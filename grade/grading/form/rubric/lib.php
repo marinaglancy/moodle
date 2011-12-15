@@ -527,10 +527,18 @@ class gradingform_rubric_controller extends gradingform_controller {
     }
 
     /**
-     * Deletes the rubric definition and all the associated information
+     * Deletes the form definition and all the associated data.
+     * Plugins may override this function to delete also data from their DB tables.
+     *
+     * @return void
      */
-    protected function delete_plugin_definition() {
+    public function delete_definition() {
         global $DB;
+
+        if (!$this->is_form_defined()) {
+            // nothing to do
+            return;
+        }
 
         // get the list of instances
         $instances = array_keys($DB->get_records('grading_instances', array('definitionid' => $this->definition->id), '', 'id'));
@@ -544,6 +552,10 @@ class gradingform_rubric_controller extends gradingform_controller {
         $DB->delete_records_list('gradingform_rubric_levels', 'criterionid', $criteria);
         // delete critera
         $DB->delete_records_list('gradingform_rubric_criteria', 'id', $criteria);
+        // delete the main definition record
+        $DB->delete_records('grading_definitions', array('id' => $this->definition->id));
+
+        $this->definition = false;
     }
 
     /**

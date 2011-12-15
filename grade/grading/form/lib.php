@@ -82,28 +82,28 @@ abstract class gradingform_controller {
     /**
      * @return stdClass controller context
      */
-    public function get_context() {
+    public final function get_context() {
         return $this->context;
     }
 
     /**
      * @return string gradable component name
      */
-    public function get_component() {
+    public final function get_component() {
         return $this->component;
     }
 
     /**
      * @return string gradable area name
      */
-    public function get_area() {
+    public final function get_area() {
         return $this->area;
     }
 
     /**
      * @return int gradable area id
      */
-    public function get_areaid() {
+    public final function get_areaid() {
         return $this->areaid;
     }
 
@@ -133,7 +133,7 @@ abstract class gradingform_controller {
      *
      * @return boolean
      */
-    public function is_shared_template() {
+    public final function is_shared_template() {
         return ($this->get_context()->id == context_system::instance()->id
             and $this->get_component() == 'core_grading');
     }
@@ -146,7 +146,7 @@ abstract class gradingform_controller {
      * @param int $userid the user id to check, defaults to the current user
      * @return boolean|null null if the form not defined yet, boolean otherwise
      */
-    public function is_own_form($userid = null) {
+    public final function is_own_form($userid = null) {
         global $USER;
 
         if (!$this->is_form_defined()) {
@@ -338,6 +338,21 @@ abstract class gradingform_controller {
     }
 
     /**
+     * Options for displaying the grading form description field in the form
+     *
+     * @param object $context
+     * @return array options for the form description field
+     */
+    public static function description_form_field_options($context) {
+        global $CFG;
+        return array(
+            'maxfiles' => -1,
+            'maxbytes' => get_max_upload_file_size($CFG->maxbytes),
+            'context'  => $context,
+        );
+    }
+
+    /**
      * Formats the definition description for display on page
      *
      * @return string
@@ -346,7 +361,19 @@ abstract class gradingform_controller {
         if (!isset($this->definition->description)) {
             return '';
         }
-        return format_text($this->definition->description, $this->definition->descriptionformat);
+        $context = $this->get_context();
+
+        $options = self::description_form_field_options($this->get_context());
+        $description = file_rewrite_pluginfile_urls($this->definition->description, 'pluginfile.php', $context->id,
+            'grading', 'description', $this->definition->id, $options);
+
+        $formatoptions = array(
+            'noclean' => false,
+            'trusted' => false,
+            'filter' => true,
+            'context' => $context
+        );
+        return format_text($description, $this->definition->descriptionformat, $formatoptions);
     }
 
     /**
@@ -358,7 +385,7 @@ abstract class gradingform_controller {
      * @param boolean $idonly
      * @return mixed if $idonly=true returns id of the found instance, otherwise returns the instance object
      */
-    public function get_current_instance($raterid, $itemid, $idonly = false) {
+    public final function get_current_instance($raterid, $itemid, $idonly = false) {
         global $DB;
         $params = array(
                 'definitionid'  => $this->definition->id,
@@ -389,7 +416,7 @@ abstract class gradingform_controller {
      * @param int $itemid
      * @return array of gradingform_instance objects
      */
-    public function get_active_instances($itemid) {
+    public final function get_active_instances($itemid) {
         global $DB;
         $conditions = array('definitionid'  => $this->definition->id,
                     'itemid' => $itemid,
@@ -408,7 +435,7 @@ abstract class gradingform_controller {
      *
      * @return boolean
      */
-    public function has_active_instances() {
+    public final function has_active_instances() {
         global $DB;
         if (empty($this->definition->id)) {
             return false;
@@ -427,7 +454,7 @@ abstract class gradingform_controller {
      * @param mixed $instance id or row from grading_isntances table
      * @return gradingform_instance
      */
-    protected function get_instance($instance) {
+    protected final function get_instance($instance) {
         global $DB;
         if (is_scalar($instance)) {
             // instance id is passed as parameter
@@ -492,9 +519,9 @@ abstract class gradingform_controller {
     abstract public function render_preview(moodle_page $page);
 
     /**
-     * Deletes the form definition and all the associated data
+     * Deletes the form definition and all the associated data.
+     * Plugins may override this function to delete also data from their DB tables.
      *
-     * @see delete_plugin_definition()
      * @return void
      */
     public function delete_definition() {
@@ -505,11 +532,9 @@ abstract class gradingform_controller {
             return;
         }
 
-        // firstly, let the plugin delete everything from their own tables
-        $this->delete_plugin_definition();
-        // then, delete all instances left
+        // delete all instances
         $DB->delete_records('grading_instances', array('definitionid' => $this->definition->id));
-        // finally, delete the main definition record
+        // delete the main definition record
         $DB->delete_records('grading_definitions', array('id' => $this->definition->id));
 
         $this->definition = false;
@@ -560,17 +585,11 @@ abstract class gradingform_controller {
     }
 
     /**
-     * Deletes all plugin data associated with the given form definiton
+     * Returns the name of the grading method plugin
      *
-     * @see delete_definition()
+     * @return string
      */
-    abstract protected function delete_plugin_definition();
-
-    /**
-     * @return string the name of the grading method plugin, eg 'rubric'
-     * @see PARAM_PLUGIN
-     */
-    protected function get_method_name() {
+    protected final function get_method_name() {
         if (preg_match('/^gradingform_([a-z][a-z0-9_]*[a-z0-9])_controller$/', get_class($this), $matches)) {
             return $matches[1];
         } else {
@@ -613,6 +632,16 @@ abstract class gradingform_controller {
             return array();
         }
         return $this->graderange;
+    }
+
+    /**
+     * Returns the plugin renderer
+     *
+     * @param moodle_page $page the target page
+     * @return plugin_renderer
+     */
+    public function get_renderer(moodle_page $page) {
+        return $page->get_renderer('gradingform_'. $this->get_method_name());
     }
 }
 
@@ -692,7 +721,7 @@ abstract class gradingform_instance {
      *
      * @return gradingform_instance
      */
-    public function get_current_instance() {
+    public final function get_current_instance() {
         if ($this->get_status() == self::INSTANCE_STATUS_ACTIVE || $this->get_status() == self::INSTANCE_STATUS_NEEDUPDATE) {
             return $this;
         }
@@ -704,7 +733,7 @@ abstract class gradingform_instance {
      *
      * @return gradingform_controller
      */
-    public function get_controller() {
+    public final function get_controller() {
         return $this->controller;
     }
 
@@ -714,7 +743,7 @@ abstract class gradingform_instance {
      * @param string $key
      * @return mixed
      */
-    public function get_data($key) {
+    public final function get_data($key) {
         if (isset($this->data->$key)) {
             return $this->data->$key;
         }
@@ -726,7 +755,7 @@ abstract class gradingform_instance {
      *
      * @return int
      */
-    public function get_id() {
+    public final function get_id() {
         return $this->get_data('id');
     }
 
@@ -735,14 +764,14 @@ abstract class gradingform_instance {
      *
      * @return int
      */
-    public function get_status() {
+    public final function get_status() {
         return $this->get_data('status');
     }
 
     /**
      * Marks the instance as ACTIVE and current active instance (if exists) as ARCHIVE
      */
-    protected function make_active() {
+    protected final function make_active() {
         global $DB;
         if ($this->data->status == self::INSTANCE_STATUS_ACTIVE) {
             // already active
@@ -812,7 +841,7 @@ abstract class gradingform_instance {
      * @param int $itemid
      * @return int the grade on 0-100 scale
      */
-    public function submit_and_get_grade($elementvalue, $itemid) {
+    public final function submit_and_get_grade($elementvalue, $itemid) {
         $elementvalue['itemid'] = $itemid;
         $this->update($elementvalue);
         $this->make_active();
