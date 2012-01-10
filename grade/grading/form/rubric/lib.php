@@ -106,7 +106,7 @@ class gradingform_rubric_controller extends gradingform_controller {
      * Returns the level of changes:
      * 0 - no changes
      * 1 - only texts or criteria sortorders are changed, students probably do not require re-grading
-     * 2 - added levels but maximum score on rubric is the same, students still may not require re-grading
+     * 2 - added levels but minimum and maximum score on rubric remain the same, students still may not require re-grading
      * 3 - removed criteria or added levels or changed number of points, students require re-grading but may be re-graded automatically
      * 4 - removed levels - students require re-grading and not all students may be re-graded automatically
      * 5 - added criteria - all students require manual re-grading
@@ -158,6 +158,7 @@ class gradingform_rubric_controller extends gradingform_controller {
                 $levelsdata = $criterion['levels'];
             }
             $criterionmaxscore = null;
+            $criterionminscore = null;
             if (preg_match('/^NEWID\d+$/', $id)) {
                 // insert criterion into DB
                 $data = array('definitionid' => $this->definition->id, 'descriptionformat' => FORMAT_MOODLE); // TODO format is not supported yet
@@ -191,6 +192,9 @@ class gradingform_rubric_controller extends gradingform_controller {
                     if ($criterionmaxscore === null || $criterionmaxscore < $currentlevel['score']) {
                         $criterionmaxscore = $currentlevel['score'];
                     }
+                    if ($criterionminscore === null || $criterionminscore > $currentlevel['score']) {
+                        $criterionminscore = $currentlevel['score'];
+                    }
                     if (!array_key_exists($levelid, $levelsdata)) {
                         if ($doupdate) {
                             $DB->delete_records('gradingform_rubric_levels', array('id' => $levelid));
@@ -218,8 +222,8 @@ class gradingform_rubric_controller extends gradingform_controller {
                     if ($doupdate) {
                         $levelid = $DB->insert_record('gradingform_rubric_levels', $data);
                     }
-                    if ($criterionmaxscore !== null && $criterionmaxscore >= $level['score']) {
-                        // new level is added but the maximum score for this criteria did not change, re-grading may not be necessary
+                    if ($criterionmaxscore !== null && $criterionmaxscore >= $level['score'] && $criterionminscore <= $level['score']) {
+                        // new level is added but the minimum and maximum score for this criteria did not change, re-grading may not be necessary
                         $haschanges[2] = true;
                     } else {
                         $haschanges[3] = true;
