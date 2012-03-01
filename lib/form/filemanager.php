@@ -354,6 +354,7 @@ function form_filemanager_render($options) {
     $strmakedir  = get_string('makeafolder', 'moodle');
     $strdownload = get_string('downloadfolder', 'repository');
     $strloading  = get_string('loading', 'repository');
+    $strquickupload = get_string('quickupload', 'repository');
 
     $icon_progress = $OUTPUT->pix_icon('i/loading_small', $strloading).'';
 
@@ -393,6 +394,7 @@ $icon_progress
     <div class="fm-breadcrumb" id="fm-path-{$client_id}"></div>
     <div class="filemanager-toolbar">
         <input type="button" class="fm-btn-add" id="btnadd-{$client_id}" onclick="return false" value="{$straddfile}" />
+        <input type="button" class="fm-btn-quickupload" id="btnqup-{$client_id}" onclick="return false" value="{$strquickupload}" />
         <input type="button" class="fm-btn-mkdir" id="btncrt-{$client_id}" onclick="return false" value="{$strmakedir}" />
         <input type="button" class="fm-btn-download" id="btndwn-{$client_id}" onclick="return false" {$extra} value="{$strdownload}" />
         <span> $maxsize </span>

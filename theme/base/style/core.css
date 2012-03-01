@@ -518,6 +518,7 @@ body.tag .managelink {padding: 5px;}
 .filepicker-filelist {padding: 5px;margin: 6px 0;background: #E9F4FF;border: #AACCEE 1px solid}
 /* file picker search dialog */
 .file-picker div.bd {text-align:left;}
+.file-picker.quickupload .fp-list {display:none;}
 
 /**
  * File Manager

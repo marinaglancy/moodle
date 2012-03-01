@@ -149,6 +149,7 @@ $string['pluginerror'] = 'Errors in repository plugin.';
 $string['popup'] = 'Click "Login" button to login';
 $string['popupblockeddownload'] = 'The downloading window is blocked, please allow the popup window, and try again.';
 $string['preview'] = 'Preview';
+$string['quickupload'] = 'Quick upload';
 $string['readonlyinstance'] = 'You cannot edit/delete a read-only instance';
 $string['refresh'] = 'Refresh';
 $string['refreshnonjsfilepicker'] = 'Please close this window and refresh non-javascript file picker';

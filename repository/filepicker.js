@@ -1156,8 +1156,12 @@ M.core_filepicker.init = function(Y, options) {
             str += '<tr><td class="mdl-right">';
             str += '<label for="'+id+'_file">'+data.upload.label+': </label></td>';
             str += '<td class="mdl-left"><input type="file" id="'+id+'_file" name="repo_upload_file" />';
-            str += '<tr><td class="mdl-right"><label for="newname-'+client_id+'">'+M.str.repository.saveas+':</label></td>';
-            str += '<td class="mdl-left"><input type="text" name="title" id="newname-'+client_id+'" value="" /></td></tr>';
+            if (!this.options.quickupload) {
+                str += '<tr><td class="mdl-right"><label for="newname-'+client_id+'">'+M.str.repository.saveas+':</label></td>';
+                str += '<td class="mdl-left"><input type="text" name="title" id="newname-'+client_id+'" value="" /></td></tr>';
+            } else {
+                str += '<input type="hidden" name="title" id="newname-'+client_id+'" value="" />';
+            }
             str += '<input type="hidden" name="itemid" value="'+this.options.itemid+'" />';
             for (var i in types) {
                 str += '<input type="hidden" name="accepted_types[]" value="'+types[i]+'" />';
@@ -1187,12 +1191,14 @@ M.core_filepicker.init = function(Y, options) {
             str += '</td>';
             str += '</tr></table>';
             str += '</form>';
-            str += '<div class="fp-upload-btn"><button id="'+id+'_action">'+M.str.repository.upload+'</button></div>';
+            if (!this.options.quickupload) {
+                str += '<div class="fp-upload-btn"><button id="'+id+'_action">'+M.str.repository.upload+'</button></div>';
+            }
             str += '</div>';
             var upload_form = Y.Node.create(str);
             Y.one('#panel-'+client_id).appendChild(upload_form);
             var scope = this;
-            Y.one('#'+id+'_action').on('click', function(e) {
+            var submit_upload_form = function(e) {
                 e.preventDefault();
                 var license = Y.one('#select-license-'+client_id).get('value');
                 YAHOO.util.Cookie.set('recentlicense', license);
@@ -1226,7 +1232,15 @@ M.core_filepicker.init = function(Y, options) {
                             scope.options.formcallback.apply(formcallback_scope, [o]);
                         }
                 }, true);
-            }, this);
+            }
+            if (!this.options.quickupload) {
+                Y.one('#'+id+'_action').on('click', submit_upload_form, this);
+            } else {
+                Y.one('#'+id+'_file').on('change', submit_upload_form, this);
+                // this works in some browsers and does not in more secure ones (saves user one extra click if works):
+                Y.one('#'+id+'_file').focus();
+                Y.one('#'+id+'_file').simulate('click');
+            }
         },
         print_header: function() {
             var r = this.active_repo;
@@ -1248,7 +1262,8 @@ M.core_filepicker.init = function(Y, options) {
             if(!r.nosearch) {
                 var html = '<a href="###"><img src="'+M.util.image_url('a/search')+'" /> '+M.str.repository.search+'</a>';
                 var search = Y.Node.create(html);
-                search.on('click', function() {
+                search.on('click', function(e) {
+                    e.preventDefaults();
                     scope.request({
                         scope: scope,
                         action:'searchform',
@@ -1512,12 +1527,42 @@ M.core_filepicker.init = function(Y, options) {
             } else {
                 this.launch();
             }
+            var filepicker = Y.one('#filepicker-'+this.options.client_id);
+            if (this.options.quickupload) {
+                filepicker.addClass('quickupload')
+                filepicker.removeClass('fullview')
+            } else {
+                filepicker.removeClass('quickupload')
+                filepicker.addClass('fullview')
+            }
         },
         launch: function() {
             this.render();
         },
+        display_object_remove_me: function(o, indent) {
+            var str='';
+            for(var p in o){
+                if(typeof o[p] == 'string'){
+                    str+= indent + p + ': ' + o[p]+'; '+"\n";
+                }else{
+                    str+= indent + p + ': { '+"\n" + this.display_object_remove_me(o[p], indent+'  ') + indent + '}' + "\n";
+                }
+            }
+            return str;
+        },
         show_recent_repository: function() {
-            var repository_id = YAHOO.util.Cookie.get('recentrepository');
+            var repository_id;
+            if (this.options.quickupload) {
+                for (var p in this.options.repositories) {
+                    if (this.options.repositories[p].type == 'upload') {
+                        repository_id = p;
+                        break;
+                    }
+                }
+            } else {
+                // get the repository from cookies
+                repository_id = YAHOO.util.Cookie.get('recentrepository');
+            }
             if (this.options.repositories[repository_id]) {
                 this.list({'repo_id':repository_id});
             }
