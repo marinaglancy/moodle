@@ -1156,40 +1156,40 @@ M.core_filepicker.init = function(Y, options) {
             str += '<tr><td class="mdl-right">';
             str += '<label for="'+id+'_file">'+data.upload.label+': </label></td>';
             str += '<td class="mdl-left"><input type="file" id="'+id+'_file" name="repo_upload_file" />';
-            if (!this.options.quickupload) {
-                str += '<tr><td class="mdl-right"><label for="newname-'+client_id+'">'+M.str.repository.saveas+':</label></td>';
-                str += '<td class="mdl-left"><input type="text" name="title" id="newname-'+client_id+'" value="" /></td></tr>';
-            } else {
-                str += '<input type="hidden" name="title" id="newname-'+client_id+'" value="" />';
-            }
+            str += '</td></tr>';
             str += '<input type="hidden" name="itemid" value="'+this.options.itemid+'" />';
             for (var i in types) {
                 str += '<input type="hidden" name="accepted_types[]" value="'+types[i]+'" />';
             }
-            str += '</td></tr><tr>';
-            str += '<td class="mdl-right"><label>'+M.str.repository.author+': </label></td>';
-            str += '<td class="mdl-left"><input type="text" name="author" value="'+this.options.author+'" /></td>';
-            str += '</tr>';
-            str += '<tr>';
-            str += '<td class="mdl-right">'+M.str.repository.chooselicense+': </td>';
-            str += '<td class="mdl-left">';
-            var licenses = this.options.licenses;
-            str += '<select name="license" id="select-license-'+client_id+'">';
-            var recentlicense = YAHOO.util.Cookie.get('recentlicense');
-            if (recentlicense) {
-                this.options.defaultlicense=recentlicense;
-            }
-            for (var i in licenses) {
-                if (this.options.defaultlicense==licenses[i].shortname) {
-                    var selected = ' selected';
-                } else {
-                    var selected = '';
+            if (!this.options.quickupload) {
+                str += '<tr><td class="mdl-right"><label for="newname-'+client_id+'">'+M.str.repository.saveas+':</label></td>';
+                str += '<td class="mdl-left"><input type="text" name="title" id="newname-'+client_id+'" value="" /></td></tr>';
+                str += '<tr><td class="mdl-right"><label>'+M.str.repository.author+': </label></td>';
+                str += '<td class="mdl-left"><input type="text" name="author" value="'+this.options.author+'" /></td></tr>';
+                str += '<tr><td class="mdl-right">'+M.str.repository.chooselicense+': </td>';
+                str += '<td class="mdl-left">';
+                var licenses = this.options.licenses;
+                str += '<select name="license" id="select-license-'+client_id+'">';
+                var recentlicense = YAHOO.util.Cookie.get('recentlicense');
+                if (recentlicense) {
+                    this.options.defaultlicense=recentlicense;
                 }
-                str += '<option value="'+licenses[i].shortname+'"'+selected+'>'+licenses[i].fullname+'</option>';
+                for (var i in licenses) {
+                    if (this.options.defaultlicense==licenses[i].shortname) {
+                        var selected = ' selected';
+                    } else {
+                        var selected = '';
+                    }
+                    str += '<option value="'+licenses[i].shortname+'"'+selected+'>'+licenses[i].fullname+'</option>';
+                }
+                str += '</select>';
+                str += '</td></tr>';
+            } else {
+                str += '<input type="hidden" name="title" value="" />';
+                str += '<input type="hidden" name="author" value="'+this.options.author+'" />';
+                str += '<input type="hidden" name="license" value="'+this.options.defaultlicense+'" />';
             }
-            str += '</select>';
-            str += '</td>';
-            str += '</tr></table>';
+            str += '</table>';
             str += '</form>';
             if (!this.options.quickupload) {
                 str += '<div class="fp-upload-btn"><button id="'+id+'_action">'+M.str.repository.upload+'</button></div>';
@@ -1200,8 +1200,10 @@ M.core_filepicker.init = function(Y, options) {
             var scope = this;
             var submit_upload_form = function(e) {
                 e.preventDefault();
-                var license = Y.one('#select-license-'+client_id).get('value');
-                YAHOO.util.Cookie.set('recentlicense', license);
+                if (Y.one('#select-license-'+client_id)) {
+                    var license = Y.one('#select-license-'+client_id).get('value');
+                    YAHOO.util.Cookie.set('recentlicense', license);
+                }
                 if (!Y.one('#'+id+'_file').get('value')) {
                     scope.print_msg(M.str.repository.nofilesattached, 'error');
                     return false;
@@ -1237,9 +1239,6 @@ M.core_filepicker.init = function(Y, options) {
                 Y.one('#'+id+'_action').on('click', submit_upload_form, this);
             } else {
                 Y.one('#'+id+'_file').on('change', submit_upload_form, this);
-                // this works in some browsers and does not in more secure ones (saves user one extra click if works):
-                Y.one('#'+id+'_file').focus();
-                Y.one('#'+id+'_file').simulate('click');
             }
         },
         print_header: function() {
@@ -1528,9 +1527,12 @@ M.core_filepicker.init = function(Y, options) {
                 this.launch();
             }
             var filepicker = Y.one('#filepicker-'+this.options.client_id);
+            var scope = this
+            filepicker.detach('mouseleave')
             if (this.options.quickupload) {
                 filepicker.addClass('quickupload')
                 filepicker.removeClass('fullview')
+                filepicker.on('mouseleave', function(e) {scope.hide()})
             } else {
                 filepicker.removeClass('quickupload')
                 filepicker.addClass('fullview')
