@@ -165,6 +165,7 @@ class repository_flickr_public extends repository {
             $ret['login'] = array($fulltext, $tag, $email_field, $commercial, $modification);
             $ret['login_btn_label'] = get_string('search');
             $ret['login_btn_action'] = 'search';
+            $ret['allowcaching'] = true; // indicates that login form can be cached in filepicker.js
             return $ret;
         } else {
             echo '<table>';

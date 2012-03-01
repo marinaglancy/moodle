@@ -1112,36 +1112,46 @@ M.core_filepicker.init = function(Y, options) {
             if (!args.repo_id) {
                 args.repo_id = scope.active_repo.id;
             }
-            scope.request({
-                action:'list',
-                client_id: scope.options.client_id,
-                repository_id: args.repo_id,
-                path:args.path?args.path:'',
-                page:args.page?args.page:'',
-                callback: function(id, obj, args) {
-                    Y.all('#fp-list-'+scope.options.client_id+' li a').setStyle('backgroundColor', 'transparent');
-                    var el = Y.one('#repository-'+scope.options.client_id+'-'+obj.repo_id+'-link');
-                    if (el) {
-                        el.setStyle('backgroundColor', '#AACCEE');
-                    }
-                    if (obj.login) {
-                        scope.viewbar.set('disabled', true);
-                        scope.print_login(obj);
-                    } else if (obj.upload) {
-                        scope.viewbar.set('disabled', true);
-                        scope.parse_repository_options(obj);
-                        scope.create_upload_form(obj);
-
-                    } else if (obj.iframe) {
-
-                    } else if (obj.list) {
-                        obj.issearchresult = false;
-                        scope.viewbar.set('disabled', false);
-                        scope.parse_repository_options(obj);
-                        scope.view_files();
-                    }
+            if (!scope.options.cached_list_repo) {
+                scope.options.cached_list_repo = {}
+            }
+            var list_onload_callback = function(id, obj, args) {
+                Y.all('#fp-list-'+scope.options.client_id+' li a').setStyle('backgroundColor', 'transparent');
+                var el = Y.one('#repository-'+scope.options.client_id+'-'+obj.repo_id+'-link');
+                if (obj.allowcaching) {
+                    scope.options.cached_list_repo[obj.repo_id] = obj;
                 }
-            }, true);
+                if (el) {
+                    el.setStyle('backgroundColor', '#AACCEE');
+                }
+                if (obj.login) {
+                    scope.viewbar.set('disabled', true);
+                    scope.print_login(obj);
+                } else if (obj.upload) {
+                    scope.viewbar.set('disabled', true);
+                    scope.parse_repository_options(obj);
+                    scope.create_upload_form(obj);
+                } else if (obj.iframe) {
+
+                } else if (obj.list) {
+                    obj.issearchresult = false;
+                    scope.viewbar.set('disabled', false);
+                    scope.parse_repository_options(obj);
+                    scope.view_files();
+                }
+            }
+            if (scope.options.cached_list_repo[args.repo_id]) {
+                list_onload_callback(null, scope.options.cached_list_repo[args.repo_id], null)
+            } else {
+                scope.request({
+                    action: 'list',
+                    client_id: scope.options.client_id,
+                    repository_id: args.repo_id,
+                    path: args.path,
+                    page: args.page,
+                    callback: list_onload_callback
+                }, true);
+            }
         },
         create_upload_form: function(data) {
             var client_id = this.options.client_id;
