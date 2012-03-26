@@ -368,8 +368,7 @@ M.core_filepicker.init = function(Y, options) {
                 tmpNode.isLeaf = true;
             }
         },
-        view_files: function(page) {
-            var p= page?page:null;
+        view_files: function() {
             if (this.active_repo.issearchresult) {
                 // list view is desiged to display treeview
                 // it is not working well with search result
@@ -379,7 +378,7 @@ M.core_filepicker.init = function(Y, options) {
                 if (this.viewmode == 1) {
                     this.view_as_icons();
                 } else if (this.viewmode == 2) {
-                    this.view_as_list(p);
+                    this.view_as_list();
                 } else {
                     this.view_as_icons();
                 }
@@ -396,7 +395,6 @@ M.core_filepicker.init = function(Y, options) {
                 path:node.path?node.path:'',
                 page:node.page?args.page:'',
                 callback: function(id, obj, args) {
-                    obj.issearchresult = false;
                     var list = obj.list;
                     scope.viewbar.set('disabled', false);
                     scope.parse_repository_options(obj);
@@ -407,70 +405,46 @@ M.core_filepicker.init = function(Y, options) {
                 }
             }, false);
         },
-        view_as_list: function(p) {
+        view_as_list: function() {
             var scope = this;
-            var page = null;
-            if (!p) {
-                if (scope.active_repo.page) {
-                    page = scope.active_repo.page;
-                }
-            } else {
-                page = p;
+            var client_id = scope.options.client_id;
+            var dynload = scope.active_repo.dynload;
+            var list = this.filelist;
+            var panel_id = '#panel-'+client_id;
+            scope.viewmode = 2;
+            Y.one(panel_id).set('innerHTML', '');
+            scope.print_header();
+
+            var html = '<div class="fp-tree-panel" id="treeview-'+client_id+'">';
+            if (list && list.length==0) {
+                html += '<div class="fp-emptylist mdl-align">' +M.str.repository.nofilesavailable+'</div>';
             }
-            scope.request({
-                action:'list',
-                client_id: scope.options.client_id,
-                repository_id: scope.active_repo.id,
-                path:'',
-                page:page,
-                callback: function(id, obj, args) {
-                    scope.parse_repository_options(obj);
-                    if (obj.login) {
-                        scope.viewbar.set('disabled', true);
-                        scope.print_login(obj);
-                        return;
-                    }
-                    var client_id = scope.options.client_id;
-                    var dynload = scope.active_repo.dynload;
-                    var list = obj.list;
-                    var panel_id = '#panel-'+client_id;
-                    scope.viewmode = 2;
-                    Y.one(panel_id).set('innerHTML', '');
+            html += '</div>';
 
-                    scope.print_header();
+            var tree = Y.Node.create(html);
+            Y.one(panel_id).appendChild(tree);
+            if (!list || list.length==0) {
+                return;
+            }
 
-                    var html = '<div class="fp-tree-panel" id="treeview-'+client_id+'">';
-                    if (list && list.length==0) {
-                        html += '<div class="fp-emptylist mdl-align">' +M.str.repository.nofilesavailable+'</div>';
-                    }
-                    html += '</div>';
+            scope.treeview = new YAHOO.widget.TreeView('treeview-'+client_id);
+            if (dynload) {
+                scope.treeview.setDynamicLoad(scope.treeview_dynload, 1);
+            }
 
-                    var tree = Y.Node.create(html);
-                    Y.one(panel_id).appendChild(tree);
-                    if (!list || list.length==0) {
-                        return;
-                    }
-
-                    scope.treeview = new YAHOO.widget.TreeView('treeview-'+client_id);
-                    if (dynload) {
-                        scope.treeview.setDynamicLoad(scope.treeview_dynload, 1);
-                    }
-
-                    for(k in list) {
-                        scope.build_tree(list[k], scope.treeview.getRoot());
-                    }
-                    scope.treeview.subscribe('clickEvent', function(e){
-                        if(e.node.isLeaf){
-                            var fileinfo = {};
-                            fileinfo['title'] = e.node.data.filename;
-                            fileinfo['source'] = e.node.data.source;
-                            fileinfo['thumbnail'] = e.node.data.thumbnail;
-                            scope.select_file(fileinfo);
-                        }
-                    });
-                    scope.treeview.draw();
+            for(k in list) {
+                scope.build_tree(list[k], scope.treeview.getRoot());
+            }
+            scope.treeview.subscribe('clickEvent', function(e){
+                if(e.node.isLeaf){
+                    var fileinfo = {};
+                    fileinfo['title'] = e.node.data.filename;
+                    fileinfo['source'] = e.node.data.source;
+                    fileinfo['thumbnail'] = e.node.data.thumbnail;
+                    scope.select_file(fileinfo);
                 }
-            }, true);
+            });
+            scope.treeview.draw();
         },
         view_as_icons: function() {
             var scope = this;
@@ -546,6 +520,7 @@ M.core_filepicker.init = function(Y, options) {
                 var dynload = this.active_repo.dynload;
                 if(node.children) {
                     y_file.on('click', function(e, p) {
+                        e.preventDefault();
                         if(dynload) {
                             var params = {'path':p.path};
                             scope.list(params);
@@ -555,6 +530,7 @@ M.core_filepicker.init = function(Y, options) {
                         }
                     }, this, node);
                     y_title.on('click', function(e, p, id){
+                        e.preventDefault();
                         var icon = Y.one(id);
                         icon.simulate('click');
                     }, this, node, '#'+link.id);
@@ -566,9 +542,11 @@ M.core_filepicker.init = function(Y, options) {
                     fileinfo['haslicense'] = list[k].haslicense?true:false;
                     fileinfo['hasauthor'] = list[k].hasauthor?true:false;
                     y_title.on('click', function(e, args) {
+                        e.preventDefault();
                         this.select_file(args);
                     }, this, fileinfo);
                     y_file.on('click', function(e, args) {
+                        e.preventDefault();
                         this.select_file(args);
                     }, this, fileinfo);
                 }
@@ -792,15 +770,19 @@ M.core_filepicker.init = function(Y, options) {
             // adding buttons
             var view_icons = {label: M.str.repository.iconview, value: 't', 'checked': true,
                 onclick: {
-                    fn: function(){
-                        scope.view_as_icons();
+                    fn: function(e){
+                        e.preventDefault();
+                        scope.viewmode = 1;
+                        scope.view_files();
                     }
                 }
             };
             var view_listing = {label: M.str.repository.listview, value: 'l',
                 onclick: {
-                    fn: function(){
-                        scope.view_as_list();
+                    fn: function(e){
+                        e.preventDefault();
+                        scope.viewmode = 2;
+                        scope.view_files();
                     }
                 }
             };
@@ -828,6 +810,7 @@ M.core_filepicker.init = function(Y, options) {
                     list.append('<li id="'+id+'"><a class="fp-repo-name" id="'+link_id+'" href="###">'+repository.name+'</a></li>');
                     Y.one('#'+link_id).prepend('<img src="'+repository.icon+'" width="16" height="16" />&nbsp;');
                     Y.one('#'+link_id).on('click', function(e, scope, repository_id) {
+                        e.preventDefault();
                         YAHOO.util.Cookie.set('recentrepository', repository_id);
                         scope.repository_id = repository_id;
                         this.list({'repo_id':repository_id});
@@ -847,7 +830,7 @@ M.core_filepicker.init = function(Y, options) {
             this.filelist = data.list?data.list:null;
             this.filepath = data.path?data.path:null;
             this.active_repo = {};
-            this.active_repo.issearchresult = Boolean(data.issearchresult);
+            this.active_repo.issearchresult = data.issearchresult?true:false;
             this.active_repo.dynload = data.dynload?data.dynload:false;
             this.active_repo.pages = Number(data.pages?data.pages:null);
             this.active_repo.page = Number(data.page?data.page:null);
@@ -994,10 +977,7 @@ M.core_filepicker.init = function(Y, options) {
                         'path': '',
                         'client_id': client_id,
                         'repository_id': repository_id,
-                        'callback': function(id, o, args) {
-                            scope.parse_repository_options(o);
-                            scope.view_files();
-                        }
+                        'callback': this.display_response
                     }, true);
                 }, this);
             }
@@ -1031,11 +1011,7 @@ M.core_filepicker.init = function(Y, options) {
                             client_id: client_id,
                             repository_id: repository_id,
                             form: {id: 'fp-form-'+scope.options.client_id,upload:false,useDisabled:true},
-                            callback: function(id, o, args) {
-                                o.issearchresult = true;
-                                scope.parse_repository_options(o);
-                                scope.view_files();
-                            }
+                            callback: scope.display_response
                     }, true);
                 }, this);
             }
@@ -1069,78 +1045,45 @@ M.core_filepicker.init = function(Y, options) {
             }, this);
 
         },
-        search: function(args) {
-            var data = this.logindata;
-            var params = {};
-
-            for (var k in data) {
-                if(data[k].type!='popup') {
-                    var el = document.getElementsByName(data[k].name)[0];
-                    params[data[k].name] = '';
-                    if(el.type == 'checkbox') {
-                        params[data[k].name] = el.checked;
-                    } else if(el.type == 'radio') {
-                        var tmp = document.getElementsByName(data[k].name);
-                        for(var i in tmp) {
-                            if (tmp[i].checked) {
-                                params[data[k].name] = tmp[i].value;
-                            }
-                        }
-                    } else {
-                        params[data[k].name] = el.value;
-                    }
-                }
+        display_response: function(id, obj, args) {
+            var scope = args.scope
+            // highlight the current repository in repositories list
+            Y.all('#fp-list-'+scope.options.client_id+' li a').setStyle('backgroundColor', 'transparent');
+            var el = Y.one('#repository-'+scope.options.client_id+'-'+obj.repo_id+'-link');
+            if (el) {
+                el.setStyle('backgroundColor', '#AACCEE');
             }
-            this.request({
-                    scope: scope,
-                    action:'search',
-                    client_id: client_id,
-                    repository_id: repository_id,
-                    form: {id: 'fp-form-'+scope.options.client_id,upload:false,useDisabled:true},
-                    callback: function(id, o, args) {
-                        o.issearchresult = true;
-                        scope.parse_repository_options(o);
-                        scope.view_files();
-                    }
-            }, true);
+            // display response
+            if (obj.login) {
+                scope.viewbar.set('disabled', true);
+                scope.print_login(obj);
+            } else if (obj.upload) {
+                scope.viewbar.set('disabled', true);
+                scope.parse_repository_options(obj);
+                scope.create_upload_form(obj);
+            } else if (obj.iframe) {
+
+            } else if (obj.list) {
+                scope.viewbar.set('disabled', false);
+                scope.parse_repository_options(obj);
+                scope.view_files();
+            }
         },
         list: function(args) {
-            var scope = this;
             if (!args) {
                 args = {};
             }
             if (!args.repo_id) {
-                args.repo_id = scope.active_repo.id;
+                args.repo_id = this.active_repo.id;
             }
-            scope.request({
-                action:'list',
-                client_id: scope.options.client_id,
+            this.request({
+                action: 'list',
+                client_id: this.options.client_id,
                 repository_id: args.repo_id,
-                path:args.path?args.path:'',
-                page:args.page?args.page:'',
-                callback: function(id, obj, args) {
-                    Y.all('#fp-list-'+scope.options.client_id+' li a').setStyle('backgroundColor', 'transparent');
-                    var el = Y.one('#repository-'+scope.options.client_id+'-'+obj.repo_id+'-link');
-                    if (el) {
-                        el.setStyle('backgroundColor', '#AACCEE');
-                    }
-                    if (obj.login) {
-                        scope.viewbar.set('disabled', true);
-                        scope.print_login(obj);
-                    } else if (obj.upload) {
-                        scope.viewbar.set('disabled', true);
-                        scope.parse_repository_options(obj);
-                        scope.create_upload_form(obj);
-
-                    } else if (obj.iframe) {
-
-                    } else if (obj.list) {
-                        obj.issearchresult = false;
-                        scope.viewbar.set('disabled', false);
-                        scope.parse_repository_options(obj);
-                        scope.view_files();
-                    }
-                }
+                path: args.path,
+                page: args.page,
+                scope: this,
+                callback: this.display_response
             }, true);
         },
         create_upload_form: function(data) {
@@ -1248,7 +1191,8 @@ M.core_filepicker.init = function(Y, options) {
             if(!r.nosearch) {
                 var html = '<a href="###"><img src="'+M.util.image_url('a/search')+'" /> '+M.str.repository.search+'</a>';
                 var search = Y.Node.create(html);
-                search.on('click', function() {
+                search.on('click', function(e) {
+                    e.preventDefault();
                     scope.request({
                         scope: scope,
                         action:'searchform',
@@ -1290,10 +1234,7 @@ M.core_filepicker.init = function(Y, options) {
                                         client_id: client_id,
                                         repository_id: repository_id,
                                         form: {id: 'fp-search-form',upload:false,useDisabled:true},
-                                        callback: function(id, o, args) {
-                                            scope.parse_repository_options(o);
-                                            scope.view_files();
-                                        }
+                                        callback: scope.display_response
                                 }, true);
                                 search_dialog.cancel();
                             }
@@ -1336,7 +1277,8 @@ M.core_filepicker.init = function(Y, options) {
             if(!r.norefresh) {
                 var html = '<a href="###"><img src="'+M.util.image_url('a/refresh')+'" /> '+M.str.repository.refresh+'</a>';
                 var refresh = Y.Node.create(html);
-                refresh.on('click', function() {
+                refresh.on('click', function(e) {
+                    e.preventDefault();
                     this.list();
                 }, this);
                 toolbar.appendChild(refresh);
@@ -1345,16 +1287,14 @@ M.core_filepicker.init = function(Y, options) {
                 var label = r.logouttext?r.logouttext:M.str.repository.logout;
                 var html = '<a href="###"><img src="'+M.util.image_url('a/logout')+'" /> '+label+'</a>';
                 var logout = Y.Node.create(html);
-                logout.on('click', function() {
+                logout.on('click', function(e) {
+                    e.preventDefault();
                     this.request({
                         action:'logout',
                         client_id: client_id,
                         repository_id: repository_id,
                         path:'',
-                        callback: function(id, obj, args) {
-                            scope.viewbar.set('disabled', true);
-                            scope.print_login(obj);
-                        }
+                        callback: this.display_response
                     }, true);
                 }, this);
                 toolbar.appendChild(logout);
@@ -1448,6 +1388,7 @@ M.core_filepicker.init = function(Y, options) {
                 Y.all('#fp-header-'+client_id+' .fp-paging a').each(
                     function(node, id) {
                         node.on('click', function(e) {
+                            e.preventDefault();
                             var id = node.get('id');
                             var re = new RegExp("repo-page-(\\d+)", "i");
                             var result = id.match(re);
@@ -1460,19 +1401,11 @@ M.core_filepicker.init = function(Y, options) {
                                         client_id: client_id,
                                         repository_id: r.id,
                                         params: {'page':result[1]},
-                                        callback: function(id, o, args) {
-                                            o.issearchresult = true;
-                                            scope.parse_repository_options(o);
-                                            scope.view_files(result[1]);
-                                        }
+                                        callback: scope.display_response
                                 }, true);
 
                             } else {
-                                if (scope.viewmode == 2) {
-                                    scope.view_as_list(result[1]);
-                                } else {
-                                    scope.list(args);
-                                }
+                                scope.list(args);
                             }
                         });
                     });
@@ -1494,7 +1427,8 @@ M.core_filepicker.init = function(Y, options) {
                     var sep = Y.Node.create('<span>/</span>');
                     path.appendChild(link);
                     path.appendChild(sep);
-                    Y.one('#'+link.id).on('click', function(Y, path){
+                    Y.one('#'+link.id).on('click', function(e, path){
+                        e.preventDefault();
                         this.list({'path':path});
                         }, this, link_path)
                 }
