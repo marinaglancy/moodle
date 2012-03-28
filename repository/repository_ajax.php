@@ -70,16 +70,6 @@ if (!confirm_sesskey()) {
     die(json_encode($err));
 }
 
-// Get repository instance information
-$repooptions = array(
-    'ajax' => true,
-    'mimetypes' => $accepted_types
-);
-$repo = repository::get_repository_by_id($repo_id, $contextid, $repooptions);
-
-// Check permissions
-$repo->check_capability();
-
 $coursemaxbytes = 0;
 if (!empty($course)) {
     $coursemaxbytes = $course->maxbytes;
@@ -96,7 +86,7 @@ switch ($action) {
     case 'gsearch':
         $params = array();
         $params['context'] = array(context::instance_by_id($contextid), get_system_context());
-        $params['currentcontext'] = context::instance_by_id($contextid);
+        $params['currentcontext'] = $context;
         $repos = repository::get_instances($params);
         $list = array();
         foreach($repos as $repo){
@@ -118,6 +108,26 @@ switch ($action) {
         $cache->refresh();
         $action = 'list';
         break;
+}
+
+if (file_exists($CFG->dirroot.'/repository/'.$type.'/lib.php')) {
+    require_once($CFG->dirroot.'/repository/'.$type.'/lib.php');
+    $classname = 'repository_' . $type;
+    $repooptions = array(
+        'ajax' => true,
+        'name' => $repository->name,
+        'type' => $type,
+        'mimetypes' => $accepted_types
+    );
+    $repo = new $classname($repo_id, $contextid, $repooptions);
+    // Check permissions
+    if (!$repo->check_capability()) {
+        $err->error = get_string('nopermissiontoaccess', 'repository');
+        die(json_encode($err));
+    }
+} else {
+    $err->error = get_string('invalidplugin', 'repository', $type);
+    die(json_encode($err));
 }
 
 // These actions all occur on the currently active repository instance

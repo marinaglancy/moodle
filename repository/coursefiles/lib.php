@@ -165,19 +165,13 @@ class repository_coursefiles extends repository {
     }
 
     /**
-     * Return is the instance is visible
-     * (is the type visible ? is the context enable ?)
+     * Additional check for repository availability to be implemented by repositories if needed.
      *
      * @return boolean
      */
-    public function is_visible() {
-        global $COURSE; //TODO: this is deprecated (skodak)
-        if ($COURSE->legacyfiles != 2) {
-            // do not show repo if legacy files disabled in this course...
-            return false;
-        }
-
-        return parent::is_visible();
+    public function is_available() {
+        list($context, $course, $cm) = get_context_info_array($this->context->id);
+        return $course && $course->legacyfiles != 2 && has_capability('moodle/course:managefiles', $this->context);
     }
 
     public function get_name() {

@@ -138,6 +138,27 @@ class repository_local extends repository {
     }
 
     /**
+     * Additional check for repository availability to be implemented by repositories if needed.
+     *
+     * @return boolean
+     */
+    public function is_available() {
+        if (has_capability('moodle/course:update', get_system_context())) {
+            // this is admin
+            return true;
+        }
+        // check if user has 'moodle/course:managefiles' in at least one context
+        $roles = get_roles_with_capability('moodle/course:managefiles');
+        global $USER;
+        foreach (array_keys($roles) as $roleid) {
+            if (user_has_role_assignment($USER->id, $roleid)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * Returns all children elements that have one of the specified extensions
      *
      * This function may skip subfolders and recursively add their children

@@ -630,9 +630,17 @@ abstract class repository {
             $type = $matches[1];
             $capability = has_capability('repository/'.$type.':view', $this->context);
         }
-        if (!$capability) {
+        if (!($capability && $this->is_visible() && $this->is_availble())) {
             throw new repository_exception('nopermissiontoaccess', 'repository');
         }
+
+    /**
+     * Additional check for repository availability to be implemented by repositories if needed.
+     *
+     * @return boolean
+     */
+    public function is_availble() {
+        return true;
     }
 
     /**
@@ -850,7 +858,7 @@ abstract class repository {
         if (isset($args['currentcontext'])) {
             $current_context = $args['currentcontext'];
         } else {
-            $current_context = null;
+            $current_context = get_system_context();
         }
 
         if (!empty($args['context'])) {
@@ -931,7 +939,7 @@ abstract class repository {
             // tell instance what file types will be accepted by file picker
             $classname = 'repository_' . $record->repositorytype;
 
-            $repository = new $classname($record->id, $record->contextid, $options, $record->readonly);
+            $repository = new $classname($record->id, $current_context, $options, $record->readonly);
 
             $is_supported = true;
 
@@ -947,7 +955,7 @@ abstract class repository {
                     $is_supported = !empty($valid_ext);
                 }
                 // check return values
-                if ($returntypes !== 3 and $repository->supported_returntypes() !== 3) {
+                if ($is_supported && $returntypes !== 3 && $repository->supported_returntypes() !== 3) {
                     $type = $repository->supported_returntypes();
                     if ($type & $returntypes) {
                         //
@@ -956,24 +964,8 @@ abstract class repository {
                     }
                 }
 
-                if (!$onlyvisible || ($repository->is_visible() && !$repository->disabled)) {
-                    // check capability in current context
-                    if (!empty($current_context)) {
-                        $capability = has_capability('repository/'.$record->repositorytype.':view', $current_context);
-                    } else {
-                        $capability = has_capability('repository/'.$record->repositorytype.':view', get_system_context());
-                    }
-                    if ($record->repositorytype == 'coursefiles') {
-                        // coursefiles plugin needs managefiles permission
-                        if (!empty($current_context)) {
-                            $capability = $capability && has_capability('moodle/course:managefiles', $current_context);
-                        } else {
-                            $capability = $capability && has_capability('moodle/course:managefiles', get_system_context());
-                        }
-                    }
-                    if ($is_supported && $capability) {
-                        $repositories[$repository->id] = $repository;
-                    }
+                if (!$onlyvisible || ($is_supported && $repository->check_capability())) {
+                    $repositories[$repository->id] = $repository;
                 }
             }
         }
@@ -1747,8 +1739,8 @@ abstract class repository {
      *
      * @return bool
      */
-    public function is_visible() {
-        $type = repository::get_type_by_id($this->options['typeid']);
+    public final function is_visible() {
+        $type = repository::get_type_by_typename($this->options['type']);
         $instanceoptions = repository::static_function($type->get_typename(), 'get_instance_option_names');
 
         if ($type->get_visible()) {
