@@ -1710,12 +1710,9 @@ abstract class repository {
      * @return null
      */
     public function print_search() {
-        $str = '';
-        $str .= '<input type="hidden" name="repo_id" value="'.$this->id.'" />';
-        $str .= '<input type="hidden" name="ctx_id" value="'.$this->context->id.'" />';
-        $str .= '<input type="hidden" name="seekey" value="'.sesskey().'" />';
-        $str .= '<label>'.get_string('keyword', 'repository').': </label><br/><input name="s" value="" /><br/>';
-        return $str;
+        global $PAGE;
+        $renderer = $PAGE->get_renderer('core', 'repository');
+        return $renderer->repository_default_searchform();
     }
 
     /**
@@ -2159,6 +2156,8 @@ function initialise_filepicker($args) {
         // JavaScript a lot, the key NEEDS to be the repository id.
         $return->repositories[$repository->id] = $meta;
     }
+    $fprenderer = $PAGE->get_renderer('core', 'repository');
+    $return->templates = $fprenderer->filepicker_templates();
     return $return;
 }
 /**
