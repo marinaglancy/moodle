@@ -1219,6 +1219,7 @@ $string['olduserdirectory'] = 'This is the OLD users directory, and is no longer
 $string['opentoguests'] = 'Guest access';
 $string['optional'] = 'optional';
 $string['order'] = 'Order';
+$string['originalpath'] = 'Original path';
 $string['orphanedactivities'] = 'Orphaned activities';
 $string['other'] = 'Other';
 $string['outline'] = 'Outline';
