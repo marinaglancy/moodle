@@ -1409,6 +1409,17 @@ class file_storage {
     }
 
     /**
+     * Return number of files referencing to the current
+     *
+     * @param stored_file $storedfile
+     * @return array
+     */
+    public function get_reference_count($storedfile) {
+        // TODO this is a temp dummy function to merge with MDL-28666
+        return (rand(1,5)==3)?rand(1,10):0;
+    }
+
+    /**
      * Cron cleanup job.
      */
     public function cron() {

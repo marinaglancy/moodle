@@ -61,6 +61,25 @@ class stored_file {
     }
 
     /**
+     * Whether or not this is a external resource
+     *
+     * @return bool
+     */
+    public function is_external_file() {
+        // TODO this is a dummy function for testing external files references
+        return (rand(1, 5)==3);
+    }
+
+    /**
+     * Returns human-readable location of reference origin
+     *
+     * @return string
+     */
+    public function get_reference_details() {
+        return 'links to somewhere';
+    }
+
+    /**
      * Update some file record fields
      *
      * @param stdClass $dataobject
