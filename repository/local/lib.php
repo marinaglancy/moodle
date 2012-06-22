@@ -298,7 +298,10 @@ class repository_local_file {
     public function is_empty() {
         if ($this->isempty === null) {
             $this->isempty = true;
-            if (!$this->fileinfo->is_empty_area()) {
+            if (method_exists($this->fileinfo, 'has_files')) {
+                $accepted_types = optional_param_array('accepted_types', '', PARAM_RAW);
+                $this->isempty = !$this->fileinfo->has_files($accepted_types);
+            } else if (!$this->fileinfo->is_empty_area()) {
                 // even if is_empty_area() returns false, element still may be empty
                 $children = $this->get_children();
                 if (!empty($children)) {

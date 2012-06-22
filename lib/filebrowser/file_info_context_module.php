@@ -244,6 +244,63 @@ class file_info_context_module extends file_info {
     }
 
     /**
+     * Checks if the module has any files inside that match specified extensions
+     *
+     * This function is called by repository_local_file::is_empty() to make sure this module needs
+     * to be displayed in 'Server files' repository. This is faster than retrieving all
+     * children and checking if they are empty or not.
+     *
+     * @param type $extensions
+     * @return type
+     */
+    public function has_files($extensions) {
+        global $DB;
+        if (has_capability('moodle/backup:backupactivity', $this->context)) {
+            $areas['backup'] = array('activity');
+        }
+
+        $areas = array_keys($this->areas);
+        if (plugin_supports('mod', $this->modname, FEATURE_MOD_INTRO, true) && has_capability('moodle/course:managefiles', $this->context)) {
+            $areas[] = 'intro';
+        }
+        $component = 'mod_'.$this->modname;
+
+        $sql = '';
+        $params = array();
+        if (count($areas)) {
+            list($sqlareas, $paramsareas) = $DB->get_in_or_equal($areas, SQL_PARAMS_NAMED, 'area');
+            $sql = "component = :component and filearea ".$sqlareas;
+            $params['component'] = 'mod_'.$this->modname;
+            $params = array_merge($params, $paramsareas);
+        }
+        if (!empty($sql) && has_capability('moodle/backup:backupactivity', $this->context)) {
+            $sql = "( (".$sql.") OR (component=:componentbackup and filearea = :areabackup))";
+            $params['componentbackup'] = 'backup';
+            $params['areabackup'] = 'activity';
+        }
+        if (empty($sql)) {
+            return false;
+        }
+        $sql .= ' AND contextid = :contextid AND filename <> :emptyfilename';
+        $params['contextid'] = $this->context->id;
+        $params['emptyfilename'] = '.';
+        if (!empty($extensions) && !is_array($extensions)) {
+            $extensions = array($extensions);
+        }
+        if (!empty($extensions) && !in_array('*', $extensions)) {
+            $likes = array();
+            $cnt = 0;
+            foreach ($extensions as $ext) {
+                $cnt++;
+                $likes[] = $DB->sql_like('filename', ':filename'.$cnt, false);
+                $params['filename'.$cnt] = '%'.$ext;
+            }
+            $sql .= ' AND ('.join(' OR ', $likes).')';
+        }
+        return $DB->record_exists_sql("select 1 from {files} WHERE ".$sql, $params);
+    }
+
+    /**
      * Whether or not this is a directory
      *
      * @return bool

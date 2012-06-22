@@ -219,6 +219,42 @@ class file_info_stored extends file_info {
     }
 
     /**
+     * Checks if the folder has any files inside that match specified extensions
+     *
+     * This function is called by repository_local_file::is_empty() to make sure this folder needs
+     * to be displayed in 'Server files' repository. This is faster than retrieving all
+     * children and checking if they are empty or not with the standard functions.
+     *
+     * @param type $extensions
+     * @return type
+     */
+    public function has_files($extensions) {
+        global $DB;
+        $sql = 'contextid = :contextid AND component = :component AND filearea = :filearea AND '.
+            $DB->sql_like('filepath', ':filepath'). ' AND filename <> :emptyfilename';
+        $params = array();
+        $params['contextid'] = $this->lf->get_contextid();
+        $params['component'] = $this->lf->get_component();
+        $params['filearea'] = $this->lf->get_filearea();
+        $params['filepath'] = $this->lf->get_filepath().'%';
+        $params['emptyfilename'] = '.';
+        if (!empty($extensions) && !is_array($extensions)) {
+            $extensions = array($extensions);
+        }
+        if (!empty($extensions) && !in_array('*', $extensions)) {
+            $likes = array();
+            $cnt = 0;
+            foreach ($extensions as $ext) {
+                $cnt++;
+                $likes[] = $DB->sql_like('filename', ':filename'.$cnt, false);
+                $params['filename'.$cnt] = '%'.$ext;
+            }
+            $sql .= ' AND ('.join(' OR ', $likes).')';
+        }
+        return $DB->record_exists_sql("select 1 from {files} WHERE ".$sql, $params);
+    }
+
+    /**
      * Returns file size in bytes, null for directories
      *
      * @return int bytes or null if not known
