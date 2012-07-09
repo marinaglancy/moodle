@@ -277,6 +277,7 @@ class file_info_context_user extends file_info {
      * @return array of file_info instances
      */
     public function get_children() {
+        $this->log();
         $children = array();
 
         if ($child = $this->get_area_user_private(0, '/', '.')) {

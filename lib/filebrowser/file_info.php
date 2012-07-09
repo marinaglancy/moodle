@@ -47,6 +47,7 @@ abstract class file_info {
      * @param stdClass $context
      */
     public function __construct($browser, $context) {
+        //$this->log();
         $this->browser = $browser;
         $this->context = $context;
     }
@@ -152,6 +153,7 @@ abstract class file_info {
      * @return bool
      */
     public function is_empty_area() {
+        $this->log();
         return false;
     }
 
@@ -336,6 +338,19 @@ abstract class file_info {
         return false;
     }
 
+    public function log($forcelog = false) {
+        $functionname = '';
+        $backtrace = debug_backtrace();
+        $call = $backtrace[1];
+        if ($call['class'] === 'file_info' && $backtrace[2]['function'] === $call['function']) {
+            $call = $backtrace[2];
+        }
+        //echo $call['class']."::".$call['function']."()\n".join('&',$this->get_params_rawencoded())."\n\n";
+        if ($forcelog) {
+            $message = 'file_info.log( '.join('&',$this->get_params_rawencoded())." )";
+            echo $message."\n".print_r($backtrace[1],true)."\n\n";
+        }
+    }
 
 //TODO: following methods are not implemented yet ;-)
     //public abstract function move(location params);

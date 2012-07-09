@@ -273,6 +273,7 @@ class imscp_file_info extends file_info {
      * @return array of file_info instances
      */
     public function get_children() {
+        $this->log();
         global $DB;
 
         $children = array();

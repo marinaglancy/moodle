@@ -221,6 +221,7 @@ class file_info_context_module extends file_info {
      * @return bool
      */
     public function is_empty_area() {
+        $this->log();
         if ($child = $this->get_area_backup(0, '/', '.')) {
             if (!$child->is_empty_area()) {
                 return false;
@@ -254,6 +255,7 @@ class file_info_context_module extends file_info {
      * @return type
      */
     public function has_files($extensions) {
+        $this->log();
         global $DB;
         if (has_capability('moodle/backup:backupactivity', $this->context)) {
             $areas['backup'] = array('activity');
@@ -315,6 +317,7 @@ class file_info_context_module extends file_info {
      * @return array of file_info instances
      */
     public function get_children() {
+        $this->log();
         $children = array();
 
         if ($child = $this->get_area_backup(0, '/', '.')) {

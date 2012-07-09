@@ -484,6 +484,7 @@ class forum_file_info_container extends file_info {
      * @return array of file_info instances
      */
     public function get_children() {
+        $this->log();
         global $DB;
 
         $children = array();
@@ -496,6 +497,70 @@ class forum_file_info_container extends file_info {
         }
 
         return $children;
+    }
+
+    /**
+     * Returns list of children nodes that contain files
+     *
+     * @return array of file_info instances
+     */
+    public function get_nonempty_children() {
+        $this->log();
+        global $DB;
+
+        $children = array();
+        $sql = 'SELECT DISTINCT itemid FROM {files} WHERE contextid = :contextid AND component = :component AND filearea = :filearea '.
+            ' AND filename <> :emptyfilename ORDER BY itemid DESC';
+        $params = array();
+        $params['contextid'] = $this->context->id;
+        $params['component'] = $this->component;
+        $params['filearea'] = $this->filearea;
+        $params['emptyfilename'] = '.';
+        print_r($params);
+        $itemids = $DB->get_records_sql($sql, $params);
+        foreach ($itemids as $itemid => $unused) {
+            if ($child = $this->browser->get_file_info($this->context, 'mod_forum', $this->filearea, $itemid)) {
+                $children[] = $child;
+            }
+        }
+
+        return $children;
+    }
+
+    /**
+     * Checks if the folder has any files inside that match specified extensions
+     *
+     * This function is called by repository_local_file::is_empty() to make sure this folder needs
+     * to be displayed in 'Server files' repository. This is faster than retrieving all
+     * children and checking if they are empty or not with the standard functions.
+     *
+     * @param type $extensions
+     * @return type
+     */
+    public function has_files($extensions) {
+        $this->log();
+        global $DB;
+        $sql = 'contextid = :contextid AND component = :component AND filearea = :filearea '.
+            ' AND filename <> :emptyfilename';
+        $params = array();
+        $params['contextid'] = $this->context->id;
+        $params['component'] = $this->component;
+        $params['filearea'] = $this->filearea;
+        $params['emptyfilename'] = '.';
+        if (!empty($extensions) && !is_array($extensions)) {
+            $extensions = array($extensions);
+        }
+        if (!empty($extensions) && !in_array('*', $extensions)) {
+            $likes = array();
+            $cnt = 0;
+            foreach ($extensions as $ext) {
+                $cnt++;
+                $likes[] = $DB->sql_like('filename', ':filename'.$cnt, false);
+                $params['filename'.$cnt] = '%'.$ext;
+            }
+            $sql .= ' AND ('.join(' OR ', $likes).')';
+        }
+        return $DB->record_exists_sql("select 1 from {files} WHERE ".$sql, $params);
     }
 
     /**

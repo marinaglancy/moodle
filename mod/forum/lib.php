@@ -4150,10 +4150,10 @@ function forum_get_file_info($browser, $areas, $course, $cm, $context, $filearea
         return null;
     }
     // Make sure groups allow this user to see this file
-    if ($discussion->groupid > 0) {
+    if ($discussion->groupid > 0 && !has_capability('moodle/site:accessallgroups', $context)) {
         $groupmode = groups_get_activity_groupmode($cm, $course);
         if ($groupmode == SEPARATEGROUPS) {
-            if (!groups_is_member($discussion->groupid) and !has_capability('moodle/site:accessallgroups', $context)) {
+            if (!groups_is_member($discussion->groupid)) {
                 return null;
             }
         }

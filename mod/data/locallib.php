@@ -492,6 +492,7 @@ class data_file_info_container extends file_info {
      * @return array of file_info instances
      */
     public function get_children() {
+        $this->log();
         global $DB;
 
         $children = array();

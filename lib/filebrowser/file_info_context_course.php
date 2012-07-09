@@ -350,6 +350,7 @@ class file_info_context_course extends file_info {
      * @return array of file_info instances
      */
     public function get_children() {
+        $this->log();
         $children = array();
 
         if ($child = $this->get_area_course_summary(0, '/', '.')) {
@@ -545,6 +546,7 @@ class file_info_area_course_section extends file_info {
      * @return bool
      */
     public function is_empty_area() {
+        $this->log();
         $fs = get_file_storage();
         return $fs->is_area_empty($this->context->id, 'course', 'section');
     }
@@ -564,6 +566,7 @@ class file_info_area_course_section extends file_info {
      * @return array of file_info instances
      */
     public function get_children() {
+        $this->log();
         global $DB;
 
         $children = array();
@@ -656,6 +659,7 @@ class file_info_area_backup_section extends file_info {
      * @return bool
      */
     public function is_empty_area() {
+        $this->log();
         $fs = get_file_storage();
         return $fs->is_area_empty($this->context->id, 'backup', 'section');
     }
@@ -675,6 +679,7 @@ class file_info_area_backup_section extends file_info {
      * @return array of file_info instances
      */
     public function get_children() {
+        $this->log();
         global $DB;
 
         $children = array();

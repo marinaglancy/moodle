@@ -280,14 +280,27 @@ class repository_local_file {
         if (!$this->isdir) {
             return array();
         }
+        $markasnonempty = false;
         if ($this->children === null) {
             $this->children = array();
-            $children = $this->fileinfo->get_children();
+            if (method_exists($this->fileinfo, 'get_nonempty_children')) {
+                $children = $this->fileinfo->get_nonempty_children();
+                $markasnonempty = true;
+            } else {
+                $children = $this->fileinfo->get_children();
+            }
             for ($i=0; $i<count($children); $i++) {
                 $this->children[] = self::retrieve_file_info($children[$i], $this->repository, $this);
+                if ($markasnonempty) {
+                    $this->children[count($this->children)-1]->set_empty(false);
+                }
             }
         }
         return $this->children;
+    }
+
+    public function set_empty($empty) {
+        $this->isempty = $empty;
     }
 
     /**

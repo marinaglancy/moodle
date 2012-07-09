@@ -209,6 +209,7 @@ class file_info_stored extends file_info {
      * @return bool
      */
     public function is_empty_area() {
+        $this->log();
         if ($this->lf->get_filepath() === '/' and $this->lf->get_filename() === '.') {
             // test the emptiness only in the top most level, it does not make sense at lower levels
             $fs = get_file_storage();
@@ -229,6 +230,7 @@ class file_info_stored extends file_info {
      * @return type
      */
     public function has_files($extensions) {
+        $this->log();
         global $DB;
         $sql = 'contextid = :contextid AND component = :component AND filearea = :filearea AND '.
             $DB->sql_like('filepath', ':filepath'). ' AND filename <> :emptyfilename';
@@ -369,6 +371,7 @@ class file_info_stored extends file_info {
      * @return array of file_info instances
      */
     public function get_children() {
+        $this->log();
         if (!$this->lf->is_directory()) {
             return array();
         }
