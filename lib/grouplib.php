@@ -307,11 +307,20 @@ function groups_get_all_groupings($courseid) {
 function groups_is_member($groupid, $userid=null) {
     global $USER, $DB;
 
+    static $cache = array();
+
     if (!$userid) {
         $userid = $USER->id;
     }
 
-    return $DB->record_exists('groups_members', array('groupid'=>$groupid, 'userid'=>$userid));
+    $cachekey = $userid.'|'.$groupid;
+    if (isset($cache[$cachekey])) {
+        return($cache[$cachekey]);
+    }
+
+    $cache[$cachekey] = $DB->record_exists('groups_members', array('groupid'=>$groupid, 'userid'=>$userid));
+
+    return $cache[$cachekey];
 }
 
 /**

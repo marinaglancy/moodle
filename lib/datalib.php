@@ -1363,42 +1363,64 @@ function get_course_mods($courseid) {
 function get_coursemodule_from_id($modulename, $cmid, $courseid=0, $sectionnum=false, $strictness=IGNORE_MISSING) {
     global $DB;
 
-    $params = array('cmid'=>$cmid);
+    static $cached = array('course_modules' => array(), 'modules' => array(), 'course_sections' => array());
 
-    if (!$modulename) {
-        if (!$modulename = $DB->get_field_sql("SELECT md.name
-                                                 FROM {modules} md
-                                                 JOIN {course_modules} cm ON cm.module = md.id
-                                                WHERE cm.id = :cmid", $params, $strictness)) {
-            return false;
+    // retrieve record from {course_modules}
+    $params = array('id' => $cmid);
+    if (!array_key_exists($cmid, $cached['course_modules'])) {
+        $cached['course_modules'][$cmid] = $DB->get_record('course_modules', $params, '*', IGNORE_MISSING);
+    }
+    $cm = $cached['course_modules'][$cmid];
+    if (empty($cm)) {
+        if ($strictness == MUST_EXISTS) {
+            throw new dml_missing_record_exception('course_module', '', $params);
+        }
+        return false;
+    }
+
+    // retrieve record from {modules}
+    $params = array('id' => $cm->module);
+    if (!array_key_exists($cm->module, $cached['modules'])) {
+        $cached['modules'][$cm->module] = $DB->get_field('modules', 'name', $params, IGNORE_MISSING);
+    }
+    if ($cached['modules'][$cm->module] === false || ($modulename && $modulename != $cached['modules'][$cm->module])) {
+        if ($strictness == MUST_EXISTS) {
+            if ($modulename) {
+                $params['name'] = $modulename;
+            }
+            throw new dml_missing_record_exception('modules', '', $params);
+        }
+        return false;
+    }
+    $cm->modname = $cached['modules'][$cm->module];
+
+    // retrieve record from module specific table
+    $params = array('id' => $cm->instance);
+    if (!array_key_exists($cm->modname, $cached)) {
+        $cached[$cm->modname] = array();
+    }
+    if (!array_key_exists($cm->instance, $cached[$cm->modname])) {
+        $cached[$cm->modname][$cm->instance] = $DB->get_field($cm->modname, 'name', $params, IGNORE_MISSING);
+    }
+    if ($cached[$cm->modname][$cm->instance] === false) {
+        if ($strictness == MUST_EXISTS) {
+            throw new dml_missing_record_exception($cm->modname, '', $params);
+        }
+        return false;
+    }
+    $cm->name = $cached[$cm->modname][$cm->instance];
+
+    // retrieve record from {course_sections} if applicable. Ignore missing here always
+    if ($sectionnum) {
+        if (!array_key_exists($cm->section, 'course_sections')) {
+            $cached['course_sections'][$cm->section] = $DB->get_field('course_sections', 'section', array('id' => $cm->section), IGNORE_MISSING);
+        }
+        $cm->sectionnum = $cached['course_sections'][$cm->section];
+        if ($cm->sectionnum === false) {
+            $cm->sectionnum = null;
         }
     }
-
-    $params['modulename'] = $modulename;
-
-    $courseselect = "";
-    $sectionfield = "";
-    $sectionjoin  = "";
-
-    if ($courseid) {
-        $courseselect = "AND cm.course = :courseid";
-        $params['courseid'] = $courseid;
-    }
-
-    if ($sectionnum) {
-        $sectionfield = ", cw.section AS sectionnum";
-        $sectionjoin  = "LEFT JOIN {course_sections} cw ON cw.id = cm.section";
-    }
-
-    $sql = "SELECT cm.*, m.name, md.name AS modname $sectionfield
-              FROM {course_modules} cm
-                   JOIN {modules} md ON md.id = cm.module
-                   JOIN {".$modulename."} m ON m.id = cm.instance
-                   $sectionjoin
-             WHERE cm.id = :cmid AND md.name = :modulename
-                   $courseselect";
-
-    return $DB->get_record_sql($sql, $params, $strictness);
+    return $cm;
 }
 
 /**
