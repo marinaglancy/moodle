@@ -506,6 +506,8 @@ class data_file_info_container extends file_info {
         return $children;
     }
 
+    // TODO
+
     /**
      * Returns parent file_info instance
      *

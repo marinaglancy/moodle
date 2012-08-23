@@ -285,6 +285,8 @@ class imscp_file_info extends file_info {
         return $children;
     }
 
+    // TODO
+
     /**
      * Returns parent file_info instance
      * @return file_info or null for root

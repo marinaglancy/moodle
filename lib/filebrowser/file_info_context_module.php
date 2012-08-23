@@ -41,6 +41,8 @@ class file_info_context_module extends file_info {
     protected $modname;
     /** @var array Available file areas */
     protected $areas;
+    /** @var array caches the result of last call to get_non_empty_children() */
+    protected $nonemptychildren;
 
     /**
      * Constructor
@@ -58,6 +60,7 @@ class file_info_context_module extends file_info {
         $this->course  = $course;
         $this->cm      = $cm;
         $this->modname = $modname;
+        $this->nonemptychildren = null;
 
         include_once("$CFG->dirroot/mod/$modname/lib.php");
 
@@ -274,6 +277,96 @@ class file_info_context_module extends file_info {
         }
 
         return $children;
+    }
+
+    /**
+     * Returns list of children which are either files matching the specified extensions
+     * or folders that contain at least one such file.
+     *
+     * @param string|array $extensions, either '*' or array of lowercase extensions, i.e. array('.gif','.jpg')
+     * @return array of file_info instances
+     */
+    public function get_non_empty_children($extensions = '*') {
+        global $DB;
+        if ($this->nonemptychildren !== null) {
+            return $this->nonemptychildren;
+        }
+        $this->nonemptychildren = array();
+
+        if (($child = $this->get_area_backup(0, '/', '.')) &&
+                $child->count_non_empty_children($extensions)) {
+            $this->nonemptychildren[] = $child;
+        }
+        if (($child = $this->get_area_intro(0, '/', '.')) &&
+                $child->count_non_empty_children($extensions)) {
+            $this->nonemptychildren[] = $child;
+        }
+
+        $params1 = array('contextid' => $this->context->id, 'emptyfilename' => '.');
+        list($sql2, $params2) = $this->build_search_files_sql($extensions);
+        foreach ($this->areas as $area => $description) {
+            $params1['filearea'] = $area;
+            // first check if any files exist in DB for this filearea and then
+            // validate if there are any files visible for this user
+            if ($DB->record_exists_sql('SELECT 1 from {files}
+                    WHERE contextid = :contextid AND filename <> :emptyfilename
+                    AND filearea = :filearea '.$sql2,
+                    array_merge($params1, $params2))) {
+                if ($child = $this->get_file_info('mod_'.$this->modname, $area, null, null, null)) {
+                    if ($child->count_non_empty_children($extensions)) {
+                        $this->nonemptychildren[] = $child;
+                    }
+                }
+            }
+        }
+        return $this->nonemptychildren;
+    }
+
+    /**
+     * Returns the number of children which are either files matching the specified extensions
+     * or folders containing at least one such file.
+     *
+     * NOTE: We don't need the exact number of non empty children if it is >=2
+     *
+     * @param string|array $extensions, for example '*' or array('.gif','.jpg')
+     * @return int
+     */
+    public function count_non_empty_children($extensions = '*') {
+        global $DB;
+        if ($this->nonemptychildren !== null) {
+            return count($this->nonemptychildren);
+        }
+        $cnt = 0;
+        if (($child = $this->get_area_backup(0, '/', '.')) &&
+                $child->count_non_empty_children($extensions)) {
+            $cnt++;
+        }
+        if (($child = $this->get_area_intro(0, '/', '.')) &&
+                $child->count_non_empty_children($extensions)) {
+            $cnt++;
+        }
+
+        $params1 = array('contextid' => $this->context->id, 'emptyfilename' => '.');
+        list($sql2, $params2) = $this->build_search_files_sql($extensions);
+        foreach ($this->areas as $area => $description) {
+            if ($cnt > 1) {
+                // do not search further it only matters if there is 0 or 1 or 2+ children
+                return $cnt;
+            }
+            $params1['filearea'] = $area;
+            // first check if any files exist in DB for this filearea and then
+            // validate if there are any files visible for this user
+            if ($DB->record_exists_sql('SELECT 1 from {files}
+                    WHERE contextid = :contextid AND filename <> :emptyfilename
+                    AND filearea = :filearea '.$sql2,
+                    array_merge($params1, $params2))) {
+                if (($child = $this->get_file_info('mod_'.$this->modname, $area, null, null, null))
+                        && $child->count_non_empty_children($extensions)) {
+                    $cnt++;
+                }
+            }
+        }
+        return $cnt;
     }
 
     /**

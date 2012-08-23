@@ -499,6 +499,71 @@ class forum_file_info_container extends file_info {
     }
 
     /**
+     * Returns list of children which are either files matching the specified extensions
+     * or folders that contain at least one such file.
+     *
+     * @param string|array $extensions, either '*' or array of lowercase extensions, i.e. array('.gif','.jpg')
+     * @return array of file_info instances
+     */
+    public function get_non_empty_children($extensions = '*') {
+        global $DB;
+
+        $sql = "SELECT DISTINCT itemid FROM {files}
+            WHERE contextid = :contextid AND component = :component
+            AND filearea = :filearea";
+        $params = array('contextid' => $this->context->id, 'component' => $this->component,
+            'filearea' => $this->filearea);
+        list($sql1, $params1) = $this->build_search_files_sql($extensions);
+        $itemids = $DB->get_records_sql($sql.' '.$sql1.' ORDER BY itemid DESC',
+                array_merge($params, $params1));
+        $children = array();
+        foreach ($itemids as $itemid => $unused) {
+            if ($child = $this->browser->get_file_info($this->context, 'mod_forum', $this->filearea, $itemid)) {
+                if ($child->count_non_empty_children($extensions)) {
+                    $children[] = $child;
+                }
+            }
+        }
+
+        return $children;
+    }
+
+    /**
+     * Returns the number of children which are either files matching the specified extensions
+     * or folders containing at least one such file.
+     *
+     * NOTE: We don't need the exact number of non empty children if it is >=2
+     *
+     * @param string|array $extensions, for example '*' or array('.gif','.jpg')
+     * @return int
+     */
+    public function count_non_empty_children($extensions = '*') {
+        global $DB;
+
+        $sql = "SELECT DISTINCT itemid FROM {files}
+            WHERE contextid = :contextid AND component = :component
+            AND filearea = :filearea";
+        $params = array('contextid' => $this->context->id, 'component' => $this->component,
+            'filearea' => $this->filearea);
+        list($sql1, $params1) = $this->build_search_files_sql($extensions);
+        $result = $DB->get_recordset_sql($sql.' '.$sql1, array_merge($params, $params1));
+        $cnt = 0;
+        foreach ($result as $record) {
+            if ($cnt > 1) {
+                // do not search further it only matters if there is 0 or 1 or 2+ children
+                return $cnt;
+            }
+            if ($child = $this->browser->get_file_info($this->context, 'mod_forum', $this->filearea, $record->itemid)) {
+                if ($child->count_non_empty_children($extensions)) {
+                    $cnt++;
+                }
+            }
+        }
+
+        return $cnt;
+    }
+
+    /**
      * Returns parent file_info instance
      *
      * @return file_info or null for root

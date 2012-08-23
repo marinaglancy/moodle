@@ -106,6 +106,73 @@ class workshop_file_info_submissions_container extends file_info {
     }
 
     /**
+     * Returns list of children which are either files matching the specified extensions
+     * or folders that contain at least one such file.
+     *
+     * @param string|array $extensions, either '*' or array of lowercase extensions, i.e. array('.gif','.jpg')
+     * @return array of file_info instances
+     */
+    public function get_non_empty_children($extensions = '*') {
+        global $DB;
+        $children = array();
+        $params1 = array('contextid' => $this->context->id, 'component' => 'mod_workshop',
+            'filearea' => $this->filearea, 'emptyfilename' => '.');
+        list($sql2, $params2) = $this->build_search_files_sql($extensions);
+        $itemids = $DB->get_records_sql(
+                'SELECT DISTINCT itemid FROM {files}
+                    WHERE contextid = :contextid
+                    AND component = :component
+                    AND filearea = :filearea
+                    AND filename <> :emptyfilename '.$sql2.
+                'ORDER BY itemid',
+                array_merge($params1, $params2));
+        foreach ($itemids as $itemid => $unused) {
+            if ($child = $this->browser->get_file_info($this->context, 'mod_workshop', $this->filearea, $itemid)) {
+                if ($child->count_non_empty_children($extensions)) {
+                    $children[] = $child;
+                }
+            }
+        }
+        return $children;
+    }
+
+    /**
+     * Returns the number of children which are either files matching the specified extensions
+     * or folders containing at least one such file.
+     *
+     * NOTE: We don't need the exact number of non empty children if it is >=2
+     * In this function 1 is never returned to avoid skipping the single subfolder
+     *
+     * @param string|array $extensions, for example '*' or array('.gif','.jpg')
+     * @return int
+     */
+    public function count_non_empty_children($extensions = '*') {
+        global $DB;
+        $cnt = 0;
+        $params1 = array('contextid' => $this->context->id, 'component' => 'mod_workshop',
+            'filearea' => $this->filearea, 'emptyfilename' => '.');
+        list($sql2, $params2) = $this->build_search_files_sql($extensions);
+        $itemids = $DB->get_recordset_sql(
+                'SELECT DISTINCT itemid FROM {files}
+                    WHERE contextid = :contextid
+                    AND component = :component
+                    AND filearea = :filearea
+                    AND filename <> :emptyfilename '.$sql2,
+                array_merge($params1, $params2));
+        foreach ($itemids as $record) {
+            if ($cnt > 1) {
+                break;
+            }
+            if ($child = $this->browser->get_file_info($this->context, 'mod_workshop', $this->filearea, $record->itemid)) {
+                if ($child->count_non_empty_children($extensions)) {
+                    $cnt++;
+                }
+            }
+        }
+        return $cnt;
+    }
+
+    /**
      * Returns parent file_info instance
      * @return file_info or null for root
      */
