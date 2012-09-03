@@ -89,19 +89,32 @@ class file_info_context_module extends file_info {
      * @return file_info|null
      */
     public function get_file_info($component, $filearea, $itemid, $filepath, $filename) {
+        global $USER;
+
         // try to emulate require_login() tests here
-        if (!isloggedin()) {
-            return null;
-        }
+        if ($this->course->id == SITEID) {
+            // This is a frontpage module. Front page can not be hidden and
+            // user is always allowed to see front page modules, even when not enrolled
+        } else {
+            if (!isloggedin()) {
+                return null;
+            }
 
-        $coursecontext = get_course_context($this->context);
-        if (!$this->course->visible and !has_capability('moodle/course:viewhiddencourses', $coursecontext)) {
-            return null;
-        }
+            $coursecontext = get_course_context($this->context);
+            if (!$this->course->visible and !has_capability('moodle/course:viewhiddencourses', $coursecontext)) {
+                return null;
+            }
 
-        if (!is_viewing($this->context) and !is_enrolled($this->context)) {
-            // no peaking here if not enrolled or inspector
-            return null;
+            if (!is_viewing($this->context) and !is_enrolled($this->context) &&
+                    !(isset($USER->enrol['tempguest'][$this->course->id]) &&
+                        ($USER->enrol['tempguest'][$this->course->id] == 0 ||
+                         $USER->enrol['tempguest'][$this->course->id] > time()
+                        )
+                     )
+               ) {
+                // no peaking here if not enrolled or inspector
+                return null;
+            }
         }
 
         $modinfo = get_fast_modinfo($this->course);
