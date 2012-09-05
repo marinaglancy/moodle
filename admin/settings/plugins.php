@@ -5,7 +5,29 @@
  */
 
 if ($hassiteconfig) {
+    require_once("$CFG->libdir/pluginlib.php");
+    $allplugins = plugin_manager::instance()->get_plugins();
     $ADMIN->add('modules', new admin_page_pluginsoverview());
+
+    // course formats
+    $ADMIN->add('modules', new admin_category('formatsettings', new lang_string('courseformats')));
+    $formats = $allplugins['format'];
+    $temp = new admin_settingpage('manageformats', new lang_string('manageformats', 'core_admin'));
+    $temp->add(new admin_setting_manageformats());
+    // TODO: move setting moodlecourse/format here
+    // TODO: Add dropdown with default format for restore (if original format does not exist or is not enabled)
+    $ADMIN->add('formatsettings', $temp);
+    foreach ($formats as $format) {
+        // do not show disabled formats in tree, keep only settings link on manage page
+        if (file_exists($format->full_path('settings.php'))) {
+            $settings = new admin_settingpage('formatsettings'.$format->name, $format->displayname,
+                    'moodle/site:config', !$format->is_enabled());
+            include($format->full_path('settings.php'));
+            $ADMIN->add('formatsettings', $settings);
+        }
+    }
+
+    // activity modules
     $ADMIN->add('modules', new admin_category('modsettings', new lang_string('activitymodules')));
     $ADMIN->add('modsettings', new admin_page_managemods());
     $modules = $DB->get_records('modules', array(), "name ASC");
