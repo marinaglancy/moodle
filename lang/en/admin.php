@@ -631,6 +631,7 @@ $string['longtimewarning'] = '<b>Please note that this process can take a long t
 $string['maintenancemode'] = 'In maintenance mode';
 $string['maintfileopenerror'] = 'Error opening maintenance files!';
 $string['maintinprogress'] = 'Maintenance is in progress...';
+$string['manageformats'] = 'Manage course formats';
 $string['managelang'] = 'Manage';
 $string['managelicenses'] = 'Manage licences';
 $string['manageqbehaviours'] = 'Manage question behaviours';
