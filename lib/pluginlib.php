@@ -2525,3 +2525,36 @@ class plugininfo_report extends plugininfo_base {
         return new moodle_url('/admin/reports.php', array('delete' => $this->name, 'sesskey' => sesskey()));
     }
 }
+
+/**
+ * Class for course formats
+ */
+class plugininfo_format extends plugininfo_base {
+
+    /**
+     * Gathers and returns the information about all plugins of the given type
+     *
+     * @param string $type the name of the plugintype, eg. mod, auth or workshopform
+     * @param string $typerootdir full path to the location of the plugin dir
+     * @param string $typeclass the name of the actually called class
+     * @return array of plugintype classes, indexed by the plugin name
+     */
+    public static function get_plugins($type, $typerootdir, $typeclass) {
+        $formats = parent::get_plugins($type, $typerootdir, $typeclass);
+        // TODO sort
+        return $formats;
+    }
+
+    public function get_settings_url() {
+        if (file_exists($this->full_path('settings.php'))) {
+            return new moodle_url('/admin/settings.php', array('section' => 'formatsettings' . $this->name));
+        } else {
+            return parent::get_settings_url();
+        }
+    }
+
+    public function is_enabled() {
+        // TODO
+        return true;
+    }
+}
