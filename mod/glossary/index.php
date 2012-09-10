@@ -43,10 +43,7 @@ if (! $glossarys = get_all_instances_in_course("glossary", $course)) {
     die;
 }
 
-$usesections = course_format_uses_sections($course->format);
-if ($usesections) {
-    $sections = get_all_sections($course->id);
-}
+$usesections = course_get_format($course)->uses_sections();
 
 /// Print the list of instances (your module will probably extend this)
 
@@ -88,7 +85,7 @@ foreach ($glossarys as $glossary) {
     if ($usesections) {
         if ($glossary->section !== $currentsection) {
             if ($glossary->section) {
-                $printsection = get_section_name($course, $sections[$glossary->section]);
+                $printsection = course_get_format($course)->get_section_name($glossary->section);
             }
             if ($currentsection !== "") {
                 $table->data[] = 'hr';

@@ -59,7 +59,7 @@ if (!empty($add)) {
     $context = context_course::instance($course->id);
     require_capability('moodle/course:manageactivities', $context);
 
-    $cw = get_course_section($section, $course->id);
+    $cw = course_get_format($course)->get_or_create_section($section);
 
     if (!course_allowed_module($course, $module->name)) {
         print_error('moduledisable');
@@ -110,7 +110,7 @@ if (!empty($add)) {
         $data->type = $type;
     }
 
-    $sectionname = get_section_name($course, $cw);
+    $sectionname = course_get_format($course)->get_section_full_name($cw);
     $fullmodulename = get_string('modulename', $module->name);
 
     if ($data->section && $course->format != 'site') {
@@ -136,7 +136,7 @@ if (!empty($add)) {
 
     $module = $DB->get_record('modules', array('id'=>$cm->module), '*', MUST_EXIST);
     $data = $data = $DB->get_record($module->name, array('id'=>$cm->instance), '*', MUST_EXIST);
-    $cw = $DB->get_record('course_sections', array('id'=>$cm->section), '*', MUST_EXIST);
+    $cw = course_get_format($course)->get_section($cm->section, MUST_EXIST);
 
     $data->coursemodule       = $cm->id;
     $data->section            = $cw->section;  // The section number itself - relative!!! (section column in course_sections)
@@ -216,7 +216,7 @@ if (!empty($add)) {
         }
     }
 
-    $sectionname = get_section_name($course, $cw);
+    $sectionname = course_get_format($course)->get_section_name($cw);
     $fullmodulename = get_string('modulename', $module->name);
 
     if ($data->section && $course->format != 'site') {

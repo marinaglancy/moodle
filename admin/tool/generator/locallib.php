@@ -564,7 +564,7 @@ class generator {
                         $module->coursemodule = '';
                         $add_instance_function = $moduledata->name . '_add_instance';
 
-                        $section = get_course_section($i, $courseid);
+                        $section = course_get_format($courseid)->get_or_create_section($i);
                         $module->section = $section->id;
                         $module->coursemodule = add_course_module($module);
                         $module->section = $i;

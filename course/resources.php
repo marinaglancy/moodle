@@ -64,10 +64,7 @@ $PAGE->navbar->add($strresources);
 echo $OUTPUT->header();
 
 $modinfo = get_fast_modinfo($course);
-$usesections = course_format_uses_sections($course->format);
-if ($usesections) {
-    $sections = get_all_sections($course->id);
-}
+$usesections = course_get_format($course)->uses_sections();
 $cms = array();
 $resources = array();
 foreach ($modinfo->cms as $cm) {
@@ -116,7 +113,7 @@ foreach ($cms as $cm) {
         $printsection = '';
         if ($cm->sectionnum !== $currentsection) {
             if ($cm->sectionnum) {
-                $printsection = get_section_name($course, $sections[$cm->sectionnum]);
+                $printsection = course_get_format($course)->get_section_name($cm->sectionnum);
             }
             if ($currentsection !== '') {
                 $table->data[] = 'hr';

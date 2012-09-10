@@ -29,6 +29,8 @@ defined('MOODLE_INTERNAL') || die;
 require_once($CFG->libdir.'/completionlib.php');
 require_once($CFG->libdir.'/filelib.php');
 require_once($CFG->dirroot.'/course/dnduploadlib.php');
+require_once($CFG->dirroot.'/course/deprecatedlib.php');
+require_once($CFG->dirroot.'/course/format/lib.php');
 
 define('COURSE_MAX_LOGS_PER_PAGE', 1000);       // records
 define('COURSE_MAX_RECENT_PERIOD', 172800);     // Two days, in seconds
@@ -1255,31 +1257,6 @@ function get_all_mods($courseid, &$mods, &$modnames, &$modnamesplural, &$modname
             collatorlib::asort($modnamesused);
         }
     }
-}
-
-/**
- * Returns an array of sections for the requested course id
- *
- * This function stores the sections against the course id within a staticvar encase
- * of subsequent requests. This is used all over + in some standard libs and course
- * format callbacks so subsequent requests are a reality.
- *
- * Note: Since Moodle 2.3, it is more efficient to get this data by calling
- * get_fast_modinfo, then using $modinfo->get_section_info or get_section_info_all.
- *
- * @staticvar array $coursesections
- * @param int $courseid
- * @return array Array of sections
- */
-function get_all_sections($courseid) {
-    global $DB;
-    static $coursesections = array();
-    if (!array_key_exists($courseid, $coursesections)) {
-        $coursesections[$courseid] = $DB->get_records("course_sections", array("course"=>"$courseid"), "section",
-                'section, id, course, name, summary, summaryformat, sequence, visible, ' .
-                'availablefrom, availableuntil, showavailability, groupingid');
-    }
-    return $coursesections[$courseid];
 }
 
 /**
@@ -2757,29 +2734,6 @@ function add_course_module($mod) {
 }
 
 /**
- * Returns course section - creates new if does not exist yet.
- * @param int $relative section number
- * @param int $courseid
- * @return object $course_section object
- */
-function get_course_section($section, $courseid) {
-    global $DB;
-
-    if ($cw = $DB->get_record("course_sections", array("section"=>$section, "course"=>$courseid))) {
-        return $cw;
-    }
-    $cw = new stdClass();
-    $cw->course   = $courseid;
-    $cw->section  = $section;
-    $cw->summary  = "";
-    $cw->summaryformat = FORMAT_HTML;
-    $cw->sequence = "";
-    $id = $DB->insert_record("course_sections", $cw);
-    rebuild_course_cache($courseid, true);
-    return $DB->get_record("course_sections", array("id"=>$id));
-}
-
-/**
  * Given a full mod object with section and course already defined, adds this module to that section.
  *
  * @param object $mod
@@ -2789,7 +2743,7 @@ function get_course_section($section, $courseid) {
 function add_mod_to_section($mod, $beforemod=NULL) {
     global $DB;
 
-    if ($section = $DB->get_record("course_sections", array("course"=>$mod->course, "section"=>$mod->section))) {
+    $section = course_get_format($mod->course)->get_or_create_section($mod->section);
 
         $section->sequence = trim($section->sequence);
 
@@ -2813,17 +2767,8 @@ function add_mod_to_section($mod, $beforemod=NULL) {
         }
 
         $DB->set_field("course_sections", "sequence", $newsequence, array("id"=>$section->id));
+        rebuild_course_cache($mod->course, true);
         return $section->id;     // Return course_sections ID that was used.
-
-    } else {  // Insert a new record
-        $section = new stdClass();
-        $section->course   = $mod->course;
-        $section->section  = $mod->section;
-        $section->summary  = "";
-        $section->summaryformat = FORMAT_HTML;
-        $section->sequence = $mod->coursemodule;
-        return $DB->insert_record("course_sections", $section);
-    }
 }
 
 function set_coursemodule_groupmode($id, $groupmode) {
@@ -3654,108 +3599,6 @@ function move_category($category, $newparentcat) {
     if ($hidecat) {
         course_category_hide($category);
     }
-}
-
-/**
- * Returns the display name of the given section that the course prefers.
- *
- * This function utilizes a callback that can be implemented within the course
- * formats lib.php file to customize the display name that is used to reference
- * the section.
- *
- * By default (if callback is not defined) the method
- * {@see get_numeric_section_name} is called instead.
- *
- * @param stdClass $course The course to get the section name for
- * @param stdClass $section Section object from database
- * @return Display name that the course format prefers, e.g. "Week 2"
- *
- * @see get_generic_section_name
- */
-function get_section_name(stdClass $course, stdClass $section) {
-    global $CFG;
-
-    /// Inelegant hack for bug 3408
-    if ($course->format == 'site') {
-        return get_string('site');
-    }
-
-    // Use course formatter callback if it exists
-    $namingfile = $CFG->dirroot.'/course/format/'.$course->format.'/lib.php';
-    $namingfunction = 'callback_'.$course->format.'_get_section_name';
-    if (!function_exists($namingfunction) && file_exists($namingfile)) {
-        require_once $namingfile;
-    }
-    if (function_exists($namingfunction)) {
-        return $namingfunction($course, $section);
-    }
-
-    // else, default behavior:
-    return get_generic_section_name($course->format, $section);
-}
-
-/**
- * Gets the generic section name for a courses section.
- *
- * @param string $format Course format ID e.g. 'weeks' $course->format
- * @param stdClass $section Section object from database
- * @return Display name that the course format prefers, e.g. "Week 2"
- */
-function get_generic_section_name($format, stdClass $section) {
-    return get_string('sectionname', "format_$format") . ' ' . $section->section;
-}
-
-
-function course_format_uses_sections($format) {
-    global $CFG;
-
-    $featurefile = $CFG->dirroot.'/course/format/'.$format.'/lib.php';
-    $featurefunction = 'callback_'.$format.'_uses_sections';
-    if (!function_exists($featurefunction) && file_exists($featurefile)) {
-        require_once $featurefile;
-    }
-    if (function_exists($featurefunction)) {
-        return $featurefunction();
-    }
-
-    return false;
-}
-
-/**
- * Returns the information about the ajax support in the given source format
- *
- * The returned object's property (boolean)capable indicates that
- * the course format supports Moodle course ajax features.
- * The property (array)testedbrowsers can be used as a parameter for {@see ajaxenabled()}.
- *
- * @param string $format
- * @return stdClass
- */
-function course_format_ajax_support($format) {
-    global $CFG;
-
-    // set up default values
-    $ajaxsupport = new stdClass();
-    $ajaxsupport->capable = false;
-    $ajaxsupport->testedbrowsers = array();
-
-    // get the information from the course format library
-    $featurefile = $CFG->dirroot.'/course/format/'.$format.'/lib.php';
-    $featurefunction = 'callback_'.$format.'_ajax_support';
-    if (!function_exists($featurefunction) && file_exists($featurefile)) {
-        require_once $featurefile;
-    }
-    if (function_exists($featurefunction)) {
-        $formatsupport = $featurefunction();
-        if (isset($formatsupport->capable)) {
-            $ajaxsupport->capable = $formatsupport->capable;
-        }
-        if (is_array($formatsupport->testedbrowsers)) {
-            $ajaxsupport->testedbrowsers = $formatsupport->testedbrowsers;
-        }
-    }
-
-    return $ajaxsupport;
 }
 
 /**

@@ -306,18 +306,7 @@ class course_modinfo extends stdClass {
         }
 
         // Expand section objects
-        $this->sectioninfo = array();
-        foreach ($sectioncache as $number => $data) {
-            // Calculate sequence
-            if (isset($this->sections[$number])) {
-                $sequence = implode(',', $this->sections[$number]);
-            } else {
-                $sequence = '';
-            }
-            // Expand
-            $this->sectioninfo[$number] = new section_info($data, $number, $course->id, $sequence,
-                    $this, $userid);
-        }
+        $this->sectioninfo = course_get_format($course)->restore_sections_from_cache($this, $sectioncache, $userid);
 
         // We need at least 'dynamic' data from each course-module (this is basically the remaining
         // data which was always present in previous version of get_fast_modinfo, so it's required
@@ -338,22 +327,8 @@ class course_modinfo extends stdClass {
      * @return array Information about sections, indexed by section number (not id)
      */
     public static function build_section_cache($courseid) {
-        global $DB;
-
-        // Get section data
-        $sections = $DB->get_records('course_sections', array('course' => $courseid), 'section',
-                'section, id, course, name, summary, summaryformat, sequence, visible, ' .
-                'availablefrom, availableuntil, showavailability, groupingid');
-        $compressedsections = array();
-
-        // Remove unnecessary data and add availability
-        foreach ($sections as $number => $section) {
-            // Clone just in case it is reused elsewhere (get_all_sections cache)
-            $compressedsections[$number] = clone($section);
-            section_info::convert_for_section_cache($compressedsections[$number]);
-        }
-
-        return $compressedsections;
+        debugging('Function course_modinfo::build_section_cache is deprecated, please use course_get_format($courseid)->build_section_cache()', DEBUG_DEVELOPER);
+        return course_get_format($courseid)->build_section_cache();
     }
 }
 
@@ -1264,10 +1239,10 @@ function rebuild_course_cache($courseid=0, $clearonly=false) {
         @set_time_limit(0);  // this could take a while!   MDL-10954
     }
 
-    $rs = $DB->get_recordset("course", $select,'','id,fullname');
+    $rs = $DB->get_recordset("course", $select,'','id,format,fullname');
     foreach ($rs as $course) {
         $modinfo = serialize(get_array_of_activities($course->id));
-        $sectioncache = serialize(course_modinfo::build_section_cache($course->id));
+        $sectioncache = serialize(course_get_format($course)->build_section_cache());
         $updateobj = (object)array('id' => $course->id,
                 'modinfo' => $modinfo, 'sectioncache' => $sectioncache);
         $DB->update_record("course", $updateobj);

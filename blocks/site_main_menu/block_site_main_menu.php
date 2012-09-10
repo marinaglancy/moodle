@@ -29,10 +29,10 @@ class block_site_main_menu extends block_list {
         require_once($CFG->dirroot.'/course/lib.php');
         $context = context_course::instance($course->id);
         $isediting = $this->page->user_is_editing() && has_capability('moodle/course:manageactivities', $context);
-        $modinfo = get_fast_modinfo($course);
 
 /// extra fast view mode
         if (!$isediting) {
+            $modinfo = get_fast_modinfo($course);
             if (!empty($modinfo->sections[0])) {
                 $options = array('overflowdiv'=>true);
                 foreach($modinfo->sections[0] as $cmid) {
@@ -61,8 +61,8 @@ class block_site_main_menu extends block_list {
 
 /// slow & hacky editing mode
         $ismoving = ismoving($course->id);
-        $section  = get_course_section(0, $course->id);
-
+        $section  = course_get_format($course)->get_or_create_section(0);
+        $modinfo = get_fast_modinfo($course);
         get_all_mods($course->id, $mods, $modnames, $modnamesplural, $modnamesused);
 
         $groupbuttons = $course->groupmode;
@@ -82,14 +82,14 @@ class block_site_main_menu extends block_list {
             $this->content->items[] = $USER->activitycopyname.'&nbsp;(<a href="'.$CFG->wwwroot.'/course/mod.php?cancelcopy=true&amp;sesskey='.sesskey().'">'.$strcancel.'</a>)';
         }
 
-        if (!empty($section->sequence)) {
+        if (!empty($modinfo->sections[0])) {
             $sectionmods = explode(',', $section->sequence);
             $options = array('overflowdiv'=>true);
-            foreach ($sectionmods as $modnumber) {
-                if (empty($mods[$modnumber])) {
+            foreach ($modinfo->sections[0] as $modnumber) {
+                $mod = $modinfo->cms[$modnumber];
+                if (!$mod->uservisible) {
                     continue;
                 }
-                $mod = $mods[$modnumber];
                 if (!$ismoving) {
                     if ($groupbuttons) {
                         if (! $mod->groupmodelink = $groupbuttonslink) {

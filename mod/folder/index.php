@@ -53,10 +53,7 @@ if (!$folders = get_all_instances_in_course('folder', $course)) {
     exit;
 }
 
-$usesections = course_format_uses_sections($course->format);
-if ($usesections) {
-    $sections = get_all_sections($course->id);
-}
+$usesections = course_get_format($course)->uses_sections();
 
 $table = new html_table();
 $table->attributes['class'] = 'generaltable mod_index';
@@ -77,7 +74,7 @@ foreach ($folders as $folder) {
         $printsection = '';
         if ($folder->section !== $currentsection) {
             if ($folder->section) {
-                $printsection = get_section_name($course, $sections[$folder->section]);
+                $printsection = course_get_format($course)->get_section_name($folder->section);
             }
             if ($currentsection !== '') {
                 $table->data[] = 'hr';

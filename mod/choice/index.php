@@ -28,10 +28,7 @@
         notice(get_string('thereareno', 'moodle', $strchoices), "../../course/view.php?id=$course->id");
     }
 
-    $usesections = course_format_uses_sections($course->format);
-    if ($usesections) {
-        $sections = get_all_sections($course->id);
-    }
+    $usesections = course_get_format($course)->uses_sections();
 
     $sql = "SELECT cha.*
               FROM {choice} ch, {choice_answers} cha
@@ -76,7 +73,7 @@
             $printsection = "";
             if ($choice->section !== $currentsection) {
                 if ($choice->section) {
-                    $printsection = get_section_name($course, $sections[$choice->section]);
+                    $printsection = course_get_format($course)->get_section_name($choice->section);
                 }
                 if ($currentsection !== "") {
                     $table->data[] = 'hr';

@@ -64,7 +64,7 @@ abstract class format_section_renderer_base extends plugin_renderer_base {
      * @return string HTML to output.
      */
     public function section_title($section, $course) {
-        $title = get_section_name($course, $section);
+        $title = course_get_format($course)->get_section_name($section);
         if ($section->section != 0 && $course->coursedisplay == COURSE_DISPLAY_MULTIPAGE) {
             $title = html_writer::link(course_get_url($course, $section->section), $title);
         }
@@ -665,7 +665,7 @@ abstract class format_section_renderer_base extends plugin_renderer_base {
                 $thissection = $sections[$section];
             } else {
                 // This will create a course section if it doesn't exist..
-                $thissection = get_course_section($section, $course->id);
+                $thissection = course_get_format($course)->get_or_create_section($section);
 
                 // The returned section is only a bare database object rather than
                 // a section_info object - we will need at least the uservisible
