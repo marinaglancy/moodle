@@ -2907,3 +2907,53 @@ function textlib_get_instance() {
     return new textlib();
 }
 
+/**
+ * Returns an array of sections for the requested course id
+ *
+ * It is usually not recommended to display the list of sections used
+ * in course because the course format may have it's own way to do it.
+ *
+ * If you need to just display the name of the section please call:
+ * get_section_name($course, $section)
+ * {@link get_section_name()}
+ * from 2.4 $section may also be just the field course_sections.section
+ *
+ * If you need the list of all sections it is more efficient to get this data by calling
+ * $modinfo = get_fast_modinfo($course);
+ * $sections = $modinfo->get_section_info_all()
+ * {@link get_fast_modinfo()}
+ * {@link course_modinfo::get_section_info_all()}
+ *
+ * Information about one section (instance of section_info):
+ * get_fast_modinfo($course)->get_sections_info($section)
+ * {@link course_modinfo::get_section_info()}
+ *
+ * @deprecated since 2.4
+ *
+ * @param int $courseid
+ * @return array Array of section_info objects
+ */
+function get_all_sections($courseid) {
+    global $DB;
+    debugging('get_all_sections() is deprecated. See phpdocs for this function', DEBUG_DEVELOPER);
+    $course = $DB->get_record('course', array('id' => $courseid));
+    return get_fast_modinfo($course)->get_section_info_all();
+}
+
+/**
+ * Gets the generic section name for a courses section
+ *
+ * The global function is deprecated. Each course format can define their own generic section name
+ *
+ * @deprecated since 2.4
+ * @see get_section_name()
+ * @see format_base::get_section_name()
+ *
+ * @param string $format Course format ID e.g. 'weeks' $course->format
+ * @param stdClass $section Section object from database
+ * @return Display name that the course format prefers, e.g. "Week 2"
+ */
+function get_generic_section_name($format, stdClass $section) {
+    debugging('get_generic_section_name() is deprecated. Please use appropriate functionality from class format_base', DEBUG_DEVELOPER);
+    return get_string('sectionname', "format_$format") . ' ' . $section->section;
+}
