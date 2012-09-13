@@ -4608,8 +4608,9 @@ function include_course_ajax($course, $usedmodules = array(), $enabledmodules = 
 function course_get_url($course, $sectionno = null) {
     $url = new moodle_url('/course/view.php', array('id' => $course->id));
 
-    if (!is_null($sectionno)) {
-        if ($course->coursedisplay == COURSE_DISPLAY_MULTIPAGE) {
+    if ($sectionno !== null) {
+        $usercoursedisplay = get_user_preferences('coursedisplay-'.$course->id, $course->coursedisplay);
+        if ($sectionno != 0 && $usercoursedisplay == COURSE_DISPLAY_MULTIPAGE) {
             $url->param('section', $sectionno);
         } else {
             $url->set_anchor('section-'.$sectionno);

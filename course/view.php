@@ -44,6 +44,15 @@
         $urlparams['section'] = $section;
     }
 
+    // See if user wants to override $course->coursedisplay
+    if (($overwritecoursedisplay = optional_param('coursedisplay', -1, PARAM_INT)) != -1) {
+        if ($overwritecoursedisplay != $course->coursedisplay) {
+            set_user_preference('coursedisplay-'.$course->id, $overwritecoursedisplay);
+        } else {
+            set_user_preference('coursedisplay-'.$course->id, null);
+        }
+    }
+
     $PAGE->set_url('/course/view.php', $urlparams); // Defined here to avoid notices on errors etc
 
     // Prevent caching of this page to stop confusion when changing page after making AJAX changes

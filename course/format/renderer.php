@@ -81,10 +81,31 @@ abstract class format_section_renderer_base extends plugin_renderer_base {
      * @return string HTML to output.
      */
     protected function section_right_content($section, $course, $onsectionpage) {
+        global $PAGE;
         $o = $this->output->spacer();
 
         if ($section->section != 0) {
             $controls = $this->section_edit_controls($course, $section, $onsectionpage);
+
+            if (!$PAGE->user_is_editing()) {
+                $url = course_get_url($course);
+                if ($onsectionpage) {
+                    $url->param('coursedisplay', COURSE_DISPLAY_SINGLEPAGE);
+                    $strshowall = new lang_string('coursedisplay_single');
+                    $controls[] = html_writer::link($url,
+                                html_writer::empty_tag('img', array('src' => $this->output->pix_url('i/all'),
+                                'class' => 'icon all', 'alt' => $strshowall)),
+                                array('title' => $strshowall, 'class' => 'showall'));
+                } else {
+                    $url->param('section', $section->section);
+                    $url->param('coursedisplay', COURSE_DISPLAY_MULTIPAGE);
+                    $strshowone = new lang_string('coursedisplay_multi');
+                    $controls[] = html_writer::link($url,
+                                html_writer::empty_tag('img', array('src' => $this->output->pix_url('i/one'),
+                                'class' => 'icon one', 'alt' => $strshowone)),
+                                array('title' => $strshowone, 'class' => 'showone'));
+                }
+            }
             if (!empty($controls)) {
                 $o = implode('<br />', $controls);
             }
@@ -689,7 +710,8 @@ abstract class format_section_renderer_base extends plugin_renderer_base {
                 continue;
             }
 
-            if (!$PAGE->user_is_editing() && $course->coursedisplay == COURSE_DISPLAY_MULTIPAGE) {
+            $usercoursedisplay = get_user_preferences('coursedisplay-'.$course->id, $course->coursedisplay);
+            if (!$PAGE->user_is_editing() && $usercoursedisplay == COURSE_DISPLAY_MULTIPAGE) {
                 // Display section summary only.
                 echo $this->section_summary($thissection, $course, $mods);
             } else {
