@@ -91,11 +91,10 @@ if (has_capability('moodle/course:viewhiddensections', $context)) {
     $hiddenfilter = "AND cs.visible = 1";
 }
 $sections = array();
-$rawsections = array_slice(get_all_sections($course->id), 0, $course->numsections+1, true);
 $canviewhidden = has_capability('moodle/course:viewhiddensections', $context);
-foreach ($rawsections as $section) {
+foreach ($modinfo->get_section_info_all() as $i => $section) {
     if ($canviewhidden || !empty($section->visible)) {
-        $sections[$section->section] = $section;
+        $sections[$i] = $section;
     }
 }
 
@@ -115,9 +114,9 @@ if ($param->modid === 'all') {
     }
 
 } else if (is_numeric($param->modid)) {
-    $section = $sections[$modinfo->cms[$param->modid]->sectionnum];
-    $section->sequence = $param->modid;
-    $sections = array($section->sequence=>$section);
+    $sectionnum = $modinfo->cms[$param->modid]->sectionnum;
+    $filter_modid = $param->modid;
+    $sections = array($sectionnum => $sections[$sectionnum]);
 }
 
 
@@ -128,7 +127,7 @@ if (is_null($modinfo->groups)) {
 $activities = array();
 $index = 0;
 
-foreach ($sections as $section) {
+foreach ($sections as $sectionnum => $section) {
 
     $activity = new stdClass();
     $activity->type = 'section';
@@ -141,17 +140,11 @@ foreach ($sections as $section) {
     $activity->visible = $section->visible;
     $activities[$index++] = $activity;
 
-    if (empty($section->sequence)) {
+    if (empty($modinfo->sections[$sectionnum])) {
         continue;
     }
 
-    $sectionmods = explode(",", $section->sequence);
-
-    foreach ($sectionmods as $cmid) {
-        if (!isset($mods[$cmid]) or !isset($modinfo->cms[$cmid])) {
-            continue;
-        }
-
+    foreach($modinfo->sections[$sectionnum] as $cmid) {
         $cm = $modinfo->cms[$cmid];
 
         if (!$cm->uservisible) {
@@ -159,6 +152,10 @@ foreach ($sections as $section) {
         }
 
         if (!empty($filter) and $cm->modname != $filter) {
+            continue;
+        }
+
+        if (!empty($filter_modid) and $cmid != $filter_modid) {
             continue;
         }
 
