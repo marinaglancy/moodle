@@ -4611,7 +4611,7 @@ function course_get_url($course, $sectionno = null, $options = array()) {
                 $usercoursedisplay = COURSE_DISPLAY_SINGLEPAGE;
             }
         } else {
-            $usercoursedisplay = $course->coursedisplay;
+            $usercoursedisplay = get_user_preferences('coursedisplay-'.$course->id, $course->coursedisplay);
         }
         if ($sectionno != 0 && $usercoursedisplay == COURSE_DISPLAY_MULTIPAGE) {
             $url->param('section', $sectionno);
