@@ -432,6 +432,31 @@ class core_files_renderer extends plugin_renderer_base {
     }
 
     /**
+     * FileManager JS template for displaying 'Select encoding for unzip' dialog.
+     *
+     * content of element with class 'fp-unzipencoding-dlg-select' will be 
+     * replaced with dynamicaly genegated posible encodings select list;
+     * content of element with class 'fp-unzipencoding-dlg-preview' will be 
+     * replaced with preview of filenames list according to selected encoding;
+     * elements with classes 'fp-dlg-butunzip' and 'fp-dlg-butcancel' will
+     * hold onclick events;
+     *
+     * @return string
+     */
+    private function fm_js_template_unzipencoding() {
+        $rv = '
+<div class="filemanager fp-unzipencoding-dlg">
+    <div class="fp-unzipencoding-dlg-text">'.get_string('unzipselectencoding','repository').'</div>
+    <select class="fp-unzipencoding-dlg-select"></select>
+    <div class="fp-unzipencoding-dlg-text">'.get_string('unzipselectencodingdesc','repository').'</div>
+    <ul class="fp-unzipencoding-dlg-preview"></ul>
+    <button class="{!}fp-dlg-butunzip">'.get_string('unzip').'</button>
+    <button class="{!}fp-dlg-butcancel">'.get_string('cancel').'</button>
+</div>';
+        return preg_replace('/\{\!\}/', '', $rv);
+    }
+
+    /**
      * Returns all FileManager JavaScript templates as an array.
      *
      * @return array

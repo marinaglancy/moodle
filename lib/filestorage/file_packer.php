@@ -63,9 +63,10 @@ abstract class file_packer {
      *
      * @param stored_file|string $archivefile full pathname of zip file or stored_file instance
      * @param string $pathname target directory
+     * @param string $encoding archive pathnames encoding
      * @return array|bool list of processed files; false if error
      */
-    public abstract function extract_to_pathname($archivefile, $pathname);
+    public abstract function extract_to_pathname($archivefile, $pathname, $encoding = 'utf-8');
 
     /**
      * Extract file to given file path (real OS filesystem), existing files are overwrited
@@ -77,15 +78,17 @@ abstract class file_packer {
      * @param int $itemid item ID
      * @param string $pathbase file path
      * @param int $userid user ID
+     * @param string $encoding archive pathnames encoding
      * @return array|bool list of processed files; false if error
      */
-    public abstract function extract_to_storage($archivefile, $contextid, $component, $filearea, $itemid, $pathbase, $userid = NULL);
+    public abstract function extract_to_storage($archivefile, $contextid, $component, $filearea, $itemid, $pathbase, $userid = NULL, $encoding = 'utf-8');
 
     /**
      * Returns array of info about all files in archive
      *
      * @param string|file_archive $archivefile
+     * @param string $encoding archive pathnames encoding
      * @return array of file infos
      */
-    public abstract function list_files($archivefile);
+    public abstract function list_files($archivefile, $encoding = 'utf-8');
 }

@@ -395,6 +395,14 @@ a.ygtvspacer:hover {color: transparent;text-decoration: none;}
 .filemanager.fp-dlg .fp-dlg-text {padding: 0px 10px;min-width:200px;max-width:340px;max-height:300px;overflow:auto;line-height: 22px;margin: 40px 20px 20px;font-size: 12px;}
 
 /*
+ * Select unzip encoding dialogue (File Manager only)
+ */
+.filemanager.fp-unzipencoding-dlg {text-align: center;}
+.filemanager.fp-unzipencoding-dlg .fp-unzipencoding-dlg-text {margin: 10px;}
+.filemanager.fp-unzipencoding-dlg .fp-unzipencoding-dlg-preview {text-align: left; margin-left: 25px; margin-right: 25px;}
+.filemanager.fp-unzipencoding-dlg .fp-unzipencoding-dlg-preview.loading {visibility: hidden;}
+
+/*
  *file picker search dialog
  */
 .file-picker div.bd {text-align:left;}

@@ -264,6 +264,8 @@ switch ($action) {
     case 'unzip':
         $filename = required_param('filename', PARAM_FILE);
         $filepath = required_param('filepath', PARAM_PATH);
+        $encoding = optional_param('encoding', '', PARAM_ALPHANUMEXT); 
+        $preview = optional_param('preview', 0, PARAM_BOOL); 
 
         $zipper = get_file_packer('application/zip');
 
@@ -271,7 +273,69 @@ switch ($action) {
 
         $file = $fs->get_file($user_context->id, 'user', 'draft', $draftid, $filepath, $filename);
 
-        if ($newfile = $file->extract_to_storage($zipper, $user_context->id, 'user', 'draft', $draftid, $filepath, $USER->id)) {
+        $return = new stdClass();
+        if (empty($encoding)) {
+            // check for files with bad filenames
+            $bad_files = array();
+            $list = $file->list_files($zipper);
+            foreach ($list as $item) {
+                if (preg_match('/[\x00-\x1F\x7F-\xFF]/', $item->original_pathname)) {
+                    $bad_files[] = $item;
+                }
+            }
+            if (empty($bad_files)) {
+                $preview = false;
+                $encoding = 'utf-8';
+            } else {
+                $preview = true;
+                $return->unknown_encoding = true;
+                $encodings = textlib::get_encodings();
+                // Custom error handler for supressing iconv errors
+                function error_to_exception($errno, $errstr) {
+                    throw new Exception($errstr); 
+                }
+                set_error_handler('error_to_exception');
+                foreach ($encodings as $key=>$item) {
+                    // unlisting encodings that cause error on convertion
+                    try { 
+                        foreach ($bad_files as $bad_file) {
+                            $tmp = textlib::convert($bad_file->original_pathname, $key, 'utf-8');
+                        }
+                    } catch (Exception $exc) {
+                        unset($encodings[$key]);
+                    }
+                }
+                restore_error_handler(); 
+                if (empty($encoding) or !in_array($encoding, $encodings)) {
+                    $encoding = reset($encodings);
+                }
+                $return->select_list = '<select class="fp-unzipencoding-dlg-select">';
+                foreach ($encodings as $key=>$item) {
+                    if ($key == $encoding) {
+                        $return->select_list .= '<option selected="selected" value="'.$key.'">'.$item.'</option>';
+                    } else {
+                        $return->select_list .= '<option value="'.$key.'">'.$item.'</option>';
+                    }
+                }
+                $return->select_list .= '</select>';
+            }
+        }
+        if ($preview) {
+            $list = $file->list_files($zipper, $encoding);
+            $return->preview = '<ul class="fp-unzipencoding-dlg-preview">';
+            $i = 0;
+            foreach ($list as $item) {
+                if (preg_match('/[\x00-\x1F\x7F-\xFF]/', $item->original_pathname)) {
+                    $return->preview .= '<li>'.$item->pathname.'</li>';
+                    $i++;
+                    if ($i >= 10) {
+                        break;
+                    }
+                }
+            }
+            $return->preview .= '</ul>';
+            echo json_encode($return);
+        } elseif ($newfile = $file->extract_to_storage($zipper, $user_context->id, 'user', 'draft', $draftid, $filepath, $USER->id, $encoding)) {
             $return = new stdClass();
             $return->filepath = $filepath;
             echo json_encode($return);

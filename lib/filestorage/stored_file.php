@@ -428,11 +428,12 @@ class stored_file {
      * List contents of archive.
      *
      * @param file_packer $packer file packer instance
+     * @param string $encoding archive pathnames encoding
      * @return array of file infos
      */
-    public function list_files(file_packer $packer) {
+    public function list_files(file_packer $packer, $encoding = 'utf-8') {
         $archivefile = $this->get_content_file_location();
-        return $packer->list_files($archivefile);
+        return $packer->list_files($archivefile, $encoding);
     }
 
     /**
@@ -440,11 +441,12 @@ class stored_file {
      *
      * @param file_packer $packer file packer instance
      * @param string $pathname target directory
+     * @param string $encoding archive pathnames encoding
      * @return array|bool list of processed files; false if error
      */
-    public function extract_to_pathname(file_packer $packer, $pathname) {
+    public function extract_to_pathname(file_packer $packer, $pathname, $encoding = 'utf-8') {
         $archivefile = $this->get_content_file_location();
-        return $packer->extract_to_pathname($archivefile, $pathname);
+        return $packer->extract_to_pathname($archivefile, $pathname, $encoding);
     }
 
     /**
@@ -457,11 +459,12 @@ class stored_file {
      * @param int $itemid item ID
      * @param string $pathbase path base
      * @param int $userid user ID
+     * @param string $encoding archive pathnames encoding
      * @return array|bool list of processed files; false if error
      */
-    public function extract_to_storage(file_packer $packer, $contextid, $component, $filearea, $itemid, $pathbase, $userid = NULL) {
+    public function extract_to_storage(file_packer $packer, $contextid, $component, $filearea, $itemid, $pathbase, $userid = NULL, $encoding = 'utf-8') {
         $archivefile = $this->get_content_file_location();
-        return $packer->extract_to_storage($archivefile, $contextid, $component, $filearea, $itemid, $pathbase);
+        return $packer->extract_to_storage($archivefile, $contextid, $component, $filearea, $itemid, $pathbase, $userid, $encoding);
     }
 
     /**

@@ -55,6 +55,8 @@ $targetpath  = optional_param('targetpath', '',    PARAM_PATH);
 $maxfiles    = optional_param('maxfiles', -1, PARAM_INT);    // maxfiles
 $maxbytes    = optional_param('maxbytes',  0, PARAM_INT);    // maxbytes
 $subdirs     = optional_param('subdirs',  0, PARAM_INT);    // maxbytes
+$encoding    = optional_param('encoding', '', PARAM_ALPHANUMEXT); // Encoding for unzip operation
+$unzip       = optional_param('unzip', '', PARAM_RAW); // Encoding for unzip operation
 
 // draft area
 $newdirname  = optional_param('newdirname', '',    PARAM_FILE);
@@ -176,17 +178,97 @@ case 'zip':
 case 'unzip':
     $zipper = new zip_packer();
     $file = $fs->get_file($user_context->id, 'user', 'draft', $itemid, $draftpath, $filename);
-
-    if ($newfile = $file->extract_to_storage($zipper, $user_context->id, 'user', 'draft', $itemid, $draftpath, $USER->id)) {
-        $str = get_string('unzipped', 'repository');
+    if (empty($encoding) or empty($unzip)) {
+        $can_unzip = false;
     } else {
-        $str = get_string('cannotunzip', 'error');
+        $can_unzip = true;
     }
-    $home_url->param('action', 'browse');
-    $home_url->param('draftpath', $draftpath);
-    redirect($home_url, $str);
-    break;
+    if (!$can_unzip) {
+        // Checking archive for files with unknown encoding
+        $textlib = textlib_get_instance();
+        $bad_files = array();
+        $list = $file->list_files($zipper);
+        foreach ($list as $item) {
+            if (preg_match("/[\x80-\xFF]{1,}/", $item->original_pathname)) {
+                $bad_files[] = $item;
+            }
+        }
+        if (empty($bad_files)) {
+            $encoding = 'utf-8'; // this value minimises conver calls
+            $can_unzip = true;
+        }
+    }
+    if (!$can_unzip) {
+        // If still cannot unzip, showing files preview form
+        // getting suitable encodings list
+        $encodings = $textlib->get_encodings();
+        // Custom error handler for supressing iconv errors
+        function error_to_exception($errno, $errstr) {
+            throw new Exception($errstr); 
+        }
+        set_error_handler('error_to_exception');
+        foreach ($encodings as $key=>$item) {
+            // unlisting encodings that cause error on convertion
+            try { 
+                foreach ($bad_files as $bad_file) {
+                    $tmp = $textlib->convert($bad_file->original_pathname, $key, 'utf-8');
+                }
+            } catch (Exception $exc) {
+                unset($encodings[$key]);
+            }
+        }
+        restore_error_handler();
+        if (empty($encoding)) {
+            $encoding = reset($encodings);
+        }
 
+        echo $OUTPUT->header();
+        echo '<div><a href="' . $home_url->out() . '">'.get_string('back', 'repository')."</a></div>";
+        echo '<form method="post" action="'.$home_url->out().'">';
+        echo '<input name="action" type="hidden" value="unzip" />';
+        echo '<input name="draftpath" type="hidden" value="'.s($draftpath).'" />';
+        echo '<input name="filename" type="hidden" value="'.s($filename).'" />';
+        echo '<select name="encoding"/>';
+        foreach ($encodings as $key=>$item) {
+            if ($key == $encoding) {
+                echo '<option selected="selected" value="'.$key.'">'.$item.'</option>';
+            } else {
+                echo '<option value="'.$key.'">'.$item.'</option>';
+            }
+        }
+        echo '</select>';
+        echo '<input name="preview" type="submit" value="'.s('Preview').'" />';
+        echo '<div>'.get_string('unzipselectencodingdesc', 'repository').'</div>';
+        echo '<ul>';
+        $list = $file->list_files($zipper, $encoding);
+        $i = 0;
+        foreach ($list as $item) {
+            if (preg_match("/[\x80-\xFF]{1,}/", $item->original_pathname)) {
+                echo '<li>'.$item->pathname.'</li>';
+                $i++;
+                if ($i >= 10) {
+                    break;
+                }
+            }
+        }
+        echo '</ul>';
+        echo '<input name="unzip" type="submit" value="'.s(get_string('unzip')).'" />';
+        echo '</form>';
+        echo $OUTPUT->footer();
+    }
+    if ($can_unzip) {
+        // If encodig is known and unzip requested, unzipping
+        if ($newfile = $file->extract_to_storage($zipper, $user_context->id, 'user', 'draft', $itemid, $draftpath, $USER->id, $encoding)) {
+            $str = get_string('unzipped', 'repository');
+        } else {
+            $str = get_string('cannotunzip', 'error');
+        }
+        $home_url->param('action', 'browse');
+        $home_url->param('draftpath', $draftpath);
+        redirect($home_url, $str);
+    }
+    break;
+    
 case 'movefile':
     if (!empty($targetpath)) {
         if ($fs->file_exists($user_context->id, 'user', 'draft', $itemid, $targetpath, $filename)) {
@@ -321,6 +403,7 @@ default:
 
                 if (file_extension_in_typegroup($file->filename, 'archive', true)) {
                     $home_url->param('action', 'unzip');
+                    $home_url->param('unzip', 'unzip');
                     $home_url->param('draftpath', $file->filepath);
                     echo ' [<a href="'.$home_url->out().'" class="fm-operation">'.get_string('unzip').'</a>]';
                 }

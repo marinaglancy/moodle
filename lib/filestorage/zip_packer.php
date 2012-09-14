@@ -220,7 +220,7 @@ class zip_packer extends file_packer {
      * @param string $pathname target directory
      * @return bool|array list of processed files; false if error
      */
-    public function extract_to_pathname($archivefile, $pathname) {
+    public function extract_to_pathname($archivefile, $pathname, $encoding='utf-8') {
         global $CFG;
 
         if (!is_string($archivefile)) {
@@ -234,7 +234,7 @@ class zip_packer extends file_packer {
             return false;
         }
        $ziparch = new zip_archive();
-        if (!$ziparch->open($archivefile, file_archive::OPEN)) {
+        if (!$ziparch->open($archivefile, file_archive::OPEN, $encoding)) {
             return false;
         }
 
@@ -320,7 +320,7 @@ class zip_packer extends file_packer {
      * @param int $userid user ID
      * @return array|bool list of processed files; false if error
      */
-    public function extract_to_storage($archivefile, $contextid, $component, $filearea, $itemid, $pathbase, $userid = NULL) {
+    public function extract_to_storage($archivefile, $contextid, $component, $filearea, $itemid, $pathbase, $userid = NULL, $encoding='utf-8') {
         global $CFG;
 
         if (!is_string($archivefile)) {
@@ -336,7 +336,7 @@ class zip_packer extends file_packer {
         $processed = array();
 
         $ziparch = new zip_archive();
-        if (!$ziparch->open($archivefile, file_archive::OPEN)) {
+        if (!$ziparch->open($archivefile, file_archive::OPEN, $encoding)) {
             return false;
         }
 
@@ -463,13 +463,13 @@ class zip_packer extends file_packer {
      * @param string|file_archive $archivefile
      * @return array of file infos
      */
-    public function list_files($archivefile) {
+    public function list_files($archivefile, $encoding='utf-8') {
         if (!is_string($archivefile)) {
             return $archivefile->list_files();
         }
 
         $ziparch = new zip_archive();
-        if (!$ziparch->open($archivefile, file_archive::OPEN)) {
+        if (!$ziparch->open($archivefile, file_archive::OPEN, $encoding)) {
             return false;
         }
         $list = $ziparch->list_files();
