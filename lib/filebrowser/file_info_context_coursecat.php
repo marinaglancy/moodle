@@ -189,6 +189,44 @@ class file_info_context_coursecat extends file_info {
     }
 
     /**
+     * Returns list of children which are either files matching the specified extensions
+     * or folders that contain at least one such file.
+     *
+     * @param string|array $extensions, either '*' or array of lowercase extensions, i.e. array('.gif','.jpg')
+     * @return array of file_info instances
+     */
+    public function get_non_empty_children($extensions = '*') {
+        global $DB;
+        $children = array();
+        if (($child = $this->get_area_coursecat_description(0, '/', '.')) &&
+                $child->count_non_empty_children($extensions)) {
+            $children[] = $child;
+        }
+        $catcontexts = $DB->get_fieldset_sql('SELECT ctx.id
+                FROM {context} ctx, {course_categories} cat
+                WHERE ctx.instanceid = cat.id
+                AND ctx.contextlevel = :catlevel
+                AND cat.parent = :categoryid
+                ORDER BY cat.sortorder',
+                array('categoryid' => $this->category->id, 'catlevel' => CONTEXT_COURSECAT));
+        $coursecontexts = $DB->get_fieldset_sql('SELECT ctx.id
+                FROM {context} ctx, {course} c
+                WHERE ctx.instanceid = c.id
+                AND ctx.contextlevel = :courselevel
+                AND c.category = :categoryid
+                ORDER BY c.sortorder',
+                array('categoryid' => $this->category->id, 'courselevel' => CONTEXT_COURSE));
+        foreach (array_merge($catcontexts, $coursecontexts) as $childcontextid) {
+            $childcontext = context::instance_by_id($childcontextid);
+            if (($child = $this->browser->get_file_info($childcontext)) &&
+                    $child->count_non_empty_children($extensions)) {
+                $children[] = $child;
+            }
+        }
+        return $children;
+    }
+
+    /**
      * Returns the number of children which are either files matching the specified extensions
      * or folders containing at least one such file.
      *
@@ -204,42 +242,39 @@ class file_info_context_coursecat extends file_info {
             return $cnt;
         }
 
-        $rs = $DB->get_recordset_sql('SELECT ctx.id contextid, c.visible
-                FROM {context} ctx, {course} c
-                WHERE ctx.instanceid = c.id
-                AND ctx.contextlevel = :courselevel
-                AND c.category = :categoryid
-                ORDER BY c.visible DESC', // retrieve visible courses first
-                array('categoryid' => $this->category->id, 'courselevel' => CONTEXT_COURSE));
+        // first we find all course and category contexts that are children (grandchildren, etc.)
+        // or this category
+        $sql = "SELECT ctx.*
+                  FROM {context} ctx
+                 WHERE ctx.path LIKE :path
+                 AND (ctx.contextlevel = :courselevel or ctx.contextlevel = :catlevel)";
+        $params = array('path' => $this->context->path.'/%',
+            'courselevel' => CONTEXT_COURSE,
+            'catlevel' => CONTEXT_COURSECAT);
+        $rs = $DB->get_recordset_sql($sql, $params);
+        $children = array(); // counter of direct non-empty children of this category
         foreach ($rs as $record) {
-            $context = context::instance_by_id($record->contextid);
-            if (!$record->visible and !has_capability('moodle/course:viewhiddencourses', $context)) {
+            $path = explode('/', $record->path);
+            $childid = $path[$this->context->depth+1];
+            if (in_array($children, $childid)) {
+                // we already know that this direct child is not empty
                 continue;
             }
-            if (($child = $this->browser->get_file_info($context))
-                    && $child->count_non_empty_children($extensions) && (++$cnt) >= $limit) {
-                break;
+            $childcontext = context::instance_by_id($record->id);
+            if ($record->contextlevel == CONTEXT_COURSE) {
+                if (!($child = $this->browser->get_file_info($childcontext)) ||
+                        !$child->count_non_empty_children($extensions)) {
+                    continue;
+                }
+            } else {
+                if (!($child = $this->browser->get_file_info($childcontext, 'coursecat', 'description', 0, '/', '.')) ||
+                        !$child->count_non_empty_children($extensions)) {
+                    continue;
+                }
             }
-        }
-        $rs->close();
-        if ($cnt >= $limit) {
-            return $cnt;
-        }
-
-        $rs = $DB->get_recordset_sql('SELECT ctx.id contextid, cat.visible
-                FROM {context} ctx, {course_categories} cat
-                WHERE ctx.instanceid = cat.id
-                AND ctx.contextlevel = :catlevel
-                AND cat.parent = :categoryid
-                ORDER BY cat.visible DESC', // retrieve visible categories first
-                array('categoryid' => $this->category->id, 'catlevel' => CONTEXT_COURSECAT));
-        foreach ($rs as $record) {
-            $context = context::instance_by_id($record->contextid);
-            if (!$record->visible and !has_capability('moodle/category:viewhiddencategories', $context)) {
-                continue;
-            }
-            if (($child = $this->browser->get_file_info($context))
-                    && $child->count_non_empty_children($extensions) && (++$cnt) >= $limit) {
+            // we found a non-empty course or category with non-empty description
+            $children[] = $childid;
+            if ((++$cnt) >= $limit) {
                 break;
             }
         }

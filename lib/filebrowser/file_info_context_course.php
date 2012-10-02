@@ -431,7 +431,19 @@ class file_info_context_course extends file_info {
      * @return int
      */
     public function count_non_empty_children($extensions = '*', $limit = 1) {
-        return $this->get_filtered_children($extensions, $limit);
+        static $countcache = array();
+        $key = $this->course->id.'-'.json_encode($extensions);
+        if (!array_key_exists($countcache[$key])) {
+            $countcache[$key] = array();
+        }
+        if (array_key_exists($countcache[$key][$limit])) {
+            return $countcache[$key][$limit];
+        }
+        $cnt = $this->get_filtered_children($extensions, $limit);
+        for ($i = 1; $i <= $limit; $i++) {
+            $countcache[$key][$i] = $cnt;
+        }
+        return $cnt;
     }
 
     /**
