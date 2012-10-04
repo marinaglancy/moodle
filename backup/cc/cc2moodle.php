@@ -372,25 +372,16 @@ class cc2moodle {
         $sheet_course_blocks_block = static::loadsheet(SHEET_COURSE_BLOCKS_BLOCK);
         $node_course_blocks_block = '';
 
-        $format_config = $CFG->dirroot . '/course/format/weeks/config.php';
-
-        if (@is_file($format_config) && is_readable($format_config)) {
-            require ($format_config);
-        }
-
-        if (!empty($format['defaultblocks'])) {
-            $blocknames = $format['defaultblocks'];
+        require_once($CFG->libdir.'/blocklib.php');
+        require_once($CFG->dirroot.'/course/lib.php');
+        if (!empty($CFG->defaultblocks_override)) {
+            $blocknames = blocks_parse_default_blocks_list($CFG->defaultblocks_override);
         } else {
-            if (!empty($CFG->defaultblocks)) {
-                $blocknames = $CFG->defaultblocks;
-            } else {
-                $blocknames = 'participants,activity_modules,search_forums,course_list:news_items,calendar_upcoming,recent_activity';
-            }
+            $course = (object)array('format' => 'topics');
+            $blocknames = course_get_format($course)->get_default_blocks();
         }
-
-        $blocknames = explode(':', $blocknames);
-        $blocks_left = explode(',', $blocknames[0]);
-        $blocks_right = explode(',', $blocknames[1]);
+        $blocks_left = $blocknames[BLOCK_POS_LEFT];
+        $blocks_right = $blocknames[BLOCK_POS_RIGHT];
 
         $find_tags = array('[#block_id#]',
                            '[#block_name#]',
