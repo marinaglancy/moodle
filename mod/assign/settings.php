@@ -35,9 +35,13 @@ $ADMIN->add('assignmentplugins', new admin_category('assignfeedbackplugins',
                 new lang_string('feedbackplugins', 'assign'), $module->is_enabled() === false));
 $ADMIN->add('assignfeedbackplugins', new assign_admin_page_manage_assign_plugins('assignfeedback'));
 
-
-assign_plugin_manager::add_admin_assign_plugin_settings('assignsubmission', $ADMIN, $settings, $module);
-assign_plugin_manager::add_admin_assign_plugin_settings('assignfeedback', $ADMIN, $settings, $module);
+$allplugins = plugin_manager::instance()->get_plugins();
+foreach ($allplugins['assignsubmission'] as $plugin) {
+    $plugin->load_settings($ADMIN, 'assignsubmissionplugins', $hassiteconfig);
+}
+foreach ($allplugins['assignfeedback'] as $plugin) {
+    $plugin->load_settings($ADMIN, 'assignfeedbackplugins', $hassiteconfig);
+}
 
 if ($ADMIN->fulltree) {
     $menu = array();

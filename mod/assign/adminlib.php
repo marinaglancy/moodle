@@ -26,6 +26,7 @@ defined('MOODLE_INTERNAL') || die();
 
 /** Include adminlib.php */
 require_once($CFG->libdir . '/adminlib.php');
+require_once($CFG->libdir . '/pluginlib.php');
 
 /**
  * Admin external page that displays a list of the installed submission plugins.
@@ -175,16 +176,17 @@ class assign_plugin_manager {
         $table->setup();
 
 
-        $plugins = $this->get_sorted_plugins_list();
+        $allplugins = plugin_manager::instance()->get_plugins();
+        $plugins = $allplugins[$this->subtype];
         $shortsubtype = substr($this->subtype, strlen('assign'));
-
-        foreach ($plugins as $idx => $plugin) {
+        $idx = 0;
+        foreach ($plugins as $plugin => $plugininfo) {
             $row = array();
 
-            $row[] = get_string('pluginname', $this->subtype . '_' . $plugin);
-            $row[] = get_config($this->subtype . '_' . $plugin, 'version');
+            $row[] = $plugininfo->displayname;
+            $row[] = $plugininfo->versiondb;
 
-            $visible = !get_config($this->subtype . '_' . $plugin, 'disabled');
+            $visible = $plugininfo->is_enabled();
 
             if ($visible) {
                 $row[] = $this->format_icon_link('hide', $plugin, 'i/hide', get_string('disable'));
@@ -208,13 +210,13 @@ class assign_plugin_manager {
             } else {
                 $row[] = '&nbsp;';
             }
-            if ($row[1] != '' && file_exists($CFG->dirroot . '/mod/assign/' . $shortsubtype . '/' . $plugin . '/settings.php')) {
-                $row[] = html_writer::link(new moodle_url('/admin/settings.php',
-                        array('section' => $this->subtype . '_' . $plugin)), get_string('settings'));
+            if ($row[1] != '' && ($settingsurl = $plugininfo->get_settings_url())) {
+                $row[] = html_writer::link($settingsurl, get_string('settings'));
             } else {
                 $row[] = '&nbsp;';
             }
             $table->add_data($row);
+            $idx++;
         }
 
 
@@ -439,38 +441,68 @@ class assign_plugin_manager {
             $this->view_plugins_table();
         }
     }
+}
 
-    /**
-     * This function adds plugin pages to the navigation menu
-     *
-     * @static
-     * @param string $subtype - The type of plugin (submission or feedback)
-     * @param part_of_admin_tree $admin - The handle to the admin menu
-     * @param admin_settingpage $settings - The handle to current node in the navigation tree
-     * @param stdClass|plugininfo_mod $module - The handle to the current module
-     * @return None
-     */
-    static function add_admin_assign_plugin_settings($subtype, part_of_admin_tree $admin, admin_settingpage $settings, $module) {
-        global $CFG;
+/**
+ * Base class for mod_assign subplugins
+ */
+abstract class plugininfo_assign_subplugin extends plugininfo_base {
 
-        $plugins = get_plugin_list_with_file($subtype, 'settings.php', false);
-        $pluginsbyname = array();
-        foreach ($plugins as $plugin => $plugindir) {
-            $pluginname = get_string('pluginname', $subtype . '_'.$plugin);
-            $pluginsbyname[$pluginname] = $plugin;
+    public static function get_plugins($type, $typerootdir, $typeclass) {
+        // get the information about plugins at the disk
+        $plugins = parent::get_plugins($type, $typerootdir, $typeclass);
+
+        $sortorders = array();
+        foreach ($plugins as $name => $plugin) {
+            $sortorders[$name] = (int)get_config($type . '_' . $name, 'sortorder');
         }
-        ksort($pluginsbyname);
-
-        foreach ($pluginsbyname as $pluginname => $plugin) {
-            $settings = new admin_settingpage($subtype . '_'.$plugin,
-                    $pluginname, 'moodle/site:config', $module->is_enabled() === false);
-            if ($admin->fulltree) {
-                $shortsubtype = substr($subtype, strlen('assign'));
-                include($CFG->dirroot . "/mod/assign/$shortsubtype/$plugin/settings.php");
-            }
-
-            $admin->add($subtype . 'plugins', $settings);
+        asort($sortorders);
+        $newplugins = array();
+        foreach ($sortorders as $name => $unused) {
+            $newplugins[$name] = $plugins[$name];
         }
-
+        return $newplugins;
     }
+
+    public function get_settings_section_name() {
+        return $this->type. '_' . $this->name;
+    }
+
+    public function load_settings(admin_root $ADMIN, $parentnodename, $hassiteconfig) {
+        global $CFG, $USER, $DB, $OUTPUT, $PAGE; // in case settings.php wants to refer to them
+        $admin = $ADMIN; // to be used inside settings.php
+        $section = $this->get_settings_section_name();
+
+        $settings = null;
+        if ($hassiteconfig && file_exists($this->full_path('settings.php'))) {
+            $settings = new admin_settingpage($section, $this->displayname,
+                    'moodle/site:config', $this->is_enabled() === false);
+            include($this->full_path('settings.php')); // this may also set $settings to null
+        }
+        if ($settings) {
+            $ADMIN->add($parentnodename, $settings);
+        }
+    }
+
+    public function is_enabled() {
+        return !get_config($this->component, 'disabled');
+    }
+
+    public function get_uninstall_url() {
+        return new moodle_url('/mod/assign/adminmanageplugins.php',
+                array('subtype' => $this->type, 'action' => 'delete', 'plugin' => $this->name, 'sesskey' => sesskey()));
+    }
+}
+
+
+/**
+ * Class for assign submission subplugin
+ */
+class plugininfo_assignsubmission extends plugininfo_assign_subplugin {
+}
+
+/**
+ * Class for assign feedback subplugin
+ */
+class plugininfo_assignfeedback extends plugininfo_assign_subplugin {
 }
