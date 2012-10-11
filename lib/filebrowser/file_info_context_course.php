@@ -433,10 +433,10 @@ class file_info_context_course extends file_info {
     public function count_non_empty_children($extensions = '*', $limit = 1) {
         static $countcache = array();
         $key = $this->course->id.'-'.json_encode($extensions);
-        if (!array_key_exists($countcache[$key])) {
+        if (!array_key_exists($key, $countcache)) {
             $countcache[$key] = array();
         }
-        if (array_key_exists($countcache[$key][$limit])) {
+        if (array_key_exists($limit, $countcache[$key])) {
             return $countcache[$key][$limit];
         }
         $cnt = $this->get_filtered_children($extensions, $limit);

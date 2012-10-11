@@ -256,7 +256,7 @@ class file_info_context_coursecat extends file_info {
         foreach ($rs as $record) {
             $path = explode('/', $record->path);
             $childid = $path[$this->context->depth+1];
-            if (in_array($children, $childid)) {
+            if (in_array($childid, $children)) {
                 // we already know that this direct child is not empty
                 continue;
             }
