@@ -558,6 +558,59 @@ class core_course_renderer extends plugin_renderer_base {
     }
 
     /**
+     * Renders HTML to display name and summary of the remote course
+     *
+     * @param stdClass $course object representing remote course as returned by {@link get_my_remotecourses()}
+     * @return string
+     */
+    function remote_course_link($course) {
+        $url = new moodle_url('/auth/mnet/jump.php', array(
+            'hostid' => $course->hostid,
+            'wantsurl' => '/course/view.php?id='. $course->remoteid
+        ));
+
+        $output = html_writer::start_tag('div', array('class' => 'coursebox remotecoursebox clearfix'));
+        $output .= html_writer::start_tag('div', array('class' => 'info'));
+        $output .= html_writer::start_tag('div', array('class' => 'name'));
+        $output .= html_writer::link($url, format_string($course->fullname),
+                        array('title' => get_string('entercourse')))
+                .'<br />'
+            . format_string($course->hostname) . ' : '
+            . format_string($course->cat_name) . ' : '
+            . format_string($course->shortname);
+        $output .= html_writer::end_tag('div'); // .name
+        $output .= html_writer::end_tag('div'); // .info
+        $output .= html_writer::start_tag('div', array('class' => 'summary'));
+        $options = new stdClass();
+        $options->noclean = true;
+        $options->para = false;
+        $options->overflowdiv = true;
+        $output .= format_text($course->summary, $course->summaryformat, $options);
+        $output .= html_writer::end_tag('div'); // .summary
+        $output .= html_writer::end_tag('div'); // .coursebox.remotecoursebox
+        return $output;
+    }
+
+    /**
+     * Renders HTML to display link to the remote host
+     *
+     * @param array $host array with host attributes as returned by {@link get_my_remotehosts()}
+     */
+    function remote_host_link($host) {
+        $output = html_writer::start_tag('div', array('class' => 'coursebox clearfix'));
+        $output .= html_writer::start_tag('div', array('class' => 'info'));
+        $output .= html_writer::start_tag('div', array('class' => 'name'));
+        $output .= html_writer::empty_tag('img', array('src' => $this->output->pix_url('i/mnethost'),
+            'alt' => get_string('course'), 'class' => 'icon'));
+        $output .= html_writer::link(s($host['url']), s($host['name']), array('title' => s($host['name'])));
+        $output .= ' - '. $host['count'] . ' ' . get_string('courses');
+        $output .= html_writer::end_tag('div'); // .name
+        $output .= html_writer::end_tag('div'); // .info
+        $output .= html_writer::end_tag('div'); // .coursebox
+        return $output;
+    }
+
+    /**
      * Renders html for completion box on course page
      *
      * If completion is disabled, returns empty string

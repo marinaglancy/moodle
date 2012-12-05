@@ -1704,12 +1704,13 @@ function print_course($course, $highlightterms = '') {
  * Over time this can include all sorts of information
  */
 function print_my_moodle() {
-    global $USER, $CFG, $DB, $OUTPUT;
+    global $USER, $CFG, $DB, $OUTPUT, $PAGE;
 
     if (!isloggedin() or isguestuser()) {
         print_error('nopermissions', '', '', 'See My Moodle');
     }
 
+    $courserenderer = $PAGE->get_renderer('core', 'course');
     $courses  = enrol_get_my_courses('summary', 'visible DESC,sortorder ASC');
     $rhosts   = array();
     $rcourses = array();
@@ -1737,12 +1738,12 @@ function print_my_moodle() {
         if (!empty($rcourses)) {
             // at the IDP, we know of all the remote courses
             foreach ($rcourses as $course) {
-                print_remote_course($course, "100%");
+                echo $courserenderer->remote_course_link($course);
             }
         } elseif (!empty($rhosts)) {
             // non-IDP, we know of all the remote servers, but not courses
             foreach ($rhosts as $host) {
-                print_remote_host($host, "100%");
+                echo $courserenderer->remote_host_link($host);
             }
         }
         unset($course);
@@ -1811,48 +1812,43 @@ function print_course_search($value="", $return=false, $format="plain") {
     echo $output;
 }
 
+/**
+ * Displays name and summary of the remote course
+ *
+ * Deprecated. Please use:
+ * $renderer = $PAGE->get_renderer('core', 'course');
+ * echo $renderer->remote_course_link($course);
+ *
+ * @deprecated since 2.5
+ *
+ * @param stdClass $course object representing remote course as returned by {@link get_my_remotecourses()}
+ * @param string $width not used
+ */
 function print_remote_course($course, $width="100%") {
-    global $CFG, $USER;
-
-    $linkcss = '';
-
-    $url = "{$CFG->wwwroot}/auth/mnet/jump.php?hostid={$course->hostid}&amp;wantsurl=/course/view.php?id={$course->remoteid}";
-
-    echo '<div class="coursebox remotecoursebox clearfix">';
-    echo '<div class="info">';
-    echo '<div class="name"><a title="'.get_string('entercourse').'"'.
-         $linkcss.' href="'.$url.'">'
-        .  format_string($course->fullname) .'</a><br />'
-        . format_string($course->hostname) . ' : '
-        . format_string($course->cat_name) . ' : '
-        . format_string($course->shortname). '</div>';
-    echo '</div><div class="summary">';
-    $options = new stdClass();
-    $options->noclean = true;
-    $options->para = false;
-    $options->overflowdiv = true;
-    echo format_text($course->summary, $course->summaryformat, $options);
-    echo '</div>';
-    echo '</div>';
+    global $PAGE;
+    debugging('Function print_remote_course() is deprecated, please use course renderer function '.
+            'remote_course_link(), see function PHPdocs for more info', DEBUG_DEVELOPER);
+    $renderer = $PAGE->get_renderer('core', 'course');
+    echo $renderer->remote_course_link($course);
 }
 
+/**
+ * Display link to the remote host
+ *
+ * Deprecated. Please use:
+ * $renderer = $PAGE->get_renderer('core', 'course');
+ * echo $renderer->remote_host_link($course);
+ *
+ * @param array $host array with host attributes as returned by {@link get_my_remotehosts()}
+ * @param string $width not used
+ */
 function print_remote_host($host, $width="100%") {
-    global $OUTPUT;
-
-    $linkcss = '';
-
-    echo '<div class="coursebox clearfix">';
-    echo '<div class="info">';
-    echo '<div class="name">';
-    echo '<img src="'.$OUTPUT->pix_url('i/mnethost') . '" class="icon" alt="'.get_string('course').'" />';
-    echo '<a title="'.s($host['name']).'" href="'.s($host['url']).'">'
-        . s($host['name']).'</a> - ';
-    echo $host['count'] . ' ' . get_string('courses');
-    echo '</div>';
-    echo '</div>';
-    echo '</div>';
+    global $PAGE;
+    debugging('Function print_remote_host() is deprecated, please use course renderer function '.
+            'remote_host_link(), see function PHPdocs for more info', DEBUG_DEVELOPER);
+    $renderer = $PAGE->get_renderer('core', 'course');
+    echo $renderer->remote_host_link($host);
 }
-
 
 /// MODULE FUNCTIONS /////////////////////////////////////////////////////////////////
 
