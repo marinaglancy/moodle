@@ -3087,6 +3087,92 @@ function format_weeks_get_section_dates($section, $course) {
 }
 
 /**
+ * Print a description of a course, suitable for browsing in a list.
+ *
+ * Deprecated, please use:
+ * $renderer = $PAGE->get_renderer('core', 'course');
+ * echo $renderer->course_link($course, $highlightterms);
+ * or for the list of courses:
+ * echo $renderer->courses_list($courses, $highlightterms);
+ *
+ * @deprecated since 2.5
+ *
+ * @param object $course the course object.
+ * @param string $highlightterms (optional) some search terms that should be highlighted in the display.
+ */
+function print_course($course, $highlightterms = '') {
+    global $PAGE;
+    debugging('Function print_course() is deprecated. Please use course renderer, '.
+            'see function PHPdocs for more info', DEBUG_DEVELOPER);
+    $renderer = $PAGE->get_renderer('core', 'course');
+    echo $renderer->course_link($course, $highlightterms);
+}
+
+/**
+ * Displays a course search form
+ *
+ * This function is deprecated, please use course renderer:
+ * $renderer = $PAGE->get_renderer('core', 'course');
+ * echo $renderer->course_search_form($value, $format);
+ *
+ * @deprecated since 2.5
+ *
+ * @param string $value default value to populate the search field
+ * @param bool $return if true returns the value, if false - outputs
+ * @param string $format display format - 'plain' (default), 'short' or 'navbar'
+ * @return null|string
+ */
+function print_course_search($value="", $return=false, $format="plain") {
+    global $PAGE;
+    debugging('Function print_course_search() is deprecated, please use course renderer, '.
+            'see function PHPdocs for more info', DEBUG_DEVELOPER);
+    $renderer = $PAGE->get_renderer('core', 'course');
+    if ($return) {
+        return $renderer->course_search_form($value, $format);
+    } else {
+        echo $renderer->course_search_form($value, $format);
+    }
+}
+
+/**
+ * Displays name and summary of the remote course
+ *
+ * Deprecated. Please use:
+ * $renderer = $PAGE->get_renderer('core', 'course');
+ * echo $renderer->remote_course_link($course);
+ *
+ * @deprecated since 2.5
+ *
+ * @param stdClass $course object representing remote course as returned by {@link get_my_remotecourses()}
+ * @param string $width not used
+ */
+function print_remote_course($course, $width="100%") {
+    global $PAGE;
+    debugging('Function print_remote_course() is deprecated, please use course renderer function '.
+            'remote_course_link(), see function PHPdocs for more info', DEBUG_DEVELOPER);
+    $renderer = $PAGE->get_renderer('core', 'course');
+    echo $renderer->remote_course_link($course);
+}
+
+/**
+ * Display link to the remote host
+ *
+ * Deprecated. Please use:
+ * $renderer = $PAGE->get_renderer('core', 'course');
+ * echo $renderer->remote_host_link($course);
+ *
+ * @param array $host array with host attributes as returned by {@link get_my_remotehosts()}
+ * @param string $width not used
+ */
+function print_remote_host($host, $width="100%") {
+    global $PAGE;
+    debugging('Function print_remote_host() is deprecated, please use course renderer function '.
+            'remote_host_link(), see function PHPdocs for more info', DEBUG_DEVELOPER);
+    $renderer = $PAGE->get_renderer('core', 'course');
+    echo $renderer->remote_host_link($host);
+}
+
+/**
  * Obtains shared data that is used in print_section when displaying a
  * course-module entry.
  *
@@ -3523,4 +3609,28 @@ function update_category_button($categoryid = 0) {
         $page = 'index.php';
     }
     return $OUTPUT->single_button(new moodle_url('/course/' . $page, $options), $label, 'get');
+}
+
+/**
+ * Prints custom user information on the home page.
+ * Replaced with /my/ page, particularily block_course_overview
+ * Displaying the enrolled ("my") courses list on the front
+ * page remains as a legacy
+ *
+ * This function is deprecated, please use course renderer:
+ * $renderer = $PAGE->get_renderer('core', 'course');
+ * echo $renderer->enrolled_courses_list();
+ *
+ * @deprecated since 2.5
+ */
+function print_my_moodle() {
+    global $PAGE;
+
+    if (!isloggedin() or isguestuser()) {
+        print_error('nopermissions', '', '', 'See My Moodle');
+    }
+    debugging('Function print_my_moodle() is deprecated, please use course renderer', DEBUG_DEVELOPER);
+
+    $courserenderer = $PAGE->get_renderer('core', 'course');
+    echo $courserenderer->enrolled_courses_list();
 }
