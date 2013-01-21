@@ -607,7 +607,7 @@ function get_courses_page($categoryid="all", $sort="c.sortorder ASC", $fields="c
 
 /**
  * Retrieve course records with the course managers and other related records
- * that we need for print_course(). This allows print_courses() to do its job
+ * that we need to print the course. This allows print_courses() to do its job
  * in a constant number of DB queries, regardless of the number of courses,
  * role assignments, etc.
  *

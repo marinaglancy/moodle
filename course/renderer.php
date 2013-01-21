@@ -611,6 +611,234 @@ class core_course_renderer extends plugin_renderer_base {
     }
 
     /**
+     * Renders HTML to displays list of courses current user is enrolled into
+     *
+     * To be displayed on front page in case of setting FRONTPAGEENROLLEDCOURSELIST
+     * Note this is legacy, recommended to use "My moodle"
+     */
+    function enrolled_courses_list() {
+        global $CFG, $DB;
+        $output = '';
+
+        // get lists of local courses
+        $courses  = enrol_get_my_courses('summary', 'visible DESC,sortorder ASC');
+        unset($courses[SITEID]);
+
+        if (!empty($courses)) {
+            $output .= $this->courses_list($courses);
+        }
+
+        // MNET
+        if (!empty($CFG->mnet_dispatcher_mode) && $CFG->mnet_dispatcher_mode==='strict') {
+            $rcourses = get_my_remotecourses();
+            $rhosts   = get_my_remotehosts();
+            if (!empty($rcourses)) {
+                // at the IDP, we know of all the remote courses
+                foreach ($rcourses as $course) {
+                    $output .= $this->remote_course_link($course);
+                }
+            } elseif (!empty($rhosts)) {
+                // non-IDP, we know of all the remote servers, but not courses
+                foreach ($rhosts as $host) {
+                    $output .= $this->remote_host_link($host);
+                }
+            }
+        }
+
+        if (empty($output)) {
+            // no enrolled or remote courses found, just print list of available courses
+            ob_start();
+            if ($DB->count_records("course_categories") > 1) {
+                echo $this->output->box_start("categorybox");
+                print_whole_category_list();
+                echo $this->output->box_end();
+            } else {
+                print_courses(0);
+            }
+            $output .= ob_get_contents();
+            ob_end_clean();
+        } else {
+            // enrolled and/or remote courses found but there are more courses
+            // in the system, display course search box
+            $morecoursesexist = $DB->count_records('course') > (count($courses) + 1);
+            if ($morecoursesexist) {  // Some courses not being displayed
+                $output .= "<table width=\"100%\"><tr><td align=\"center\">";
+                $output .= $this->course_search_form('', 'short');
+                $output .= "</td><td align=\"center\">";
+                $output .= $this->output->single_button(new moodle_url('/course/index.php'),
+                        get_string("fulllistofcourses"), "get");
+                $output .= "</td></tr></table>\n";
+            }
+        }
+        return $output;
+    }
+
+    /**
+     * Renders HTML to display a list of links to courses
+     *
+     * @param array $courses array of course objects
+     * @param string $highlightterms string to highlight in course name/summary
+     * @param bool $displaycategory whether to display category name for each course
+     * @return string
+     */
+    function courses_list($courses, $highlightterms = '', $displaycategory = false) {
+        global $CFG;
+        if ($displaycategory) {
+            require_once($CFG->libdir.'/coursecatlib.php');
+            // retrieve list of categories names
+            $categorynames = coursecat::make_categories_list();
+        }
+
+        $output = '';
+        if (!empty($courses)) {
+            $output .= html_writer::start_tag('ul', array('class'=>'unlist'));
+            foreach ($courses as $course) {
+                $output .= html_writer::start_tag('li');
+                if ($displaycategory && !empty($course->category)) {
+                    $output .= $this->course_link($course, $highlightterms, true, $categorynames[$course->category]);
+                } else {
+                    $output .= $this->course_link($course, $highlightterms);
+                }
+                $output .= html_writer::end_tag('li');
+            }
+            $output .= html_writer::end_tag('ul');
+        } else {
+            $output .= $this->output->heading(get_string("nocoursesyet"));
+        }
+        return $output;
+    }
+
+    /**
+     * Renders a description of a course, suitable for browsing in a list
+     *
+     * Usually is only called from {@link core_course_renderer::courses_list()}
+     *
+     * @param object $course the course object.
+     * @param string $highlightterms (optional) some search terms that should be highlighted in the display.
+     */
+    function course_link($course, $highlightterms = '', $displaycategory = false, $categoryname = null) {
+        // Rewrite file URLs so that they are correct
+        $context = context_course::instance($course->id);
+        $course->summary = file_rewrite_pluginfile_urls($course->summary, 'pluginfile.php', $context->id, 'course', 'summary', NULL);
+
+        $output = '';
+        $output .= html_writer::start_tag('div', array('class'=>'coursebox clearfix'));
+        $output .= html_writer::start_tag('div', array('class'=>'info'));
+        $output .= html_writer::start_tag('h3', array('class'=>'name'));
+
+        $coursename = get_course_display_name_for_list($course);
+        $linktext = highlight($highlightterms, format_string($coursename));
+        $linkparams = array('title'=>get_string('entercourse'));
+        if (empty($course->visible)) {
+            $linkparams['class'] = 'dimmed';
+        }
+        $courseurl = new moodle_url('/course/view.php', array('id' => $course->id));
+        $output .= html_writer::link($courseurl, $linktext, $linkparams);
+        $output .= html_writer::end_tag('h3'); // .name
+        $coursecontacts = course_get_coursecontacts($course);
+        if (!empty($coursecontacts)) {
+            $output .= html_writer::start_tag('ul', array('class' => 'teachers'));
+            foreach ($coursecontacts as $userid => $coursecontact) {
+                $name = $coursecontact['rolename'].': '.
+                        html_writer::link(new moodle_url('/user/view.php',
+                                array('id' => $userid, 'course' => SITEID)),
+                            $coursecontact['username']);
+                $output .= html_writer::tag('li', $name);
+            }
+            $output .= html_writer::end_tag('ul'); // .teachers
+        }
+        $output .= html_writer::end_tag('div'); // .info
+
+        $output .= html_writer::start_tag('div', array('class'=>'summary'));
+        $options = new stdClass();
+        $options->noclean = true;
+        $options->para = false;
+        $options->overflowdiv = true;
+        if (!isset($course->summaryformat)) {
+            $course->summaryformat = FORMAT_MOODLE;
+        }
+        $output .= highlight($highlightterms, format_text($course->summary, $course->summaryformat, $options,  $course->id));
+        if ($icons = enrol_get_course_info_icons($course)) {
+            $output .= html_writer::start_tag('div', array('class'=>'enrolmenticons'));
+            foreach ($icons as $icon) {
+                $icon->attributes['alt'] .= ': '. format_string($coursename, true, array('context' => $context));
+                $output .= $this->output->render($icon);
+            }
+            $output .= html_writer::end_tag('div'); // .enrolmenticons
+        }
+        if ($displaycategory && $course->category) {
+            $output .= html_writer::start_tag('p', array('class' => 'category'));
+            $output .= get_string('category').': ';
+            $output .= html_writer::link(new moodle_url('/course/category.php', array('id' => $course->category)),
+                    $categoryname);
+            $output .= html_writer::end_tag('p'); // .category
+        }
+        $output .= html_writer::end_tag('div'); // .summary
+        $output .= html_writer::end_tag('div'); // .coursebox
+        return $output;
+    }
+
+    /**
+     * Renders HTML to display a link to crate a new course in the specified category
+     *
+     * @param int $categoryid
+     * @return string
+     */
+    function create_course_link($categoryid) {
+        $createcourseurl = new moodle_url('/course/edit.php', array('category' => $categoryid));
+        $output = '';
+        $output .= html_writer::start_tag('div', array('class' => 'addcoursebutton'));
+        $output .= $this->output->single_button($createcourseurl, get_string("addnewcourse"));
+        $output .= html_writer::end_tag('div'); // .addcoursebutton
+        return $output;
+    }
+
+    /**
+     * Renders html to display a course search form
+     *
+     * @param string $value default value to populate the search field
+     * @param string $format display format - 'plain' (default), 'short' or 'navbar'
+     * @return string
+     */
+    function course_search_form($value = '', $format = 'plain') {
+        static $count = 0;
+        $formid = 'coursesearch';
+        if ((++$count) > 1) {
+            $formid .= $count;
+        }
+
+        switch ($format) {
+            case 'navbar' :
+                $formid = 'coursesearchnavbar';
+                $inputid = 'navsearchbox';
+                $inputsize = 20;
+                break;
+            case 'short' :
+                $inputid = 'shortsearchbox';
+                $inputsize = 12;
+                break;
+            default :
+                $inputid = 'coursesearchbox';
+                $inputsize = 30;
+        }
+
+        $strsearchcourses= get_string("searchcourses");
+        $searchurl = new moodle_url('/course/search.php');
+
+        $output = html_writer::start_tag('form', array('id' => $formid, 'action' => $searchurl, 'method' => 'get'));
+        $output .= html_writer::start_tag('fieldset', array('class' => 'coursesearchbox invisiblefieldset'));
+        $output .= html_writer::tag('lavel', $strsearchcourses.': ', array('for' => $inputid));
+        $output .= html_writer::empty_tag('input', array('type' => 'text', 'id' => $inputid,
+            'size' => $inputsize, 'name' => 'search', 'value' => s($value)));
+        $output .= html_writer::empty_tag('input', array('type' => 'submit',
+            'value' => get_string('go')));
+        $output .= html_writer::end_tag('fieldset');
+        $output .= html_writer::end_tag('form');
+
+        return $output;
+    }
+
+    /**
      * Renders html for completion box on course page
      *
      * If completion is disabled, returns empty string

@@ -1543,7 +1543,7 @@ function can_edit_in_category($categoryid = 0) {
  * @return bool true if courses found and printed, else false.
  */
 function print_courses($category) {
-    global $CFG, $OUTPUT;
+    global $CFG, $PAGE;
     require_once($CFG->libdir. '/coursecatlib.php');
 
     if (!is_object($category) && $category==0) {
@@ -1559,73 +1559,55 @@ function print_courses($category) {
                                                 array('summary','summaryformat'));
         }
         unset($categories);
+        $context = context_system::instance();
     } else {
         $courses    = get_courses_wmanagers($category->id,
                                             'c.sortorder ASC',
                                             array('summary','summaryformat'));
+        $context = context_coursecat::instance($category->id);
     }
 
-    if ($courses) {
-        echo html_writer::start_tag('ul', array('class'=>'unlist'));
-        foreach ($courses as $course) {
-            $coursecontext = context_course::instance($course->id);
-            if ($course->visible == 1 || has_capability('moodle/course:viewhiddencourses', $coursecontext)) {
-                echo html_writer::start_tag('li');
-                print_course($course);
-                echo html_writer::end_tag('li');
-            }
+    $visiblecourses = array();
+    foreach ($courses as $course) {
+        if ($course->visible == 1 ||
+                has_capability('moodle/course:viewhiddencourses',
+                        context_course::instance($course->id))) {
+            $visiblecourses[] = $course;
         }
-        echo html_writer::end_tag('ul');
-    } else {
-        echo $OUTPUT->heading(get_string("nocoursesyet"));
-        $context = context_system::instance();
-        if (has_capability('moodle/course:create', $context)) {
-            $options = array();
-            if (!empty($category->id)) {
-                $options['category'] = $category->id;
-            } else {
-                $options['category'] = $CFG->defaultrequestcategory;
-            }
-            echo html_writer::start_tag('div', array('class'=>'addcoursebutton'));
-            echo $OUTPUT->single_button(new moodle_url('/course/edit.php', $options), get_string("addnewcourse"));
-            echo html_writer::end_tag('div');
-            return false;
+    }
+
+    $courserenderer = $PAGE->get_renderer('core', 'course');
+    echo $courserenderer->courses_list($visiblecourses);
+
+    if (empty($visiblecourses) && has_capability('moodle/course:create', $context)) {
+        if (!empty($category->id)) {
+            $categoryid = $category->id;
+        } else {
+            $categoryid = $CFG->defaultrequestcategory;
         }
+        echo $courserenderer->create_course_link($categoryid);
+        return false;
     }
     return true;
 }
 
 /**
- * Print a description of a course, suitable for browsing in a list.
+ * Returns list of course contacts (usually teachers) to display in course link
  *
- * @param object $course the course object.
- * @param string $highlightterms (optional) some search terms that should be highlighted in the display.
+ * If $course is a result of {@link get_courses_wmanagers()} it already contains
+ * the list of contacts, otherwise we retrieve list of users with particular roles
+ *
+ * Roles to display are set up in $CFG->coursecontact
+ *
+ * @param stdClass $course
+ * @return array
  */
-function print_course($course, $highlightterms = '') {
-    global $CFG, $USER, $DB, $OUTPUT;
-
-    $context = context_course::instance($course->id);
-
-    // Rewrite file URLs so that they are correct
-    $course->summary = file_rewrite_pluginfile_urls($course->summary, 'pluginfile.php', $context->id, 'course', 'summary', NULL);
-
-    echo html_writer::start_tag('div', array('class'=>'coursebox clearfix'));
-    echo html_writer::start_tag('div', array('class'=>'info'));
-    echo html_writer::start_tag('h3', array('class'=>'name'));
-
-    $linkhref = new moodle_url('/course/view.php', array('id'=>$course->id));
-
-    $coursename = get_course_display_name_for_list($course);
-    $linktext = highlight($highlightterms, format_string($coursename));
-    $linkparams = array('title'=>get_string('entercourse'));
-    if (empty($course->visible)) {
-        $linkparams['class'] = 'dimmed';
-    }
-    echo html_writer::link($linkhref, $linktext, $linkparams);
-    echo html_writer::end_tag('h3');
-
+function course_get_coursecontacts($course) {
+    global $CFG;
+    $namesarray = array();
     /// first find all roles that are supposed to be displayed
     if (!empty($CFG->coursecontact)) {
+        $context = context_course::instance($course->id);
         $managerroles = explode(',', $CFG->coursecontact);
         $rusers = array();
 
@@ -1635,23 +1617,25 @@ function print_course($course, $highlightterms = '') {
                 'ra.id AS raid, u.id, u.username, u.firstname, u.lastname, rn.name AS rolecoursealias,
                  r.name AS rolename, r.sortorder, r.id AS roleid, r.shortname AS roleshortname',
                 'r.sortorder ASC, ' . $sort, null, '', '', '', '', $sortparams);
-        } else {
-            //  use the managers array if we have it for perf reasosn
-            //  populate the datastructure like output of get_role_users();
-            foreach ($course->managers as $manager) {
-                $user = clone($manager->user);
-                $user->roleid = $manager->roleid;
-                $user->rolename = $manager->rolename;
-                $user->roleshortname = $manager->roleshortname;
-                $user->rolecoursealias = $manager->rolecoursealias;
-                $rusers[$user->id] = $user;
+            foreach ($rusers as $userid => $ruser) {
+                $rusers[$userid]->user = (object)array(
+                    'id' => $ruser->id,
+                    'username' => $ruser->username,
+                    'firstname' => $ruser->firstname,
+                    'lastname' => $ruser->lastname,
+                );
+                unset($rusers[$userid]->id);
+                unset($rusers[$userid]->username);
+                unset($rusers[$userid]->firstname);
+                unset($rusers[$userid]->lastname);
             }
+        } else {
+            $rusers = $course->managers;
         }
 
-        $namesarray = array();
         $canviewfullnames = has_capability('moodle/site:viewfullnames', $context);
         foreach ($rusers as $ra) {
-            if (isset($namesarray[$ra->id])) {
+            if (isset($namesarray[$ra->user->id])) {
                 //  only display a user once with the higest sortorder role
                 continue;
             }
@@ -1661,155 +1645,84 @@ function print_course($course, $highlightterms = '') {
             $role->name = $ra->rolename;
             $role->shortname = $ra->roleshortname;
             $role->coursealias = $ra->rolecoursealias;
-            $rolename = role_get_name($role, $context, ROLENAME_ALIAS);
 
-            $fullname = fullname($ra, $canviewfullnames);
-            $namesarray[$ra->id] = $rolename.': '.
-                html_writer::link(new moodle_url('/user/view.php', array('id'=>$ra->id, 'course'=>SITEID)), $fullname);
-        }
-
-        if (!empty($namesarray)) {
-            echo html_writer::start_tag('ul', array('class'=>'teachers'));
-            foreach ($namesarray as $name) {
-                echo html_writer::tag('li', $name);
-            }
-            echo html_writer::end_tag('ul');
+            $namesarray[$ra->user->id] = array(
+                'user' => $ra->user,
+                'role' => $role,
+                'rolename' => role_get_name($role, $context, ROLENAME_ALIAS),
+                'username' => fullname($ra->user, $canviewfullnames)
+            );
         }
     }
-    echo html_writer::end_tag('div'); // End of info div
+    return $namesarray;
+}
 
-    echo html_writer::start_tag('div', array('class'=>'summary'));
-    $options = new stdClass();
-    $options->noclean = true;
-    $options->para = false;
-    $options->overflowdiv = true;
-    if (!isset($course->summaryformat)) {
-        $course->summaryformat = FORMAT_MOODLE;
-    }
-    echo highlight($highlightterms, format_text($course->summary, $course->summaryformat, $options,  $course->id));
-    if ($icons = enrol_get_course_info_icons($course)) {
-        echo html_writer::start_tag('div', array('class'=>'enrolmenticons'));
-        foreach ($icons as $icon) {
-            $icon->attributes["alt"] .= ": ". format_string($coursename, true, array('context'=>$context));
-            echo $OUTPUT->render($icon);
-        }
-        echo html_writer::end_tag('div'); // End of enrolmenticons div
-    }
-    echo html_writer::end_tag('div'); // End of summary div
-    echo html_writer::end_tag('div'); // End of coursebox div
+/**
+ * Print a description of a course, suitable for browsing in a list.
+ *
+ * Deprecated, please use:
+ * $renderer = $PAGE->get_renderer('core', 'course');
+ * echo $renderer->course_link($course, $highlightterms);
+ * or for the list of courses:
+ * echo $renderer->courses_list($courses, $highlightterms);
+ *
+ * @deprecated since 2.5
+ *
+ * @param object $course the course object.
+ * @param string $highlightterms (optional) some search terms that should be highlighted in the display.
+ */
+function print_course($course, $highlightterms = '') {
+    global $PAGE;
+    debugging('Function print_course() is deprecated. Please use course renderer', DEBUG_DEVELOPER);
+    $renderer = $PAGE->get_renderer('core', 'course');
+    echo $renderer->course_link($course, $highlightterms);
 }
 
 /**
  * Prints custom user information on the home page.
  * Over time this can include all sorts of information
+ *
+ * This function is deprecated, please use course renderer:
+ * $renderer = $PAGE->get_renderer('core', 'course');
+ * echo $renderer->enrolled_courses_list();
+ *
+ * @deprecated since 2.5
  */
 function print_my_moodle() {
-    global $USER, $CFG, $DB, $OUTPUT, $PAGE;
+    global $PAGE;
 
     if (!isloggedin() or isguestuser()) {
         print_error('nopermissions', '', '', 'See My Moodle');
     }
+    debugging('Function print_my_moodle() is deprecated, please use course renderer', DEBUG_DEVELOPER);
 
     $courserenderer = $PAGE->get_renderer('core', 'course');
-    $courses  = enrol_get_my_courses('summary', 'visible DESC,sortorder ASC');
-    $rhosts   = array();
-    $rcourses = array();
-    if (!empty($CFG->mnet_dispatcher_mode) && $CFG->mnet_dispatcher_mode==='strict') {
-        $rcourses = get_my_remotecourses($USER->id);
-        $rhosts   = get_my_remotehosts();
-    }
-
-    if (!empty($courses) || !empty($rcourses) || !empty($rhosts)) {
-
-        if (!empty($courses)) {
-            echo '<ul class="unlist">';
-            foreach ($courses as $course) {
-                if ($course->id == SITEID) {
-                    continue;
-                }
-                echo '<li>';
-                print_course($course);
-                echo "</li>\n";
-            }
-            echo "</ul>\n";
-        }
-
-        // MNET
-        if (!empty($rcourses)) {
-            // at the IDP, we know of all the remote courses
-            foreach ($rcourses as $course) {
-                echo $courserenderer->remote_course_link($course);
-            }
-        } elseif (!empty($rhosts)) {
-            // non-IDP, we know of all the remote servers, but not courses
-            foreach ($rhosts as $host) {
-                echo $courserenderer->remote_host_link($host);
-            }
-        }
-        unset($course);
-        unset($host);
-
-        if ($DB->count_records("course") > (count($courses) + 1) ) {  // Some courses not being displayed
-            echo "<table width=\"100%\"><tr><td align=\"center\">";
-            print_course_search("", false, "short");
-            echo "</td><td align=\"center\">";
-            echo $OUTPUT->single_button("$CFG->wwwroot/course/index.php", get_string("fulllistofcourses"), "get");
-            echo "</td></tr></table>\n";
-        }
-
-    } else {
-        if ($DB->count_records("course_categories") > 1) {
-            echo $OUTPUT->box_start("categorybox");
-            print_whole_category_list();
-            echo $OUTPUT->box_end();
-        } else {
-            print_courses(0);
-        }
-    }
+    echo $courserenderer->enrolled_courses_list();
 }
 
-
+/**
+ * Displays a course search form
+ *
+ * This function is deprecated, please use course renderer:
+ * $renderer = $PAGE->get_renderer('core', 'course');
+ * echo $renderer->course_search_form($value, $format);
+ *
+ * @deprecated since 2.5
+ *
+ * @param string $value default value to populate the search field
+ * @param bool $return if true returns the value, if false - outputs
+ * @param string $format display format - 'plain' (default), 'short' or 'navbar'
+ * @return null|string
+ */
 function print_course_search($value="", $return=false, $format="plain") {
-    global $CFG;
-    static $count = 0;
-
-    $count++;
-
-    $id = 'coursesearch';
-
-    if ($count > 1) {
-        $id .= $count;
-    }
-
-    $strsearchcourses= get_string("searchcourses");
-
-    if ($format == 'plain') {
-        $output  = '<form id="'.$id.'" action="'.$CFG->wwwroot.'/course/search.php" method="get">';
-        $output .= '<fieldset class="coursesearchbox invisiblefieldset">';
-        $output .= '<label for="coursesearchbox">'.$strsearchcourses.': </label>';
-        $output .= '<input type="text" id="coursesearchbox" size="30" name="search" value="'.s($value).'" />';
-        $output .= '<input type="submit" value="'.get_string('go').'" />';
-        $output .= '</fieldset></form>';
-    } else if ($format == 'short') {
-        $output  = '<form id="'.$id.'" action="'.$CFG->wwwroot.'/course/search.php" method="get">';
-        $output .= '<fieldset class="coursesearchbox invisiblefieldset">';
-        $output .= '<label for="shortsearchbox">'.$strsearchcourses.': </label>';
-        $output .= '<input type="text" id="shortsearchbox" size="12" name="search" value="'.s($value).'" />';
-        $output .= '<input type="submit" value="'.get_string('go').'" />';
-        $output .= '</fieldset></form>';
-    } else if ($format == 'navbar') {
-        $output  = '<form id="coursesearchnavbar" action="'.$CFG->wwwroot.'/course/search.php" method="get">';
-        $output .= '<fieldset class="coursesearchbox invisiblefieldset">';
-        $output .= '<label for="navsearchbox">'.$strsearchcourses.': </label>';
-        $output .= '<input type="text" id="navsearchbox" size="20" name="search" value="'.s($value).'" />';
-        $output .= '<input type="submit" value="'.get_string('go').'" />';
-        $output .= '</fieldset></form>';
-    }
-
+    global $PAGE;
+    debugging('Function print_course_search() is deprecated, please use course renderer', DEBUG_DEVELOPER);
+    $renderer = $PAGE->get_renderer('core', 'course');
     if ($return) {
-        return $output;
+        return $renderer->course_search_form($value, $format);
+    } else {
+        echo $renderer->course_search_form($value, $format);
     }
-    echo $output;
 }
 
 /**
