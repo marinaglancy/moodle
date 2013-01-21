@@ -315,6 +315,7 @@ if ($perpage) {
 
 // Begin output
 $PAGE->set_pagelayout('coursecategory');
+$courserenderer = $PAGE->get_renderer('core', 'course');
 if (can_edit_in_category()) {
     // Integrate into the admin tree only if the user can edit categories at the top level,
     // otherwise the admin block does not appear to this user, and you get an error.
@@ -335,7 +336,7 @@ if (can_edit_in_category()) {
     $site = get_site();
     $PAGE->set_title("$site->shortname: $category->name");
     $PAGE->set_heading($site->fullname);
-    $PAGE->set_button(print_course_search('', true, 'navbar'));
+    $PAGE->set_button($courserenderer->course_search_form('', 'navbar'));
     echo $OUTPUT->header();
 }
 
@@ -596,7 +597,7 @@ if (!empty($CFG->enablecourserequests) && $category->id == $CFG->defaultrequestc
 }
 echo '</div>';
 
-print_course_search();
+echo $courserenderer->course_search_form();
 
 echo $OUTPUT->footer();
 

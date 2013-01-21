@@ -76,6 +76,7 @@ $PAGE->navbar->add($tagname);
 $PAGE->set_title($title);
 $PAGE->set_heading($COURSE->fullname);
 $PAGE->set_button($button);
+$courserenderer = $PAGE->get_renderer('core', 'course');
 echo $OUTPUT->header();
 
 // Manage all tags links
@@ -144,10 +145,7 @@ if (!empty($courses)) {
     $heading = get_string('courses') . ' ' . get_string('taggedwith', 'tag', $tagname) .': '. $totalcount;
     echo "<a name='course'></a>";
     echo $OUTPUT->heading($heading, 3);
-
-    foreach ($courses as $course) {
-        print_course($course);
-    }
+    echo $courserenderer->courses_list($courses, '', true);
 
     echo $OUTPUT->box_end();
 }

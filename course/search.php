@@ -72,6 +72,7 @@ if ($perpage != 10) {
 $PAGE->set_url('/course/search.php', $urlparams);
 $PAGE->set_context(context_system::instance());
 $PAGE->set_pagelayout('standard');
+$courserenderer = $PAGE->get_renderer('core', 'course');
 
 if ($CFG->forcelogin) {
     require_login();
@@ -109,10 +110,6 @@ if (has_capability('moodle/course:visibility', context_system::instance())) {
     }
 }
 
-$displaylist = array();
-$parentlist = array();
-make_categories_list($displaylist, $parentlist);
-
 $strcourses = new lang_string("courses");
 $strsearch = new lang_string("search");
 $strsearchresults = new lang_string("searchresults");
@@ -134,7 +131,7 @@ if (empty($search) and empty($blocklist) and empty($modulelist) and empty($movet
     echo $OUTPUT->box_start();
     echo "<center>";
     echo "<br />";
-    print_course_search("", false, "plain");
+    echo $courserenderer->course_search_form('', 'plain');
     echo "<br /><p>";
     print_string("searchhelp");
     echo "</p>";
@@ -228,7 +225,7 @@ if (!empty($courses) && (can_edit_in_category() || !empty($usercatlist))) {
     $aurl = new moodle_url("$CFG->wwwroot/course/search.php", $params);
     $searchform = $OUTPUT->single_button($aurl, $string, 'get');
 } else {
-    $searchform = print_course_search($search, true, "navbar");
+    $searchform = $courserenderer->course_search_form($search, 'navbar');
 }
 
 $PAGE->navbar->add($strcourses, new moodle_url('/course/index.php'));
@@ -259,19 +256,12 @@ if ($courses) {
 
     // Show list of courses
     if (!$adminediting) { //Not editing mode
-        foreach ($courses as $course) {
-            // front page don't belong to any category and block can exist.
-            if ($course->category > 0) {
-                $course->summary .= "<br /><p class=\"category\">";
-                $course->summary .= "$strcategory: <a href=\"category.php?id=$course->category\">";
-                $course->summary .= $displaylist[$course->category];
-                $course->summary .= "</a></p>";
-            }
-            print_course($course, $search);
-            echo $OUTPUT->spacer(array('height'=>5, 'width'=>5, 'br'=>true)); // should be done with CSS instead
-        }
+        echo $courserenderer->courses_list($courses, $search, true);
     } else {
         // Editing mode
+        $displaylist = array();
+        $parentlist = array();
+        make_categories_list($displaylist, $parentlist);
         echo "<form id=\"movecourses\" action=\"search.php\" method=\"post\">\n";
         echo "<div><input type=\"hidden\" name=\"sesskey\" value=\"".sesskey()."\" />\n";
         echo "<input type=\"hidden\" name=\"search\" value=\"".s($search)."\" />\n";
@@ -398,7 +388,7 @@ if ($courses) {
 
 echo "<br /><br />";
 
-print_course_search($search);
+echo $courserenderer->course_search_form($search);
 
 echo $OUTPUT->footer();
 
