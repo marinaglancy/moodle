@@ -1223,6 +1223,8 @@ function get_category_or_system_context($categoryid) {
  * Gets the child categories of a given courses category. Uses a static cache
  * to make repeat calls efficient.
  *
+ * @todo potentially deprecate
+ *
  * @param int $parentid the id of a course category.
  * @return array all the child course categories.
  */
@@ -1275,6 +1277,8 @@ function get_child_categories($parentid) {
  * are omitted from the tree. This is useful when you are doing something like
  * moving categories, where you do not want to allow people to move a category
  * to be the child of itself.
+ *
+ * @todo potentially deprecate
  *
  * @param array $list For output, accumulates an array categoryid => full category path name
  * @param array $parents For output, accumulates an array categoryid => list of parent category ids.
@@ -1352,6 +1356,8 @@ function make_categories_list(&$list, &$parents, $requiredcapability = '',
  * $renderer = $PAGE->get_renderer('core','course');
  * echo $renderer->course_category_tree(get_course_category_tree());
  *
+ * @todo potentially deprecate
+ *
  * @global moodle_database $DB
  * @param int $id
  * @param int $depth
@@ -1414,6 +1420,8 @@ function get_course_category_tree($id = 0, $depth = 0) {
 /**
  * Recursive function to print out all the categories in a nice format
  * with or without courses included
+ *
+ * @todo potentially deprecate
  */
 function print_whole_category_list($category=NULL, $displaylist=NULL, $parentslist=NULL, $depth=-1, $showcourses = true, $categorycourses=NULL) {
     global $CFG;
@@ -1669,6 +1677,8 @@ function can_edit_in_category($categoryid = 0) {
  * Print courses in category. If category is 0 then all courses are printed.
  * @param int|stdClass $category category object or id.
  * @return bool true if courses found and printed, else false.
+ *
+ * @todo potentially deprecate
  */
 function print_courses($category) {
     global $CFG, $OUTPUT, $PAGE;
