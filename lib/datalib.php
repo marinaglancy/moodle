@@ -942,6 +942,7 @@ function get_courses_search($searchterms, $sort='fullname ASC', $page=0, $record
  * a "shallow" resultset. Pass false to $shallow and it will return all
  * the child categories as well.
  *
+ * @todo deprecate
  * @global object
  * @uses CONTEXT_COURSECAT
  * @param string $parent The parent category if any
@@ -950,7 +951,22 @@ function get_courses_search($searchterms, $sort='fullname ASC', $page=0, $record
  * @return array of categories
  */
 function get_categories($parent='none', $sort=NULL, $shallow=true) {
-    global $DB;
+    global $DB, $CFG;
+    require_once($CFG->libdir.'/coursecatlib.php');
+    if ($parent === 'none' && $sort === null) {
+        $list = coursecat::get_all_visible();
+        $rv = array();
+        foreach ($list as $id => $obj) {
+            $rv[$id] = (object)convert_to_array($obj);
+        }
+        return $rv;
+    } else if ($parent !== 'none' && $sort === null && $shallow) {
+        $cat = coursecat::get($parent, IGNORE_MISSING, true);
+        if ($cat) {
+            return $cat->get_children();
+        }
+        return array();
+    }
 
     if ($sort === NULL) {
         $sort = 'ORDER BY cc.sortorder ASC';
@@ -1007,6 +1023,7 @@ function get_categories($parent='none', $sort=NULL, $shallow=true) {
  * category.
  *
  * @global object
+ * @todo deprecate
  * @param int $catid - The id of the category whose subcategories we want to find.
  * @return array of category ids.
  */
@@ -1027,6 +1044,7 @@ function get_all_subcategories($catid) {
 /**
  * Return specified category, default if given does not exist
  *
+ * @todo deprecate
  * @global object
  * @uses MAX_COURSES_IN_CATEGORY
  * @uses CONTEXT_COURSECAT
