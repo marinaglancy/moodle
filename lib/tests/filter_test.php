@@ -530,10 +530,12 @@ class filter_preload_activities_testcase extends advanced_testcase {
     }
 
     private function assert_matches($modinfo) {
-        global $FILTERLIB_PRIVATE, $DB;
+        global $DB;
 
         // Use preload cache...
-        $FILTERLIB_PRIVATE = new stdClass();
+        $filtercache = cache::make_from_params(cache_store::MODE_REQUEST, 'core',
+                'filters', array('simplekeys' => true));
+        $filtercache->purge();
         filter_preload_activities($modinfo);
 
         // Get data and check no queries are made
@@ -544,7 +546,7 @@ class filter_preload_activities_testcase extends advanced_testcase {
         $this->assertEquals($before, $after);
 
         // Repeat without cache and check it makes queries now
-        $FILTERLIB_PRIVATE = new stdClass;
+        $filtercache->purge();
         $before = $DB->perf_get_reads();
         $filters1 = filter_get_active_in_context(self::$activity1context);
         $filters2 = filter_get_active_in_context(self::$activity2context);

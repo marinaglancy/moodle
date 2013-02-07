@@ -858,17 +858,19 @@ function filter_get_all_local_settings($contextid) {
  *      array(tex' => array())
  */
 function filter_get_active_in_context($context) {
-    global $DB, $FILTERLIB_PRIVATE;
+    global $DB;
 
-    if (!isset($FILTERLIB_PRIVATE)) {
-        $FILTERLIB_PRIVATE = new stdClass();
+    $filtercache = cache::make_from_params(cache_store::MODE_REQUEST, 'core',
+            'filters', array('simplekeys' => true));
+    $active = $filtercache->get('active');
+    if ($active === false) {
+        $active = array();
     }
 
     // Use cache (this is a within-request cache only) if available. See
     // function filter_preload_activities.
-    if (isset($FILTERLIB_PRIVATE->active) &&
-            array_key_exists($context->id, $FILTERLIB_PRIVATE->active)) {
-        return $FILTERLIB_PRIVATE->active[$context->id];
+    if (array_key_exists($context->id, $active)) {
+        return $active[$context->id];
     }
 
     $contextids = str_replace('/', ',', trim($context->path, '/'));
@@ -910,20 +912,21 @@ function filter_get_active_in_context($context) {
  * @param course_modinfo $modinfo Course object from get_fast_modinfo
  */
 function filter_preload_activities(course_modinfo $modinfo) {
-    global $DB, $FILTERLIB_PRIVATE;
+    global $DB;
 
-    if (!isset($FILTERLIB_PRIVATE)) {
-        $FILTERLIB_PRIVATE = new stdClass();
-    }
+    $filtercache = cache::make_from_params(cache_store::MODE_REQUEST, 'core',
+            'filters', array('simplekeys' => true));
 
     // Don't repeat preload
-    if (!isset($FILTERLIB_PRIVATE->preloaded)) {
-        $FILTERLIB_PRIVATE->preloaded = array();
+    $preloaded = $filtercache->get('preloaded');
+    if ($preloaded === false) {
+        $preloaded = array();
     }
-    if (!empty($FILTERLIB_PRIVATE->preloaded[$modinfo->get_course_id()])) {
+    if (in_array($modinfo->get_course_id(), $preloaded)) {
         return;
     }
-    $FILTERLIB_PRIVATE->preloaded[$modinfo->get_course_id()] = true;
+    $preloaded[] = $modinfo->get_course_id();
+    $filtercache->set('preloaded', $preloaded);
 
     // Get contexts for all CMs
     $cmcontexts = array();
@@ -1000,12 +1003,13 @@ function filter_preload_activities(course_modinfo $modinfo) {
 
     // Loop through the contexts to reconstruct filter_active lists for each
     // cm on the course.
-    if (!isset($FILTERLIB_PRIVATE->active)) {
-        $FILTERLIB_PRIVATE->active = array();
+    $active = $filtercache->get('active');
+    if ($active === false) {
+        $active = array();
     }
     foreach ($cmcontextids as $contextid) {
         // Copy course list
-        $FILTERLIB_PRIVATE->active[$contextid] = $courseactive;
+        $active[$contextid] = $courseactive;
 
         // Are there any changes to the active list?
         if (array_key_exists($contextid, $remainingactives)) {
@@ -1013,11 +1017,11 @@ function filter_preload_activities(course_modinfo $modinfo) {
                 if ($row->active > 0 && empty($banned[$row->filter])) {
                     // If it's marked active for specific context, add entry
                     // (doesn't matter if one exists already).
-                    $FILTERLIB_PRIVATE->active[$contextid][$row->filter] = array();
+                    $active[$contextid][$row->filter] = array();
                 } else {
                     // If it's marked inactive, remove entry (doesn't matter
                     // if it doesn't exist).
-                    unset($FILTERLIB_PRIVATE->active[$contextid][$row->filter]);
+                    unset($active[$contextid][$row->filter]);
                 }
             }
         }
@@ -1025,10 +1029,11 @@ function filter_preload_activities(course_modinfo $modinfo) {
 
     // Process all config rows to add config data to these entries.
     foreach ($filterconfigs as $row) {
-        if (isset($FILTERLIB_PRIVATE->active[$row->contextid][$row->filter])) {
-            $FILTERLIB_PRIVATE->active[$row->contextid][$row->filter][$row->name] = $row->value;
+        if (isset($active[$row->contextid][$row->filter])) {
+            $active[$row->contextid][$row->filter][$row->name] = $row->value;
         }
     }
+    $filtercache->set('active', $active);
 }
 
 /**
