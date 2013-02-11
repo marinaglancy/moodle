@@ -50,7 +50,7 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
         'visibleold' => array('vo', 1),
         'timemodified' => null, // not cached
         'depth' => array('dh', 1),
-        'path' => array('pa', null),
+        'path' => array('ph', null),
         'theme' => array('th', null)
     );
     
@@ -137,7 +137,7 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
      * @return bool
      */
     public function __isset($name) {
-        if (array_key_exists(name, self::$coursecatfields)) {
+        if (array_key_exists($name, self::$coursecatfields)) {
             return isset($this->$name);
         }
         return false;
@@ -299,7 +299,6 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
             $coursecatcache->set('all', new coursecat_list($rv));
             $coursecatcache->set('cntall', $cntall);
         } else if ($rv instanceof coursecat_list) {
-            print_r($rv);
             $rv = $rv->toArray();
         }
         return $rv;
@@ -326,7 +325,7 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
     /**
      * Returns array of children categories
      * 
-     * @return array of coursecat objects
+     * @return array of coursecat objects indexed by category id
      */
     public function get_children() {
         $all = self::get_all_visible();
@@ -337,6 +336,120 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
             }
         }
         return $children;
+    }
+    
+    /**
+     * Returns name of the category formatted as a string
+     * 
+     * @param array $options formatting options other than context
+     * @return string
+     */
+    public function get_formatted_name($options = array()) {
+        if ($this->id) {
+            $context = context_coursecat::instance($this->id);
+            return format_string($this->name, true, array('context' => $context) + $options);
+        } else {
+            return ''; // TODO 'Top'?
+        }
+    }
+
+    /**
+     * Returns all parents of the element
+     *
+     * For example, if you have a tree of categories like:
+     *   Miscellaneous (id = 1)
+     *      Subcategory (id = 2)
+     *         Sub-subcategory (id = 4)
+     *   Other category (id = 3)
+     *
+     * coursecat::get(1)->get_all_parents() == array()
+     * coursecat::get(2)->get_all_parents() == array(1 => coursecat(...))
+     * coursecat::get(4)->get_all_parents() == array(1 => coursecat(...), 2 => coursecat(...));
+     *
+     * @return array of coursecat objects indexed by category id
+     */
+    public function get_all_parents() {
+        $parents = array();
+        if ($this->parent && ($parent = self::get($this->parent, IGNORE_MISSING, true))) {
+            $parents += array($parent->id => $parent) +
+                $parent->get_all_parents();
+        }
+        return array_reverse($parents, true);
+    }
+    
+    /**
+     * This function recursively travels the categories, building up a nice list
+     * for display or to use in a form <select> element
+     *
+     * For example, if you have a tree of categories like:
+     *   Miscellaneous (id = 1)
+     *      Subcategory (id = 2)
+     *         Sub-subcategory (id = 4)
+     *   Other category (id = 3)
+     * Then after calling this function you will have
+     * array(1 => 'Miscellaneous', 2 => 'Miscellaneous / Subcategory',
+     *      4 => 'Miscellaneous / Subcategory / Sub-subcategory',
+     *      3 => 'Other category');
+     *
+     * If you specify $requiredcapability, then only categories where the current
+     * user has that capability will be added to $list.
+     * If you only have $requiredcapability in a child category, not the parent,
+     * then the child catgegory will still be included.
+     *
+     * If you specify the option $excludeid, then that category, and all its children,
+     * are omitted from the tree. This is useful when you are doing something like
+     * moving categories, where you do not want to allow people to move a category
+     * to be the child of itself.
+     *
+     * @param string/array $requiredcapability if given, only categories where the current
+     *      user has this capability will be added to $list. Can also be an array of capabilities,
+     *      in which case they are all required.
+     * @param integer $excludeid Omit this category and its children from the lists built.
+     * @param string $separator string to use as a separator between parent and child category. Default ' / '
+     * @param string $pathprefix For internal use, as part of recursive calls
+     * @return array of strings
+     */
+    public static function make_categories_list($requiredcapability = '', $excludeid = 0, $separator = ' / ') {
+        return self::get(0, MUST_EXIST, true)->get_children_names($requiredcapability, $excludeid, $separator);
+    }
+
+    /**
+     * Helper function for {@link coursecat::make_categories_list()}
+     *
+     * @param string/array $requiredcapability if given, only categories where the current
+     *      user has this capability will be added to $list. Can also be an array of capabilities,
+     *      in which case they are all required.
+     * @param integer $excludeid Omit this category and its children from the lists built.
+     * @param string $separator string to use as a separator between parent and child category. Default ' / '
+     * @param string $pathprefix For internal use, as part of recursive calls
+     * @return array of strings
+     */
+    protected function get_children_names($requiredcapability = '', $excludeid = 0, $separator = ' / ', $pathprefix = '') {
+        $list = array();        
+        if ($excludeid && $this->id == $excludeid) {
+            return $list;
+        }
+
+        if ($this->id) {
+            // Update $path.
+            if ($pathprefix) {
+                $pathprefix .= $separator;
+            }
+            $pathprefix .= $this->get_formatted_name();
+
+            // Add this category to $list, if the permissions check out.
+            if (empty($requiredcapability) ||
+                    has_all_capabilities((array)$requiredcapability, context_coursecat::instance($this->id))) {
+                $list[$this->id] = $pathprefix;
+            }
+        }
+
+        // Add all the children recursively, while updating the parents array.
+        foreach ($this->get_children() as $cat) {
+            $list += $cat->get_children_names($requiredcapability, $excludeid, $separator, $pathprefix);
+        }
+        
+        return $list;
     }
 
     /**
@@ -414,9 +527,9 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
     }
     
     public static function mylog($txt) {
-        global $DB;
-        $DB->execute("INSERT INTO {mylog} (timestamp, data) values (?, ?)", 
-                array(time(), $txt));
+        //global $DB;
+        //$DB->execute("INSERT INTO {mylog} (timestamp, data) values (?, ?)", 
+        //        array(time(), $txt));
     }
 }
 

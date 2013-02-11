@@ -682,11 +682,11 @@ class core_course_renderer extends plugin_renderer_base {
      * @return string
      */
     function courses_list($courses, $highlightterms = '', $displaycategory = false) {
+        global $CFG;
         if ($displaycategory) {
+            require_once($CFG->libdir.'/coursecatlib.php');
             // retrieve list of categories names
-            $categorynames = array();
-            $parentlist = array();
-            make_categories_list($categorynames, $parentlist);
+            $categorynames = coursecat::make_categories_list();
         }
 
         $output = '';

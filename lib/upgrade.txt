@@ -3,6 +3,18 @@ information provided here is intended especially for developers.
 
 === 2.5 ===
 
+course category functions to be deprecated:
+get_categories()
+get_child_categories()
+make_categories_list() !
+get_course_category_tree() - used only for combo display
+make_categories_options()
+
+affected files:
+block_course_list.php
+manage.php
+delete_category_form.php
+
 * Functions responsible for output in course/lib.php are deprecated, the code is moved to
   appropriate renderers: print_course(), print_course_search(), print_remote_course(),
   print_remote_host(), print_section_add_menus(), print_my_moodle()

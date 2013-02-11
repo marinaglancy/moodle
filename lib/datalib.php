@@ -963,7 +963,12 @@ function get_categories($parent='none', $sort=NULL, $shallow=true) {
     } else if ($parent !== 'none' && $sort === null && $shallow) {
         $cat = coursecat::get($parent, IGNORE_MISSING, true);
         if ($cat) {
-            return $cat->get_children();
+            $rv = array();
+            foreach ($cat->get_children() as $id => $obj) {
+                $rv[$id] = (object)convert_to_array($obj);
+            }
+            return $rv;
+            //return $cat->get_children();
         }
         return array();
     }
