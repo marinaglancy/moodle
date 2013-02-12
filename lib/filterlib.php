@@ -943,12 +943,20 @@ function filter_preload_activities(course_modinfo $modinfo) {
     $allcontextids = array_merge($cmcontextids, $parentcontextids);
 
     // Get all filter_active rows relating to all these contexts
-    list ($sql, $params) = $DB->get_in_or_equal($allcontextids);
-    $filteractives = $DB->get_records_select('filter_active', "contextid $sql", $params);
+    if (!empty($allcontextids)) {
+        list ($sql, $params) = $DB->get_in_or_equal($allcontextids);
+        $filteractives = $DB->get_records_select('filter_active', "contextid $sql", $params);
+    } else {
+        $filteractives = array();
+    }
 
     // Get all filter_config only for the cm contexts
-    list ($sql, $params) = $DB->get_in_or_equal($cmcontextids);
-    $filterconfigs = $DB->get_records_select('filter_config', "contextid $sql", $params);
+    if (!empty($cmcontextids)) {
+        list ($sql, $params) = $DB->get_in_or_equal($cmcontextids);
+        $filterconfigs = $DB->get_records_select('filter_config', "contextid $sql", $params);
+    } else {
+        $filterconfigs = array();
+    }
 
     // Note: I was a bit surprised that filter_config only works for the
     // most specific context (i.e. it does not need to be checked for course
