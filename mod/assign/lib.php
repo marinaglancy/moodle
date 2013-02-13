@@ -369,7 +369,8 @@ function assign_print_overview($courses, &$htmlarray) {
                '<a ' . $dimmedclass .
                    'title="' . $strassignment . '" ' .
                    'href="' . $href . '">' .
-               format_string($assignment->name) .
+               format_string($assignment->name, true,
+                       array('context' => context_module::instance($assignment->coursemodule))) .
                '</a></div>';
         if ($assignment->duedate) {
             $userdate = userdate($assignment->duedate);
@@ -718,7 +719,7 @@ function assign_get_recent_mod_activity(&$activities,
         $grades = grade_get_grades($courseid, 'mod', 'assign', $cm->instance, $userids);
     }
 
-    $aname = format_string($cm->name, true);
+    $aname = format_string($cm->name, true, array('context' => $cm_context));
     foreach ($show as $submission) {
         $activity = new stdClass();
 

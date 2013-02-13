@@ -667,12 +667,13 @@ function login_lock_account($user) {
         $data->firstname = $user->firstname;
         $data->lastname  = $user->lastname;
         $data->username  = $user->username;
-        $data->sitename  = format_string($site->fullname);
+        $data->sitename  = format_string($site->fullname, true,
+                array('context' => context_system::instance()));
         $data->link      = $CFG->wwwroot.'/login/unlock_account.php?u='.$user->id.'&s='.$secret;
         $data->admin     = generate_email_signoff();
 
         $message = get_string('lockoutemailbody', 'admin', $data);
-        $subject = get_string('lockoutemailsubject', 'admin', format_string($site->fullname));
+        $subject = get_string('lockoutemailsubject', 'admin', $data->sitename);
 
         if ($message) {
             // Directly email rather than using the messaging system to ensure its not routed to a popup or jabber.

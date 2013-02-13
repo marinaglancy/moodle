@@ -6509,7 +6509,7 @@ class context_course extends context {
                 if ($short){
                     $name .= format_string($course->shortname, true, array('context' => $this));
                 } else {
-                    $name .= format_string(get_course_display_name_for_list($course));
+                    $name .= format_string(get_course_display_name_for_list($course), true, array('context' => $this));
                }
             }
         }

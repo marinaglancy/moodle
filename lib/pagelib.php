@@ -1070,7 +1070,7 @@ class moodle_page {
      * @param string $title the title that should go in the <head> section of the HTML of this page.
      */
     public function set_title($title) {
-        $title = format_string($title);
+        $title = format_string($title, true, array('context' => $this->context));
         $title = strip_tags($title);
         $title = str_replace('"', '&quot;', $title);
         $this->_title = $title;
@@ -1083,7 +1083,7 @@ class moodle_page {
      * @param string $heading the main heading that should be displayed at the top of the <body>.
      */
     public function set_heading($heading) {
-        $this->_heading = format_string($heading);
+        $this->_heading = format_string($heading, true, array('context' => $this->context));
     }
 
     /**

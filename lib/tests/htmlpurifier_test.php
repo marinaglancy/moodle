@@ -42,10 +42,11 @@ class core_htmlpurifier_testcase extends basic_testcase {
      */
     public function test_allow_blank_target() {
         $text = '<a href="http://moodle.org" target="_blank">Some link</a>';
-        $result = format_text($text, FORMAT_HTML);
+        $options = array('context' => context_system::instance());
+        $result = format_text($text, FORMAT_HTML, $options);
         $this->assertSame($text, $result);
 
-        $result = format_text('<a href="http://moodle.org" target="some">Some link</a>', FORMAT_HTML);
+        $result = format_text('<a href="http://moodle.org" target="some">Some link</a>', FORMAT_HTML, $options);
         $this->assertSame('<a href="http://moodle.org">Some link</a>', $result);
     }
 
@@ -119,7 +120,8 @@ class core_htmlpurifier_testcase extends basic_testcase {
     public function test_format_text_allowid() {
         // Start off by not allowing ids (default)
         $options = array(
-            'nocache' => true
+            'nocache' => true,
+            'context' => context_system::instance()
         );
         $result = format_text('<div id="example">Frog</div>', FORMAT_HTML, $options);
         $this->assertSame('<div>Frog</div>', $result);

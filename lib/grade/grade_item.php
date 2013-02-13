@@ -1220,7 +1220,8 @@ class grade_item extends grade_object {
     public function get_name($fulltotal=false) {
         if (!empty($this->itemname)) {
             // MDL-10557
-            return format_string($this->itemname);
+            return format_string($this->itemname, true,
+                    array('context' => context_course::instance($this->courseid)));
 
         } else if ($this->is_course_item()) {
             return get_string('coursetotal', 'grades');

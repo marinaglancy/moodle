@@ -700,7 +700,9 @@ function external_format_text($text, $textformat, $contextid, $component, $filea
     if (!$settings->get_raw()) {
         $textformat = FORMAT_HTML; // Force format to HTML when not raw.
         $text = format_text($text, $textformat,
-                array('noclean' => true, 'para' => false, 'filter' => $settings->get_filter()));
+                array('noclean' => true, 'para' => false,
+                    'filter' => $settings->get_filter(),
+                    'context' => $contextid));
     }
 
     return array($text, $textformat);

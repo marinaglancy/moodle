@@ -1995,7 +1995,7 @@ abstract class repository implements cacheable_object {
         global $CFG, $OUTPUT;
         $meta = new stdClass();
         $meta->id   = $this->id;
-        $meta->name = format_string($this->get_name());
+        $meta->name = format_string($this->get_name(), true, array('context' => $this->context));
         $meta->type = $this->get_typename();
         $meta->icon = $OUTPUT->pix_url('icon', 'repository_'.$meta->type)->out(false);
         $meta->supported_types = file_get_typegroup('extension', $this->supported_filetypes());
