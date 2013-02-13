@@ -259,6 +259,7 @@ class qtype_essay_format_editor_renderer extends plugin_renderer_base {
 
         $formatoptions = new stdClass();
         $formatoptions->para = false;
+        $formatoptions->context = $qa->get_question()->contextid;
         return format_text($step->get_qt_var($name), $step->get_qt_var($name . 'format'),
                 $formatoptions);
     }

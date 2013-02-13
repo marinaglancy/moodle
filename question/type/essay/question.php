@@ -72,6 +72,7 @@ class qtype_essay_question extends question_with_responses {
         if (isset($response['answer'])) {
             $formatoptions = new stdClass();
             $formatoptions->para = false;
+            $formatoptions->context = $this->contextid;
             return html_to_text(format_text(
                     $response['answer'], FORMAT_HTML, $formatoptions), 0, false);
         } else {

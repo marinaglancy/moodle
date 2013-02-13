@@ -506,6 +506,7 @@ abstract class question_behaviour {
         $formatoptions = new stdClass();
         $formatoptions->noclean = true;
         $formatoptions->para = false;
+        $formatoptions->context = $this->question->contextid;
 
         if (is_null($comment)) {
             list($comment, $commentformat) = $this->qa->get_manual_comment();

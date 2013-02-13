@@ -305,6 +305,7 @@ abstract class question_definition {
         $formatoptions = new stdClass();
         $formatoptions->noclean = !$clean;
         $formatoptions->para = false;
+        $formatoptions->context = $this->contextid;
         $text = $qa->rewrite_pluginfile_urls($text, $component, $filearea, $itemid);
         return format_text($text, $format, $formatoptions);
     }
@@ -317,7 +318,8 @@ abstract class question_definition {
      * @return string the equivalent plain text.
      */
     public function html_to_text($text, $format) {
-        return html_to_text(format_text($text, $format, array('noclean' => true)), 0, false);
+        return html_to_text(format_text($text, $format,
+                array('noclean' => true, 'context' => $this->contextid)), 0, false);
     }
 
     /** @return the result of applying {@link format_text()} to the question text. */
