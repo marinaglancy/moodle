@@ -60,8 +60,9 @@ class filter_activitynames extends moodle_text_filter {
                 usort($sortedactivities, 'filter_activitynames_comparemodulenamesbylength');
 
                 foreach ($sortedactivities as $cm) {
-                    //Exclude labels, hidden activities and activities for group members only
-                    if ($cm->visible and empty($cm->groupmembersonly) and $cm->has_view()) {
+                    //Exclude current activity, labels, hidden activities and activities for group members only
+                    if (!($this->context->contextlevel == CONTEXT_MODULE && $cm->id == $this->context->instanceid) &&
+                            $cm->visible && empty($cm->groupmembersonly) && $cm->has_view()) {
                         $title = s(trim(strip_tags($cm->name)));
                         $currentname = trim($cm->name);
                         $entitisedname  = s($currentname);
