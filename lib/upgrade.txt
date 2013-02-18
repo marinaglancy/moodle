@@ -21,7 +21,8 @@ information provided here is intended especially for developers.
 * curl::setopt() does not accept constant values any more. As it never worked properly,
   we decided to make the type check stricter. Now, the keys of the array pass must be a string
   corresponding to the curl constant name.
-
+* Functions responsible for managing and accessing course categories are moved to class coursecat
+  in lib/coursecatlib.php. The following global functions are deprecated: make_categories_list()
 
 YUI changes:
 * M.util.help_icon has been deprecated. Code should be updated to use moodle-core-popuphelp
