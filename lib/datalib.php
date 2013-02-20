@@ -936,13 +936,34 @@ function get_courses_search($searchterms, $sort='fullname ASC', $page=0, $record
 
 
 /**
- * Returns a sorted list of categories. Each category object has a context
- * property that is a context object.
+ * Returns a sorted list of categories.
  *
  * When asking for $parent='none' it will return all the categories, regardless
  * of depth. Wheen asking for a specific parent, the default is to return
  * a "shallow" resultset. Pass false to $shallow and it will return all
  * the child categories as well.
+ *
+ * This function is deprecated. Use appropriate functions from class coursecat.
+ * Examples:
+ *
+ * coursecat::get_all_visible()
+ * - returns all categories visible to the current user (i.e. that have
+ * visible=1 or user has capability to view hidden categories)
+ *
+ * coursecat::get($categoryid)->get_children()
+ * - returns all children of the specified category as instances of class
+ * coursecat, which means on each of them method get_children() can be called again
+ *
+ * coursecat::cnt_all()
+ * - returns total number of categories (including those invisible to current user)
+ *
+ * see class coursecat for more functions
+ *
+ * Note that coursecat returns categories sorted by sortorder and it caches the
+ * retrieved categories and their contexts. Alternative sorting must be done using
+ * PHP methods.
+ *
+ * @deprecated since 2.5
  *
  * @global object
  * @uses CONTEXT_COURSECAT
@@ -952,7 +973,39 @@ function get_courses_search($searchterms, $sort='fullname ASC', $page=0, $record
  * @return array of categories
  */
 function get_categories($parent='none', $sort=NULL, $shallow=true) {
-    global $DB;
+    global $DB, $CFG;
+
+    // Typical cases implemented in coursecat:
+    if (($parent === 'none' || (!$parent && !$shallow)) && $sort === null) {
+        // all categories in the system sorted by sortorder
+        debugging('Function get_categories() is deprecated. Please use coursecat::get_all_visible(). See phpdocs for more details',
+                DEBUG_DEVELOPER);
+        require_once($CFG->libdir. '/coursecatlib.php');
+        $rv = array();
+        foreach (coursecat::get_all_visible() as $cat) {
+            // cast from coursecat to stdClass in case developer accesses additional properties later
+            $rv[] = (object)convert_to_array($cat);
+        }
+        return $rv;
+    }
+    if ($parent !== 'none' && $shallow && $sort === null) {
+        // children categories sorted by sortorder
+        debugging('Function get_categories($parent) is deprecated. Please use coursecat::get($parent)->get_children(). See phpdocs for more details',
+                DEBUG_DEVELOPER);
+        require_once($CFG->libdir. '/coursecatlib.php');
+        $rv = array();
+        if ($coursecat = coursecat::get((int)$parent, IGNORE_MISSING)) {
+            foreach ($coursecat->get_children() as $child) {
+                // cast from coursecat to stdClass in case developer accesses additional properties later
+                $rv[] = (object)convert_to_array($child);
+            }
+        }
+        return $rv;
+    }
+
+    // Custom sorting or retrieving the whole sub-tree - do direct DB queries as in the original function
+    debugging('Function get_categories() is deprecated. Please use appropriate methods from class coursecat. See phpdocs for more details',
+            DEBUG_DEVELOPER);
 
     if ($sort === NULL) {
         $sort = 'ORDER BY cc.sortorder ASC';
