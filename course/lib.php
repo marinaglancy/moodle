@@ -2799,93 +2799,75 @@ function move_courses($courseids, $categoryid) {
 
 /**
  * Hide course category and child course and subcategories
+ *
+ * This function is deprecated. Please use
+ * coursecat::get($category->id)->hide();
+ *
+ * @see coursecat::hide()
+ * @deprecated since 2.5
+ *
  * @param stdClass $category
  * @return void
  */
 function course_category_hide($category) {
-    global $DB;
+    global $CFG;
+    require_once($CFG->libdir.'/coursecatlib.php');
 
-    $category->visible = 0;
-    $DB->set_field('course_categories', 'visible', 0, array('id'=>$category->id));
-    $DB->set_field('course_categories', 'visibleold', 0, array('id'=>$category->id));
-    $DB->execute("UPDATE {course} SET visibleold = visible WHERE category = ?", array($category->id)); // store visible flag so that we can return to it if we immediately unhide
-    $DB->set_field('course', 'visible', 0, array('category' => $category->id));
-    // get all child categories and hide too
-    if ($subcats = $DB->get_records_select('course_categories', "path LIKE ?", array("$category->path/%"))) {
-        foreach ($subcats as $cat) {
-            $DB->set_field('course_categories', 'visibleold', $cat->visible, array('id'=>$cat->id));
-            $DB->set_field('course_categories', 'visible', 0, array('id'=>$cat->id));
-            $DB->execute("UPDATE {course} SET visibleold = visible WHERE category = ?", array($cat->id));
-            $DB->set_field('course', 'visible', 0, array('category' => $cat->id));
-        }
-    }
-    add_to_log(SITEID, "category", "hide", "editcategory.php?id=$category->id", $category->id);
+    debugging('Function course_category_hide() is deprecated. Please use coursecat::hide() instead.');
+
+    coursecat::get($category->id)->hide();
 }
 
 /**
  * Show course category and child course and subcategories
+ *
+ * This function is deprecated. Please use
+ * coursecat::get($category->id)->show();
+ *
+ * @see coursecat::show()
+ * @deprecated since 2.5
+ *
  * @param stdClass $category
  * @return void
  */
 function course_category_show($category) {
-    global $DB;
+    global $CFG;
+    require_once($CFG->libdir.'/coursecatlib.php');
 
-    $category->visible = 1;
-    $DB->set_field('course_categories', 'visible', 1, array('id'=>$category->id));
-    $DB->set_field('course_categories', 'visibleold', 1, array('id'=>$category->id));
-    $DB->execute("UPDATE {course} SET visible = visibleold WHERE category = ?", array($category->id));
-    // get all child categories and unhide too
-    if ($subcats = $DB->get_records_select('course_categories', "path LIKE ?", array("$category->path/%"))) {
-        foreach ($subcats as $cat) {
-            if ($cat->visibleold) {
-                $DB->set_field('course_categories', 'visible', 1, array('id'=>$cat->id));
-            }
-            $DB->execute("UPDATE {course} SET visible = visibleold WHERE category = ?", array($cat->id));
-        }
-    }
-    add_to_log(SITEID, "category", "show", "editcategory.php?id=$category->id", $category->id);
+    debugging('Function course_category_show() is deprecated. Please use coursecat::show() instead.');
+
+    coursecat::get($category->id)->show();
 }
 
 /**
  * Efficiently moves a category - NOTE that this can have
  * a huge impact access-control-wise...
  *
+ * This function is deprecated. Please use
+ * $coursecat = coursecat::get($category->id);
+ * if ($coursecat->can_change_parent($newparentcat->id)) {
+ *     $coursecat->change_parent($newparentcat->id);
+ * }
+ *
+ * Alternatively you can use
+ * $coursecat->update(array('parent' => $newparentcat->id));
+ *
+ * Function update() also updates field course_categories.timemodified
+ *
+ * @see coursecat::change_parent()
+ * @see coursecat::update()
+ * @deprecated since 2.5
+ *
  * @param stdClass|coursecat $category
  * @param stdClass|coursecat $newparentcat
  */
 function move_category($category, $newparentcat) {
-    global $CFG, $DB;
+    global $CFG;
+    require_once($CFG->libdir.'/coursecatlib.php');
 
-    $context = context_coursecat::instance($category->id);
+    debugging('Function move_category() is deprecated. Please use coursecat::change_parent() instead.');
 
-    $hidecat = false;
-    if (empty($newparentcat->id)) {
-        $DB->set_field('course_categories', 'parent', 0, array('id' => $category->id));
-        $newparent = context_system::instance();
-    } else {
-        $DB->set_field('course_categories', 'parent', $newparentcat->id, array('id' => $category->id));
-        $newparent = context_coursecat::instance($newparentcat->id);
-
-        if (!$newparentcat->visible and $category->visible) {
-            // better hide category when moving into hidden category, teachers may unhide afterwards and the hidden children will be restored properly
-            $hidecat = true;
-        }
-    }
-
-    context_moved($context, $newparent);
-
-    // now make it last in new category
-    $DB->set_field('course_categories', 'sortorder', MAX_COURSES_IN_CATEGORY*MAX_COURSE_CATEGORIES, array('id'=>$category->id));
-
-    // Log action.
-    add_to_log(SITEID, "category", "move", "editcategory.php?id=$category->id", $category->id);
-
-    // and fix the sortorders
-    fix_course_sortorder();
-
-    if ($hidecat) {
-        course_category_hide($category);
-    }
+    return coursecat::get($category->id)->change_parent($newparentcat->id);
 }
 
 /**
