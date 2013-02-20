@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -19,8 +18,7 @@
  * This filter provides automatic linking to
  * activities when its name (title) is found inside every Moodle text
  *
- * @package    filter
- * @subpackage activitynames
+ * @package    filter_activitynames
  * @copyright  2004 onwards Eloy Lafuente (stronk7) {@link http://stronk7.com}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -29,83 +27,93 @@ defined('MOODLE_INTERNAL') || die();
 
 /**
  * Activity name filtering
+ *
+ * This filter provides automatic linking to
+ * activities when its name (title) is found inside every Moodle text.
+ * If called in module context it does not link to the same module's name
+ *
+ * @package    filter_activitynames
+ * @copyright  2004 onwards Eloy Lafuente (stronk7) {@link http://stronk7.com}
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class filter_activitynames extends moodle_text_filter {
-    // Trivial-cache - keyed on $cachedcourseid
-    static $activitylist = null;
-    static $cachedcourseid;
 
+    /**
+     * Filters the text adding links to activities in the same course
+     *
+     * @param $text some HTML content.
+     * @param array $options options passed to the filters
+     * @return the HTML content after the filtering has been applied.
+     */
     function filter($text, array $options = array()) {
         if (!$courseid = get_courseid_from_context($this->context)) {
             return $text;
         }
 
-        // Initialise/invalidate our trivial cache if dealing with a different course
-        if (!isset(self::$cachedcourseid) || self::$cachedcourseid !== (int)$courseid) {
-            self::$activitylist = null;
-        }
-        self::$cachedcourseid = (int)$courseid;
+        // Check for cached list of activities inside the course.
+        $cache = cache::make_from_params(cache_store::MODE_REQUEST, 'filter_activitynames',
+                'activitylist', array('simplekeys' => true));
+        $activitylist = $cache->get($courseid);
 
-        /// It may be cached
-
-        if (is_null(self::$activitylist)) {
-            self::$activitylist = array();
+        if ($activitylist === false) {
+            $activitylist = array();
 
             $modinfo = get_fast_modinfo($courseid);
             if (!empty($modinfo->cms)) {
-                self::$activitylist = array();      /// We will store all the activities here
+                // Create list of course modules sorted by name length.
+                // Exclude course modules without links, hidden activities and activities for group members only.
+                $sortedactivities = array();
+                foreach ($modinfo->cms as $cm) {
+                    if ($cm->visible && empty($cm->groupmembersonly) &&
+                            strlen(trim(strip_tags($cm->name))) && $cm->has_view()) {
+                        $sortedactivities[] = $cm;
+                    }
+                }
+                usort($sortedactivities, array($this, 'comparemodulenamesbylength'));
 
-                //Sort modinfo by name length
-                $sortedactivities = fullclone($modinfo->cms);
-                usort($sortedactivities, 'filter_activitynames_comparemodulenamesbylength');
-
+                // For each course module create and store filterobject(s)
                 foreach ($sortedactivities as $cm) {
-                    //Exclude labels, hidden activities and activities for group members only
-                    if ($cm->visible and empty($cm->groupmembersonly) and $cm->has_view()) {
-                        $title = s(trim(strip_tags($cm->name)));
-                        $currentname = trim($cm->name);
-                        $entitisedname  = s($currentname);
-                        /// Avoid empty or unlinkable activity names
-                        if (!empty($title)) {
-                            $href_tag_begin = html_writer::start_tag('a',
-                                    array('class' => 'autolink', 'title' => $title,
-                                        'href' => $cm->get_url()));
-                            self::$activitylist[$cm->id] = new filterobject($currentname, $href_tag_begin, '</a>', false, true);
-                            if ($currentname != $entitisedname) { /// If name has some entity (&amp; &quot; &lt; &gt;) add that filter too. MDL-17545
-                                self::$activitylist[$cm->id.'-e'] = new filterobject($entitisedname, $href_tag_begin, '</a>', false, true);
-                            }
-                        }
+                    $title = s(trim(strip_tags($cm->name)));
+                    $currentname = trim($cm->name);
+                    $entitisedname = s($currentname);
+                    $href_tag_begin = html_writer::start_tag('a',
+                            array('class' => 'autolink', 'title' => $title,
+                                'href' => $cm->get_url()));
+                    $activitylist[$cm->id] = new filterobject($currentname, $href_tag_begin, '</a>', false, true);
+                    if ($currentname != $entitisedname) {
+                        // If name has some entity (&amp; &quot; &lt; &gt;) add that filter too. MDL-17545.
+                        $activitylist[$cm->id.'-e'] = new filterobject($entitisedname, $href_tag_begin, '</a>', false, true);
                     }
                 }
             }
+
+            // store activitylist in cahce but only for one course
+            $cache->purge();
+            $cache->set($courseid, $activitylist);
         }
 
-        $filterslist = array();
-        if (self::$activitylist) {
+        if ($activitylist && $this->context->contextlevel == CONTEXT_MODULE) {
+            // remove filterobjects for the current module
             $cmid = $this->context->instanceid;
-            if ($this->context->contextlevel == CONTEXT_MODULE && isset(self::$activitylist[$cmid])) {
-                // remove filterobjects for the current module
-                $filterslist = array_diff_key(self::$activitylist, array($cmid => 1, $cmid.'-e' => 1));
-            } else {
-                $filterslist = self::$activitylist;
+            if (isset($activitylist[$cmid])) {
+                $activitylist = array_diff_key($activitylist, array($cmid => 1, $cmid.'-e' => 1));
             }
         }
 
-        if ($filterslist) {
-            return $text = filter_phrases($text, $filterslist);
+        if ($activitylist) {
+            return filter_phrases($text, $activitylist);
         } else {
             return $text;
         }
     }
-}
 
-
-
-//This function is used to order module names from longer to shorter
-function filter_activitynames_comparemodulenamesbylength($a, $b)  {
-    if (strlen($a->name) == strlen($b->name)) {
-        return 0;
+    /**
+     * Used to order module names from longer to shorter
+     */
+    function comparemodulenamesbylength($a, $b)  {
+        if (strlen($a->name) == strlen($b->name)) {
+            return 0;
+        }
+        return (strlen($a->name) < strlen($b->name)) ? 1 : -1;
     }
-    return (strlen($a->name) < strlen($b->name)) ? 1 : -1;
 }
-
