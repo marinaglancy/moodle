@@ -1027,64 +1027,6 @@ function get_all_subcategories($catid) {
 }
 
 /**
- * Return specified category, default if given does not exist
- *
- * This function is deprecated.
- * To get the category with the specified it please use:
- * coursecat::get($catid, IGNORE_MISSING);
- * or
- * coursecat::get($catid, MUST_EXIST);
- *
- * To get the first available category please use
- * $all = coursecat::get_all_visible();
- * $category = reset($all);
- * Please note that it is possible that all categories in the system are hidden
- * and current user does not have capability to view them, in this case
- * it is not possible to retrieve any category object
- *
- * class coursecat will also make sure that at least one category exists in DB
- *
- * @deprecated since 2.5
- * @see coursecat::get
- *
- * @param int $catid course category id
- * @return object caregory
- */
-function get_course_category($catid=0) {
-    global $DB;
-
-    debugging('Function get_course_category() is deprecated. Please use coursecat::get(), see phpdocs for more details');
-
-    $category = false;
-
-    if (!empty($catid)) {
-        $category = $DB->get_record('course_categories', array('id'=>$catid));
-    }
-
-    if (!$category) {
-        // the first category is considered default for now
-        if ($category = $DB->get_records('course_categories', null, 'sortorder', '*', 0, 1)) {
-            $category = reset($category);
-
-        } else {
-            $cat = new stdClass();
-            $cat->name         = get_string('miscellaneous');
-            $cat->depth        = 1;
-            $cat->sortorder    = MAX_COURSES_IN_CATEGORY;
-            $cat->timemodified = time();
-            $catid = $DB->insert_record('course_categories', $cat);
-            // make sure category context exists
-            context_coursecat::instance($catid);
-            mark_context_dirty('/'.SYSCONTEXTID);
-            fix_course_sortorder(); // Required to build course_categories.depth and .path.
-            $category = $DB->get_record('course_categories', array('id'=>$catid));
-        }
-    }
-
-    return $category;
-}
-
-/**
  * Fixes course category and course sortorder, also verifies category and course parents and paths.
  * (circular references are not fixed)
  *
