@@ -381,7 +381,7 @@ class moodle_page_categories_test extends advanced_testcase {
 
     public function test_set_category_top_level() {
         // Setup fixture
-        $cat = $this->getDataGenerator()->create_category();
+        $cat = $this->getDataGenerator()->create_category()->get_db_record();
         // Exercise SUT
         $this->testpage->set_category_by_id($cat->id);
         // Validate
@@ -391,8 +391,8 @@ class moodle_page_categories_test extends advanced_testcase {
 
     public function test_set_nested_categories() {
         // Setup fixture
-        $topcat = $this->getDataGenerator()->create_category();
-        $subcat = $this->getDataGenerator()->create_category(array('parent'=>$topcat->id));
+        $topcat = $this->getDataGenerator()->create_category()->get_db_record();
+        $subcat = $this->getDataGenerator()->create_category(array('parent'=>$topcat->id))->get_db_record();
         // Exercise SUT
         $this->testpage->set_category_by_id($subcat->id);
         // Validate
