@@ -3839,3 +3839,43 @@ function get_all_subcategories($catid) {
     }
     return $subcats;
 }
+
+/**
+ * Gets the child categories of a given courses category. Uses a static cache
+ * to make repeat calls efficient.
+ *
+ * This function is deprecated. Please use functions in class coursecat:
+ * - coursecat::get($parentid)->has_children()
+ * tells if the category has children (visible or not to the current user)
+ *
+ * - coursecat::get($parentid)->get_children()
+ * returns an array of coursecat objects, each of them represents a children category visible
+ * to the current user (i.e. visible=1 or user has capability to view hidden categories)
+ *
+ * - coursecat::cnt_all()
+ * returns total count of all categories (both visible and not)
+ *
+ * - coursecat::get_default()
+ * returns the first category (usually to be used if cnt_all() == 1)
+ *
+ * @deprecated since 2.5
+ *
+ * @param int $parentid the id of a course category.
+ * @return array all the child course categories.
+ */
+function get_child_categories($parentid) {
+    global $CFG;
+    require_once($CFG->libdir. '/coursecatlib.php');
+
+    debugging('Function get_child_categories() is deprecated. Use coursecat::get_children() or see phpdocs for more details.',
+            DEBUG_DEVELOPER);
+
+    $rv = array();
+    if ($coursecat = coursecat::get($parentid, IGNORE_MISSING)) {
+        foreach ($coursecat->get_children() as $child) {
+            // cast from coursecat to stdClass in case developer accesses additional properties later
+            $rv[] = (object)convert_to_array($child);
+        }
+    }
+    return $rv;
+}
