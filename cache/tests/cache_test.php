@@ -866,4 +866,87 @@ class cache_phpunit_tests extends advanced_testcase {
         $this->assertTrue($cache->set('test', 'test'));
         $this->assertEquals('test', $cache->get('test'));
     }
+
+    public function test_false_value() {
+        $cache = cache::make_from_params(cache_store::MODE_APPLICATION, 'phpunit', 'falsevalue');
+        $cache->set('falsevar', false);
+        $this->assertTrue($cache->has('falsevar'));
+        $this->assertEquals(false, $cache->get('falsevar'));
+    }
+
+    public function test_session_cache() {
+        $this->resetAfterTest(true);
+        $cache = cache::make_from_params(cache_store::MODE_SESSION, 'phpunit', 'sessioncache');
+        $user1 = $this->getDataGenerator()->create_user();
+        $user2 = $this->getDataGenerator()->create_user();
+
+        $this->setUser($user1);
+        session_set_user($user1);
+        $sesskey1 = sesskey();
+
+        $cache->set('var', 1);
+
+        $this->assertTrue($cache->has('var'));
+        $this->assertEquals(1, $cache->get('var'));
+
+        $this->setUser($user2);
+        session_set_user($user2);
+        $sesskey2 = sesskey();
+
+        $this->assertNotEquals($sesskey1, $sesskey2);
+
+        $cache = cache::make_from_params(cache_store::MODE_SESSION, 'phpunit', 'sessioncache');
+        $this->assertFalse($cache->has('var'));
+        $this->assertEquals(false, $cache->get('var'));
+    }
+
+    public function test_purge_all_caches() {
+        $this->resetAfterTest(true);
+
+        $cache = cache::make_from_params(cache_store::MODE_APPLICATION, 'phpunit', 'purgecachesapp');
+        $cache->set('var', 1);
+        $this->assertTrue($cache->has('var'));
+        $this->assertEquals(1, $cache->get('var'));
+
+        purge_all_caches();
+        $this->assertFalse($cache->has('var'));
+        $this->assertEquals(false, $cache->get('var'));
+
+        $cache = cache::make_from_params(cache_store::MODE_SESSION, 'phpunit', 'purgecachessess');
+        $cache->set('var', 1);
+        $this->assertTrue($cache->has('var'));
+        $this->assertEquals(1, $cache->get('var'));
+
+        purge_all_caches();
+        $this->assertFalse($cache->has('var'));
+        $this->assertEquals(false, $cache->get('var'));
+
+        $cache = cache::make_from_params(cache_store::MODE_REQUEST, 'phpunit', 'purgecachesreq');
+        $cache->set('var', 1);
+        $this->assertTrue($cache->has('var'));
+        $this->assertEquals(1, $cache->get('var'));
+
+        purge_all_caches();
+        $this->assertFalse($cache->has('var'));
+        $this->assertEquals(false, $cache->get('var'));
+    }
+
+    public function test_definition_ttl2() {
+        $instance = cache_config_phpunittest::instance(true);
+        $instance->phpunit_add_definition('phpunit/ttltest2', array(
+            'mode' => cache_store::MODE_APPLICATION,
+            'component' => 'phpunit',
+            'area' => 'ttltest2',
+            'ttl' => 2
+        ));
+        $cache = cache::make('phpunit', 'ttltest2');
+
+        $cache->set('var', 1);
+        $this->assertTrue($cache->has('var'));
+        $this->assertEquals(1, $cache->get('var'));
+
+        sleep(3);
+        $this->assertFalse($cache->has('var'));
+        $this->assertEquals(false, $cache->get('var'));
+    }
 }
