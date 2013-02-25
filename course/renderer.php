@@ -1450,6 +1450,100 @@ class core_course_renderer extends plugin_renderer_base {
         return $content;
     }
 
+    /** invoked from /index.php */
+    public function courses_list_frontpage($displaytype) {
+        global $CFG, $DB;
+        $content = '';
+        $hassiteconfig = has_capability('moodle/site:config', context_system::instance());
+        if ($displaytype == FRONTPAGECATEGORYNAMES) {
+            $content .= html_writer::tag('a', get_string('skipa', 'access', textlib::strtolower(get_string('categories'))), array('href'=>'#skipcategories', 'class'=>'skip-block'));
+
+            //wrap frontpage category names in div container
+            $content .= html_writer::start_tag('div', array('id'=>'frontpage-category-names'));
+
+            $content .= $this->heading(get_string('categories'), 2, 'headingblock header');
+            $content .= $this->box_start('generalbox categorybox');
+            ob_start();
+            print_whole_category_list(NULL, NULL, NULL, -1, false);
+            $content .= ob_get_contents();
+            ob_end_clean();
+            $content .= $this->box_end();
+            $content .= $this->course_search_form('', 'short');
+
+            //end frontpage category names div container
+            $content .= html_writer::end_tag('div');
+
+            $content .= html_writer::tag('span', '', array('class'=>'skip-block-to', 'id'=>'skipcategories'));
+        }
+
+        if ($displaytype == FRONTPAGECATEGORYCOMBO) {
+            $content .= html_writer::tag('a', get_string('skipa', 'access', textlib::strtolower(get_string('courses'))), array('href'=>'#skipcourses', 'class'=>'skip-block'));
+
+            //wrap frontpage category combo in div container
+            $content .= html_writer::start_tag('div', array('id'=>'frontpage-category-combo'));
+
+            $content .= $this->heading(get_string('courses'), 2, 'headingblock header');
+            // if there are too many courses, building course category tree could be slow,
+            // users should go to course index page to see the whole list.
+            $coursecount = $DB->count_records('course');
+            if (empty($CFG->numcoursesincombo)) {
+                // if $CFG->numcoursesincombo hasn't been set, use default value 500
+                $CFG->numcoursesincombo = 500;
+            }
+            if ($coursecount > $CFG->numcoursesincombo) {
+                $link = new moodle_url('/course/');
+                $content .= $this->notification(get_string('maxnumcoursesincombo', 'moodle', array('link'=>$link->out(), 'maxnumofcourses'=>$CFG->numcoursesincombo, 'numberofcourses'=>$coursecount)));
+            } else {
+                $content .= $this->course_category_tree(get_course_category_tree());
+            }
+            $content .= $this->course_search_form('', 'short');
+
+            //end frontpage category combo div container
+            $content .= html_writer::end_tag('div');
+
+            $content .= html_writer::tag('span', '', array('class'=>'skip-block-to', 'id'=>'skipcourses'));
+        }
+
+        if ($displaytype == FRONTPAGECOURSELIST) {
+            $ncourses = $DB->count_records('course');
+            if (isloggedin() and !$hassiteconfig and !isguestuser() and empty($CFG->disablemycourses)) {
+                $content .= html_writer::tag('a', get_string('skipa', 'access', textlib::strtolower(get_string('mycourses'))), array('href'=>'#skipmycourses', 'class'=>'skip-block'));
+
+                //wrap frontpage course list in div container
+                $content .= html_writer::start_tag('div', array('id'=>'frontpage-course-list'));
+
+                $content .= $this->heading(get_string('mycourses'), 2, 'headingblock header');
+                $content .= $this->enrolled_courses_list();
+
+                //end frontpage course list div container
+                $content .= html_writer::end_tag('div');
+
+                $content .= html_writer::tag('span', '', array('class'=>'skip-block-to', 'id'=>'skipmycourses'));
+            } else if ((!$hassiteconfig and !isguestuser()) or ($ncourses <= FRONTPAGECOURSELIMIT)) {
+                // admin should not see list of courses when there are too many of them
+                $content .= html_writer::tag('a', get_string('skipa', 'access', textlib::strtolower(get_string('availablecourses'))), array('href'=>'#skipavailablecourses', 'class'=>'skip-block'));
+
+                //wrap frontpage course list in div container
+                $content .= html_writer::start_tag('div', array('id'=>'frontpage-course-list'));
+
+                $content .= $this->heading(get_string('availablecourses'), 2, 'headingblock header');
+                ob_start();
+                print_courses(0);
+                $content .= ob_get_contents();
+                ob_end_clean();
+
+                //end frontpage course list div container
+                $content .= html_writer::end_tag('div');
+
+                $content .= html_writer::tag('span', '', array('class'=>'skip-block-to', 'id'=>'skipavailablecourses'));
+            } else {
+                $content .= html_writer::tag('div', get_string('therearecourses', '', $ncourses), array('class' => 'notifyproblem'));
+                $content .= $this->course_search_form('', 'short');
+            }
+        }
+        return $content;
+    }
+
     /** invoked from /course/index.php */
     public function coursecat($category) {
         global $CFG, $DB;
