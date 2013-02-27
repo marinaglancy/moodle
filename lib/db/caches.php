@@ -128,4 +128,8 @@ $definitions = array(
             'changesincoursecat',
         )
     ),
+    // Used to store data for courses lists in category and/or search results
+    'courseslists' => array(
+        'mode' => cache_store::MODE_SESSION
+    ),
 );
