@@ -1347,7 +1347,8 @@ class core_course_renderer extends plugin_renderer_base {
         }
         if ($hassubcategories || $hascourses) {
             $classes[] = 'with_children';
-            if ($depth && $depth >= $coursecatr->get_attr(coursecat_renderable::EXPANDSUBCATEGORIESDEPTH)) {
+            $expanddepth = $coursecatr->get_attr(coursecat_renderable::EXPANDSUBCATEGORIESDEPTH);
+            if ($depth && $expanddepth > 0 && $depth >= $expanddepth) {
                 $classes[] = 'collapsed';
                 // TODO not only mark collapsed but also do not display subcategories and courses,
                 // they will be loaded in AJAX request or displayed on separate page for non-js users
@@ -1462,12 +1463,12 @@ class core_course_renderer extends plugin_renderer_base {
             $content .= html_writer::start_tag('div', array('id'=>'frontpage-category-names'));
 
             $content .= $this->heading(get_string('categories'), 2, 'headingblock header');
-            $content .= $this->box_start('generalbox categorybox');
-            ob_start();
-            print_whole_category_list(NULL, NULL, NULL, -1, false);
-            $content .= ob_get_contents();
-            ob_end_clean();
-            $content .= $this->box_end();
+            $coursecategory = new coursecat_renderable(0,
+                    array(
+                    coursecat_renderable::EXPANDSUBCATEGORIESDEPTH => $CFG->maxcategorydepth,
+                    coursecat_renderable::DISPLAYCOURSES => 'none',
+            ));
+            $content .= $this->render($coursecategory);
             $content .= $this->course_search_form('', 'short');
 
             //end frontpage category names div container
@@ -1494,7 +1495,12 @@ class core_course_renderer extends plugin_renderer_base {
                 $link = new moodle_url('/course/');
                 $content .= $this->notification(get_string('maxnumcoursesincombo', 'moodle', array('link'=>$link->out(), 'maxnumofcourses'=>$CFG->numcoursesincombo, 'numberofcourses'=>$coursecount)));
             } else {
-                $content .= $this->course_category_tree(get_course_category_tree());
+                $coursecategory = new coursecat_renderable(0,
+                        array(
+                        coursecat_renderable::EXPANDSUBCATEGORIESDEPTH => $CFG->maxcategorydepth,
+                        coursecat_renderable::DISPLAYCOURSES => 'collapsed',
+                ));
+                $content .= $this->render($coursecategory);
             }
             $content .= $this->course_search_form('', 'short');
 
@@ -1527,10 +1533,12 @@ class core_course_renderer extends plugin_renderer_base {
                 $content .= html_writer::start_tag('div', array('id'=>'frontpage-course-list'));
 
                 $content .= $this->heading(get_string('availablecourses'), 2, 'headingblock header');
-                ob_start();
-                print_courses(0);
-                $content .= ob_get_contents();
-                ob_end_clean();
+                $coursecategory = new coursecat_renderable(0,
+                    array(
+                        coursecat_renderable::OMITSUBCATEGORIES => true,
+                        coursecat_renderable::DISPLAYCOURSES => 'expanded',
+                ));
+                $content .= $this->render($coursecategory);
 
                 //end frontpage course list div container
                 $content .= html_writer::end_tag('div');
