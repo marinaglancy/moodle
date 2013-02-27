@@ -3555,7 +3555,7 @@ function update_category_button($categoryid = 0) {
  * This function is deprecated! For list of categories use
  * coursecat::make_all_categories($requiredcapability, $excludeid, $separator)
  * For parents of one particular category use
- * coursecat::get($id)->get_all_parents()
+ * coursecat::get($id)->get_parents()
  *
  * @deprecated since 2.5
  *
@@ -3574,7 +3574,7 @@ function make_categories_list(&$list, &$parents, $requiredcapability = '',
     require_once($CFG->libdir.'/coursecatlib.php');
 
     debugging('Global function make_categories_list() is deprecated. Please use '.
-            'coursecat::make_categories_list() and coursecat::get_all_parents()',
+            'coursecat::make_categories_list() and coursecat::get_parents()',
             DEBUG_DEVELOPER);
 
     // For categories list use just this one function:
@@ -3585,7 +3585,7 @@ function make_categories_list(&$list, &$parents, $requiredcapability = '',
 
     // Building the list of all parents of all categories in the system is highly undesirable and hardly ever needed.
     // Usually user needs only parents for one particular category, in which case should be used:
-    // coursecat::get($categoryid)->get_all_parents()
+    // coursecat::get($categoryid)->get_parents()
     if (empty($parents)) {
         $parents = array();
     }

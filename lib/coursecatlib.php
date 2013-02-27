@@ -865,8 +865,7 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
         if (!$newparentcat) {
             return false;
         }
-        $newparents = $newparentcat->get_all_parents();
-        if ($newparentcat->id == $this->id || isset($newparents[$this->id])) {
+        if ($newparentcat->id == $this->id || in_array($this->id, $newparentcat->get_parents())) {
             // can not move to itself or it's own child
             return false;
         }
@@ -893,8 +892,7 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
             $DB->set_field('course_categories', 'parent', 0, array('id' => $this->id));
             $newparent = context_system::instance();
         } else {
-            $checkparents = $newparentcat->get_all_parents();
-            if ($newparentcat->id == $this->id || isset($checkparents[$this->id])) {
+            if ($newparentcat->id == $this->id || in_array($this->id, $newparentcat->get_parents())) {
                 // can not move to itself or it's own child
                 throw new moodle_exception('cannotmovecategory');
             }
@@ -1087,7 +1085,7 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
     }
 
     /**
-     * Returns all parents of the element. Last element in the return array is the direct parent of this category
+     * Returns ids of all parents of the category. Last element in the return array is the direct parent
      *
      * For example, if you have a tree of categories like:
      *   Miscellaneous (id = 1)
@@ -1095,21 +1093,18 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
      *         Sub-subcategory (id = 4)
      *   Other category (id = 3)
      *
-     * coursecat::get(1)->get_all_parents() == array()
-     * coursecat::get(2)->get_all_parents() == array(1 => coursecat(...))
-     * coursecat::get(4)->get_all_parents() == array(1 => coursecat(...), 2 => coursecat(...));
+     * coursecat::get(1)->get_parents() == array()
+     * coursecat::get(2)->get_parents() == array(1)
+     * coursecat::get(4)->get_parents() == array(1, 2);
      *
      * Note that this method does not check if all parents are accessible by current user
      *
-     * @return array of coursecat objects indexed by category id
+     * @return array of category ids
      */
-    public function get_all_parents() {
-        $parents = array();
-        if ($this->parent && ($parent = self::get($this->parent, IGNORE_MISSING, true))) {
-            $parents += array($parent->id => $parent) +
-                $parent->get_all_parents();
-        }
-        return array_reverse($parents, true);
+    public function get_parents() {
+        $parents = preg_split('|/|', $this->path, PREG_SPLIT_NO_EMPTY);
+        array_pop($parents);
+        return $parents;
     }
 
     /**
