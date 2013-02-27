@@ -386,8 +386,8 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
      *
      * Please note that this function does not verify access control.
      *
-     * This function calls coursecat::_change_parent if field 'parent' is updated.
-     * It also calls coursecat::_hide or coursecat::_show if 'visible' is updated.
+     * This function calls coursecat::change_parent_raw if field 'parent' is updated.
+     * It also calls coursecat::hide_raw or coursecat::show_raw if 'visible' is updated.
      * Visibility is changed first and then parent is changed. This means that
      * if parent category is hidden, the current category will become hidden
      * too and it may overwrite whatever was set in field 'visible'.
@@ -447,9 +447,9 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
         $changes = false;
         if (isset($data->visible)) {
             if ($data->visible) {
-                $changes = $this->_show();
+                $changes = $this->show_raw();
             } else {
-                $changes = $this->_hide(0);
+                $changes = $this->hide_raw(0);
             }
         }
 
@@ -458,7 +458,7 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
                 self::purge_cache();
             }
             $parentcat = self::get($data->parent, MUST_EXIST, true);
-            $this->_change_parent($parentcat);
+            $this->change_parent_raw($parentcat);
             fix_course_sortorder();
         }
 
@@ -793,7 +793,7 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
 
         if ($children) {
             foreach ($children as $childcat) {
-                $childcat->_change_parent($newparentcat);
+                $childcat->change_parent_raw($newparentcat);
                 // Log action.
                 add_to_log(SITEID, "category", "move", "editcategory.php?id=$childcat->id", $childcat->id);
             }
@@ -883,7 +883,7 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
      *
      * @param coursecat $newparentcat
      */
-     protected function _change_parent(coursecat $newparentcat) {
+     protected function change_parent_raw(coursecat $newparentcat) {
         global $DB;
 
         $context = context_coursecat::instance($this->id);
@@ -917,7 +917,7 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
             fix_course_sortorder();
             $this->restore();
             // Hide object but store 1 in visibleold, because when parent category visibility changes this category must become visible again.
-            $this->_hide(1);
+            $this->hide_raw(1);
         }
     }
 
@@ -947,7 +947,7 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
             $newparentcat = self::get((int)$newparentcat, MUST_EXIST, true);
         }
         if ($newparentcat->id != $this->parent) {
-            $this->_change_parent($newparentcat);
+            $this->change_parent_raw($newparentcat);
             fix_course_sortorder();
             $this->restore();
             add_to_log(SITEID, "category", "move", "editcategory.php?id=$this->id", $this->id);
@@ -972,7 +972,7 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
      * @param int $visibleold value to set in field $visibleold for this category
      * @return bool whether changes have been made and caches need to be purged afterwards
      */
-    protected function _hide($visibleold = 0) {
+    protected function hide_raw($visibleold = 0) {
         global $DB;
         $changes = false;
 
@@ -1012,7 +1012,7 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
      * $coursecat->update(array('visible' => 0));
      */
     public function hide() {
-        if ($this->_hide(0)) {
+        if ($this->hide_raw(0)) {
             self::purge_cache();
             add_to_log(SITEID, "category", "hide", "editcategory.php?id=$this->id", $this->id);
         }
@@ -1030,7 +1030,7 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
      *
      * @return bool whether changes have been made and caches need to be purged afterwards
      */
-    protected function _show() {
+    protected function show_raw() {
         global $DB;
 
         if ($this->visible) {
@@ -1065,7 +1065,7 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
      * $coursecat->update(array('visible' => 1));
      */
     public function show() {
-        if ($this->_show()) {
+        if ($this->show_raw()) {
             self::purge_cache();
             add_to_log(SITEID, "category", "show", "editcategory.php?id=$this->id", $this->id);
         }
