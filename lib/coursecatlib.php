@@ -492,45 +492,6 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
     }
 
     /**
-     * Returns all categories visible to the current user
-     *
-     * This is a generic function that returns an array of
-     * (category id => coursecat object) sorted by sortorder
-     *
-     * @see coursecat::get_children()
-     * @see coursecat::get_all_parents()
-     *
-     * @return cacheable_object_array array of coursecat objects
-     */
-    public static function get_all_visible() {
-        global $USER;
-        $coursecatcache = cache::make('core', 'coursecat');
-        $ids = $coursecatcache->get('user'. $USER->id);
-        if ($ids === false) {
-            $all = self::get_all_ids();
-            $parentvisible = $all[0];
-            $rv = array();
-            foreach ($all as $id => $children) {
-                if ($id && in_array($id, $parentvisible) &&
-                        ($coursecat = self::get($id, IGNORE_MISSING)) &&
-                        (!$coursecat->parent || isset($rv[$coursecat->parent]))) {
-                    $rv[$id] = $coursecat;
-                    $parentvisible += $children;
-                }
-            }
-            $coursecatcache->set('user'. $USER->id, array_keys($rv));
-        } else {
-            $rv = array();
-            foreach ($ids as $id) {
-                if ($coursecat = self::get($id, IGNORE_MISSING)) {
-                    $rv[$id] = $coursecat;
-                }
-            }
-        }
-        return $rv;
-    }
-
-    /**
      * Returns tree of categories ids
      *
      * Return array has categories ids as keys and list of children ids as values.

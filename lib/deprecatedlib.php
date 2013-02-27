@@ -3570,7 +3570,7 @@ function update_category_button($categoryid = 0) {
  */
 function make_categories_list(&$list, &$parents, $requiredcapability = '',
         $excludeid = 0, $category = NULL, $path = "") {
-    global $CFG;
+    global $CFG, $DB;
     require_once($CFG->libdir.'/coursecatlib.php');
 
     debugging('Global function make_categories_list() is deprecated. Please use '.
@@ -3583,14 +3583,19 @@ function make_categories_list(&$list, &$parents, $requiredcapability = '',
     }
     $list += coursecat::make_categories_list($requiredcapability, $excludeid);
 
-    // Highly ineffective building of $parents list.
-    // Usually user needs only parents for one particular category.
+    // Building the list of all parents of all categories in the system is highly undesirable and hardly ever needed.
+    // Usually user needs only parents for one particular category, in which case should be used:
+    // coursecat::get($categoryid)->get_all_parents()
     if (empty($parents)) {
         $parents = array();
     }
-    $all = coursecat::get_all_visible();
-    foreach ($all as $cat) {
-        $parents[$cat->id] = array_keys($cat->get_all_parents());
+    $all = $DB->get_records_sql('SELECT id, parent FROM {course_categories} ORDER BY sortorder');
+    foreach ($all as $record) {
+        if ($record->parent) {
+            $parents[$record->id] = array_merge($parents[$record->parent], array($record->parent));
+        } else {
+            $parents[$record->id] = array();
+        }
     }
 }
 
@@ -3721,16 +3726,13 @@ function course_category_show($category) {
  * coursecat::get($catid, MUST_EXIST);
  *
  * To get the first available category please use
- * $all = coursecat::get_all_visible();
- * $category = reset($all);
- * Please note that it is possible that all categories in the system are hidden
- * and current user does not have capability to view them, in this case
- * it is not possible to retrieve any category object
+ * coursecat::get_default();
  *
  * class coursecat will also make sure that at least one category exists in DB
  *
  * @deprecated since 2.5
- * @see coursecat::get
+ * @see coursecat::get()
+ * @see coursecat::get_default()
  *
  * @param int $catid course category id
  * @return object caregory
@@ -3815,7 +3817,6 @@ function create_course_category($category) {
  *
  * @see coursecat::get()
  * @see coursecat::get_children()
- * @see coursecat::get_all_visible()
  *
  * @deprecated since 2.5
  *
@@ -3891,10 +3892,6 @@ function get_child_categories($parentid) {
  * This function is deprecated. Use appropriate functions from class coursecat.
  * Examples:
  *
- * coursecat::get_all_visible()
- * - returns all categories visible to the current user (i.e. that have
- * visible=1 or user has capability to view hidden categories)
- *
  * coursecat::get($categoryid)->get_children()
  * - returns all children of the specified category as instances of class
  * coursecat, which means on each of them method get_children() can be called again
@@ -3920,19 +3917,7 @@ function get_child_categories($parentid) {
 function get_categories($parent='none', $sort=NULL, $shallow=true) {
     global $DB, $CFG;
 
-    // Typical cases implemented in coursecat:
-    if (($parent === 'none' || (!$parent && !$shallow)) && $sort === null) {
-        // all categories in the system sorted by sortorder
-        debugging('Function get_categories() is deprecated. Please use coursecat::get_all_visible(). See phpdocs for more details',
-                DEBUG_DEVELOPER);
-        require_once($CFG->libdir. '/coursecatlib.php');
-        $rv = array();
-        foreach (coursecat::get_all_visible() as $cat) {
-            // cast from coursecat to stdClass in case developer accesses additional properties later
-            $rv[] = (object)convert_to_array($cat);
-        }
-        return $rv;
-    }
+    // Typical case implemented in coursecat:
     if ($parent !== 'none' && $shallow && $sort === null) {
         // children categories sorted by sortorder
         debugging('Function get_categories($parent) is deprecated. Please use coursecat::get($parent)->get_children(). See phpdocs for more details',
