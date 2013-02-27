@@ -968,11 +968,11 @@ div.course_category_tree div.course a {
     font-size: 14px;
 }
 
-div.category.subcategory.with_children {
+div.course_category_tree div.category.with_children {
     margin-left: 20px;
 }
 
-.dir-rtl div.category.subcategory.with_children {
+.dir-rtl div.course_category_tree div.category.with_children {
     margin-right: 20px;
 }
 
