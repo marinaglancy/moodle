@@ -1310,96 +1310,144 @@ class core_course_renderer extends plugin_renderer_base {
         return $output;
     }
 
+    /**
+     * Renders course category contents
+     *
+     * This function is recursive. Atrribute depth in $coursecatr object reflects
+     * the level of recursion. On the 0-level the list is wrapped in div.course_category_tree
+     * and JS is included
+     *
+     * @param coursecat_renderable $coursecatr
+     * @return string
+     */
     protected function render_coursecat_renderable(coursecat_renderable $coursecatr) {
         $depth = $coursecatr->get_attr(coursecat_renderable::DEPTH);
-        if ($depth == 0) {
-            $content = '';
+        $content = '';
+        if (!isset($this->strings->summary)) {
             $this->strings->summary = get_string('summary');
+        }
+        $hassubcategories = !$coursecatr->get_attr(coursecat_renderable::OMITSUBCATEGORIES) &&
+                ($coursecatr->get_child_categories_count() > 0);
+        $hascourses = ($coursecatr->get_attr(coursecat_renderable::DISPLAYCOURSES) !== 'none') &&
+                ($coursecatr->get_child_courses_count() > 0);
 
+        if ($depth == 0) {
             // Generate an id and the required JS call to make this a nice widget
             $id = html_writer::random_id('course_category_tree');
-            $this->page->requires->js_init_call('M.util.init_toggle_class_on_click', array($id, '.category.with_children .category_label', 'collapsed', '.category.with_children'));
+            $this->page->requires->js_init_call('M.util.init_toggle_class_on_click',
+                    array($id, '.category.with_children .category_label', 'collapsed', '.category.with_children'));
 
             // Start content generation
-            $content .= html_writer::start_tag('div', array('class'=>'course_category_tree', 'id'=>$id));
-            foreach ($coursecatr->get_child_categories() as $child) {
-                $content .= $this->render($child);
-            }
-            $content .= html_writer::start_tag('div', array('class'=>'controls'));
-            $content .= html_writer::tag('div', get_string('collapseall'), array('class'=>'addtoall expandall'));
-            $content .= html_writer::tag('div', get_string('expandall'), array('class'=>'removefromall collapseall'));
-            $content .= html_writer::end_tag('div');
-            $content .= html_writer::end_tag('div');
+            $content .= html_writer::start_tag('div', array('class' => 'course_category_tree', 'id' => $id));
+        }
 
-            // Return the course category tree HTML
-            return $content;
-        } else {
-            $content = '';
-            $hassubcategories = $coursecatr->get_child_categories_count() > 0;
-            $hascourses = $coursecatr->get_child_courses_count() > 0;
-            $classes = array('category');
-            if ($coursecatr->get_category()->parent != 0) {
-                $classes[] = 'subcategory';
+        $classes = array('category');
+        if (empty($coursecatr->get_category()->visible)) {
+            $classes[] = 'dimmed_category';
+        }
+        if ($hassubcategories || $hascourses) {
+            $classes[] = 'with_children';
+            if ($depth && $depth >= $coursecatr->get_attr(coursecat_renderable::EXPANDSUBCATEGORIESDEPTH)) {
+                $classes[] = 'collapsed';
+                // TODO not only mark collapsed but also do not display subcategories and courses,
+                // they will be loaded in AJAX request or displayed on separate page for non-js users
             }
-            if (empty($coursecatr->get_category()->visible)) {
-                $classes[] = 'dimmed_category';
-            }
-            if ($hassubcategories || $hascourses) {
-                $classes[] = 'with_children';
-                if ($depth > 1) { // TODO attribute!
-                    $classes[] = 'collapsed';
-                }
-            }
+        }
+        $content .= html_writer::start_tag('div', array('class' => join(' ', $classes)));
+        if ($coursecatr->id) {
             $categoryname = $coursecatr->get_formatted_name();
-
-            $content .= html_writer::start_tag('div', array('class'=>join(' ', $classes)));
-            $content .= html_writer::start_tag('div', array('class'=>'category_label'));
-            $content .= html_writer::link(new moodle_url('/course/category.php', array('id'=>$coursecatr->id)), $categoryname, array('class'=>'category_link'));
+            $content .= html_writer::start_tag('div', array('class' => 'category_label'));
+            $content .= html_writer::link(new moodle_url('/course/category.php',
+                    array('id' => $coursecatr->id)),
+                    $categoryname, array('class' => 'category_link'));
             $content .= html_writer::end_tag('div');
-            if ($hassubcategories) {
-                $content .= html_writer::start_tag('div', array('class'=>'subcategories'));
-                foreach ($coursecatr->get_child_categories() as $subcategory) {
-                    $content .= $this->render($subcategory);
-                }
-                $content .= html_writer::end_tag('div');
-            }
-            if ($hascourses) {
-                $content .= html_writer::start_tag('div', array('class'=>'courses'));
-                $coursecount = 0;
-                $strinfo = new lang_string('info');
-                foreach ($coursecatr->get_child_courses() as $course) {
-                    $classes = array('course');
-                    $linkclass = 'course_link';
-                    if (!$course->visible) {
-                        $linkclass .= ' dimmed';
-                    }
-                    $coursecount ++;
-                    $classes[] = ($coursecount%2)?'odd':'even';
-                    $content .= html_writer::start_tag('div', array('class'=>join(' ', $classes)));
-                    $coursename = format_string($course->fullname, true, array('context' => context_course::instance($course->id)));
-                    $content .= html_writer::link(new moodle_url('/course/view.php', array('id'=>$course->id)), $coursename, array('class'=>$linkclass));
-                    $content .= html_writer::start_tag('div', array('class'=>'course_info clearfix'));
+        }
 
-                    // print enrol info
-                    if ($icons = enrol_get_course_info_icons($course)) {
-                        foreach ($icons as $pix_icon) {
-                            $content .= $this->render($pix_icon);
+        // Subcategories
+        if ($hassubcategories) {
+            $content .= html_writer::start_tag('div', array('class' => 'subcategories'));
+            foreach ($coursecatr->get_child_categories() as $subcategory) {
+                $content .= $this->render($subcategory);
+            }
+            $content .= html_writer::end_tag('div');
+        }
+        // Courses
+        if ($hascourses) {
+            $content .= html_writer::start_tag('div', array('class' => 'courses'));
+            $coursecount = 0;
+            foreach ($coursecatr->get_child_courses() as $course) {
+                $classes = array('course');
+                $linkclass = 'course_link';
+                if (!$course->visible) {
+                    $linkclass .= ' dimmed';
+                }
+                $coursecount ++;
+                $classes[] = ($coursecount%2) ? 'odd' : 'even';
+                $content .= html_writer::start_tag('div', array('class' => join(' ', $classes))); // .course
+                $coursename = $coursecatr->get_course_formatted_name($course);
+                $content .= html_writer::link(new moodle_url('/course/view.php', array('id' => $course->id)),
+                        $coursename, array('class' => $linkclass));
+                $content .= html_writer::start_tag('div', array('class'=>'course_info clearfix')); // .course_info
+
+                // print enrol info
+                if ($icons = enrol_get_course_info_icons($course)) {
+                    foreach ($icons as $pix_icon) {
+                        $content .= $this->render($pix_icon);
+                    }
+                }
+
+                if ($course->has_summary() || $course->has_course_contacts()) {
+                    if ($coursecatr->get_attr(coursecat_renderable::DISPLAYCOURSES) !== 'expanded') {
+                        $url = new moodle_url('/course/info.php', array('id' => $course->id));
+                        $image = html_writer::empty_tag('img', array('src' => $this->output->pix_url('i/info'),
+                            'alt' => $this->strings->summary));
+                        $content .= $this->action_link($url, $image, new popup_action('click', $url, 'courseinfo'),
+                                array('title' => $this->strings->summary));
+                    }
+                }
+                $content .= html_writer::end_tag('div'); // .course_info
+
+                if ($course->has_summary() || $course->has_course_contacts()) {
+                    if ($coursecatr->get_attr(coursecat_renderable::DISPLAYCOURSES) === 'expanded') {
+                        if ($course->has_summary()) {
+                            $content .= html_writer::start_tag('div', array('class' => 'course_description'));
+                            $content .= $coursecatr->get_course_formatted_summary($course,
+                                    array('overflowdiv' => true, 'noclean' => true, 'para' => false));
+                            $content .= html_writer::end_tag('div'); // .course_description
+                        }
+                        if ($course->has_course_contacts()) {
+                            $content .= html_writer::start_tag('ul', array('class' => 'teachers'));
+                            foreach ($course->get_course_contacts() as $userid => $coursecontact) {
+                                $name = $coursecontact['rolename'].': '.
+                                        html_writer::link(new moodle_url('/user/view.php',
+                                                array('id' => $userid, 'course' => SITEID)),
+                                            $coursecontact['username']);
+                                $content .= html_writer::tag('li', $name);
+                            }
+                            $content .= html_writer::end_tag('ul'); // .teachers
                         }
                     }
-
-                    if ($course->summary) {
-                        $url = new moodle_url('/course/info.php', array('id' => $course->id));
-                        $image = html_writer::empty_tag('img', array('src'=>$this->output->pix_url('i/info'), 'alt'=>$this->strings->summary));
-                        $content .= $this->action_link($url, $image, new popup_action('click', $url, 'courseinfo'), array('title' => $this->strings->summary));
-                    }
-                    $content .= html_writer::end_tag('div');
-                    $content .= html_writer::end_tag('div');
                 }
+                $content .= html_writer::end_tag('div'); // .course
+            }
+            $content .= html_writer::end_tag('div'); // .courses
+        }
+
+        $content .= html_writer::end_tag('div'); // .category
+
+        if ($depth == 0) {
+            if ($hassubcategories) {
+                $content .= html_writer::start_tag('div', array('class'=>'controls'));
+                $content .= html_writer::tag('div', get_string('collapseall'), array('class'=>'addtoall expandall'));
+                $content .= html_writer::tag('div', get_string('expandall'), array('class'=>'removefromall collapseall'));
                 $content .= html_writer::end_tag('div');
             }
-            $content .= html_writer::end_tag('div');
-            return $content;
+
+            $content .= html_writer::end_tag('div'); // .course-category-tree
         }
+
+        // Return the course category tree HTML
+        return $content;
     }
 
     /** invoked from /course/index.php */
@@ -1407,9 +1455,9 @@ class core_course_renderer extends plugin_renderer_base {
         global $CFG, $DB;
         require_once($CFG->libdir. '/coursecatlib.php');
         $options = array(
-            coursecat_renderable::DISPLAYCOURSES => 'auto',
-            coursecat_renderable::SORTCOURSES => 'sortorder',
-            coursecat_renderable::SORTCATEGORIES => 'sortorder',
+            coursecat_renderable::DISPLAYCOURSES => 'collapsed',
+            //coursecat_renderable::SORTCOURSES => 'sortorder',
+            //coursecat_renderable::SORTCATEGORIES => 'sortorder',
             coursecat_renderable::EXPANDSUBCATEGORIESDEPTH => 1,
         );
         $coursecategory = new coursecat_renderable(
@@ -1489,39 +1537,39 @@ class coursecat_renderable implements renderable {
     protected $id = 0;
     protected $attributes = array();
 
-    /** @var string attribute : [none, countonly, collapsed, expanded] how (if) display courses list */
-    const DISPLAYCOURSES = 'display';
+    /** @var string attribute : [none, collapsed, expanded] how (if) display courses list */
+    const DISPLAYCOURSES = 'collapsed'; // TODO: [countonly, auto]
     /** @var string attribute : depth to expand subcategories in the tree (deeper subcategories will be loaded by AJAX or proceed to category page by clicking on category name) */
     const EXPANDSUBCATEGORIESDEPTH = 'expanddepth'; // TODO rename to subcategorydepth for better understanding
     /** @var string attribute : for small sites, do not display categories names just list all courses in all subcategories */
     const OMITSUBCATEGORIES = 'omitcat';
     /** @var string attribute : how to sort courses */
-    const SORTCOURSES = 'sort';
+    //const SORTCOURSES = 'sort';
     /** @var string attribute : how to sort subcategories */
-    const SORTCATEGORIES = 'sortcat';
+    //const SORTCATEGORIES = 'sortcat';
     /** @var string attribute : limit the number of subcategories inside one category.
      * If there are more categories, a link "More categories..." is displayed,
      * which leads to the subcategory page, or displays the next page or loads
      * more entries via AJAX. Defaults to $CFG->coursesperpage.
      * Also can be concatenated with level: course_category::sortcategories.'2' */
-    const CATEGORIESLIMIT = 'limitcat';
+    //const CATEGORIESLIMIT = 'limitcat';
     /** @var string attribute : limit the number of courses inside one category.
      * If there are more courses, a link "More courses..." is displayed which
      * leads to the subcategory page, or displays the next page or loads more
      * entries via AJAX. Defaults to $CFG->coursesperpage */
-    const COURSESLIMIT = 'limit';
+    //const COURSESLIMIT = 'limit';
     /** @var string attribute : completely disable AJAX loading even if browser
      * supports it */
-    const AJAXDISABLED = 'noajax';
+    //const AJAXDISABLED = 'noajax';
     /** @var string attribute : add a heading (?) */
-    const HEADING = 'heading';
+    //const HEADING = 'heading';
     /** @var string attribute : depth of this category in the current view */
     const DEPTH = 'depth';
     /** @var string attribute : search string in courses names and/or descriptions */
-    const SEARCHSTRING = 'search';
+    //const SEARCHSTRING = 'search';
     /** @var string attribute : display category name in course description
      * (may be used in search results or in 'my courses' lists) */
-    const DISPLAYCATEGORYNAME = 'showcatname';
+    //const DISPLAYCATEGORYNAME = 'showcatname';
 
     /**
      * Constructor
@@ -1553,12 +1601,19 @@ class coursecat_renderable implements renderable {
         $this->attributes = $attributes;
     }
 
+    /**
+     * Magic method to get category id property
+     *
+     * @param string $name
+     * @return mixed
+     */
     public function __get($name) {
-        if ($name == 'id') {
+        if ($name === 'id') {
             return $this->id;
         }
         return null;
     }
+
     /**
      * Get the category attribute. Some attributes are substituted with
      * defaults or overwritten
@@ -1644,6 +1699,9 @@ class coursecat_renderable implements renderable {
      */
     function get_child_categories() {
         $childcategories = array();
+        if ($this->get_attr(self::OMITSUBCATEGORIES)) {
+            return $childcategories;
+        }
         if ($cat = $this->get_category(IGNORE_MISSING)) {
             foreach ($cat->get_children() as $child) {
                 $attr = $this->attributes + array();
@@ -1667,50 +1725,17 @@ class coursecat_renderable implements renderable {
         return 0;
     }
 
-    protected $childcourses = null;
-    protected function get_child_courses_int() {
-        global $DB;
-        if ($this->childcourses !== null) {
-            return $this->childcourses;
-        }
-
-        $this->childcourses = array();
-        // check if this category is hidden
-        if ($this->get_category() === null) {
-            return $this->childcourses;
-        }
-
-        // TODO this queries only direct children!
-        list($ccselect, $ccjoin) = context_instance_preload_sql('c.id', CONTEXT_COURSE, 'ctx');
-        $sql = "SELECT
-                c.id,c.sortorder,c.visible,c.fullname,c.shortname,c.summary,c.category
-                $ccselect
-                FROM {course} c
-                $ccjoin
-                WHERE c.category = :categoryid ORDER BY c.sortorder ASC";
-        $params = array('categoryid' => $this->id);
-        if ($courses = $DB->get_records_sql($sql, $params)) {
-            // loop throught them
-            foreach ($courses as $course) {
-                if ($course->id == SITEID) {
-                    continue;
-                }
-                context_instance_preload($course);
-                if (!empty($course->visible) || has_capability('moodle/course:viewhiddencourses', context_course::instance($course->id))) {
-                    $this->childcourses[$course->id] = $course;
-                }
-            }
-        }
-        return $this->childcourses;
-    }
-
     /**
      * Returns array of courses in this category
      *
      * @return array of rows from DB {courses} table
      */
     public function get_child_courses() {
-        $childcourses = $this->get_child_courses_int();
+        if ($this->get_attr(self::DISPLAYCOURSES) == 'none') {
+            return array();
+        }
+        $childcourses = $this->get_category()->get_courses($this->get_attr(self::OMITSUBCATEGORIES),
+                $this->get_attr(self::DISPLAYCOURSES) == 'expanded');
         return $childcourses;
     }
 
@@ -1720,7 +1745,43 @@ class coursecat_renderable implements renderable {
      * @return int
      */
     public function get_child_courses_count() {
-        $childcourses = $this->get_child_courses_int();
+        $childcourses = $this->get_category()->get_courses($this->get_attr(self::OMITSUBCATEGORIES));
         return count($childcourses);
+    }
+
+    /**
+     * Returns summary formatted to course context
+     *
+     * @param course_in_list $course
+     * @param array|stdClass $options additional formatting options
+     * @return string
+     */
+    public function get_course_formatted_summary($course, $options = array()) {
+        if (!$course->has_summary()) {
+            return '';
+        }
+        $options = (array)$options;
+        $context = $course->get_context();
+        if (!isset($options['context'])) {
+            $options['context'] = $context;
+        }
+        $summary = file_rewrite_pluginfile_urls($course->summary, 'pluginfile.php', $context->id, 'course', 'summary', null);
+        return format_text($summary, $course->summaryformat, $options, $course->id);
+    }
+
+    public function get_course_formatted_name($course, $options = array()) {
+        global $CFG;
+        if (!empty($CFG->courselistshortnames)) {
+            // convert course to stdClass to be able to pass to get_string
+            $obj = (object)convert_to_array($course);
+            $name = get_string('courseextendednamedisplay', '', $obj);
+        } else {
+            $name = $course->fullname;
+        }
+        $options = (array)$options;
+        if (!isset($options['context'])) {
+            $options['context'] = $course->get_context();
+        }
+        return format_string($name, true, $options);
     }
 }
