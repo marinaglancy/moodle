@@ -116,6 +116,6 @@ $definitions = array(
     'coursecat' => array(
         'mode' => cache_store::MODE_APPLICATION,
         'simplekeys' => true,
-        'simpledata' => false,
+        'persistent' => true,
     ),
 );
