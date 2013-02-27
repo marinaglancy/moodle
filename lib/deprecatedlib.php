@@ -3852,11 +3852,11 @@ function get_all_subcategories($catid) {
  * returns an array of coursecat objects, each of them represents a children category visible
  * to the current user (i.e. visible=1 or user has capability to view hidden categories)
  *
- * - coursecat::cnt_all()
+ * - coursecat::count_all()
  * returns total count of all categories (both visible and not)
  *
  * - coursecat::get_default()
- * returns the first category (usually to be used if cnt_all() == 1)
+ * returns the first category (usually to be used if count_all() == 1)
  *
  * @deprecated since 2.5
  *
@@ -3899,7 +3899,7 @@ function get_child_categories($parentid) {
  * - returns all children of the specified category as instances of class
  * coursecat, which means on each of them method get_children() can be called again
  *
- * coursecat::cnt_all()
+ * coursecat::count_all()
  * - returns total number of categories (including those invisible to current user)
  *
  * see class coursecat for more functions

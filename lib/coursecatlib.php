@@ -188,7 +188,7 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
      * Returns coursecat object for requested category
      *
      * If category is not visible to user it is treated as non existing
-     * unless $returninvisible is set to true
+     * unless $alwaysreturnhidden is set to true
      *
      * If id is 0, the pseudo object for root category is returned (convenient
      * for calling other functions such as get_children())
@@ -197,49 +197,43 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
      * @param int $strictness whether to throw an exception (MUST_EXIST) or
      *     return null (IGNORE_MISSING) in case the category is not found or
      *     not visible to current user
-     * @param bool $returninvisible set to true if you want an object to be
+     * @param bool $alwaysreturnhidden set to true if you want an object to be
      *     returned even if this category is not visible to the current user
      *     (category is hidden and user does not have
      *     'moodle/category:viewhiddencategories' capability). Use with care!
-     * @return null|\coursecat
+     * @return null|coursecat
      */
-    public static function get($id, $strictness = MUST_EXIST, $returninvisible = false) {
+    public static function get($id, $strictness = MUST_EXIST, $alwaysreturnhidden = false) {
         global $DB;
         if (!$id) {
             if (!isset(self::$coursecat0)) {
-                $record = array(
-                    'id' => 0,
-                    'visible' => 1,
-                    'depth' => 0,
-                    'path' => ''
-                );
-                self::$coursecat0 = new coursecat((object)$record);
+                $record = new stdClass();
+                $record->id = 0;
+                $record->visible = 1;
+                $record->depth = 0;
+                $record->path = '';
+                self::$coursecat0 = new coursecat($record);
             }
             return self::$coursecat0;
         }
         $coursecatcache = cache::make('core', 'coursecat');
-        $coursecat = null;
-        if ($coursecatcache->has($id)) {
-            $coursecat = $coursecatcache->get($id);
-        } else {
+        $coursecat = $coursecatcache->get($id);
+        if ($coursecat === false) {
             $all = self::get_all_ids();
             if (array_key_exists($id, $all)) {
                 // retrieve from DB and store in cache
-                list($ccselect, $ccjoin) = context_instance_preload_sql('cc.id', CONTEXT_COURSECAT, 'ctx');
-                $sql = "SELECT cc.* $ccselect
+                $ctxselect = context_helper::get_preload_record_columns_sql('ctx');
+                $sql = "SELECT cc.*, $ctxselect
                         FROM {course_categories} cc
-                        $ccjoin
+                        JOIN {context} ctx ON cc.id = ctx.instanceid AND ctx.contextlevel = ?
                         WHERE cc.id = ?";
-                if ($record = $DB->get_record_sql($sql, array($id))) {
+                if ($record = $DB->get_record_sql($sql, array(CONTEXT_COURSECAT, $id))) {
                     $coursecat = new coursecat($record);
                     $coursecatcache->set($id, $coursecat);
-                } else {
-                    // should not happen because if entry is present in get_all_ids() it should be found
-                    self::purge_cache();
                 }
             }
         }
-        if ($coursecat && ($returninvisible || $coursecat->is_uservisible())) {
+        if ($coursecat && ($alwaysreturnhidden || $coursecat->is_uservisible())) {
             return $coursecat;
         } else {
             if ($strictness == MUST_EXIST) {
@@ -577,33 +571,12 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
     }
 
     /**
-     * Returns all categories in the system
-     *
-     * This function is protected because all functions operating with the full
-     * list of categories (including those not visible to the current user)
-     * must be only inside this class
-     *
-     * @return cacheable_object_array array of coursecat objects
-     */
-    protected static function get_all() {
-        $all = self::get_all_ids();
-        $rv = array();
-        foreach ($all as $id => $unused) {
-            if ($coursecat = self::get($id, IGNORE_MISSING, true)) {
-                $rv[$id] = $coursecat;
-            }
-        }
-        unset($rv[0]);
-        return $rv;
-    }
-
-    /**
      * Returns number of ALL categories in the system regardless if
      * they are visible to current user or not
      *
      * @return int
      */
-    public static function cnt_all() {
+    public static function count_all() {
         $all = self::get_all_ids();
         return count($all) - 1; // do not count 0-category
     }
@@ -671,26 +644,32 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
             return false;
         }
 
-        // Check all child categories (we can't call get_children() because we need to check
-        // not visible categories too
-        $all = self::get_all();
-        foreach ($all as $coursecat) {
-            if (preg_match("|^{$this->path}/|", $coursecat->path)) {
-                // this is a child category
-                if (!$coursecat->is_uservisible() ||
-                        !has_capability('moodle/category:manage', context_coursecat::instance($coursecat->id))) {
-                    return false;
-                }
+        // Check all child categories (not only direct children)
+        $sql = context_helper::get_preload_record_columns_sql('ctx');
+        $childcategories = $DB->get_records_sql('SELECT c.id, c.visible, '. $sql.
+            ' FROM {context} ctx '.
+            ' JOIN {course_categories} c ON c.id = ctx.instanceid'.
+            ' WHERE ctx.path like ? AND ctx.contextlevel = ?',
+                array($context->path. '/%', CONTEXT_COURSECAT));
+        foreach ($childcategories as $childcat) {
+            context_helper::preload_from_record($childcat);
+            $childcontext = context_coursecat::instance($childcat->id);
+            if ((!$childcat->visible && !has_capability('moodle/category:viewhiddencategories', $childcontext)) ||
+                    !has_capability('moodle/category:manage', $childcontext)) {
+                return false;
             }
         }
 
         // Check courses
-        $courses = $DB->get_fieldset_sql('SELECT instanceid FROM {context} '.
-            'WHERE path like :pathmask and contextlevel = :courselevel',
+        $sql = context_helper::get_preload_record_columns_sql('ctx');
+        $coursescontexts = $DB->get_records_sql('SELECT ctx.instanceid AS courseid, '.
+                    $sql. ' FROM {context} ctx '.
+                    'WHERE ctx.path like :pathmask and ctx.contextlevel = :courselevel',
                 array('pathmask' => $context->path. '/%',
                     'courselevel' => CONTEXT_COURSE));
-        foreach ($courses as $courseid) {
-            if (!can_delete_course($courseid)) {
+        foreach ($coursescontexts as $ctxrecord) {
+            context_helper::preload_from_record($ctxrecord);
+            if (!can_delete_course($ctxrecord->courseid)) {
                 return false;
             }
         }
@@ -708,7 +687,7 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
      * @param boolean $showfeedback display some notices
      * @return array return deleted courses
      */
-    function delete_full($showfeedback = true) {
+    public function delete_full($showfeedback = true) {
         global $CFG, $DB;
         require_once($CFG->libdir.'/gradelib.php');
         require_once($CFG->libdir.'/questionlib.php');
