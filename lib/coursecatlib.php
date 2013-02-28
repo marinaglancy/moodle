@@ -55,14 +55,6 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
         'theme' => null, // not cached
     );
 
-    protected static $contextfields = array(
-        'id'           => array('xi', 0),
-        'contextlevel' => null, // not cached, always the same CONTEXT_COURSECAT
-        'instanceid'   => null, // not cached, equal to coursecat::id
-        'path'         => array('xp', 0),
-        'depth'        => array('xd', 0)
-    );
-
     /** @var int */
     protected $id;
 
@@ -1251,14 +1243,8 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
             }
         }
         $context = context_coursecat::instance($this->id);
-        foreach (self::$contextfields as $property => $cachedirectives) {
-            if ($cachedirectives !== null) {
-                list($shortname, $defaultvalue) = $cachedirectives;
-                if ($context->$property !== $defaultvalue) {
-                    $a[$shortname] = $context->$property;
-                }
-            }
-        }
+        $a['xi'] = $context->id;
+        $a['xp'] = $context->path;
         return $a;
     }
 
@@ -1280,20 +1266,11 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
                 }
             }
         }
-        foreach (self::$contextfields as $property => $cachedirectives) {
-            if ($cachedirectives !== null) {
-                list($shortname, $defaultvalue) = $cachedirectives;
-                if (array_key_exists($shortname, $a)) {
-                    $record->{'ctx'. $property} = $a[$shortname];
-                } else {
-                    $record->{'ctx'. $property} = $defaultvalue;
-                }
-            } else if ($property === 'contextlevel' && $record->id) {
-                $record->ctxcontextlevel = CONTEXT_COURSECAT;
-            } else if ($property === 'instanceid' && $record->id) {
-                $record->ctxinstanceid = $record->id;
-            }
-        }
+        $record->ctxid = $a['xi'];
+        $record->ctxpath = $a['xp'];
+        $record->ctxdepth = $record->depth + 1;
+        $record->ctxlevel = CONTEXT_COURSECAT;
+        $record->ctxinstance = $record->id;
         return new coursecat($record, true);
     }
 }
