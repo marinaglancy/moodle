@@ -233,8 +233,8 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
         $coursecatcache = cache::make('core', 'coursecat');
         $coursecat = $coursecatcache->get($id);
         if ($coursecat === false) {
-            $all = self::get_all_ids();
-            if (array_key_exists($id, $all)) {
+            $intree = self::get_tree($id);
+            if ($intree !== false) {
                 // Retrieve from DB only the fields that need to be stored in cache
                 $fields = array_filter(array_keys(self::$coursecatfields), function ($element)
                     { return (self::$coursecatfields[$element] !== null); } );
@@ -272,8 +272,8 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
         if ($visiblechildren = self::get(0)->get_children()) {
             $defcategory = reset($visiblechildren);
         } else {
-            $all = $this->get_all_ids();
-            $defcategoryid = $all[0][0];
+            $toplevelcategories = self::get_tree(0);
+            $defcategoryid = $toplevelcategories[0];
             $defcategory = self::get($defcategoryid, MUST_EXIST, true);
         }
         return $defcategory;
@@ -512,43 +512,72 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
     }
 
     /**
-     * Returns tree of categories ids
+     * Returns the entry from categories tree and makes sure the application-level tree cache is built
      *
-     * Return array has categories ids as keys and list of children ids as values.
-     * Also there is an additional first element with key 0 with list of categories on the top level.
-     * Therefore the number of elements in the return array is one more than number of categories in the system.
-     *
-     * Also this method ensures that all categories are cached together with their contexts.
+     * The following keys can be requested:
      * 
-     * @return array
+     * 'countall' - total number of categories in the system (always present)
+     * 0 - array of ids of top-level categories (always present)
+     * '0i' - array of ids of top-level categories that have visible=0 (always present but may be empty array)
+     * $id (int) - array of ids of categories that are direct children of category with id $id. If
+     *   category with id $id does not exist returns false. If category has no children returns empty array
+     * $id.'i' - array of ids of children categories that have visible=0
+     *
+     * @param int|string $id
+     * @return mixed
      */
-    protected static function get_all_ids() {
+    protected static function get_tree($id) {
         global $DB;
-        $coursecatcache = cache::make('core', 'coursecat');
-        $all = $coursecatcache->get('all');
-        if ($all === false) {
-            $coursecatcache->purge(); // it should be empty already but to be extra sure
-            $sql = "SELECT cc.id, cc.parent
-                    FROM {course_categories} cc
-                    ORDER BY cc.sortorder";
-            $rs = $DB->get_recordset_sql($sql, array());
-            $all = array(0 => array());
-            foreach ($rs as $record) {
-                $all[$record->id] = array();
-                $all[$record->parent][] = $record->id;
-            }
-            $rs->close();
-            if (!count($all[0])) {
-                // No categories found.
-                // This may happen after upgrade from very old moodle version. In new versions the default category is created on install.
-                $defcoursecat = self::create(array('name' => get_string('miscellaneous')));
-                $coursecatcache->set($defcoursecat->id, $defcoursecat);
-                set_config('defaultrequestcategory', $defcoursecat->id);
-                $all[0][$defcoursecat->id] = array();
-            }
-            $coursecatcache->set('all', $all);
+        $coursecattreecache = cache::make('core', 'coursecattree');
+        $rv = $coursecattreecache->get($id);
+        if ($rv !== false) {
+            return $rv;
         }
-        return $all;
+        // We did not find the entry in cache but it also can mean that tree is not built.
+        // The keys 0 and 'countall' must always be present if tree is built.
+        if ($id !== 0 && $id !== 'countall' && $coursecattreecache->has('countall')) {
+            // Tree was built, it means the non-existing $id was requested.
+            return false;
+        }
+        // Re-build the tree.
+        $sql = "SELECT cc.id, cc.parent, cc.visible
+                FROM {course_categories} cc
+                ORDER BY cc.sortorder";
+        $rs = $DB->get_recordset_sql($sql, array());
+        $all = array(0 => array(), '0i' => array());
+        $count = 0;
+        foreach ($rs as $record) {
+            $all[$record->id] = array();
+            $all[$record->id. 'i'] = array();
+            if (array_key_exists($record->parent, $all)) {
+                $all[$record->parent][] = $record->id;
+                if (!$record->visible) {
+                    $all[$record->parent. 'i'][] = $record->id;
+                }
+            } else {
+                // parent not found. This is data consistency error but next fix_course_sortorder() should fix it
+                $all[0][] = $record->id;
+            }
+            $count++;
+        }
+        $rs->close();
+        if (!$count) {
+            // No categories found.
+            // This may happen after upgrade from very old moodle version. In new versions the default category is created on install.
+            $defcoursecat = self::create(array('name' => get_string('miscellaneous')));
+            set_config('defaultrequestcategory', $defcoursecat->id);
+            $all[0] = array($defcoursecat->id);
+            $all[$defcoursecat->id] = array();
+            $count++;
+        }
+        foreach ($all as $id => $children) {
+            $coursecattreecache->set($id, $children);
+        }
+        $coursecattreecache->set('countall', $count);
+        if (array_key_exists($id, $all)) {
+            return $all[$id];
+        }
+        return false;
     }
 
     /**
@@ -558,8 +587,7 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
      * @return int
      */
     public static function count_all() {
-        $all = self::get_all_ids();
-        return count($all) - 1; // do not count 0-category
+        return self::get_tree('countall');
     }
 
     /**
@@ -568,10 +596,10 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
      * @return array of coursecat objects indexed by category id
      */
     public function get_children() {
-        $all = self::get_all_ids();
+        $allchildren = self::get_tree($this->id);
         $rv = array();
-        if (!empty($all[$this->id])) {
-            foreach ($all[$this->id] as $id) {
+        if (!empty($allchildren)) {
+            foreach ($allchildren as $id) {
                 if ($coursecat = self::get($id, IGNORE_MISSING)) {
                     // do not return invisible
                     $rv[$coursecat->id] = $coursecat;
@@ -587,8 +615,8 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
      * @return boolean
      */
     public function has_children() {
-        $all = self::get_all_ids();
-        return !empty($all[$this->id]);
+        $allchildren = self::get_tree($this->id);
+        return !empty($allchildren);
     }
 
     /**
