@@ -775,4 +775,20 @@ class cache_phpunit_tests extends advanced_testcase {
         $this->assertTrue($cache->set('test', 'test'));
         $this->assertEquals('test', $cache->get('test'));
     }
+
+    public function test_event_purge() {
+        $cache_app = cache::make('core', 'coursecattree');
+        $cache_sess = cache::make('core', 'coursecat');
+
+        $cache_app->set('a', 1);
+        $cache_sess->set('s', 1);
+
+        $this->assertEquals(1, $cache_app->get('a'));
+        $this->assertEquals(1, $cache_sess->get('s'));
+
+        cache_helper::purge_by_event('changesincoursecat');
+
+        $this->assertFalse($cache_app->get('a'));
+        $this->assertFalse($cache_sess->get('s'));
+    }
 }
