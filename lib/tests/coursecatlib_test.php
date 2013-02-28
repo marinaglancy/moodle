@@ -149,6 +149,7 @@ class coursecatlib_testcase extends advanced_testcase {
 
         // show category 1 and make sure that category 2 is hidden and category 3 is visible
         $category1->show();
+        $this->assertEquals(1, coursecat::get($category1->id)->visible);
         $this->assertEquals(0, coursecat::get($category2->id)->visible);
         $this->assertEquals(1, coursecat::get($category3->id)->visible);
 
