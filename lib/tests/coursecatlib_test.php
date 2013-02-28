@@ -238,7 +238,7 @@ class coursecatlib_testcase extends advanced_testcase {
         $this->assertEquals($testdescription, $category1->description);
         $category1 = coursecat::get($category1->id);
         $this->assertEquals($testdescription, $category1->description);
-        coursecat::purge_cache();
+        cache_helper::purge_by_event('changesincoursecat');
         $category1 = coursecat::get($category1->id);
         $this->assertEquals($testdescription, $category1->description);
 

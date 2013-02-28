@@ -390,10 +390,11 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
             //print_r($updatedata); exit;
             $DB->update_record('course_categories', $updatedata);
 
-            self::purge_cache();
+            cache_helper::purge_by_event('changesincoursecat');
         }
 
         add_to_log(SITEID, "category", 'add', "editcategory.php?id=$newcategory->id", $newcategory->id);
+        cache_helper::purge_by_event('changesincourse');
 
         return self::get($newcategory->id, MUST_EXIST, true);
     }
@@ -472,7 +473,7 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
 
         if (isset($data->parent) && $data->parent != $this->parent) {
             if ($changes) {
-                self::purge_cache();
+                cache_helper::purge_by_event('changesincoursecat');
             }
             $parentcat = self::get($data->parent, MUST_EXIST, true);
             $this->change_parent_raw($parentcat);
@@ -488,6 +489,8 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
         $DB->update_record('course_categories', $newcategory);
         add_to_log(SITEID, "category", 'update', "editcategory.php?id=$this->id", $this->id);
         fix_course_sortorder();
+        // purge cache even if fix_course_sortorder() did not do it
+        cache_helper::purge_by_event('changesincoursecat');
 
         // update all fields in the current object
         $this->restore();
@@ -704,7 +707,7 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
         delete_context(CONTEXT_COURSECAT, $this->id);
         add_to_log(SITEID, "category", "delete", "index.php", "$this->name (ID $this->id)");
 
-        self::purge_cache();
+        cache_helper::purge_by_event('changesincoursecat');
 
         events_trigger('course_category_deleted', $this);
 
@@ -848,7 +851,7 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
 
         events_trigger('course_category_deleted', $this);
 
-        self::purge_cache();
+        cache_helper::purge_by_event('changesincoursecat');
 
         if ($showfeedback) {
             echo $OUTPUT->notification(get_string('coursecategorydeleted', '', $catname), 'notifysuccess');
@@ -1029,7 +1032,7 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
      */
     public function hide() {
         if ($this->hide_raw(0)) {
-            self::purge_cache();
+            cache_helper::purge_by_event('changesincoursecat');
             add_to_log(SITEID, "category", "hide", "editcategory.php?id=$this->id", $this->id);
         }
     }
@@ -1082,7 +1085,7 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
      */
     public function show() {
         if ($this->show_raw()) {
-            self::purge_cache();
+            cache_helper::purge_by_event('changesincoursecat');
             add_to_log(SITEID, "category", "show", "editcategory.php?id=$this->id", $this->id);
         }
     }
@@ -1200,14 +1203,6 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
         }
 
         return $list;
-    }
-
-    /**
-     * Call to reset caches after any modification of course categories
-     */
-    public static function purge_cache() {
-        $coursecatcache = cache::make('core', 'coursecat');
-        $coursecatcache->purge();
     }
 
     // ====== implementing method from interface cacheable_object ======
