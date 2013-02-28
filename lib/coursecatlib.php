@@ -210,7 +210,6 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
      * @return null|coursecat
      */
     public static function get($id, $strictness = MUST_EXIST, $alwaysreturnhidden = false) {
-        global $DB;
         if (!$id) {
             if (!isset(self::$coursecat0)) {
                 $record = new stdClass();
@@ -225,21 +224,11 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
         $coursecatcache = cache::make('core', 'coursecat');
         $coursecat = $coursecatcache->get($id);
         if ($coursecat === false) {
-            $intree = self::get_tree($id);
-            if ($intree !== false) {
-                // Retrieve from DB only the fields that need to be stored in cache
-                $fields = array_filter(array_keys(self::$coursecatfields), function ($element)
-                    { return (self::$coursecatfields[$element] !== null); } );
-                $ctxselect = context_helper::get_preload_record_columns_sql('ctx');
-                $sql = "SELECT cc.". join(',cc.', $fields). ", $ctxselect
-                        FROM {course_categories} cc
-                        JOIN {context} ctx ON cc.id = ctx.instanceid AND ctx.contextlevel = ?
-                        WHERE cc.id = ?";
-                if ($record = $DB->get_record_sql($sql, array(CONTEXT_COURSECAT, $id))) {
-                    $coursecat = new coursecat($record);
-                    // Store in cache
-                    $coursecatcache->set($id, $coursecat);
-                }
+            if ($records = self::get_records('cc.id = :id', array('id' => $id))) {
+                $record = reset($records);
+                $coursecat = new coursecat($record);
+                // Store in cache
+                $coursecatcache->set($id, $coursecat);
             }
         }
         if ($coursecat && ($alwaysreturnhidden || $coursecat->is_uservisible())) {
@@ -507,7 +496,7 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
      * Returns the entry from categories tree and makes sure the application-level tree cache is built
      *
      * The following keys can be requested:
-     * 
+     *
      * 'countall' - total number of categories in the system (always present)
      * 0 - array of ids of top-level categories (always present)
      * '0i' - array of ids of top-level categories that have visible=0 (always present but may be empty array)
@@ -562,8 +551,8 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
             $all[$defcoursecat->id] = array();
             $count++;
         }
-        foreach ($all as $id => $children) {
-            $coursecattreecache->set($id, $children);
+        foreach ($all as $key => $children) {
+            $coursecattreecache->set($key, $children);
         }
         $coursecattreecache->set('countall', $count);
         if (array_key_exists($id, $all)) {
@@ -583,19 +572,196 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
     }
 
     /**
+     * Retrieves number of records from course_categories table
+     *
+     * Only cached fields are retrieved. Records are ready for preloading context
+     *
+     * @param string $whereclause
+     * @param array $params
+     * @return array array of stdClass objects
+     */
+    protected static function get_records($whereclause, $params) {
+        global $DB;
+        // Retrieve from DB only the fields that need to be stored in cache
+        $fields = array_filter(array_keys(self::$coursecatfields), function ($element)
+            { return (self::$coursecatfields[$element] !== null); } );
+        $ctxselect = context_helper::get_preload_record_columns_sql('ctx');
+        $sql = "SELECT cc.". join(',cc.', $fields). ", $ctxselect
+                FROM {course_categories} cc
+                JOIN {context} ctx ON cc.id = ctx.instanceid AND ctx.contextlevel = :contextcoursecat
+                WHERE ". $whereclause." ORDER BY cc.sortorder";
+        return $DB->get_records_sql($sql,
+                array('contextcoursecat' => CONTEXT_COURSECAT) + $params);
+    }
+
+    /**
+     * Returns array of ids of children categories that current user can not see
+     *
+     * This data is cached in user session cache
+     *
+     * @return array
+     */
+    protected function get_not_visible_children_ids() {
+        global $DB;
+        $coursecatcache = cache::make('core', 'coursecat');
+        if (($invisibleids = $coursecatcache->get('ic'. $this->id)) === false) {
+            // we never checked visible children before
+            $hidden = self::get_tree($this->id.'i');
+            $invisibleids = array();
+            if ($hidden) {
+                // preload categories contexts
+                list($sql, $params) = $DB->get_in_or_equal($hidden, SQL_PARAMS_NAMED, 'id');
+                $ctxselect = context_helper::get_preload_record_columns_sql('ctx');
+                $contexts = $DB->get_records_sql("SELECT $ctxselect FROM {context} ctx
+                    WHERE ctx.contextlevel = :contextcoursecat AND ctx.instanceid ".$sql,
+                        array('contextcoursecat' => CONTEXT_COURSECAT) + $params);
+                foreach ($contexts as $record) {
+                    context_helper::preload_from_record($record);
+                }
+                // check that user has 'viewhiddencategories' capability for each hidden category
+                foreach ($hidden as $id) {
+                    if (!has_capability('moodle/category:viewhiddencategories', context_coursecat::instance($id))) {
+                        $invisibleids[] = $id;
+                    }
+                }
+            }
+            $coursecatcache->set('ic'. $this->id, $invisibleids);
+        }
+        return $invisibleids;
+    }
+
+    /**
+     * Compares two records. For use in uasort()
+     *
+     * @param stdClass $a
+     * @param stdClass $b
+     * @param array $sortfields assoc array where key is the field to sort and value is 1 for asc or -1 for desc
+     * @return int
+     */
+    protected static function compare_records($a, $b, $sortfields) {
+        foreach ($sortfields as $field => $mult) {
+            if ($field === 'name' || $field === 'idnumber' || $field === 'path') {
+                // string fields
+                if ($cmp = strcmp($a->$field, $b->$field)) {
+                    // TODO textlib?
+                    return $mult * $cmp;
+                }
+            } else {
+                // int fields
+                if ($a->$field > $b->$field) {
+                    return $mult;
+                }
+                if ($a->$field < $b->$field) {
+                    return -$mult;
+                }
+            }
+        }
+        return 0;
+    }
+
+    /**
+     * Returns the number of children categories visible to the current user
+     *
+     * @return int
+     */
+    public function count_children() {
+        $coursecatcache = cache::make('core', 'coursecat');
+        $sortedids = self::get_tree($this->id);
+        if (empty($sortedids)) {
+            // there are no children in this category at all
+            return 0;
+        }
+        // there are some children, let's check if there are any invisible to the current user
+        if ($invisibleids = $this->get_not_visible_children_ids()) {
+            return count($sortedids) - count($invisibleids);
+        }
+        return count($sortedids);
+    }
+
+    /**
      * Returns array of children categories visible to the current user
      *
+     * @param array $options options for retrieving children
+     *    - sort - list of fields to sort. Example
+     *             array('idnumber' => 1, 'name' => 1, 'id' => -1)
+     *             will sort by idnumber asc, name asc and id desc.
+     *             Default: array('sortorder' => 1)
+     *             Only cached fields may be used for sorting!
+     *    - offset
+     *    - limit - maximum number of children to return, 0 or null for no limit
      * @return array of coursecat objects indexed by category id
      */
-    public function get_children() {
-        $allchildren = self::get_tree($this->id);
-        $rv = array();
-        if (!empty($allchildren)) {
-            foreach ($allchildren as $id) {
-                if ($coursecat = self::get($id, IGNORE_MISSING)) {
-                    // do not return invisible
-                    $rv[$coursecat->id] = $coursecat;
+    public function get_children($options = array()) {
+        global $DB;
+        $coursecatcache = cache::make('core', 'coursecat');
+
+        // get default values for options
+        if (!empty($options['sort']) && is_array($options['sort'])) {
+            $sortfields = $options['sort'];
+        } else {
+            $sortfields = array('sortorder' => 1);
+        }
+        $limit = null;
+        if (!empty($options['limit']) && (int)$options['limit']) {
+            $limit = (int)$options['limit'];
+        }
+        $offset = 0;
+        if (!empty($options['offset']) && (int)$options['offset']) {
+            $offset = (int)$options['offset'];
+        }
+
+        // first retrieve list of user-visible and sorted children ids from cache
+        $sortedids = $coursecatcache->get('c'. $this->id. ':'.  serialize($sortfields));
+        if ($sortedids === false) {
+            $sortfieldskeys = array_keys($sortfields);
+            if ($sortfieldskeys[0] === 'sortorder') {
+                // no DB requests required to build the list of ids sorted by sortorder.
+                // We can easily ignore other sort fields because sortorder is always different
+                $sortedids = self::get_tree($this->id);
+                if ($sortedids && ($invisibleids = $this->get_not_visible_children_ids())) {
+                    $sortedids = array_diff($sortedids, $invisibleids);
+                    if ($sortfields['sortorder'] == -1) {
+                        $sortedids = array_reverse($sortedids, true);
+                    }
                 }
+            } else {
+                // we need to retrieve and sort all children. Good thing that it is done only on first request
+                if ($invisibleids = $this->get_not_visible_children_ids()) {
+                    list($sql, $params) = $DB->get_in_or_equal($invisibleids, SQL_PARAMS_NAMED, 'id', false);
+                    $records = self::get_records('cc.parent = :parent AND cc.id '. $sql,
+                            array('parent' => $this->id) + $params);
+                } else {
+                    $records = self::get_records('cc.parent = :parent', array('parent' => $this->id));
+                }
+                uasort($records, function ($a, $b) use ($sortfields) { return self::compare_records($a, $b, $sortfields); });
+                $sortedids = array_keys($records);
+            }
+            $coursecatcache->set('c'. $this->id. ':'.serialize($sortfields), $sortedids);
+        }
+
+        if (empty($sortedids)) {
+            return array();
+        }
+
+        // now retrieive and return categories
+        if ($offset || $limit) {
+            $sortedids = array_slice($sortedids, $offset, $limit);
+        }
+        if (isset($records)) {
+            // easy, we have already retrieved records
+            if ($offset || $limit) {
+                $records = array_slice($records, $offset, $limit, true);
+            }
+        } else {
+            list($sql, $params) = $DB->get_in_or_equal($sortedids, SQL_PARAMS_NAMED, 'id');
+            $records = self::get_records('cc.id '. $sql,
+                    array('parent' => $this->id) + $params);
+        }
+
+        $rv = array();
+        foreach ($sortedids as $id) {
+            if (isset($records[$id])) {
+                $rv[$id] = new coursecat($records[$id]);
             }
         }
         return $rv;
