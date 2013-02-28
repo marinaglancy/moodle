@@ -42,17 +42,17 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
         'id' => array('id', 0),
         'name' => array('na', ''),
         'idnumber' => array('in', null),
-        'description' => array('de', null),
-        'descriptionformat' => array('df', 0 /*FORMAT_MOODLE*/),
+        'description' => null, // not cached
+        'descriptionformat' => null, // not cached
         'parent' => array('pa', 0),
         'sortorder' => array('so', 0),
-        'coursecount' => array('cc', 0),
+        'coursecount' => null, // not cached
         'visible' => array('vi', 1),
-        'visibleold' => array('vo', 1),
+        'visibleold' => null, // not cached
         'timemodified' => null, // not cached
         'depth' => array('dh', 1),
         'path' => array('ph', null),
-        'theme' => array('th', null)
+        'theme' => null, // not cached
     );
 
     protected static $contextfields = array(
@@ -73,10 +73,10 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
     protected $idnumber = null;
 
     /** @var string */
-    protected $description = null;
+    protected $description = false;
 
     /** @var int */
-    protected $descriptionformat = 0;
+    protected $descriptionformat = false;
 
     /** @var int */
     protected $parent = 0;
@@ -85,16 +85,16 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
     protected $sortorder = 0;
 
     /** @var int */
-    protected $coursecount = 0;
+    protected $coursecount = false;
 
     /** @var int */
     protected $visible = 1;
 
     /** @var int */
-    protected $visibleold = 1;
+    protected $visibleold = false;
 
     /** @var int */
-    protected $timemodified = 0;
+    protected $timemodified = false;
 
     /** @var int */
     protected $depth = 0;
@@ -103,7 +103,7 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
     protected $path = '';
 
     /** @var string */
-    protected $theme = null;
+    protected $theme = false;
 
     /** @var bool */
     protected $fromcache;
@@ -120,12 +120,24 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
     }
 
     /**
-     * Magic method getter, redirects to read only values.
+     * Magic method getter, redirects to read only values. Queries from DB the fields that were not cached
      * @param string $name
      * @return mixed
      */
     public function __get($name) {
+        global $DB;
         if (array_key_exists($name, self::$coursecatfields)) {
+            if ($this->$name === false) {
+                // property was not retrieved from DB
+                if ($name === 'description' || $name === 'descriptionformat') {
+                    // usually if one field is requested another one will be requested shortly
+                    $record = $DB->get_record('course_categories', array('id' => $this->id), 'description, descriptionformat', MUST_EXIST);
+                    $this->description = $record->description;
+                    $this->descriptionformat = $record->descriptionformat;
+                } else {
+                    $this->$name = $DB->get_field('course_categories', $name, array('id' => $this->id), MUST_EXIST);
+                }
+            }
             return $this->$name;
         }
         debugging('Invalid coursecat property accessed! '.$name, DEBUG_DEVELOPER);
@@ -160,7 +172,9 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
     public function getIterator() {
         $ret = array();
         foreach (self::$coursecatfields as $property => $unused) {
-            $ret[$property] = $this->$property;
+            if ($this->$property !== false) {
+                $ret[$property] = $this->$property;
+            }
         }
         return new ArrayIterator($ret);
     }
@@ -221,14 +235,17 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
         if ($coursecat === false) {
             $all = self::get_all_ids();
             if (array_key_exists($id, $all)) {
-                // retrieve from DB and store in cache
+                // Retrieve from DB only the fields that need to be stored in cache
+                $fields = array_filter(array_keys(self::$coursecatfields), function ($element)
+                    { return (self::$coursecatfields[$element] !== null); } );
                 $ctxselect = context_helper::get_preload_record_columns_sql('ctx');
-                $sql = "SELECT cc.*, $ctxselect
+                $sql = "SELECT cc.". join(',cc.', $fields). ", $ctxselect
                         FROM {course_categories} cc
                         JOIN {context} ctx ON cc.id = ctx.instanceid AND ctx.contextlevel = ?
                         WHERE cc.id = ?";
                 if ($record = $DB->get_record_sql($sql, array(CONTEXT_COURSECAT, $id))) {
                     $coursecat = new coursecat($record);
+                    // Store in cache
                     $coursecatcache->set($id, $coursecat);
                 }
             }
@@ -974,7 +991,8 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
         global $DB;
         $changes = false;
 
-        if ($this->id && $this->visibleold != $visibleold) {
+        // Note that field 'visibleold' is not cached so we must retrieve it from DB if it is missing
+        if ($this->id && $this->__get('visibleold') != $visibleold) {
             $this->visibleold = $visibleold;
             $DB->set_field('course_categories', 'visibleold', $visibleold, array('id' => $this->id));
             $changes = true;
