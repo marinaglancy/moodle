@@ -1626,6 +1626,9 @@ class core_course_renderer extends plugin_renderer_base {
         return $output;
     }
 
+    public function search_courses($searchstring) {
+        // TODO
+    }
 }
 
 /**
@@ -1642,6 +1645,11 @@ class core_course_renderer extends plugin_renderer_base {
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class coursecat_renderable implements renderable {
+    const DISPLAY_COURSES_NONE = 0;
+    const DISPLAY_COURSES_COLLAPSED = 10;
+    const DISPLAY_COURSES_EXPANDED = 20;
+    const DISPLAY_COURSES_EXPANDED_WITH_CAT = 30;
+
     protected $id = 0;
     protected $attributes = array();
 
@@ -1675,8 +1683,8 @@ class coursecat_renderable implements renderable {
     //const HEADING = 'heading';
     /** @var string attribute : depth of this category in the current view */
     const DEPTH = 'depth';
-    /** @var string attribute : search string in courses names and/or descriptions */
-    //const SEARCHSTRING = 'search';
+    /** @var string search string in courses names and/or descriptions */
+    protected $search = null;
     /** @var string attribute : display category name in course description
      * (may be used in search results or in 'my courses' lists) */
     //const DISPLAYCATEGORYNAME = 'showcatname';
@@ -1854,6 +1862,30 @@ class coursecat_renderable implements renderable {
     }
 
     /**
+     *
+     * @param string $search
+     * @return array
+     */
+    public function search_courses($search) {
+        if (empty($search)) {
+            return $this->get_child_courses();
+        }
+        // remember search string for highlighting search terms when formatting course name and summary
+        $this->search = $search;
+        if ($this->get_display_courses() === 'none') {
+            return array();
+        }
+        $fullinfo = $this->get_display_courses() === 'expanded';
+        $childcourses = $this->get_category()->search_courses(
+                $this->search,
+                array('recursive' => $this->get_omit_subcat(),
+                    'enrolledonly' => $this->get_show_enrolled_only(),
+                    'summary' => $fullinfo,
+                    'coursecontacts' => $fullinfo));
+        return $childcourses;
+    }
+
+    /**
      * Returns the number of visible courses in this category
      *
      * @return int
@@ -1881,7 +1913,11 @@ class coursecat_renderable implements renderable {
             $options['context'] = context_course::instance($course->id);
         }
         $summary = file_rewrite_pluginfile_urls($course->summary, 'pluginfile.php', $context->id, 'course', 'summary', null);
-        return format_text($summary, $course->summaryformat, $options, $course->id);
+        $summary = format_text($summary, $course->summaryformat, $options, $course->id);
+        if ($this->search !== null) {
+            $summary = highlight($this->search, $summary);
+        }
+        return $summary;
     }
 
     public function get_course_formatted_name($course, $options = array()) {
@@ -1897,6 +1933,10 @@ class coursecat_renderable implements renderable {
         if (!isset($options['context'])) {
             $options['context'] = context_course::instance($course->id);
         }
-        return format_string($name, true, $options);
+        $name = format_string($name, true, $options);
+        if ($this->search !== null) {
+            $name = highlight($this->search, $name);
+        }
+        return $name;
     }
 }

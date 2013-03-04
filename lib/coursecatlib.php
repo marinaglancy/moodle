@@ -933,6 +933,30 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
     }
 
     /**
+     * Searches courses
+     *
+     * @param string $search
+     * @param array $options display options, same as in get_courses()
+     * @return array
+     */
+    public function search_courses($search, $options = array()) {
+        if (empty($options['recursive']) || $this->id !== 0) {
+            debugging('Search within particular category is not supported yet', DEBUG_DEVELOPER);
+        }
+        if (!empty($options['enrolledonly'])) {
+            debugging('Search in enrolled only courses is not supported yet', DEBUG_DEVELOPER);
+        }
+        $offset = !empty($options['offset']) ? $options['offset'] : 0;
+        $limit = !empty($options['limit']) ? $options['limit'] : 50; // default 50 courses per page
+        $sortfields = !empty($options['sort']) ? $options['sort'] : array('sortorder' => 1);
+        foreach ($sortfields as $field => $dir) {
+            $sort = (empty($sort) ? '' : $sort. ','). $field. ' '.($dir>0 ? 'ASC' : 'DESC');
+        }
+        $courses = get_courses_search($searchterms, $sort, $offset/$limit, $limit, $totalcount);
+        return $courses;
+    }
+
+    /**
      * Returns true if user can delete current category and all its contents
      *
      * To be able to delete course category the user must have permission
