@@ -790,42 +790,83 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
     }
 
     /**
-     * Retrieves and caches the list of courses accessible by user
+     * Retrieves the list of courses accessible by user
      *
-     * The following fields are returned:
-     * - id, visible, fullname, shortname, idnumber, category, hassummary
-     * where hassummary indicates if summary field is not empty.
-     * Also returns context fields so each record is ready to be passed to
-     * {@link context_instance_preload()}
+     * Not all information is cached, try to avoid calling this method
+     * twice in the same request.
      *
-     * Courses are returned sorted by sortorder
+     * The following fields are always retrieved:
+     * - id, visible, fullname, shortname, idnumber, category
      *
-     * @param bool $recursive return courses from subcategories as well
-     * @param bool $fulldata fetch also course summaries and managers (course contacts)
-     * @return array array of objects
+     * If you plan to use properties/methods course_in_list::$summary,
+     * course_in_list::get_course_contacts() and/or course_in_list::is_enrolled()
+     * you can preload this information using appropriate 'options'. Otherwise
+     * they will be retrieved from DB on demand and it may end with bigger DB load.
+     *
+     * Note that method course_in_list::has_summary() will not perform additional
+     * DB queries even if $options['summary'] is not specified
+     *
+     * @param array $options options for retrieving children
+     *    - recursive - return courses from subcategories as well. Use with care,
+     *      this may be a huge list! Usually to be used on small sites or together
+     *      with 'enrolledonly' option
+     *    - enrolledonly - only returns courses where this user is enrolled
+     *    - summary - preloads fields 'summary' and 'summaryformat'
+     *    - coursecontacts - preloads course contacts
+     *    - isenrolled - preloads indication whether this user is enrolled in the course
+     *    - sort - list of fields to sort. Example
+     *             array('idnumber' => 1, 'shortname' => 1, 'id' => -1)
+     *             will sort by idnumber asc, shortname asc and id desc.
+     *             Default: array('sortorder' => 1)
+     *             Only cached fields may be used for sorting!
+     *    - offset
+     *    - limit - maximum number of children to return, 0 or null for no limit
+     * @return array array of instances of course_in_list
      */
-    public function get_courses($recursive = false, $fulldata = false) {
+    public function get_courses($options = array()) {
         global $DB;
+        $recursive = !empty($options['recursive']);
+        $offset = !empty($options['offset']) ? $options['offset'] : 0;
+        $limit = !empty($options['limit']) ? $options['limit'] : null;
+        $sortfields = !empty($options['sort']) ? $options['sort'] : array('sortorder' => 1);
+
         // Check if this category is hidden.
         // Also 0-category never has courses unless this is recursive call.
         if (!$this->is_uservisible() || (!$this->id && !$recursive)) {
             return array();
         }
 
-        // Check if we have cached list
-        $courselistcache = cache::make('core', 'coursecat');
-        $cachekey = 'crs'. $this->id. '-'. ($recursive ? 'r' : 's');
-        // check if we cached the list of courses with fulldata
-        if (($courses = $courselistcache->get($cachekey.'f')) !== false) {
-            return $courses;
-        }
-        // if we don't need fulldata check if we cached the list without it
-        if (!$fulldata && ($courses = $courselistcache->get($cachekey)) !== false) {
-            return $courses;
+        // enrolled courses temporary solution
+        if (!empty($options['enrolledonly'])) {
+            $list  = enrol_get_my_courses('summary, summaryformat', 'sortorder');
+            if (empty($options['recursive'])) {
+                // only courses in specific category
+                foreach ($list as $course) {
+                    if ($course->category != $this->id) {
+                        unset($list[$course->id]);
+                    }
+                }
+            } else if ($this->id) {
+                // courses in specific category and all subcategories
+                // hopefully this is never requested and it is temp solution anyway
+                $thiscontext = context_coursecat::instance($this->id);
+                foreach ($list as $course) {
+                    if ($course->category != $this->id) {
+                        // course contexts were already preloaded in enrol_get_my_courses()
+                        $coursecontext = context_course::instance($course->id);
+                        if (!in_array($thiscontext->id, $coursecontext->get_parent_context_ids())) {
+                            unset($list[$course->id]);
+                        }
+                    }
+                }
+            }
+            foreach (array_keys($list) as $id) {
+                $list[$id]->isenrolled = true;
+            }
         }
 
-        // fulldata mode temporary solution
-        if ($fulldata) {
+        // coursecontacts+summary mode temporary solution
+        if (!isset($list) && !empty($options['coursecontacts'])) {
             $fields = array('id', 'visible', 'fullname', 'shortname', 'idnumber',
                 'sortorder', 'category', 'summary', 'summaryformat');
             if (!$this->id && $recursive) {
@@ -833,60 +874,61 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
             } else if ($this->id && !$recursive) {
                 $list = get_courses_wmanagers($this->id, 'c.sortorder', $fields);
             } else {
-                // otherwise we can't call get_courses_wmanagers(), fall back to normal query
-                // course contacts will be retrieved one-by-one
-                if (($courses = $courselistcache->get($cachekey)) !== false) {
-                    return $courses;
-                }
-            }
-            if (isset($list)) {
-                $courses = new cacheable_object_array();
-                foreach ($list as $record) {
-                    $courses[] = new course_in_list($record);
-                }
-                $courselistcache->set($cachekey.'f', $courses);
-                return $courses;
+                // Otherwise we can't call get_courses_wmanagers(), fall back to normal query.
+                // Course contacts will be retrieved by funcion in class course_in_list on demand
             }
         }
 
-        // simple data mode
-        $courses = new cacheable_object_array();
-
-        // this queries only direct children
-        list($ccselect, $ccjoin) = context_instance_preload_sql('c.id', CONTEXT_COURSE, 'ctx');
-        if ($recursive) {
-            $where = "ctx.path like :path AND ctx.contextlevel = :coursectx";
-            $context = get_category_or_system_context($this->id);
-            $params = array('path' => $context->path. '/%', 'coursectx' => CONTEXT_COURSE);
-        } else {
-            $where = "c.category = :categoryid";
-            $params = array('categoryid' => $this->id);
-        }
-        $sql = "SELECT
-                c.id, c.visible, c.fullname, c.shortname, c.idnumber, c.category,
-                c.sortorder, ". $DB->sql_length('c.summary'). " hassummary
-                $ccselect
-                FROM {course} c
-                $ccjoin
-                WHERE $where ORDER BY c.sortorder ASC";
-        if ($allcourses = $DB->get_records_sql($sql, $params)) {
-            // Loop through all records and make sure we only return the courses accessible by user.
-            foreach ($allcourses as $course) {
-                if ($course->id == SITEID) {
-                    continue;
-                }
-                if (empty($course->visible)) {
-                    // load context only if we need to check capability
-                    context_instance_preload($course);
-                    if (!has_capability('moodle/course:viewhiddencourses', context_course::instance($course->id))) {
-                        continue;
+        if (!isset($list)) {
+            // retrieve records without course contacts
+            $sql = "SELECT
+                    c.id, c.visible, c.fullname, c.shortname, c.idnumber, c.category,
+                    c.sortorder";
+            if (empty($options['summary'])) {
+                $sql .= ", ". $DB->sql_length('c.summary'). " hassummary";
+            } else {
+                $sql .= ", c.summary, c.summaryformat";
+            }
+            $sql .= ", ". context_helper::get_preload_record_columns_sql('ctx');
+            $sql .= " FROM {course} c
+                    LEFT JOIN {context} ctx ON (ctx.instanceid = c.id AND ctx.contextlevel = :contextlevel)
+                    WHERE ";
+            $params = array('contextlevel' => CONTEXT_COURSE);
+            if ($recursive) {
+                $sql .= "ctx.path like :path";
+                $context = get_category_or_system_context($this->id);
+                $params['path'] = $context->path. '/%';
+            } else {
+                $sql .= "c.category = :categoryid";
+                $params['categoryid'] = $this->id;
+            }
+            $sql .= " ORDER BY c.sortorder ASC";
+            $courses = array();
+            if ($list = $DB->get_records_sql($sql, $params)) {
+                unset($list[SITEID]);
+                // Loop through all records and make sure we only return the courses accessible by user.
+                foreach ($list as $course) {
+                    if (empty($course->visible)) {
+                        // load context only if we need to check capability
+                        context_instance_preload($course);
+                        if (!has_capability('moodle/course:viewhiddencourses', context_course::instance($course->id))) {
+                            unset($list[$course->id]);
+                        }
                     }
                 }
-                $course->hassummary = empty($course->hassummary) ? 0 : 1;
-                $courses[$course->id] = new course_in_list($course);
             }
         }
-        $courselistcache->set($cachekey, $courses);
+
+        $courses = array();
+        if (isset($list)) {
+            uasort($list, function ($a, $b) use ($sortfields) { return self::compare_records($a, $b, $sortfields); });
+            if ($offset || $limit) {
+                $list = array_slice($list, $offset, $limit);
+            }
+            foreach ($list as $record) {
+                $courses[] = new course_in_list($record);
+            }
+        }
         return $courses;
     }
 
@@ -1545,45 +1587,19 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
 /**
  * Class to store information about one course in a list of courses
  *
- * Course context is loaded only if needed. We cache only limited set of
- * fields and everything that we might need is retrieved on demand.
- *
- * When the instance of class is created we may pass field 'hassummary' that
- * indicates that summary is empty or not empty. In this case we save on
- * DB operations when displaying summary or checking that it is present.
- *
- * Also object may contain property 'managers' for caching
+ * Not all information may be retrieved when object is created but
+ * it may be retrieved on demand when appropriate property or method is
+ * called.
  *
  * @package    core
  * @subpackage course
  * @copyright  2013 Marina Glancy
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class course_in_list implements cacheable_object, IteratorAggregate {
+class course_in_list implements IteratorAggregate {
 
     protected $record;
-    protected $fromcache;
     protected $coursecontacts;
-
-    /** @var array list of all fields and their short name and default value for caching */
-    protected static $coursefields = array(
-        'id' => array('id', 0),
-        'category' => array('ca', 0),
-        'sortorder' => array('so', 0),
-        'fullname' => array('fn', ''),
-        'shortname' => array('sn', ''),
-        'idnumber' => array('in', null),
-        'visible' => array('vi', 1),
-        'hassummary' => array('hs', null),
-        'managers' => array('ma', null), // if managers are once found, cache them
-    );
-    protected static $contextfields = array(
-        'id'           => array('xi', 0),
-        'contextlevel' => null, // not cached, always the same CONTEXT_COURSE
-        'instanceid'   => null, // not cached, equal to course id
-        'path'         => array('xp', 0),
-        'depth'        => array('xd', 0)
-    );
 
     /**
      * Creates an instance of the class from record
@@ -1592,14 +1608,13 @@ class course_in_list implements cacheable_object, IteratorAggregate {
      *     field hassummary indicating that summary field is not empty.
      *     Also it is recommended to have context fields here ready for
      *     context preloading
-     * @param bool $fromcache internally set to true if object is restored from cache
      */
-    public function __construct(stdClass $record, $fromcache = false) {
+    public function __construct(stdClass $record) {
+        context_instance_preload($record);
         $this->record = new stdClass();
         foreach ($record as $key => $value) {
             $this->record->$key = $value;
         }
-        $this->fromcache = $fromcache;
     }
 
     /**
@@ -1608,7 +1623,31 @@ class course_in_list implements cacheable_object, IteratorAggregate {
      * @return bool
      */
     public function has_summary() {
-        return $this->hassummary;
+        if (isset($this->record->hassummary)) {
+            return !empty($this->record->hassummary);
+        }
+        if (!isset($this->record->summary)) {
+            // we need to retrieve summary
+            $this->__get('summary');
+        }
+        return !empty($this->record->summary);
+    }
+
+    /**
+     * Returns true if user is enrolled in this course
+     *
+     * @return bool
+     */
+    public function is_enrolled() {
+        global $USER;
+        static $allcourses = null;
+        if (!isset($this->record->isenrolled)) {
+            if ($allcourses === null) {
+                $allcourses = enrol_get_all_users_courses($USER->id);
+            }
+            $this->record->isenrolled = array_key_exists($this->record->id, $allcourses);
+        }
+        return !empty($this->record->isenrolled);
     }
 
     /**
@@ -1617,7 +1656,7 @@ class course_in_list implements cacheable_object, IteratorAggregate {
      * @return bool
      */
     public function has_course_contacts() {
-        if (property_exists($this->record, 'managers') && $this->record->managers !== null) {
+        if (isset($this->record->managers)) {
             return !empty($this->record->managers);
         }
         $coursecontacts = $this->get_course_contacts();
@@ -1630,7 +1669,6 @@ class course_in_list implements cacheable_object, IteratorAggregate {
      * @return context
      */
     public function get_context() {
-        context_instance_preload($this->record);
         return context_course::instance($this->record->id);
     }
 
@@ -1687,7 +1725,6 @@ class course_in_list implements cacheable_object, IteratorAggregate {
             }*/
             // make sure context is preloaded
 
-            context_instance_preload($this->record);
             $this->coursecontacts = course_get_coursecontacts($this->record);
         }
         return $this->coursecontacts;
@@ -1696,11 +1733,7 @@ class course_in_list implements cacheable_object, IteratorAggregate {
     // ====== magic methods =======
 
     public function __isset($name) {
-        if (property_exists($this->record, $name)) {
-            return isset($this->record->$name);
-        } else {
-            return false;
-        }
+        return isset($this->record->$name);
     }
 
     /**
@@ -1715,15 +1748,11 @@ class course_in_list implements cacheable_object, IteratorAggregate {
         global $DB;
         if (property_exists($this->record, $name)) {
             return $this->record->$name;
-        } else if ($name === 'hassummary' && property_exists($this->record, 'summary')) {
-            $this->record->hassummary = empty($this->record->summary) ? 0 : 1;
-            return $this->record->$name;
-        } else if ($name === 'summary' || $name === 'summaryformat' || $name === 'hassummary') {
+        } else if ($name === 'summary' || $name === 'summaryformat') {
             // retrieve fields summary and summaryformat together because they are most likely to be used together
             $record = $DB->get_record('course', array('id' => $this->record->id), 'summary, summaryformat', MUST_EXIST);
             $this->record->summary = $record->summary;
             $this->record->summaryformat = $record->summaryformat;
-            $this->record->hassummary = empty($this->record->summary) ? 0 : 1;
             return $this->record->$name;
         } else if (array_key_exists($name, $DB->get_columns('course'))) {
             // another field from table 'course' that was not retrieved
@@ -1760,85 +1789,8 @@ class course_in_list implements cacheable_object, IteratorAggregate {
     public function getIterator() {
         $ret = array('id' => $this->record->id);
         foreach ($this->record as $property => $value) {
-            if ($property !== 'id' && !preg_match('/^ctx/', $property)) {
-                $ret[$property] = $value;
-            }
+            $ret[$property] = $value;
         }
         return new ArrayIterator($ret);
-    }
-
-    // ====== implementing method from interface cacheable_object ======
-
-    /**
-     * Prepares the object for caching. Works like the __sleep method.
-     *
-     * @return array ready to be cached
-     */
-    public function prepare_to_cache() {
-        $a = array();
-        // make sure hassummary is retrieved before caching
-        $this->hassummary;
-        foreach (self::$coursefields as $property => $cachedirectives) {
-            if ($cachedirectives !== null) {
-                list($shortname, $defaultvalue) = $cachedirectives;
-                if ((property_exists($this->record, $property)) &&
-                        $this->$property !== $defaultvalue) {
-                    $a[$shortname] = $this->$property;
-                }
-            }
-        }
-        // cache context
-        if (!empty($this->record->ctxid)) {
-            // context has not been loaded and it is still in the record
-            foreach (self::$contextfields as $property => $cachedirectives) {
-                if ($cachedirectives !== null) {
-                    $a[$cachedirectives[0]] = $this->record->{'ctx'.$property};
-                }
-            }
-        } else {
-            // context is not in the record any more, it means it has been loaded already
-            $context = context_course::instance($this->record->id);
-            foreach (self::$contextfields as $property => $cachedirectives) {
-                if ($cachedirectives !== null) {
-                    $a[$cachedirectives[0]] = $context->$property;
-                }
-            }
-        }
-        return $a;
-    }
-
-    /**
-     * Takes the data provided by prepare_to_cache and reinitialises an instance of the associated from it.
-     *
-     * @param array $a
-     * @return coursecat
-     */
-    public static function wake_from_cache($a) {
-        $record = new stdClass;
-        // restore course fields
-        foreach (self::$coursefields as $property => $cachedirectives) {
-            if ($cachedirectives !== null) {
-                list($shortname, $defaultvalue) = $cachedirectives;
-                if (array_key_exists($shortname, $a)) {
-                    $record->$property = $a[$shortname];
-                } else {
-                    $record->$property = $defaultvalue;
-                }
-            }
-        }
-        // restore course context fields
-        $record->ctxcontextlevel = CONTEXT_COURSE;
-        $record->ctxinstanceid = $record->id;
-        foreach (self::$contextfields as $property => $cachedirectives) {
-            if ($cachedirectives !== null) {
-                list($shortname, $defaultvalue) = $cachedirectives;
-                if (array_key_exists($shortname, $a)) {
-                    $record->{'ctx'. $property} = $a[$shortname];
-                } else {
-                    $record->{'ctx'. $property} = $defaultvalue;
-                }
-            }
-        }
-        return new course_in_list($record, true);
     }
 }
