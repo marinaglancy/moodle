@@ -1518,8 +1518,14 @@ class core_course_renderer extends plugin_renderer_base {
                 //wrap frontpage course list in div container
                 $content .= html_writer::start_tag('div', array('id'=>'frontpage-course-list'));
 
-                $content .= $this->heading(get_string('mycourses'), 2, 'headingblock header');
-                $content .= $this->enrolled_courses_list();
+                $content .= $this->heading(get_string('mycourses'). 'aaaaaaaaa', 2, 'headingblock header');
+                $coursecategory = new coursecat_renderable(0,
+                    array(
+                        coursecat_renderable::OMITSUBCATEGORIES => true,
+                        coursecat_renderable::ENROLLEDCOURSESONLY => true,
+                        coursecat_renderable::DISPLAYCOURSES => 'expanded',
+                ));
+                $content .= $this->render($coursecategory);
 
                 //end frontpage course list div container
                 $content .= html_writer::end_tag('div');
@@ -1645,6 +1651,8 @@ class coursecat_renderable implements renderable {
     const EXPANDSUBCATEGORIESDEPTH = 'expanddepth'; // TODO rename to subcategorydepth for better understanding
     /** @var string attribute : for small sites, do not display categories names just list all courses in all subcategories */
     const OMITSUBCATEGORIES = 'omitcat';
+    /** @var string attribute : return courses where user is enrolled only */
+    const ENROLLEDCOURSESONLY = 'enrolled';
     /** @var string attribute : how to sort courses */
     //const SORTCOURSES = 'sort';
     /** @var string attribute : how to sort subcategories */
@@ -1836,8 +1844,12 @@ class coursecat_renderable implements renderable {
         if ($this->get_attr(self::DISPLAYCOURSES) == 'none') {
             return array();
         }
-        $childcourses = $this->get_category()->get_courses($this->get_attr(self::OMITSUBCATEGORIES),
-                $this->get_attr(self::DISPLAYCOURSES) == 'expanded');
+        $fullinfo = $this->get_attr(self::DISPLAYCOURSES) == 'expanded';
+        $childcourses = $this->get_category()->get_courses(
+                array('recursive' => $this->get_attr(self::OMITSUBCATEGORIES),
+                    'enrolledonly' => $this->get_attr(self::ENROLLEDCOURSESONLY),
+                    'summary' => $fullinfo,
+                    'coursecontacts' => $fullinfo));
         return $childcourses;
     }
 
@@ -1847,7 +1859,8 @@ class coursecat_renderable implements renderable {
      * @return int
      */
     public function get_child_courses_count() {
-        $childcourses = $this->get_category()->get_courses($this->get_attr(self::OMITSUBCATEGORIES));
+        $childcourses = $this->get_category()->get_courses(
+                array('recursive' => $this->get_attr(self::OMITSUBCATEGORIES)));
         return count($childcourses);
     }
 
@@ -1865,7 +1878,7 @@ class coursecat_renderable implements renderable {
         $options = (array)$options;
         $context = $course->get_context();
         if (!isset($options['context'])) {
-            $options['context'] = $context;
+            $options['context'] = context_course::instance($course->id);
         }
         $summary = file_rewrite_pluginfile_urls($course->summary, 'pluginfile.php', $context->id, 'course', 'summary', null);
         return format_text($summary, $course->summaryformat, $options, $course->id);
@@ -1882,7 +1895,7 @@ class coursecat_renderable implements renderable {
         }
         $options = (array)$options;
         if (!isset($options['context'])) {
-            $options['context'] = $course->get_context();
+            $options['context'] = context_course::instance($course->id);
         }
         return format_string($name, true, $options);
     }
