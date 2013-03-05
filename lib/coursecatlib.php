@@ -607,6 +607,36 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
     }
 
     /**
+     * Retrieves number of records from course table
+     *
+     * Not all fields are retrieved. Records are ready for preloading context
+     *
+     * @param string $whereclause
+     * @param array $params
+     * @param array $options may indicate that summary needs to be retrieved
+     * @return array array of stdClass objects
+     */
+    protected static function get_course_records($whereclause, $params, $options) {
+        global $DB, $CFG;
+        $ctxselect = context_helper::get_preload_record_columns_sql('ctx');
+        $fields = array('c.id', 'c.category', 'c.sortorder',
+                        'c.shortname', 'c.fullname', 'c.idnumber',
+                        'c.startdate', 'c.visible');
+        if (!empty($options['summary'])) {
+            $fields[] = 'c.summary';
+            $fields[] = 'c.summaryformat';
+        } else {
+            $fields[] = $DB->sql_length('c.summary'). ' hassummary';
+        }
+        $sql = "SELECT ". join(',', $fields). ", $ctxselect
+                FROM {course} c
+                JOIN {context} ctx ON c.id = ctx.instanceid AND ctx.contextlevel = :contextcourse
+                WHERE ". $whereclause." ORDER BY c.sortorder";
+        return $DB->get_records_sql($sql,
+                array('contextcourse' => CONTEXT_COURSE) + $params);
+    }
+
+    /**
      * Returns array of ids of children categories that current user can not see
      *
      * This data is cached in user session cache
@@ -791,6 +821,282 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
         global $DB;
         return $DB->record_exists_sql("select 1 from {course} where category = ?",
                 array($this->id));
+    }
+
+    /**
+     * Searches courses
+     *
+     * List of found course ids is cached for 10 minutes. Cache may be purged prior
+     * to this when somebody edits courses or categories, however it is very
+     * difficult to keep track of all possible changes that may affect list of courses.
+     *
+     * @param array $search contains search criterias, such as:
+     *     - search - search string
+     *     - blocklist - id of block (if we are searching for courses containing specific block0
+     *     - modulelist - name of module (if we are searching for courses containing specific module
+     *     - tagid - id of tag
+     * @param array $options display options, same as in get_courses()
+     * @return array
+     */
+    public function search_courses($search, $options) {
+        global $DB, $CFG;
+        if (empty($options['recursive']) || $this->id !== 0) {
+            debugging('Search within particular category is not supported yet', DEBUG_DEVELOPER);
+            return array();
+        }
+        if (!empty($options['enrolledonly'])) {
+            debugging('Search in enrolled only courses is not supported yet', DEBUG_DEVELOPER);
+            return array();
+        }
+        $offset = !empty($options['offset']) ? $options['offset'] : 0;
+        $limit = !empty($options['limit']) ? $options['limit'] : null;
+        $sortfields = !empty($options['sort']) ? $options['sort'] : array('sortorder' => 1);
+        foreach ($sortfields as $field => $dir) {
+            $sort = (empty($sort) ? '' : $sort. ','). $field. ' '.($dir>0 ? 'ASC' : 'DESC');
+        }
+
+        $coursecatcache = cache::make('core', 'coursecat');
+        $cachekey = 's-'. serialize($search + array('sort' => $sortfields));
+        $cntcachekey = 'scnt-'. serialize($search);
+
+        $ids = $coursecatcache->get($cachekey);
+        if ($ids !== false && $coursecatcache->get('EXP-'. $cachekey) >= time()) {
+            // we already cached last search result
+            $ids = array_slice($ids, $offset, $limit);
+            $courses = array();
+            if (!empty($ids)) {
+                list($sql, $params) = $DB->get_in_or_equal($ids, SQL_PARAMS_NAMED, 'id');
+                $records = self::get_course_records("c.id ". $sql, $params, $options);
+                foreach ($ids as $id) {
+                    $courses[$id] = new course_in_list($records[$id]);
+                }
+            }
+            return $courses;
+        }
+
+        if (!empty($search['search'])) {
+            // search courses that have specified words in their names/summaries
+            $searchterms = preg_split('|\s+|', trim($search['search']), 0, PREG_SPLIT_NO_EMPTY);
+            $searchterms = array_filter($searchterms, function ($v) { return strlen($v) > 1; } );
+            if (!$limit) { $limit = 9999999; }
+            $records = get_courses_search($searchterms, $sort, $offset/$limit, $limit, $totalcount, $cachekey);
+            $coursecatcache->set('EXP-'. $cachekey, time() + 600); // cache search results for 10 minutes
+            $coursecatcache->set($cntcachekey, $totalcount);
+        } else if (!empty($search['blocklist'])) {
+            // search courses that have block with specified id
+            $blockname = $DB->get_field('block', 'name', array('id' => $search['blocklist']));
+            list($select, $join) = context_instance_preload_sql('c.id', CONTEXT_COURSE, 'ctx');
+            $sql = "SELECT c.* $select FROM {course} c
+                    $join JOIN {block_instances} bi ON bi.parentcontextid = ctx.id
+                    WHERE bi.blockname = ?";
+            // TODO order by is not implemented and course visibility is not checked!
+            $courselist = $DB->get_records_sql($sql, array($blockname));
+            $coursecatcache->set($cachekey, array_keys($courselist));
+            $coursecatcache->set($cntcachekey, count($courselist));
+            $coursecatcache->set('EXP-'. $cachekey, time() + 120); // cache search results for 2 minutes
+            $records = array_slice($courselist, $offset, $limit, true);
+        } else if (!empty($search['modulelist'])) {
+            // search courses that have module with specified name
+            list($select, $join) = context_instance_preload_sql('c.id', CONTEXT_COURSE, 'ctx');
+            $sql = "SELECT c.* $select FROM {course} c $join
+                    WHERE c.id IN (SELECT DISTINCT cc.id FROM {".$search['modulelist']."} module, {course} cc
+                                   WHERE module.course = cc.id)";
+            // TODO order by is not implemented and course visibility is not checked!
+            $courselist = $DB->get_records_sql($sql);
+            $coursecatcache->set($cachekey, array_keys($courselist));
+            $coursecatcache->set($cntcachekey, count($courselist));
+            $coursecatcache->set('EXP-'. $cachekey, time() + 120); // cache search results for 2 minutes
+            $records = array_slice($courselist, $offset, $limit, true);
+        } else if (!empty($search['tagid'])) {
+            require_once($CFG->dirroot.'/tag/coursetagslib.php');
+            $courselist = coursetag_get_tagged_courses($search['tagid']);
+            // TODO order by is not implemented
+            $coursecatcache->set($cachekey, array_keys($courselist));
+            $coursecatcache->set($cntcachekey, count($courselist));
+            $coursecatcache->set('EXP-'. $cachekey, time() + 120); // cache search results for 2 minutes
+            $records = array_slice($courselist, $offset, $limit, true);
+        } else {
+            debugging('No criteria is specified while searching courses', DEBUG_DEVELOPER);
+            return array();
+        }
+        $courses = array();
+        foreach ($records as $record) {
+            $courses[$record->id] = new course_in_list($record);
+        }
+        return $courses;
+    }
+
+    /**
+     * Returns number of courses in the search results
+     *
+     * It is recommended to call this function after {@link coursecat::search_courses()}
+     * and not before because only course ids are cached. Otherwise search_courses() may
+     * perform extra DB queries.
+     *
+     * @param array $search search criteria, see method search_courses() for more details
+     * @param array $options display options. They do not affect the result but
+     *     the 'sort' property is used in cache key for storing list of course ids
+     * @return int
+     */
+    public function search_courses_count($search, $options) {
+        $coursecatcache = cache::make('core', 'coursecat');
+        $cntcachekey = 'scnt-'. serialize($search);
+        if (($cnt = $coursecatcache->get($cntcachekey)) === false) {
+            $this->search_courses($search, $options);
+            $cnt = $coursecatcache->get($cntcachekey);
+        }
+        return $cnt;
+    }
+
+    /**
+     * Retrieves the list of courses accessible by user
+     *
+     * Not all information is cached, try to avoid calling this method
+     * twice in the same request.
+     *
+     * The following fields are always retrieved:
+     * - id, visible, fullname, shortname, idnumber, category, sortorder
+     *
+     * If you plan to use properties/methods course_in_list::$summary,
+     * course_in_list::get_course_contacts() and/or course_in_list::is_enrolled()
+     * you can preload this information using appropriate 'options'. Otherwise
+     * they will be retrieved from DB on demand and it may end with bigger DB load.
+     *
+     * Note that method course_in_list::has_summary() will not perform additional
+     * DB queries even if $options['summary'] is not specified
+     *
+     * List of found course ids is cached for 10 minutes. Cache may be purged prior
+     * to this when somebody edits courses or categories, however it is very
+     * difficult to keep track of all possible changes that may affect list of courses.
+     *
+     * @param array $options options for retrieving children
+     *    - recursive - return courses from subcategories as well. Use with care,
+     *      this may be a huge list! Usually to be used on small sites or together
+     *      with 'enrolledonly' option
+     *    - enrolledonly - only returns courses where this user is enrolled
+     *    - summary - preloads fields 'summary' and 'summaryformat'
+     *    - coursecontacts - preloads course contacts
+     *    - isenrolled - preloads indication whether this user is enrolled in the course
+     *    - sort - list of fields to sort. Example
+     *             array('idnumber' => 1, 'shortname' => 1, 'id' => -1)
+     *             will sort by idnumber asc, shortname asc and id desc.
+     *             Default: array('sortorder' => 1)
+     *             Only cached fields may be used for sorting!
+     *    - offset
+     *    - limit - maximum number of children to return, 0 or null for no limit
+     * @return array array of instances of course_in_list
+     */
+    public function get_courses($options = array()) {
+        global $DB;
+        $recursive = !empty($options['recursive']);
+        $offset = !empty($options['offset']) ? $options['offset'] : 0;
+        $limit = !empty($options['limit']) ? $options['limit'] : null;
+        $sortfields = !empty($options['sort']) ? $options['sort'] : array('sortorder' => 1);
+
+        // Check if this category is hidden.
+        // Also 0-category never has courses unless this is recursive call.
+        if (!$this->is_uservisible() || (!$this->id && !$recursive)) {
+            return array();
+        }
+
+        $coursecatcache = cache::make('core', 'coursecat');
+        $cachekey = 'l-'. $this->id. '-'. (!empty($options['recursive']) ? 'r' : '').
+                (!empty($options['enrolledonly']) ? 'e' : ''). '-'. serialize($sortfields);
+        $cntcachekey = 'lcnt-'. $this->id. '-'. (!empty($options['recursive']) ? 'r' : '').
+                (!empty($options['enrolledonly']) ? 'e' : '');
+
+        // check if we have already cached results
+        $ids = $coursecatcache->get($cachekey);
+        if ($ids !== false && $coursecatcache->get('EXP-'. $cachekey) > time()) {
+            // we already cached last search result and it did not expire yet
+            $ids = array_slice($ids, $offset, $limit);
+            $courses = array();
+            if (!empty($ids)) {
+                list($sql, $params) = $DB->get_in_or_equal($ids, SQL_PARAMS_NAMED, 'id');
+                $records = self::get_course_records("c.id ". $sql, $params, $options);
+                foreach ($ids as $id) {
+                    $courses[$id] = new course_in_list($records[$id]);
+                }
+            }
+            return $courses;
+        }
+
+        // enrolled courses, using enrol_get_my_courses()
+        if (!empty($options['enrolledonly'])) {
+            if ($this->id) {
+                debugging('List of enrolled courses within particular category is not supported yet', DEBUG_DEVELOPER);
+                return array();
+            }
+            $list  = enrol_get_my_courses('summary, summaryformat', 'sortorder');
+            foreach (array_keys($list) as $id) {
+                $list[$id]->isenrolled = true;
+            }
+        }
+
+        // retrieve list of courses in category
+        if (!isset($list)) {
+            $where = 'c.id <> :siteid';
+            $params = array('siteid' => SITEID);
+            if ($recursive) {
+                if ($this->id) {
+                    $context = get_category_or_system_context($this->id);
+                    $where .= ' AND ctx.path like :path';
+                    $params['path'] = $context->path. '/%';
+                }
+            } else {
+                $where .= ' AND c.category = :categoryid';
+                $params['categoryid'] = $this->id;
+            }
+            $list = $this->get_course_records($where, $params, $options);
+            $courses = array();
+            // Loop through all records and make sure we only return the courses accessible by user.
+            foreach ($list as $course) {
+                if (empty($course->visible)) {
+                    // load context only if we need to check capability
+                    context_instance_preload($course);
+                    if (!has_capability('moodle/course:viewhiddencourses', context_course::instance($course->id))) {
+                        unset($list[$course->id]);
+                    }
+                }
+            }
+        }
+
+        // sort and cache list
+        if (isset($list)) {
+            uasort($list, function ($a, $b) use ($sortfields) { return self::compare_records($a, $b, $sortfields); });
+        }
+        $coursecatcache->set($cachekey, array_keys($list));
+        $coursecatcache->set($cntcachekey, count($list));
+        $coursecatcache->set('EXP-'. $cachekey, time() + 600); // cache for 10 minutes
+        // apply offset/limit, convert to course_in_list and return
+        $courses = array();
+        if (isset($list)) {
+            if ($offset || $limit) {
+                $list = array_slice($list, $offset, $limit);
+            }
+            foreach ($list as $record) {
+                $courses[$record->id] = new course_in_list($record);
+            }
+        }
+        return $courses;
+    }
+
+    /**
+     * Returns number of courses visible to the user
+     *
+     * @param array $options similar to get_courses() except some options do not affect
+     *     number of courses (i.e. sort, summary, offset, limit etc.)
+     * @return int
+     */
+    public function get_courses_count($options = array()) {
+        $cntcachekey = 'lcnt-'. $this->id. '-'. (!empty($options['recursive']) ? 'r' : '').
+                (!empty($options['enrolledonly']) ? 'e' : '');
+        $coursecatcache = cache::make('core', 'coursecat');
+        if (($cnt = $coursecatcache->get($cntcachekey)) === false) {
+            $this->get_courses($options);
+            $cnt = $coursecatcache->get($cntcachekey);
+        }
+        return $cnt;
     }
 
     /**
@@ -1443,5 +1749,212 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
         $record->ctxlevel = CONTEXT_COURSECAT;
         $record->ctxinstance = $record->id;
         return new coursecat($record, true);
+    }
+}
+
+/**
+ * Class to store information about one course in a list of courses
+ *
+ * Not all information may be retrieved when object is created but
+ * it will be retrieved on demand when appropriate property or method is
+ * called.
+ *
+ * Instances of this class are usually returned by functions
+ * {@link coursecat::search_courses()}
+ * and
+ * {@link coursecat::get_courses()}
+ *
+ * @package    core
+ * @subpackage course
+ * @copyright  2013 Marina Glancy
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class course_in_list implements IteratorAggregate {
+
+    /** @var stdClass record retrieved from DB, may have additional calculated property such as hassummary */
+    protected $record;
+
+    /** @var array array of course contacts - stores result of call to get_course_contacts() */
+    protected $coursecontacts;
+
+    /**
+     * Creates an instance of the class from record
+     *
+     * @param stdClass $record except fields from course table it may contain
+     *     field hassummary indicating that summary field is not empty.
+     *     Also it is recommended to have context fields here ready for
+     *     context preloading
+     */
+    public function __construct(stdClass $record) {
+        context_instance_preload($record);
+        $this->record = new stdClass();
+        foreach ($record as $key => $value) {
+            $this->record->$key = $value;
+        }
+    }
+
+    /**
+     * Indicates if the course has non-empty summary field
+     *
+     * @return bool
+     */
+    public function has_summary() {
+        if (isset($this->record->hassummary)) {
+            return !empty($this->record->hassummary);
+        }
+        if (!isset($this->record->summary)) {
+            // we need to retrieve summary
+            $this->__get('summary');
+        }
+        return !empty($this->record->summary);
+    }
+
+    /**
+     * Returns true if user is enrolled in this course
+     *
+     * @return bool
+     */
+    public function is_enrolled() {
+        global $USER;
+        static $allcourses = null;
+        if (!isset($this->record->isenrolled)) {
+            if ($allcourses === null) {
+                $allcourses = enrol_get_all_users_courses($USER->id);
+            }
+            $this->record->isenrolled = array_key_exists($this->record->id, $allcourses);
+        }
+        return !empty($this->record->isenrolled);
+    }
+
+    /**
+     * Indicates if the course have course contacts to display
+     *
+     * @return bool
+     */
+    public function has_course_contacts() {
+        $coursecontacts = $this->get_course_contacts();
+        return !empty($coursecontacts);
+    }
+
+    /**
+     * Returns list of course contacts (usually teachers) to display in course link
+     *
+     * Roles to display are set up in $CFG->coursecontact
+     *
+     * The result is the list of users where user id is the key and the value
+     * is an array with elements:
+     *  - 'user' - object containing basic user information
+     *  - 'role' - object containing basic role information (id, name, shortname, coursealias)
+     *  - 'rolename' => role_get_name($role, $context, ROLENAME_ALIAS)
+     *  - 'username' => fullname($user, $canviewfullnames)
+     *
+     * @return array
+     */
+    public function get_course_contacts() {
+        global $CFG;
+        if (empty($CFG->coursecontact)) {
+            // no roles are configured to be displayed as course contacts
+            return array();
+        }
+        if ($this->coursecontacts === null) {
+            // build return array with full roles names (for this course context) and users names
+            $context = context_course::instance($this->id);
+            $canviewfullnames = has_capability('moodle/site:viewfullnames', $context);
+            $this->coursecontacts = array();
+            $managerroles = explode(',', $CFG->coursecontact);
+            list($sort, $sortparams) = users_order_by_sql('u');
+            $rusers = get_role_users($managerroles, $context, true,
+                'ra.id AS raid, u.id, u.username, u.firstname, u.lastname, rn.name AS rolecoursealias,
+                 r.name AS rolename, r.sortorder, r.id AS roleid, r.shortname AS roleshortname',
+                'r.sortorder ASC, ' . $sort, false, '', '', '', '', $sortparams);
+            foreach ($rusers as $ruser) {
+                if (isset($this->coursecontacts[$ruser->id])) {
+                    //  only display a user once with the highest sortorder role
+                    continue;
+                }
+                $user = new stdClass();
+                $user->id = $ruser->id;
+                $user->username = $ruser->username;
+                $user->firstname = $ruser->firstname;
+                $user->lastname = $ruser->lastname;
+                $role = new stdClass();
+                $role->id = $ruser->roleid;
+                $role->name = $ruser->rolename;
+                $role->shortname = $ruser->roleshortname;
+                $role->coursealias = $ruser->rolecoursealias;
+
+                $this->coursecontacts[$user->id] = array(
+                    'user' => $user,
+                    'role' => $role,
+                    'rolename' => role_get_name($role, $context, ROLENAME_ALIAS),
+                    'username' => fullname($user, $canviewfullnames)
+                );
+            }
+        }
+        return $this->coursecontacts;
+    }
+
+    // ====== magic methods =======
+
+    public function __isset($name) {
+        return isset($this->record->$name);
+    }
+
+    /**
+     * Magic method to get a course property
+     *
+     * Returns any field from table course (from cache or from DB) and/or special field 'hassummary'
+     *
+     * @param string $name
+     * @return mixed
+     */
+    public function __get($name) {
+        global $DB;
+        if (property_exists($this->record, $name)) {
+            return $this->record->$name;
+        } else if ($name === 'summary' || $name === 'summaryformat') {
+            // retrieve fields summary and summaryformat together because they are most likely to be used together
+            $record = $DB->get_record('course', array('id' => $this->record->id), 'summary, summaryformat', MUST_EXIST);
+            $this->record->summary = $record->summary;
+            $this->record->summaryformat = $record->summaryformat;
+            return $this->record->$name;
+        } else if (array_key_exists($name, $DB->get_columns('course'))) {
+            // another field from table 'course' that was not retrieved
+            $this->record->$name = $DB->get_field('course', $name, array('id' => $this->record->id), MUST_EXIST);
+            return $this->record->$name;
+        }
+        debugging('Invalid course property accessed! '.$name);
+        return null;
+    }
+
+    /**
+     * ALl properties are read only, sorry.
+     * @param string $name
+     */
+    public function __unset($name) {
+        debugging('Can not unset '.get_class($this).' instance properties!');
+    }
+
+    /**
+     * Magic setter method, we do not want anybody to modify properties from the outside
+     * @param string $name
+     * @param mixed $value
+     */
+    public function __set($name, $value) {
+        debugging('Can not change '.get_class($this).' instance properties!');
+    }
+
+    // ====== implementing method from interface IteratorAggregate ======
+
+    /**
+     * Create an iterator because magic vars can't be seen by 'foreach'.
+     * Exclude context fields
+     */
+    public function getIterator() {
+        $ret = array('id' => $this->record->id);
+        foreach ($this->record as $property => $value) {
+            $ret[$property] = $value;
+        }
+        return new ArrayIterator($ret);
     }
 }

@@ -835,9 +835,11 @@ function get_courses_wmanagers($categoryid=0, $sort="c.sortorder ASC", $fields=a
  * @param int $page The page number to get
  * @param int $recordsperpage The number of records per page
  * @param int $totalcount Passed in by reference.
+ * @param string $cachekey If specified the list of all found (sorted) course id's will
+ *      be saved in core/coursecat cache under this key
  * @return object {@link $COURSE} records
  */
-function get_courses_search($searchterms, $sort='fullname ASC', $page=0, $recordsperpage=50, &$totalcount) {
+function get_courses_search($searchterms, $sort, $page, $recordsperpage, &$totalcount, $cachekey = null) {
     global $CFG, $DB;
 
     if ($DB->sql_regex_supported()) {
@@ -913,20 +915,33 @@ function get_courses_search($searchterms, $sort='fullname ASC', $page=0, $record
           ORDER BY $sort";
 
     $rs = $DB->get_recordset_sql($sql, $params);
+    $ids = array();
     foreach($rs as $course) {
-        context_instance_preload($course);
-        $coursecontext = context_course::instance($course->id);
-        if ($course->visible || has_capability('moodle/course:viewhiddencourses', $coursecontext)) {
-            // Don't exit this loop till the end
-            // we need to count all the visible courses
-            // to update $totalcount
-            if ($c >= $limitfrom && $c < $limitto) {
-                $courses[$course->id] = $course;
+        if (!$course->visible) {
+            // preload contexts only for hidden courses or courses we need to return
+            context_instance_preload($course);
+            $coursecontext = context_course::instance($course->id);
+            if (!has_capability('moodle/course:viewhiddencourses', $coursecontext)) {
+                continue;
             }
-            $c++;
         }
+        // Don't exit this loop till the end
+        // we need to count all the visible courses
+        // to update $totalcount
+        if ($c >= $limitfrom && $c < $limitto) {
+            context_instance_preload($course);
+            $courses[$course->id] = $course;
+        }
+        $ids[] = $course->id;
+        $c++;
     }
     $rs->close();
+
+    // cache result to retrieve next page quicker
+    if (!empty($cachekey)) {
+        $coursecatcache = cache::make('core', 'coursecat');
+        $coursecatcache->set($cachekey, $ids);
+    }
 
     // our caller expects 2 bits of data - our return
     // array, and an updated $totalcount
