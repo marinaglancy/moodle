@@ -1373,6 +1373,52 @@ class core_course_renderer extends plugin_renderer_base {
         return $output;
     }
 
+    /**
+     * Renders html to display search result page
+     *
+     * @param array $searchcriteria may contain elements: search, blocklist, modulelist
+     * @return string
+     */
+    public function search_courses($searchcriteria) {
+        $content = '';
+        if (!empty($searchcriteria)) {
+            // print search results
+            $coursecatr = new coursecat_renderable(0);
+            $coursecatr->set_omit_subcat(true)->set_display_courses('expanded')->set_search_criteria($searchcriteria);
+            // TODO heading
+            $courseslist = $this->render($coursecatr);
+
+            if (!$coursecatr->get_child_courses_count()) {
+                if (!empty($searchcriteria['search'])) {
+                    $content .= $this->heading(get_string("nocoursesfound",'', s($search)));
+                } else {
+                    $content .= $this->heading(get_string('strnovalidcourses'));
+                }
+            } else {
+                $content .= $courseslist;
+            }
+
+            if (!empty($searchcriteria['search'])) {
+                // print search form only if there was a search by search string, otherwise it is confusing
+                $content .= "<br /><br />";
+                if (!empty($searchcriteria['search'])) {
+                    $content .= $this->course_search_form($searchcriteria['search']);
+                } else {
+                    $content .= $this->course_search_form();
+                }
+            }
+        } else {
+            // just print search form
+            $content .= $this->box_start();
+            $content .= "<center>";
+            $content .= "<br />";
+            $content .= $this->course_search_form('', 'plain');
+            $content .= html_writer::tag('div', get_string("searchhelp"), array('class' => 'searchhelp'));
+            $content .= "</center>";
+            $content .= $this->box_end();
+        }
+        return $content;
+    }
 }
 
 /**
@@ -1422,8 +1468,8 @@ class coursecat_renderable implements renderable {
     //const HEADING = 'heading';
     /** @var int depth of this category in the current view */
     protected $depth = 0;
-    /** @var string attribute : search string in courses names and/or descriptions */
-    //const SEARCHSTRING = 'search';
+    /** @var array search criteria */
+    protected $searchcriteria = null;
     /** @var string attribute : display category name in course description
      * (may be used in search results or in 'my courses' lists) */
     //const DISPLAYCATEGORYNAME = 'showcatname';
@@ -1553,6 +1599,26 @@ class coursecat_renderable implements renderable {
     }
 
     /**
+     * Sets the search criteria (search string, block id, module name)
+     *
+     * @param array $searchcriteria
+     * @return coursecat_renderable
+     */
+    public function set_search_criteria($searchcriteria) {
+        $this->searchcriteria = $searchcriteria;
+        return $this;
+    }
+
+    /**
+     * Returns the search criteria
+     *
+     * @return array
+     */
+    public function get_search_criteria() {
+        return $this->searchcriteria;
+    }
+
+    /**
      * Sets the depth property
      *
      * depth of the category in the current view
@@ -1671,11 +1737,15 @@ class coursecat_renderable implements renderable {
             return array();
         }
         $fullinfo = $this->get_display_courses() === 'expanded';
-        $childcourses = $this->get_category()->get_courses(
-                array('recursive' => $this->get_omit_subcat(),
+        $displayoptions = array('recursive' => $this->get_omit_subcat(),
                     'enrolledonly' => $this->get_show_enrolled_only(),
                     'summary' => $fullinfo,
-                    'coursecontacts' => $fullinfo));
+                    'coursecontacts' => $fullinfo);
+        if (empty($this->searchcriteria)) {
+            $childcourses = $this->get_category()->get_courses($displayoptions);
+        } else {
+            $childcourses = $this->get_category()->search_courses($this->searchcriteria, $displayoptions);
+        }
         return $childcourses;
     }
 
@@ -1685,10 +1755,13 @@ class coursecat_renderable implements renderable {
      * @return int
      */
     public function get_child_courses_count() {
-        $childcourses = $this->get_category()->get_courses(
-                array('recursive' => $this->get_omit_subcat(),
-                    'enrolledonly' => $this->get_show_enrolled_only()));
-        return count($childcourses);
+        $options = array('recursive' => $this->get_omit_subcat(),
+                    'enrolledonly' => $this->get_show_enrolled_only());
+        if (empty($this->searchcriteria)) {
+            return $this->get_category()->get_courses_count($options);
+        } else {
+            return $this->get_category()->search_courses_count($this->searchcriteria, $options);
+        }
     }
 
     /**
@@ -1708,7 +1781,11 @@ class coursecat_renderable implements renderable {
             $options['context'] = $context;
         }
         $summary = file_rewrite_pluginfile_urls($course->summary, 'pluginfile.php', $context->id, 'course', 'summary', null);
-        return format_text($summary, $course->summaryformat, $options, $course->id);
+        $summary = format_text($summary, $course->summaryformat, $options, $course->id);
+        if (!empty($this->searchcriteria['search'])) {
+            $summary = highlight($this->searchcriteria['search'], $summary);
+        }
+        return $summary;
     }
 
     public function get_course_formatted_name($course, $options = array()) {
@@ -1724,6 +1801,10 @@ class coursecat_renderable implements renderable {
         if (!isset($options['context'])) {
             $options['context'] = context_course::instance($course->id);
         }
-        return format_string($name, true, $options);
+        $name = format_string($name, true, $options);
+        if (!empty($this->searchcriteria['search'])) {
+            $name = highlight($this->searchcriteria['search'], $name);
+        }
+        return $name;
     }
 }

@@ -72,87 +72,32 @@ $strsearch = new lang_string("search");
 $strsearchresults = new lang_string("searchresults");
 $strnovalidcourses = new lang_string('novalidcourses');
 
-if (empty($searchcriteria)) {
-    // no search criteria specified, print page with just search form
-    $PAGE->navbar->add($strcourses, new moodle_url('/course/index.php'));
-    $PAGE->navbar->add($strsearch);
-    $PAGE->set_title("$site->fullname : $strsearch");
-    $PAGE->set_heading($site->fullname);
-
-    echo $OUTPUT->header();
-    echo $OUTPUT->box_start();
-    echo "<center>";
-    echo "<br />";
-    echo $courserenderer->course_search_form('', 'plain');
-    echo "<br /><p>";
-    print_string("searchhelp");
-    echo "</p>";
-    echo "</center>";
-    echo $OUTPUT->box_end();
-    echo $OUTPUT->footer();
-    exit;
-}
-
-// get list of courses
-$searchoptions = array('recursive' => true, 'sort' => array('fullname' => 1));
-if ($perpage !== 'all') {
-   $searchoptions['offset'] = $page * $perpage;
-   $searchoptions['limit'] = $perpage;
-}
-$courses = coursecat::get(0)->search_courses($searchcriteria, $searchoptions);
-$totalcount = coursecat::get(0)->search_courses_count($searchcriteria, $searchoptions);
-
-$searchform = '';
-// Turn editing should be visible if user have system or category level capability
-if (!empty($courses) && (can_edit_in_category() || !empty($usercatlist))) {
-    $aurl = new moodle_url('/course/manage.php', $searchcriteria);
-    $searchform = $OUTPUT->single_button($aurl, get_string('managecourses'), 'get');
-} else {
-    $searchform = $courserenderer->course_search_form($search, 'navbar');
-}
-
 $PAGE->navbar->add($strcourses, new moodle_url('/course/index.php'));
 $PAGE->navbar->add($strsearch, new moodle_url('/course/search.php'));
 if (!empty($search)) {
     $PAGE->navbar->add(s($search));
 }
-$PAGE->set_title("$site->fullname : $strsearchresults");
-$PAGE->set_heading($site->fullname);
-$PAGE->set_button($searchform);
 
-echo $OUTPUT->header();
-
-if ($courses) {
-    echo $OUTPUT->heading("$strsearchresults: $totalcount");
-
-    // add the module/block parameter to the paging bar if they exists
-    $modulelink = "";
-    if (!empty($modulelist) and confirm_sesskey()) {
-        $modulelink = "&amp;modulelist=".$modulelist."&amp;sesskey=".sesskey();
-    } else if (!empty($blocklist) and confirm_sesskey()) {
-        $modulelink = "&amp;blocklist=".$blocklist."&amp;sesskey=".sesskey();
-    }
-
-    print_navigation_bar($totalcount, $page, $perpage, $searchcriteria);
-
-    // Show list of courses
-    echo $courserenderer->courses_list($courses, $search, true);
-
-    print_navigation_bar($totalcount, $page, $perpage, $searchcriteria);
-
+if (empty($searchcriteria)) {
+    // no search criteria specified, print page with just search form
+    $PAGE->set_title("$site->fullname : $strsearch");
 } else {
-    if (!empty($search)) {
-        echo $OUTPUT->heading(get_string("nocoursesfound",'', s($search)));
+    // this is search results page
+    $PAGE->set_title("$site->fullname : $strsearchresults");
+    // Link to manage search results should be visible if user have system or category level capability
+    if ((can_edit_in_category() || !empty($usercatlist))) {
+        $aurl = new moodle_url('/course/manage.php', $searchcriteria);
+        $searchform = $OUTPUT->single_button($aurl, get_string('managecourses'), 'get');
+    } else {
+        $searchform = $courserenderer->course_search_form($search, 'navbar');
     }
-    else {
-        echo $OUTPUT->heading($strnovalidcourses);
-    }
+    $PAGE->set_button($searchform);
 }
 
-echo "<br /><br />";
+$PAGE->set_heading($site->fullname);
 
-echo $courserenderer->course_search_form($search);
-
+echo $OUTPUT->header();
+echo $courserenderer->search_courses($searchcriteria);
 echo $OUTPUT->footer();
 
 /**
