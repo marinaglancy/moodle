@@ -1092,7 +1092,7 @@ class core_course_renderer extends plugin_renderer_base {
         }
         $hassubcategories = !$coursecatr->get_omit_subcat() &&
                 ($coursecatr->get_child_categories_count() > 0);
-        $hascourses = ($coursecatr->get_display_courses() !== 'none') &&
+        $hascourses = ($coursecatr->get_display_courses() != coursecat_renderable::DISPLAY_COURSES_NONE) &&
                 ($coursecatr->get_child_courses_count() > 0);
         if ($depth == 0) {
             // Generate an id and the required JS call to make this a nice widget
@@ -1161,7 +1161,7 @@ class core_course_renderer extends plugin_renderer_base {
                 }
 
                 if ($course->has_summary() || $course->has_course_contacts()) {
-                    if ($coursecatr->get_display_courses() !== 'expanded') {
+                    if ($coursecatr->get_display_courses() < coursecat_renderable::DISPLAY_COURSES_EXPANDED) {
                         $url = new moodle_url('/course/info.php', array('id' => $course->id));
                         $image = html_writer::empty_tag('img', array('src' => $this->output->pix_url('i/info'),
                             'alt' => $this->strings->summary));
@@ -1172,11 +1172,19 @@ class core_course_renderer extends plugin_renderer_base {
                 $content .= html_writer::end_tag('div'); // .course_info
 
                 if ($course->has_summary() || $course->has_course_contacts()) {
-                    if ($coursecatr->get_display_courses() === 'expanded') {
+                    if ($coursecatr->get_display_courses() >= coursecat_renderable::DISPLAY_COURSES_EXPANDED) {
                         if ($course->has_summary()) {
                             $content .= html_writer::start_tag('div', array('class' => 'course_description'));
                             $content .= $coursecatr->get_course_formatted_summary($course,
                                     array('overflowdiv' => true, 'noclean' => true, 'para' => false));
+                            $content .= html_writer::end_tag('div'); // .course_description
+                        }
+                        if ($coursecatr->get_display_courses() == coursecat_renderable::DISPLAY_COURSES_EXPANDED_WITH_CAT
+                                && ($cat = coursecat::get($course->category, IGNORE_MISSING))) {
+                            $content .= html_writer::start_tag('div', array('class' => 'course_category'));
+                            $content .= get_string('category').': '.
+                                    html_writer::link(new moodle_url('/course/category.php', array('id' => $cat->id)),
+                                            $cat->get_formatted_name(), array('class' => $cat->visible ? '' : 'dimmed'));
                             $content .= html_writer::end_tag('div'); // .course_description
                         }
                         if ($course->has_course_contacts()) {
@@ -1227,7 +1235,8 @@ class core_course_renderer extends plugin_renderer_base {
 
             $content .= $this->heading(get_string('categories'), 2, 'headingblock header');
             $coursecategory = new coursecat_renderable(0);
-            $coursecategory->set_subcat_depth($CFG->maxcategorydepth)->set_display_courses('none');
+            $coursecategory->set_subcat_depth($CFG->maxcategorydepth)->
+                    set_display_courses(coursecat_renderable::DISPLAY_COURSES_NONE);
             $content .= $this->render($coursecategory);
             $content .= $this->course_search_form('', 'short');
 
@@ -1293,7 +1302,8 @@ class core_course_renderer extends plugin_renderer_base {
 
                 $content .= $this->heading(get_string('availablecourses'), 2, 'headingblock header');
                 $coursecategory = new coursecat_renderable(0);
-                $coursecategory->set_omit_subcat(true)->set_display_courses('expanded');
+                $coursecategory->set_omit_subcat(true)->
+                        set_display_courses(coursecat_renderable::DISPLAY_COURSES_EXPANDED);
                 $content .= $this->render($coursecategory);
 
                 //end frontpage course list div container
@@ -1384,7 +1394,9 @@ class core_course_renderer extends plugin_renderer_base {
         if (!empty($searchcriteria)) {
             // print search results
             $coursecatr = new coursecat_renderable(0);
-            $coursecatr->set_omit_subcat(true)->set_display_courses('expanded')->set_search_criteria($searchcriteria);
+            $coursecatr->set_omit_subcat(true)->
+                    set_display_courses(coursecat_renderable::DISPLAY_COURSES_EXPANDED_WITH_CAT)->
+                    set_search_criteria($searchcriteria);
             // TODO heading
             $courseslist = $this->render($coursecatr);
 
@@ -1435,11 +1447,16 @@ class core_course_renderer extends plugin_renderer_base {
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class coursecat_renderable implements renderable {
+    const DISPLAY_COURSES_NONE = 0;
+    const DISPLAY_COURSES_COLLAPSED = 10;
+    const DISPLAY_COURSES_EXPANDED = 20;
+    const DISPLAY_COURSES_EXPANDED_WITH_CAT = 30;
+
     protected $id = 0;
     protected $coursecat = false;
 
     /** @var string [none, collapsed, expanded] how (if) display courses list */
-    protected $displaycourses = 'collapsed'; // TODO: [countonly, auto]
+    protected $displaycourses = 10; /* DISPLAY_COURSES_COLLAPSED */ // TODO: [countonly, auto]
     /** @var int depth to expand subcategories in the tree (deeper subcategories will be loaded by AJAX or proceed to category page by clicking on category name) */
     protected $subcatdepth = 1;
     /** @var bool for small sites, do not display categories names just list all courses in all subcategories */
@@ -1501,9 +1518,9 @@ class coursecat_renderable implements renderable {
     /**
      * Sets the displaycourse display option
      *
-     * string [none, collapsed, expanded] how (if) display courses list
+     * how (if) display courses list - none, collapsed, expanded, etc.
      *
-     * @param string $displaycourses
+     * @param int $displaycourses DISPLAY_COURSES_NONE, DISPLAY_COURSES_COLLAPSED, DISPLAY_COURSES_EXPANDED, etc.
      * @return coursecat_renderable
      */
     public function set_display_courses($displaycourses) {
@@ -1514,9 +1531,9 @@ class coursecat_renderable implements renderable {
     /**
      * Returns the displaycourse display option
      *
-     * string [none, collapsed, expanded] how (if) display courses list
+     * how (if) display courses list - none, collapsed, expanded, etc.
      *
-     * @return string
+     * @return int - DISPLAY_COURSES_NONE, DISPLAY_COURSES_COLLAPSED, DISPLAY_COURSES_EXPANDED, etc.
      */
     public function get_display_courses() {
         return $this->displaycourses;
@@ -1733,10 +1750,10 @@ class coursecat_renderable implements renderable {
      * @return array of rows from DB {courses} table
      */
     public function get_child_courses() {
-        if ($this->get_display_courses() === 'none') {
+        if ($this->get_display_courses() == coursecat_renderable::DISPLAY_COURSES_NONE) {
             return array();
         }
-        $fullinfo = $this->get_display_courses() === 'expanded';
+        $fullinfo = $this->get_display_courses() >= coursecat_renderable::DISPLAY_COURSES_EXPANDED;
         $displayoptions = array('recursive' => $this->get_omit_subcat(),
                     'enrolledonly' => $this->get_show_enrolled_only(),
                     'summary' => $fullinfo,
