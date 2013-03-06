@@ -980,7 +980,11 @@ div.course_category_tree div.category.with_children {
     padding-right: 20px;
 }
 
-.dir-rtl.jsenabled .course_category_tree .category.with_children.collapsed .category_label {
+.dir-rtl.jsenabled .course_category_tree .category.with_children.collapsed > .category_label {
+    backkground-position: right center !important;
+}
+
+.dir-rtl.jsenabled .course_category_tree .category.with_children.notloaded > .category_label {
     backkground-position: right center !important;
 }
 

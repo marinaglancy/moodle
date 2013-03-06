@@ -1075,6 +1075,160 @@ class core_course_renderer extends plugin_renderer_base {
     }
 
     /**
+     * Displays one course in the list of courses.
+     *
+     * This is a help function for core_coursecat_renderer::render_coursecat_renderable()
+     *
+     * @param course_in_list $course
+     * @param coursecat_renderable $coursecatr contains display attributes
+     * @param array $additionalclasses additional classes to add to the main <div> tag (usually
+     *    depend on the course position in list - first/last/even/odd)
+     * @return string
+     */
+    protected function coursecat_course_link($course, coursecat_renderable $coursecatr, $additionalclasses = array()) {
+        if ($coursecatr->get_display_courses() == coursecat_renderable::DISPLAY_COURSES_NONE) {
+            return '';
+        }
+        $content = '';
+        $classes = array('course') + $additionalclasses;
+        $linkclass = 'course_link';
+        if (!$course->visible) {
+            $linkclass .= ' dimmed';
+        }
+        $content .= html_writer::start_tag('div', array('class' => join(' ', $classes))); // .course
+        $coursename = $coursecatr->get_course_formatted_name($course);
+        $content .= html_writer::link(new moodle_url('/course/view.php', array('id' => $course->id)),
+                $coursename, array('class' => $linkclass));
+        $content .= html_writer::start_tag('div', array('class'=>'course_info clearfix')); // .course_info
+
+        // print enrol info
+        if ($icons = enrol_get_course_info_icons($course)) {
+            foreach ($icons as $pix_icon) {
+                $content .= $this->render($pix_icon);
+            }
+        }
+
+        // If we display course in collapsed form but the course has summary or course contacts, display the link to the info page.
+        if ($course->has_summary() || $course->has_course_contacts()) {
+            if ($coursecatr->get_display_courses() < coursecat_renderable::DISPLAY_COURSES_EXPANDED) {
+                $url = new moodle_url('/course/info.php', array('id' => $course->id));
+                $image = html_writer::empty_tag('img', array('src' => $this->output->pix_url('i/info'),
+                    'alt' => $this->strings->summary));
+                $content .= $this->action_link($url, $image, new popup_action('click', $url, 'courseinfo'),
+                        array('title' => $this->strings->summary));
+            }
+        }
+
+        $content .= html_writer::end_tag('div'); // .course_info
+
+        // If course is displayed in expanded form - show summary, category and contacts
+        if ($coursecatr->get_display_courses() >= coursecat_renderable::DISPLAY_COURSES_EXPANDED) {
+            // display course summary
+            if ($course->has_summary()) {
+                $content .= html_writer::start_tag('div', array('class' => 'course_description'));
+                $content .= $coursecatr->get_course_formatted_summary($course,
+                        array('overflowdiv' => true, 'noclean' => true, 'para' => false));
+                $content .= html_writer::end_tag('div'); // .course_description
+            }
+            // display course category if necessary (for example in search results)
+            if ($coursecatr->get_display_courses() == coursecat_renderable::DISPLAY_COURSES_EXPANDED_WITH_CAT
+                    && ($cat = coursecat::get($course->category, IGNORE_MISSING))) {
+                $content .= html_writer::start_tag('div', array('class' => 'course_category'));
+                $content .= get_string('category').': '.
+                        html_writer::link(new moodle_url('/course/category.php', array('id' => $cat->id)),
+                                $cat->get_formatted_name(), array('class' => $cat->visible ? '' : 'dimmed'));
+                $content .= html_writer::end_tag('div'); // .course_description
+            }
+            // display course contacts. See course_in_list::get_course_contacts()
+            if ($course->has_course_contacts()) {
+                $content .= html_writer::start_tag('ul', array('class' => 'teachers'));
+                foreach ($course->get_course_contacts() as $userid => $coursecontact) {
+                    $name = $coursecontact['rolename'].': '.
+                            html_writer::link(new moodle_url('/user/view.php',
+                                    array('id' => $userid, 'course' => SITEID)),
+                                $coursecontact['username']);
+                    $content .= html_writer::tag('li', $name);
+                }
+                $content .= html_writer::end_tag('ul'); // .teachers
+            }
+        }
+        $content .= html_writer::end_tag('div'); // .course
+        return $content;
+    }
+
+    /**
+     * Renders the list of courses
+     *
+     * This is a help function for core_coursecat_renderer::render_coursecat_renderable()
+     *
+     * @param coursecat_renderable $coursecatr
+     * @return string
+     */
+    protected function coursecat_courses(coursecat_renderable $coursecatr) {
+        if ($coursecatr->get_display_courses() == coursecat_renderable::DISPLAY_COURSES_NONE) {
+            // courses are not displayed in this view at all
+            return '';
+        }
+        if ($coursecatr->get_subcat_depth() > 0 && $coursecatr->get_depth() >= $coursecatr->get_subcat_depth()) {
+            // we don't load any content in this category
+            return '';
+        }
+        $courses = $coursecatr->get_child_courses();
+        if (!$coursecatr->get_child_courses_count()) {
+            // Note that we call get_child_courses_count() AFTER get_child_courses() to avoid extra DB requests.
+            // Courses count is cached during courses retrieval.
+            return '';
+        }
+        $content = '';
+        $content .= html_writer::start_tag('div', array('class' => 'courses'));
+        $coursecount = 0;
+        foreach ($courses as $course) {
+            $coursecount ++;
+            $classes = array(($coursecount%2) ? 'odd' : 'even');
+            if ($coursecount == 1) {
+                $classes[] = 'first';
+            }
+            if ($coursecount > count($courses)) {
+                $classes[] = 'last';
+            }
+            $content .= $this->coursecat_course_link($course, $coursecatr, $classes);
+        }
+        $content .= html_writer::end_tag('div'); // .courses
+        return $content;
+    }
+
+    /**
+     * Renders the list of subcategories in a category
+     *
+     * This is a help function for core_coursecat_renderer::render_coursecat_renderable()
+     *
+     * @param coursecat_renderable $coursecatr
+     * @return string
+     */
+    protected function coursecat_subcategories(coursecat_renderable $coursecatr) {
+        if ($coursecatr->get_omit_subcat()) {
+            return '';
+        }
+        if ($coursecatr->get_subcat_depth() > 0 && $coursecatr->get_depth() >= $coursecatr->get_subcat_depth()) {
+            // we don't load any content in this category
+            return '';
+        }
+        $subcategories = $coursecatr->get_child_categories();
+        if (!$coursecatr->get_child_categories_count()) {
+            // Note that we call get_child_categories_count() AFTER get_child_categories() to avoid extra DB requests.
+            // Categories count is cached during children categories retrieval.
+            return '';
+        }
+        $content = '';
+        $content .= html_writer::start_tag('div', array('class' => 'subcategories'));
+        foreach ($subcategories as $subcategory) {
+            $content .= $this->render($subcategory);
+        }
+        $content .= html_writer::end_tag('div');
+        return $content;
+    }
+
+    /**
      * Renders course category contents
      *
      * This function is recursive. Atrribute depth in $coursecatr object reflects
@@ -1090,15 +1244,16 @@ class core_course_renderer extends plugin_renderer_base {
         if (!isset($this->strings->summary)) {
             $this->strings->summary = get_string('summary');
         }
-        $hassubcategories = !$coursecatr->get_omit_subcat() &&
-                ($coursecatr->get_child_categories_count() > 0);
-        $hascourses = ($coursecatr->get_display_courses() != coursecat_renderable::DISPLAY_COURSES_NONE) &&
-                ($coursecatr->get_child_courses_count() > 0);
+
+        // render html for subcategories and courses beforehead because their presence/absence may affect CSS classes of this category
+        $contentsubcategories = $this->coursecat_subcategories($coursecatr);
+        $contentcourses = $this->coursecat_courses($coursecatr);
+
         if ($depth == 0) {
             // Generate an id and the required JS call to make this a nice widget
             $id = html_writer::random_id('course_category_tree');
             $this->page->requires->js_init_call('M.util.init_toggle_class_on_click',
-                    array($id, '.category.with_children .category_label', 'collapsed', '.category.with_children'));
+                    array($id, '.category.with_children.loaded > .category_label', 'collapsed', '.category.with_children.loaded'));
 
             // Start content generation
             $content .= html_writer::start_tag('div', array('class' => 'course_category_tree', 'id' => $id));
@@ -1108,17 +1263,20 @@ class core_course_renderer extends plugin_renderer_base {
         if (empty($coursecatr->get_category()->visible)) {
             $classes[] = 'dimmed_category';
         }
-        if ($hassubcategories || $hascourses) {
-            $classes[] = 'with_children';
-            $expanddepth = $coursecatr->get_subcat_depth();
-            if ($depth && $expanddepth > 0 && $depth >= $expanddepth) {
-                $classes[] = 'collapsed';
-                // TODO not only mark collapsed but also do not display subcategories and courses,
-                // they will be loaded in AJAX request or displayed on separate page for non-js users
+        if ($coursecatr->get_subcat_depth() > 0 && $depth >= $coursecatr->get_subcat_depth()) {
+            // do not load content
+            $classes[] = 'notloaded';
+            if ($coursecatr->get_child_categories_count() ||
+                    ($coursecatr->get_display_courses() != coursecat_renderable::DISPLAY_COURSES_NONE && $coursecatr->get_child_courses_count())) {
+                $classes[] = 'with_children';
             }
+        } else if ($depth && (!empty($contentsubcategories) || !empty($contentcourses))) {
+            $classes[] = 'with_children';
+            $classes[] = 'loaded';
         }
         $content .= html_writer::start_tag('div', array('class' => join(' ', $classes)));
-        if ($coursecatr->id) {
+        if ($coursecatr->id && $depth) {
+            // Note, we do not print category name for the category with depth=0 (top level)
             $categoryname = $coursecatr->get_formatted_name();
             $content .= html_writer::start_tag('div', array('class' => 'category_label'));
             $content .= html_writer::link(new moodle_url('/course/category.php',
@@ -1128,87 +1286,16 @@ class core_course_renderer extends plugin_renderer_base {
         }
 
         // Subcategories
-        if ($hassubcategories) {
-            $content .= html_writer::start_tag('div', array('class' => 'subcategories'));
-            foreach ($coursecatr->get_child_categories() as $subcategory) {
-                $content .= $this->render($subcategory);
-            }
-            $content .= html_writer::end_tag('div');
-        }
+        $content .= $contentsubcategories;
         // Courses
-        if ($hascourses) {
-            $content .= html_writer::start_tag('div', array('class' => 'courses'));
-            $coursecount = 0;
-            foreach ($coursecatr->get_child_courses() as $course) {
-                $classes = array('course');
-                $linkclass = 'course_link';
-                if (!$course->visible) {
-                    $linkclass .= ' dimmed';
-                }
-                $coursecount ++;
-                $classes[] = ($coursecount%2) ? 'odd' : 'even';
-                $content .= html_writer::start_tag('div', array('class' => join(' ', $classes))); // .course
-                $coursename = $coursecatr->get_course_formatted_name($course);
-                $content .= html_writer::link(new moodle_url('/course/view.php', array('id' => $course->id)),
-                        $coursename, array('class' => $linkclass));
-                $content .= html_writer::start_tag('div', array('class'=>'course_info clearfix')); // .course_info
-
-                // print enrol info
-                if ($icons = enrol_get_course_info_icons($course)) {
-                    foreach ($icons as $pix_icon) {
-                        $content .= $this->render($pix_icon);
-                    }
-                }
-
-                if ($course->has_summary() || $course->has_course_contacts()) {
-                    if ($coursecatr->get_display_courses() < coursecat_renderable::DISPLAY_COURSES_EXPANDED) {
-                        $url = new moodle_url('/course/info.php', array('id' => $course->id));
-                        $image = html_writer::empty_tag('img', array('src' => $this->output->pix_url('i/info'),
-                            'alt' => $this->strings->summary));
-                        $content .= $this->action_link($url, $image, new popup_action('click', $url, 'courseinfo'),
-                                array('title' => $this->strings->summary));
-                    }
-                }
-                $content .= html_writer::end_tag('div'); // .course_info
-
-                if ($course->has_summary() || $course->has_course_contacts()) {
-                    if ($coursecatr->get_display_courses() >= coursecat_renderable::DISPLAY_COURSES_EXPANDED) {
-                        if ($course->has_summary()) {
-                            $content .= html_writer::start_tag('div', array('class' => 'course_description'));
-                            $content .= $coursecatr->get_course_formatted_summary($course,
-                                    array('overflowdiv' => true, 'noclean' => true, 'para' => false));
-                            $content .= html_writer::end_tag('div'); // .course_description
-                        }
-                        if ($coursecatr->get_display_courses() == coursecat_renderable::DISPLAY_COURSES_EXPANDED_WITH_CAT
-                                && ($cat = coursecat::get($course->category, IGNORE_MISSING))) {
-                            $content .= html_writer::start_tag('div', array('class' => 'course_category'));
-                            $content .= get_string('category').': '.
-                                    html_writer::link(new moodle_url('/course/category.php', array('id' => $cat->id)),
-                                            $cat->get_formatted_name(), array('class' => $cat->visible ? '' : 'dimmed'));
-                            $content .= html_writer::end_tag('div'); // .course_description
-                        }
-                        if ($course->has_course_contacts()) {
-                            $content .= html_writer::start_tag('ul', array('class' => 'teachers'));
-                            foreach ($course->get_course_contacts() as $userid => $coursecontact) {
-                                $name = $coursecontact['rolename'].': '.
-                                        html_writer::link(new moodle_url('/user/view.php',
-                                                array('id' => $userid, 'course' => SITEID)),
-                                            $coursecontact['username']);
-                                $content .= html_writer::tag('li', $name);
-                            }
-                            $content .= html_writer::end_tag('ul'); // .teachers
-                        }
-                    }
-                }
-                $content .= html_writer::end_tag('div'); // .course
-            }
-            $content .= html_writer::end_tag('div'); // .courses
-        }
+        $content .= $contentcourses;
 
         $content .= html_writer::end_tag('div'); // .category
 
         if ($depth == 0) {
-            if ($hassubcategories) {
+            if (!empty($contentsubcategories) && $coursecatr->get_subcat_depth() != 1) {
+                // We don't need to display "Expand all"/"Collapse all" buttons if there are no
+                // subcategories or there is only one level of subcategories loaded
                 $content .= html_writer::start_tag('div', array('class'=>'controls'));
                 $content .= html_writer::tag('div', get_string('collapseall'), array('class'=>'addtoall expandall'));
                 $content .= html_writer::tag('div', get_string('expandall'), array('class'=>'removefromall collapseall'));
@@ -1657,22 +1744,10 @@ class coursecat_renderable implements renderable {
     }
 
     /**
-     * Sets the depth property
-     *
-     * depth of the category in the current view
-     *
-     * @param int $depth
-     * @return coursecat_renderable
-     */
-    public function set_depth($depth) {
-        $this->depth = $depth;
-        return $this;
-    }
-
-    /**
      * Returns the depth property
      *
-     * depth of the category in the current view
+     * Depth of the category in the current view. There is no setter method
+     * because the depth can not be changed after the category is created.
      *
      * @return int
      */
