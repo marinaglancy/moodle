@@ -1767,6 +1767,7 @@ $string['version'] = 'Version';
 $string['view'] = 'View';
 $string['viewallcourses'] = 'View all courses';
 $string['viewallcoursescategories'] = 'View all courses and categories';
+$string['viewallsubcategores'] = 'View all subcategories';
 $string['viewfileinpopup'] = 'View file in a popup window';
 $string['viewprofile'] = 'View profile';
 $string['views'] = 'Views';

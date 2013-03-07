@@ -1165,6 +1165,7 @@ class core_course_renderer extends plugin_renderer_base {
      * @return string
      */
     protected function coursecat_courses(coursecat_renderable $coursecatr) {
+        global $CFG;
         if ($coursecatr->get_display_courses() == coursecat_renderable::DISPLAY_COURSES_NONE) {
             // courses are not displayed in this view at all
             return '';
@@ -1173,14 +1174,46 @@ class core_course_renderer extends plugin_renderer_base {
             // we don't load any content in this category
             return '';
         }
-        $courses = $coursecatr->get_child_courses();
-        if (!$coursecatr->get_child_courses_count()) {
+        $courses = array();
+        if (!$coursecatr->get_courses_display_option('nodisplay')) {
+            $courses =  $coursecatr->get_child_courses();
+        }
+        $totalcount = $coursecatr->get_child_courses_count();
+        if (!$totalcount) {
             // Note that we call get_child_courses_count() AFTER get_child_courses() to avoid extra DB requests.
             // Courses count is cached during courses retrieval.
             return '';
         }
+
+        // prepare content of paging bar if it is needed
+        $paginationurl = $coursecatr->get_courses_display_option('paginationurl');
+        $paginationallowall = $coursecatr->get_courses_display_option('paginationallowall');
+        if ($totalcount > count($courses)) {
+            if ($paginationurl) {
+                $perpage = $coursecatr->get_courses_display_option('limit', $CFG->coursesperpage);
+                $page = $coursecatr->get_courses_display_option('offset') / $perpage;
+                $pagingbar = $this->paging_bar($totalcount, $page, $perpage,
+                        $paginationurl->out(false, array('perpage' => $perpage)));
+                if ($paginationallowall) {
+                    $pagingbar .= html_writer::tag('div', html_writer::link($paginationurl->out(false, array('perpage' => 'all')),
+                            get_string('showall', '', $totalcount)), array('class' => 'paging paging-showall'));
+                }
+            } else if ($morelink = $coursecatr->get_courses_display_option('morelink')) {
+                $morelink = html_writer::tag('div', $morelink, array('class' => 'paging paging-morelink'));
+            }
+        } else if (($totalcount > $CFG->coursesperpage) && $paginationurl && $paginationallowall) {
+            $pagingbar = html_writer::tag('div', html_writer::link($paginationurl->out(false, array('perpage' => $CFG->coursesperpage)),
+                get_string('showperpage', '', $CFG->coursesperpage)), array('class' => 'paging paging-showperpage'));
+        }
+
+        // display list of courses
         $content = '';
         $content .= html_writer::start_tag('div', array('class' => 'courses'));
+
+        if (!empty($pagingbar)) {
+            $content .= $pagingbar;
+        }
+
         $coursecount = 0;
         foreach ($courses as $course) {
             $coursecount ++;
@@ -1193,6 +1226,14 @@ class core_course_renderer extends plugin_renderer_base {
             }
             $content .= $this->coursecat_course_link($course, $coursecatr, $classes);
         }
+
+        if (!empty($pagingbar)) {
+            $content .= $pagingbar;
+        }
+        if (!empty($morelink)) {
+            $content .= $morelink;
+        }
+
         $content .= html_writer::end_tag('div'); // .courses
         return $content;
     }
@@ -1206,6 +1247,7 @@ class core_course_renderer extends plugin_renderer_base {
      * @return string
      */
     protected function coursecat_subcategories(coursecat_renderable $coursecatr) {
+        global $CFG;
         if ($coursecatr->get_omit_subcat()) {
             return '';
         }
@@ -1213,17 +1255,57 @@ class core_course_renderer extends plugin_renderer_base {
             // we don't load any content in this category
             return '';
         }
-        $subcategories = $coursecatr->get_child_categories();
-        if (!$coursecatr->get_child_categories_count()) {
+        $subcategories = array();
+        if (!$coursecatr->get_categories_display_option('nodisplay')) {
+            $subcategories = $coursecatr->get_child_categories();
+        }
+        $totalcount = $coursecatr->get_child_categories_count();
+        if (!$totalcount) {
             // Note that we call get_child_categories_count() AFTER get_child_categories() to avoid extra DB requests.
             // Categories count is cached during children categories retrieval.
             return '';
         }
+
+        // prepare content of paging bar if it is needed
+        $paginationurl = $coursecatr->get_categories_display_option('paginationurl');
+        $paginationallowall = $coursecatr->get_categories_display_option('paginationallowall');
+        if ($totalcount > count($subcategories)) {
+            if ($paginationurl) {
+                $perpage = $coursecatr->get_categories_display_option('limit', $CFG->coursesperpage);
+                $page = $coursecatr->get_categories_display_option('offset') / $perpage;
+                $pagingbar = $this->paging_bar($totalcount, $page, $perpage,
+                        $paginationurl->out(false, array('perpage' => $perpage)));
+                if ($paginationallowall) {
+                    $pagingbar .= html_writer::tag('div', html_writer::link($paginationurl->out(false, array('perpage' => 'all')),
+                            get_string('showall', '', $totalcount)), array('class' => 'paging paging-showall'));
+                }
+            } else if ($morelink = $coursecatr->get_categories_display_option('morelink')) {
+                $morelink = html_writer::tag('div', $morelink, array('class' => 'paging paging-morelink'));
+            }
+        } else if (($totalcount > $CFG->coursesperpage) && $paginationurl && $paginationallowall) {
+            $pagingbar = html_writer::tag('div', html_writer::link($paginationurl->out(false, array('perpage' => $CFG->coursesperpage)),
+                get_string('showperpage', '', $CFG->coursesperpage)), array('class' => 'paging paging-showperpage'));
+        }
+
+        // display list of subcategories
         $content = '';
         $content .= html_writer::start_tag('div', array('class' => 'subcategories'));
+
+        if (!empty($pagingbar)) {
+            $content .= $pagingbar;
+        }
+
         foreach ($subcategories as $subcategory) {
             $content .= $this->render($subcategory);
         }
+
+        if (!empty($pagingbar)) {
+            $content .= $pagingbar;
+        }
+        if (!empty($morelink)) {
+            $content .= $morelink;
+        }
+
         $content .= html_writer::end_tag('div');
         return $content;
     }
@@ -1418,6 +1500,45 @@ class core_course_renderer extends plugin_renderer_base {
         $coursecategory = new coursecat_renderable(is_object($category) ? $category->id : $category);
         $site = get_site();
         $output = '';
+
+        $coursedisplayoptions = array();
+        $catdisplayoptions = array();
+        $browse = optional_param('browse', null, PARAM_ALPHA);
+        $perpage = optional_param('perpage', $CFG->coursesperpage, PARAM_INT);
+        $page = optional_param('page', 0, PARAM_INT);
+        if ($coursecategory->id) {
+            $baseurl = new moodle_url('/course/category.php', array('id' => $coursecategory->id));
+        } else {
+            $baseurl = new moodle_url('/course/index.php');
+        }
+        if ($browse === 'courses') {
+            $coursedisplayoptions['limit'] = $perpage;
+            $coursedisplayoptions['offset'] = $page * $perpage;
+            $coursedisplayoptions['paginationurl'] = new moodle_url($baseurl, array('browse' => 'courses', 'perpage' => $perpage));
+            $catdisplayoptions['nodisplay'] = true;
+            $catdisplayoptions['morelink'] = html_writer::link(new moodle_url($baseurl,
+                    array('browse' => 'categories', 'page' => 0)),
+                    get_string('viewallsubcategores'));
+        } else if ($browse === 'categories') {
+            $coursedisplayoptions['nodisplay'] = true;
+            $catdisplayoptions['limit'] = $perpage;
+            $catdisplayoptions['offset'] = $page * $perpage;
+            $catdisplayoptions['paginationurl'] = new moodle_url($baseurl, array('browse' => 'categories', 'perpage' => $perpage));
+            $coursedisplayoptions['morelink'] = html_writer::link(new moodle_url($baseurl,
+                    array('browse' => 'courses', 'page' => 0)),
+                    get_string('viewallcourses'));
+        } else {
+            $coursedisplayoptions['limit'] = $CFG->coursesperpage;
+            $catdisplayoptions['limit'] = $CFG->coursesperpage;
+            $coursedisplayoptions['morelink'] = html_writer::link(new moodle_url($baseurl,
+                    array('browse' => 'courses', 'page' => 1)),
+                    get_string('viewallcourses'));
+            $catdisplayoptions['morelink'] = html_writer::link(new moodle_url($baseurl,
+                    array('browse' => 'categories', 'page' => 1)),
+                    get_string('viewallsubcategores'));
+        }
+        $coursecategory->set_courses_display_options($coursedisplayoptions)->set_categories_display_options($catdisplayoptions);
+
         if ($coursecategory->id) {
             $this->page->set_title("$site->shortname: ". $coursecategory->get_formatted_name());
             // Print the category selector
@@ -1477,13 +1598,28 @@ class core_course_renderer extends plugin_renderer_base {
      * @return string
      */
     public function search_courses($searchcriteria) {
+        global $CFG;
         $content = '';
         if (!empty($searchcriteria)) {
             // print search results
+
+            $displayoptions = array('sort' => array('fullname' => 1));
+            // take the current page and number of results per page from query
+            $perpage = optional_param('perpage', 0, PARAM_RAW);
+            if ($perpage !== 'all') {
+                $displayoptions['limit'] = ((int)$perpage <= 0) ? $CFG->coursesperpage : (int)$perpage;
+                $page = optional_param('page', 0, PARAM_INT);
+                $displayoptions['offset'] = $displayoptions['limit'] * $page;
+            }
+            // options 'paginationurl' and 'paginationallowall' are only used in method coursecat_courses()
+            $displayoptions['paginationurl'] = new moodle_url('/course/search.php', $searchcriteria);
+            $displayoptions['paginationallowall'] = true; // allow adding link 'View all'
+
             $coursecatr = new coursecat_renderable(0);
             $coursecatr->set_omit_subcat(true)->
                     set_display_courses(coursecat_renderable::DISPLAY_COURSES_EXPANDED_WITH_CAT)->
-                    set_search_criteria($searchcriteria);
+                    set_search_criteria($searchcriteria)->
+                    set_courses_display_options($displayoptions);
             // TODO heading
             $courseslist = $this->render($coursecatr);
 
@@ -1527,12 +1663,17 @@ class core_course_renderer extends plugin_renderer_base {
      */
     public function tagged_courses($tagid) {
         global $CFG;
+        $displayoptions = array('limit' => $CFG->coursesperpage);
+        $displayoptions['morelink'] = html_writer::link(new moodle_url('/course/search.php',
+                array('tagid' => $tagid, 'page' => 1, 'perpage' => $CFG->coursesperpage)),
+                get_string('findmorecourses'));
         $coursecatr = new coursecat_renderable(0);
         $coursecatr->set_omit_subcat(true)->
                 set_display_courses(coursecat_renderable::DISPLAY_COURSES_EXPANDED_WITH_CAT)->
-                set_search_criteria(array('tagid' => $tagid));
+                set_search_criteria(array('tagid' => $tagid))->
+                set_courses_display_options($displayoptions);
         $content = $this->render($coursecatr);
-        if ($cnt = $coursecatr->get_child_categories_count()) {
+        if ($cnt = $coursecatr->get_child_courses_count()) {
             require_once $CFG->dirroot.'/tag/lib.php';
             $heading = get_string('courses') . ' ' . get_string('taggedwith', 'tag', tag_get_name($tagid)) .': '. $cnt;
             return $this->heading($heading, 3). $content;
@@ -1571,21 +1712,10 @@ class coursecat_renderable implements renderable {
     protected $omitsubcat = false;
     /** @var bool return courses where user is enrolled only */
     protected $enrolledonly = false;
-    /** @var string attribute : how to sort courses */
-    //const SORTCOURSES = 'sort';
-    /** @var string attribute : how to sort subcategories */
-    //const SORTCATEGORIES = 'sortcat';
-    /** @var string attribute : limit the number of subcategories inside one category.
-     * If there are more categories, a link "More categories..." is displayed,
-     * which leads to the subcategory page, or displays the next page or loads
-     * more entries via AJAX. Defaults to $CFG->coursesperpage.
-     * Also can be concatenated with level: course_category::sortcategories.'2' */
-    //const CATEGORIESLIMIT = 'limitcat';
-    /** @var string attribute : limit the number of courses inside one category.
-     * If there are more courses, a link "More courses..." is displayed which
-     * leads to the subcategory page, or displays the next page or loads more
-     * entries via AJAX. Defaults to $CFG->coursesperpage */
-    //const COURSESLIMIT = 'limit';
+    /** @var array options to display courses list */
+    protected $coursesdisplayoptions = array();
+    /** @var array options to display subcategories list */
+    protected $categoriesdisplayoptions = array();
     /** @var string attribute : completely disable AJAX loading even if browser
      * supports it */
     //const AJAXDISABLED = 'noajax';
@@ -1595,9 +1725,6 @@ class coursecat_renderable implements renderable {
     protected $depth = 0;
     /** @var array search criteria */
     protected $searchcriteria = null;
-    /** @var string attribute : display category name in course description
-     * (may be used in search results or in 'my courses' lists) */
-    //const DISPLAYCATEGORYNAME = 'showcatname';
 
     /**
      * Constructor
@@ -1744,6 +1871,69 @@ class coursecat_renderable implements renderable {
     }
 
     /**
+     * Sets options to display list of courses
+     *
+     * Options 'sort', 'offset' and 'limit' are passed to coursecat::get_courses()
+     * or coursecat::search_courses(). Any other options may be used by renderer
+     * functions
+     *
+     * @param array $options
+     * @return coursecat_renderable
+     */
+    public function set_courses_display_options($options) {
+        $this->coursesdisplayoptions = $options;
+        return $this;
+    }
+
+    /**
+     * Return the specified option to display list of courses
+     *
+     * @param string $optionname option name, if omitted an array of all options is returned
+     * @param mixed $defaultvalue default value for option if it is not specified
+     * @return mixed
+     */
+    public function get_courses_display_option($optionname = null, $defaultvalue = null) {
+        if ($optionname === null) {
+            return $this->coursesdisplayoptions;
+        } else if (array_key_exists($optionname, $this->coursesdisplayoptions)) {
+            return $this->coursesdisplayoptions[$optionname];
+        } else {
+            return $defaultvalue;
+        }
+    }
+
+    /**
+     * Sets options to display list of subcategories
+     *
+     * Options 'sort', 'offset' and 'limit' are passed to coursecat::get_children().
+     * Any other options may be used by renderer functions
+     *
+     * @param array $options
+     * @return coursecat_renderable
+     */
+    public function set_categories_display_options($options) {
+        $this->categoriesdisplayoptions = $options;
+        return $this;
+    }
+
+    /**
+     * Return the specified option to display list of subcategories
+     *
+     * @param string $optionname option name, if omitted an array of all options is returned
+     * @param mixed $defaultvalue default value for option if it is not specified
+     * @return mixed
+     */
+    public function get_categories_display_option($optionname = null, $defaultvalue = null) {
+        if ($optionname === null) {
+            return $this->categoriesdisplayoptions;
+        } else if (array_key_exists($optionname, $this->categoriesdisplayoptions)) {
+            return $this->categoriesdisplayoptions[$optionname];
+        } else {
+            return $defaultvalue;
+        }
+    }
+
+    /**
      * Returns the depth property
      *
      * Depth of the category in the current view. There is no setter method
@@ -1821,7 +2011,9 @@ class coursecat_renderable implements renderable {
         if ($this->get_omit_subcat()) {
             return $childcategories;
         }
-        foreach ($this->get_category()->get_children() as $child) {
+        $options = array_intersect_key($this->get_categories_display_option(),
+                array('sort' => 1, 'offset' => 1, 'limit' => 1));
+        foreach ($this->get_category()->get_children($options) as $child) {
             $childcategories[$child->id] = new coursecat_renderable($child->id, $this->get_depth() + 1);
             $childcategories[$child->id]->set_display_courses($this->get_display_courses()
                     )->set_show_enrolled_only($this->get_show_enrolled_only()
@@ -1836,8 +2028,7 @@ class coursecat_renderable implements renderable {
      * @return int
      */
     function get_child_categories_count() {
-        $children = $this->get_category()->get_children();
-        return count($children);
+        return $this->get_category()->get_children_count();
     }
 
     /**
@@ -1853,7 +2044,10 @@ class coursecat_renderable implements renderable {
         $displayoptions = array('recursive' => $this->get_omit_subcat(),
                     'enrolledonly' => $this->get_show_enrolled_only(),
                     'summary' => $fullinfo,
-                    'coursecontacts' => $fullinfo);
+                    'coursecontacts' => $fullinfo
+                ) +
+                array_intersect_key($this->get_courses_display_option(),
+                    array('sort' => 1, 'offset' => 1, 'limit' => 1));
         if (empty($this->searchcriteria)) {
             $childcourses = $this->get_category()->get_courses($displayoptions);
         } else {
