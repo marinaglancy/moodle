@@ -607,13 +607,69 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
     }
 
     /**
+     * Given list of DB records from table course populates each record with list of users with course contact roles
+     *
+     * @param array $courses
+     */
+    public static function preload_course_contacts(&$courses) {
+        global $CFG, $DB;
+        if (empty($courses) || empty($CFG->coursecontact)) {
+            return;
+        }
+        $managerroles = explode(',', $CFG->coursecontact);
+        /*
+        // first build the array of all context ids of the courses and their categories
+        $allcontexts = array();
+        foreach (array_keys($courses) as $id) {
+            context_helper::preload_from_record($courses[$id]);
+            $context = context_course::instance($id);
+            $courses[$id]->managers = array();
+            foreach (preg_split('|/|', $context->path, 0, PREG_SPLIT_NO_EMPTY) as $ctxid) {
+                if (!isset($allcontexts[$ctxid])) {
+                    $allcontexts[$ctxid] = array();
+                }
+                $allcontexts[$ctxid][] = $id;
+            }
+        }
+
+        list($sql1, $params1) = $DB->get_in_or_equal(array_keys($allcontexts), SQL_PARAMS_NAMED, 'ctxid');
+        list($sql2, $params2) = $DB->get_in_or_equal($managerroles, SQL_PARAMS_NAMED, 'rid');
+        list($sort, $sortparams) = users_order_by_sql('u');
+        $sql = "SELECT ra.contextid,
+                       r.id AS roleid, r.name AS rolename, r.shortname AS roleshortname,
+                       rn.name AS rolecoursealias, u.id AS userid, u.username, u.firstname, u.lastname
+                  FROM {role_assignments} ra
+                  JOIN {user} u ON ra.userid = u.id
+                  JOIN {role} r ON ra.roleid = r.id
+             LEFT JOIN {role_names} rn ON (rn.contextid = ra.contextid AND rn.roleid = r.id)
+                WHERE  ra.contextid ". $sql1." AND ra.roleid ". $sql2."
+             ORDER BY r.sortorder, $sort";
+        $rs = $DB->get_recordset_sql($sql, $params1 + $params2 + $sortparams);
+        foreach($rs as $ra) {
+            foreach ($allcontexts[$ra->contextid] as $id) {
+                $courses[$id]->managers[] = $ra;
+            }
+        }
+        $rs->close();
+        */
+        list($sort, $sortparams) = users_order_by_sql('u');
+        foreach (array_keys($courses) as $id) {
+            $context = context_course::instance($id);
+            $courses[$id]->managers = get_role_users($managerroles, $context, true,
+                'ra.id AS raid, u.id, u.username, u.firstname, u.lastname, rn.name AS rolecoursealias,
+                 r.name AS rolename, r.sortorder, r.id AS roleid, r.shortname AS roleshortname',
+                'r.sortorder ASC, ' . $sort, false, '', '', '', '', $sortparams);
+        }
+    }
+
+    /**
      * Retrieves number of records from course table
      *
      * Not all fields are retrieved. Records are ready for preloading context
      *
      * @param string $whereclause
      * @param array $params
-     * @param array $options may indicate that summary needs to be retrieved
+     * @param array $options may indicate that summary and/or coursecontacts need to be retrieved
      * @return array array of stdClass objects
      */
     protected static function get_course_records($whereclause, $params, $options) {
@@ -632,8 +688,12 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
                 FROM {course} c
                 JOIN {context} ctx ON c.id = ctx.instanceid AND ctx.contextlevel = :contextcourse
                 WHERE ". $whereclause." ORDER BY c.sortorder";
-        return $DB->get_records_sql($sql,
+        $list = $DB->get_records_sql($sql,
                 array('contextcourse' => CONTEXT_COURSE) + $params);
+        if (!empty($options['coursecontacts'])) {
+            self::preload_course_contacts($list);
+        }
+        return $list;
     }
 
     /**
@@ -919,6 +979,10 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
             debugging('No criteria is specified while searching courses', DEBUG_DEVELOPER);
             return array();
         }
+        // Preload course contacts if necessary - saves DB queries later to do it for each course separately.
+        if (!empty($options['coursecontacts'])) {
+            self::preload_course_contacts($records);
+        }
         $courses = array();
         foreach ($records as $record) {
             $courses[$record->id] = new course_in_list($record);
@@ -1047,7 +1111,8 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
                 $where .= ' AND c.category = :categoryid';
                 $params['categoryid'] = $this->id;
             }
-            $list = $this->get_course_records($where, $params, $options);
+            // get list of courses without preloaded coursecontacts because we don't need them for every course
+            $list = $this->get_course_records($where, $params, array_diff_key($options, array('coursecontacts' => 1)));
             $courses = array();
             // Loop through all records and make sure we only return the courses accessible by user.
             foreach ($list as $course) {
@@ -1073,6 +1138,10 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
         if (isset($list)) {
             if ($offset || $limit) {
                 $list = array_slice($list, $offset, $limit);
+            }
+            // Preload course contacts if necessary - saves DB queries later to do it for each course separately.
+            if (!empty($options['coursecontacts'])) {
+                self::preload_course_contacts($list);
             }
             foreach ($list as $record) {
                 $courses[$record->id] = new course_in_list($record);
@@ -1771,7 +1840,7 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
  */
 class course_in_list implements IteratorAggregate {
 
-    /** @var stdClass record retrieved from DB, may have additional calculated property such as hassummary */
+    /** @var stdClass record retrieved from DB, may have additional calculated property such as managers and hassummary */
     protected $record;
 
     /** @var array array of course contacts - stores result of call to get_course_contacts() */
@@ -1832,8 +1901,11 @@ class course_in_list implements IteratorAggregate {
      * @return bool
      */
     public function has_course_contacts() {
-        $coursecontacts = $this->get_course_contacts();
-        return !empty($coursecontacts);
+        if (!isset($this->record->managers)) {
+            $courses = array($this->id => &$this->record);
+            coursecat::preload_course_contacts($courses);
+        }
+        return !empty($this->record->managers);
     }
 
     /**
@@ -1857,17 +1929,18 @@ class course_in_list implements IteratorAggregate {
             return array();
         }
         if ($this->coursecontacts === null) {
-            // build return array with full roles names (for this course context) and users names
-            $context = context_course::instance($this->id);
-            $canviewfullnames = has_capability('moodle/site:viewfullnames', $context);
             $this->coursecontacts = array();
-            $managerroles = explode(',', $CFG->coursecontact);
-            list($sort, $sortparams) = users_order_by_sql('u');
-            $rusers = get_role_users($managerroles, $context, true,
-                'ra.id AS raid, u.id, u.username, u.firstname, u.lastname, rn.name AS rolecoursealias,
-                 r.name AS rolename, r.sortorder, r.id AS roleid, r.shortname AS roleshortname',
-                'r.sortorder ASC, ' . $sort, false, '', '', '', '', $sortparams);
-            foreach ($rusers as $ruser) {
+            $context = context_course::instance($this->id);
+
+            if (!isset($this->record->managers)) {
+                // preload course contacts from DB
+                $courses = array($this->id => &$this->record);
+                coursecat::preload_course_contacts($courses);
+            }
+
+            // build return array with full roles names (for this course context) and users names
+            $canviewfullnames = has_capability('moodle/site:viewfullnames', $context);
+            foreach ($this->record->managers as $ruser) {
                 if (isset($this->coursecontacts[$ruser->id])) {
                     //  only display a user once with the highest sortorder role
                     continue;
