@@ -1511,7 +1511,7 @@ class core_course_renderer extends plugin_renderer_base {
         } else {
             $baseurl = new moodle_url('/course/index.php');
         }
-        if ($browse === 'courses') {
+        if ($browse === 'courses' || !$coursecategory->get_category()->has_children()) {
             $coursedisplayoptions['limit'] = $perpage;
             $coursedisplayoptions['offset'] = $page * $perpage;
             $coursedisplayoptions['paginationurl'] = new moodle_url($baseurl, array('browse' => 'courses', 'perpage' => $perpage));
@@ -1519,7 +1519,7 @@ class core_course_renderer extends plugin_renderer_base {
             $catdisplayoptions['morelink'] = html_writer::link(new moodle_url($baseurl,
                     array('browse' => 'categories', 'page' => 0)),
                     get_string('viewallsubcategores'));
-        } else if ($browse === 'categories') {
+        } else if ($browse === 'categories' || !$coursecategory->get_category()->has_courses()) {
             $coursedisplayoptions['nodisplay'] = true;
             $catdisplayoptions['limit'] = $perpage;
             $catdisplayoptions['offset'] = $page * $perpage;
