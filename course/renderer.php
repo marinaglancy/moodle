@@ -1386,7 +1386,7 @@ class core_course_renderer extends plugin_renderer_base {
     /**
      * Renders html to display search result page
      *
-     * @param array $searchcriteria may contain elements: search, blocklist, modulelist
+     * @param array $searchcriteria may contain elements: search, blocklist, modulelist, tagid
      * @return string
      */
     public function search_courses($searchcriteria) {
@@ -1430,6 +1430,27 @@ class core_course_renderer extends plugin_renderer_base {
             $content .= $this->box_end();
         }
         return $content;
+    }
+
+    /**
+     * Renders html to print list of courses tagged with particular tag
+     *
+     * @param int $tagid id of the tag
+     * @return string empty string if no courses are marked with this tag or rendered list of courses
+     */
+    public function tagged_courses($tagid) {
+        global $CFG;
+        $coursecatr = new coursecat_renderable(0);
+        $coursecatr->set_omit_subcat(true)->
+                set_display_courses(coursecat_renderable::DISPLAY_COURSES_EXPANDED_WITH_CAT)->
+                set_search_criteria(array('tagid' => $tagid));
+        $content = $this->render($coursecatr);
+        if ($cnt = $coursecatr->get_child_categories_count()) {
+            require_once $CFG->dirroot.'/tag/lib.php';
+            $heading = get_string('courses') . ' ' . get_string('taggedwith', 'tag', tag_get_name($tagid)) .': '. $cnt;
+            return $this->heading($heading, 3). $content;
+        }
+        return '';
     }
 }
 
