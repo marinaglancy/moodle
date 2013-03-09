@@ -1671,7 +1671,7 @@ class core_course_renderer extends plugin_renderer_base {
                     set_show_courses(coursecat_renderable::SHOW_COURSES_EXPANDED_WITH_CAT)->
                     set_search_criteria($searchcriteria)->
                     set_courses_display_options($displayoptions)->
-                    set_display_option(array('class' => $class));
+                    set_display_options(array('class' => $class));
             // TODO heading
             $courseslist = $this->render($coursecatr);
 
