@@ -1500,7 +1500,7 @@ class core_course_renderer extends plugin_renderer_base {
                 //wrap frontpage course list in div container
                 $content .= html_writer::start_tag('div', array('id'=>'frontpage-course-list'));
 
-                $content .= $this->heading(get_string('mycourses'). 'aaaaaaaaa', 2, 'headingblock header');
+                $content .= $this->heading(get_string('mycourses'), 2, 'headingblock header');
                 $coursecategory = new coursecat_renderable(0);
                 $coursecategory->set_omit_subcat(true)->set_show_enrolled_only(true)->
                         set_display_options(array('class' => 'frontpage-course-list-enrolled'));
