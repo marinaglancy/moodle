@@ -903,10 +903,6 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
             debugging('Search within particular category is not supported yet', DEBUG_DEVELOPER);
             return array();
         }
-        if (!empty($options['enrolledonly'])) {
-            debugging('Search in enrolled only courses is not supported yet', DEBUG_DEVELOPER);
-            return array();
-        }
         $offset = !empty($options['offset']) ? $options['offset'] : 0;
         $limit = !empty($options['limit']) ? $options['limit'] : null;
         $sortfields = !empty($options['sort']) ? $options['sort'] : array('sortorder' => 1);
@@ -1034,9 +1030,7 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
      *
      * @param array $options options for retrieving children
      *    - recursive - return courses from subcategories as well. Use with care,
-     *      this may be a huge list! Usually to be used on small sites or together
-     *      with 'enrolledonly' option
-     *    - enrolledonly - only returns courses where this user is enrolled
+     *      this may be a huge list!
      *    - summary - preloads fields 'summary' and 'summaryformat'
      *    - coursecontacts - preloads course contacts
      *    - isenrolled - preloads indication whether this user is enrolled in the course
@@ -1064,9 +1058,8 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
 
         $coursecatcache = cache::make('core', 'coursecat');
         $cachekey = 'l-'. $this->id. '-'. (!empty($options['recursive']) ? 'r' : '').
-                (!empty($options['enrolledonly']) ? 'e' : ''). '-'. serialize($sortfields);
-        $cntcachekey = 'lcnt-'. $this->id. '-'. (!empty($options['recursive']) ? 'r' : '').
-                (!empty($options['enrolledonly']) ? 'e' : '');
+                 '-'. serialize($sortfields);
+        $cntcachekey = 'lcnt-'. $this->id. '-'. (!empty($options['recursive']) ? 'r' : '');
 
         // check if we have already cached results
         $ids = $coursecatcache->get($cachekey);
@@ -1082,18 +1075,6 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
                 }
             }
             return $courses;
-        }
-
-        // enrolled courses, using enrol_get_my_courses()
-        if (!empty($options['enrolledonly'])) {
-            if ($this->id) {
-                debugging('List of enrolled courses within particular category is not supported yet', DEBUG_DEVELOPER);
-                return array();
-            }
-            $list  = enrol_get_my_courses('summary, summaryformat', 'sortorder');
-            foreach (array_keys($list) as $id) {
-                $list[$id]->isenrolled = true;
-            }
         }
 
         // retrieve list of courses in category
@@ -1157,8 +1138,7 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
      * @return int
      */
     public function get_courses_count($options = array()) {
-        $cntcachekey = 'lcnt-'. $this->id. '-'. (!empty($options['recursive']) ? 'r' : '').
-                (!empty($options['enrolledonly']) ? 'e' : '');
+        $cntcachekey = 'lcnt-'. $this->id. '-'. (!empty($options['recursive']) ? 'r' : '');
         $coursecatcache = cache::make('core', 'coursecat');
         if (($cnt = $coursecatcache->get($cntcachekey)) === false) {
             $this->get_courses($options);
