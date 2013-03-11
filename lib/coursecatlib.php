@@ -595,8 +595,7 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
     protected static function get_records($whereclause, $params) {
         global $DB;
         // Retrieve from DB only the fields that need to be stored in cache
-        $fields = array_filter(array_keys(self::$coursecatfields), function ($element)
-            { return (self::$coursecatfields[$element] !== null); } );
+        $fields = array_keys(array_filter(self::$coursecatfields));
         $ctxselect = context_helper::get_preload_record_columns_sql('ctx');
         $sql = "SELECT cc.". join(',cc.', $fields). ", $ctxselect
                 FROM {course_categories} cc
@@ -740,7 +739,7 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
      * @param array $sortfields assoc array where key is the field to sort and value is 1 for asc or -1 for desc
      * @return int
      */
-    protected static function compare_records($a, $b, $sortfields) {
+    public static function compare_records($a, $b, $sortfields) {
         foreach ($sortfields as $field => $mult) {
             if ($field === 'name' || $field === 'idnumber' || $field === 'path') {
                 // string fields
@@ -816,7 +815,7 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
                 } else {
                     $records = self::get_records('cc.parent = :parent', array('parent' => $this->id));
                 }
-                uasort($records, function ($a, $b) use ($sortfields) { return self::compare_records($a, $b, $sortfields); });
+                uasort($records, function ($a, $b) use ($sortfields) { return coursecat::compare_records($a, $b, $sortfields); });
                 $sortedids = array_keys($records);
             }
             $coursecatcache->set('c'. $this->id. ':'.serialize($sortfields), $sortedids);
@@ -1128,7 +1127,7 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
 
         // sort and cache list
         if (isset($list)) {
-            uasort($list, function ($a, $b) use ($sortfields) { return self::compare_records($a, $b, $sortfields); });
+            uasort($list, function ($a, $b) use ($sortfields) { return coursecat::compare_records($a, $b, $sortfields); });
         }
         $coursecatcache->set($cachekey, array_keys($list));
         $coursecatcache->set($cntcachekey, count($list));
