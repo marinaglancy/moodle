@@ -91,8 +91,6 @@
 .path-report-outline .loginfo {text-align:center;margin:1em;}
 
 /* Course and category listings */
-.course_category_tree .controls {margin-bottom:5px;text-align:right;float:right;}
-.course_category_tree .controls div {padding-right:2em;font-size:75%;}
 .course_category_tree .category > .info {background-color:#FFF;background-image:url([[pix:theme|hgradient]]);background-repeat:repeat-x;border:1px solid #ddd;}
 .course_category_tree.frontpage-category-names .category > .info {background:none;border:none;}
 .course_category_tree .category > .info {margin: 5px 0;}

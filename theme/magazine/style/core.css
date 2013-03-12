@@ -971,18 +971,6 @@ div.course_category_tree .subcategories > .paging {
     margin:5px;
 }
 
-div.course_category_tree div.controls {
-    font-size: 10px;
-    color: #666;
-    text-transform: uppercase;
-}
-
-div.course_category_tree div.controls div {
-    margin-top: 3px;
-    margin-right: 10px;
-    border-bottom: 1px solid #dadada;
-}
-
 /** inside  of course **/
 
 li.section {
