@@ -124,7 +124,7 @@ li.section.hidden span.commands a.editing_show {cursor:default;}
 .coursebox .moreinfo {padding:3px 0;float:right;}
 .coursebox .enrolmenticons img,
 .coursebox .moreinfo img {margin:0 .2em;}
-.coursebox .content {clear:both;}
+.coursebox .content {clear:both;overflow: hidden;}
 .coursebox .summary,
 .coursebox .coursecat {float:right;width: 55%;}
 .coursebox .coursecat {text-align:right;clear:right;}
@@ -156,7 +156,7 @@ li.section.hidden span.commands a.editing_show {cursor:default;}
 .course_category_tree .category.collapsed>.content {display:none;}
 
 .course_category_tree .category > .info .name {padding-left:13px;}
-.course_category_tree .category > .content {padding-left:16px;}
+.course_category_tree .category > .content {padding-left:16px;overflow: hidden;}
 
 .dir-rtl .course_category_tree .category > .info .name {padding-left:0;padding-right:13px;}
 .dir-rtl .course_category_tree .category > .content {padding-left:0;padding-right:16px;}
