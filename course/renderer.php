@@ -1168,15 +1168,6 @@ class core_course_renderer extends plugin_renderer_base {
                         array('overflowdiv' => true, 'noclean' => true, 'para' => false));
                 $content .= html_writer::end_tag('div'); // .summary
             }
-            // display course category if necessary (for example in search results)
-            if ($coursecatr->get_show_courses() == coursecat_renderable::SHOW_COURSES_EXPANDED_WITH_CAT
-                    && ($cat = coursecat::get($course->category, IGNORE_MISSING))) {
-                $content .= html_writer::start_tag('div', array('class' => 'coursecat'));
-                $content .= get_string('category').': '.
-                        html_writer::link(new moodle_url('/course/category.php', array('id' => $cat->id)),
-                                $cat->get_formatted_name(), array('class' => $cat->visible ? '' : 'dimmed'));
-                $content .= html_writer::end_tag('div'); // .coursecat
-            }
             // display course contacts. See course_in_list::get_course_contacts()
             if ($course->has_course_contacts()) {
                 $content .= html_writer::start_tag('ul', array('class' => 'teachers'));
@@ -1188,6 +1179,15 @@ class core_course_renderer extends plugin_renderer_base {
                     $content .= html_writer::tag('li', $name);
                 }
                 $content .= html_writer::end_tag('ul'); // .teachers
+            }
+            // display course category if necessary (for example in search results)
+            if ($coursecatr->get_show_courses() == coursecat_renderable::SHOW_COURSES_EXPANDED_WITH_CAT
+                    && ($cat = coursecat::get($course->category, IGNORE_MISSING))) {
+                $content .= html_writer::start_tag('div', array('class' => 'coursecat'));
+                $content .= get_string('category').': '.
+                        html_writer::link(new moodle_url('/course/category.php', array('id' => $cat->id)),
+                                $cat->get_formatted_name(), array('class' => $cat->visible ? '' : 'dimmed'));
+                $content .= html_writer::end_tag('div'); // .coursecat
             }
         }
         $content .= html_writer::end_tag('div'); // .coursebox
