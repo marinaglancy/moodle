@@ -161,13 +161,6 @@ Navbar & Breadcrumb
     color: #787878;
 }
 
-.jsenabled .course_category_tree .controls {
-    visibility: visible;
-    float: right;
-}
-.category_label {
-    padding-left: 20px;
-}
 /*
 Collapse All - Expand All
 -------------------------*/
@@ -229,28 +222,14 @@ textarea {
     cursor: default;
 }
 /*
-Coursebox Info & Summary
+Courses lists and course summary
 ------------------------*/
-.coursebox h3,
-.coursebox .info,
-.coursebox .summary {
-    text-align: left;
-    width: 100%;
-    height: auto;
-}
-.coursebox .info {
-    float: left;
-}
-.coursebox .summary {
-    float: right;
-}
-.coursebox .summary p {
-    margin: 5px 0 0;
-}
-.coursebox .info h3.name {
-    padding: 0;
-    margin: 5px 0 0;
-}
+.course_category_tree .category_link { padding-left: 20px; }
+.course_category_tree .courses .course .course_name {margin:3px 0;}
+
+.course_category_tree .courses .course .course-summary {float:none;width: 100%;clear:both;padding-top:0.5em;}
+.course_category_tree .courses .course .course-summary p {margin: 5px 0 0;}
+.course-info-box {padding: 0.5em;}
 /*
 Course Section Topic & Weekly
 -----------------------------*/

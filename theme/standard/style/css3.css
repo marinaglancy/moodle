@@ -60,7 +60,7 @@ table.minicalendar td,
 
 .categorybox,
 .categoryboxcontent,
-.coursebox,
+.coursebox.expanded,
 .notifyproblem,
 .notifysuccess,
 table.minicalendar {

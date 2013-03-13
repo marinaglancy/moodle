@@ -340,18 +340,8 @@ img.icon {
 li.activity {
     padding-bottom:5px;
 }
-.categorylist {
-    padding-bottom:10px;
-}
-.course {
-    padding-bottom:25px;
-}
-.course_category_tree .category .courses .course_link {
+.course_category_tree .courses .course .course_link {
     padding:10px 18px;
-    background-position: 0 5px;
-}
-.coursebox .summary{
-    padding: 10px 0;
 }
 .que .info{
     width: 10em;

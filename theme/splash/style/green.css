@@ -54,7 +54,7 @@ body.splash-green { background:url([[pix:theme|bggreen]]) top left repeat-x;
 .splash-green .tabtree .here ul .here a.nolink:hover {
     color:#446e4c;
 }
-.splash-green .coursebox{
+.splash-green .course_category_tree .course{
     border-bottom: 1px dashed #dae0dc;
 }
 .splash-green #categoryquestions tr th{

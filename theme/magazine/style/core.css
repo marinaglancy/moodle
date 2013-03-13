@@ -875,7 +875,7 @@ table.rolecap td.risk {
     border-left: 1px solid #dadada;
 }
 
-/** Coursebox and category box stuff for front page **/
+/** Course listings **/
 
 ul.unlist, ul.unlist li, ul.unlist li div, ul.unlist li div ul, ul.unlist li div ul li {
     list-style-type: none;
@@ -883,114 +883,79 @@ ul.unlist, ul.unlist li, ul.unlist li div, ul.unlist li div ul, ul.unlist li div
     margin: 0;
 }
 
-div.coursebox {
-    padding-bottom: 7px !important;
-    margin-bottom: 7px !important;
+.course-info-box .course,
+.course_category_tree .courses .course {
     border-bottom: 1px solid #eee;
 }
 
-div.coursebox h3.name {
-    margin-top: 0px;
-    margin-bottom: 0px;
+.course-info-box .course,
+.course_category_tree.courses-only .courses .course {
+    padding-bottom: 7px !important;
+    margin-bottom: 7px !important;
 }
 
-div.coursebox h3.name a {
+.course_category_tree .courses .course .course_name {
+    margin: 0;
+}
+
+.course-info-box .course h3.course_name,
+.course_category_tree.courses-only .courses .course h3.course_name {
     font-size: 16px;
     font-weight: 400;
 }
 
-.unlist div.summary {
+.course-info-box .course .course-summary,
+.course_category_tree.courses-only .courses .course .course-summary {
     font-size: 14px;
     color: #666666;
     font-style: italic;
 }
 
-.unlist ul.teachers {
-    display: block;
+.course-info-box .course .course-contacts,
+.course_category_tree.courses-only .courses .course .course-contacts {
     padding-left: 5px !important;
-}
-
-.dir-rtl .unlist ul.teachers {
-    padding-right: 5px;
-}
-
-.unlist ul.teachers li {
     font-size: 10px;
 }
 
-.unlist ul.teachers li a {
+.dir-rtl .course-info-box .course .course-contacts,
+.dir-rtl .course_category_tree.courses-only .courses .course .course-contacts {
+    padding-right: 5px;
+}
+
+.course-info-box .course .course-category,
+.course_category_tree.courses-only .courses .course .course-category {
+    padding-right: 5px !important;
+    font-size: 10px;
+}
+
+.dir-rtl .course-info-box .course .course-category,
+.dir-rtl .course_category_tree.courses-only .courses .course .course-category {
+    padding-left: 5px;
+}
+
+.course-info-box .course .course-contacts li a,
+.course_category_tree.courses-only .courses .course .course-contacts li a {
     font-size: 11px;
 }
 
-div.categorybox {
-    border: none !important;
-    margin-top: 0;
-}
-
-td.category.name a {
-    padding-left: 20px;
-    background: url([[pix:theme|jcourse]]) no-repeat 0 50%;
-    font-weight: 400;
-    font-size: 16px;
-}
-
-#course-index td.category.name a {
-    padding-left: 0px;
-    background-image: none;
-}
-
-table.categorylist td {
-    padding: 0;
-}
-
-div.course_category_tree a {
+div.course_category_tree .category_link {
     font-size: 16px;
     font-weight: 400;
     text-decoration: none;
 }
 
-div.course_category_tree div.category,div.course_category_tree div.category_label,div.course_category_tree div.courses {
+div.course_category_tree div.category,
+div.course_category_tree div.category_label,
+div.course_category_tree div.courses {
     margin-bottom: 8px;
 }
 
-div.course_category_tree div.category.with_children div.category_label {
-    background-position: 0 55% !important;
+.course_category_tree .category .category_label .category_name {
+    background-position: 0 55% !important;padding:0;
 }
-.dir-rtl div.course_category_tree div.category.with_children div.category_label {
+
+.dir-rtl .course_category_tree .category .category_label .category_name {
     background-position: right center !important;
-}
-
-div.course_category_tree div.course.odd {
-    background: #eee;
-}
-
-div.course_category_tree div.course a {
-    font-size: 14px;
-}
-
-div.course_category_tree div.category.with_children {
-    margin-left: 20px;
-}
-
-.dir-rtl div.course_category_tree div.category.with_children {
-    margin-right: 20px;
-}
-
-.dir-rtl .course_category_tree .category .course_info {
-    padding-right: 20px;
-}
-
-.dir-rtl.jsenabled .course_category_tree .category.with_children.collapsed > .category_label {
-    backkground-position: right center !important;
-}
-
-.dir-rtl.jsenabled .course_category_tree .category.with_children.notloaded > .category_label {
-    backkground-position: right center !important;
-}
-
-.dir-rtl .course_category_tree .category_label,
-.dir-rtl .course_category_tree .category .course {
-    padding-right: 35px;
 }
 
 div.course_category_tree div.controls {

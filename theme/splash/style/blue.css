@@ -56,7 +56,7 @@ body.splash-blue {
 .splash-blue .tabtree .here ul .here a.nolink:hover {
     color:#3d6276;
 }
-.splash-blue .coursebox{
+.splash-blue .course_category_tree .course {
     border-bottom: 1px dashed #cbd3d6;
 }
 .splash-blue #categoryquestions tr th{

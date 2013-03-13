@@ -1,23 +1,14 @@
-.coursebox {
+/** THIS IS CANVAS */
+
+.course_category_tree .course {
     border-color: #ddd;
     border-width: 0 0 1px;
     border-style: solid;
+    /* add padding ? */
 }
 
-.coursebox .name {
-    font-size: 1.1em;
-}
-
-.coursebox .teachers {
-    margin: 0 0 0 0.75em;
-}
-
-.categorybox {
-    border: none;
-}
-
-.categorybox .categorylist td {
-    padding: 2px;
+.course_category_tree .courses .course .course-contacts {
+    margin: 0 0 0 0.75em; /* maybe not needed */
 }
 
 .categorypicker {
@@ -32,10 +23,6 @@
 
 .course_category_tree .controls div {
     margin: 0 5px 0 0;
-}
-
-#page-course-category .rolelink {
-    text-align: right;
 }
 
 #page-course-category .generalbox {

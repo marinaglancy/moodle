@@ -100,27 +100,3 @@ $PAGE->set_heading($site->fullname);
 echo $OUTPUT->header();
 echo $courserenderer->search_courses($searchcriteria);
 echo $OUTPUT->footer();
-
-/**
- * Print a list navigation bar
- * Display page numbers, and a link for displaying all entries
- * @param int $totalcount number of entry to display
- * @param int $page page number
- * @param int $perpage number of entry per page
- * @param array $search
- */
-function print_navigation_bar($totalcount, $page, $perpage, $search) {
-    global $OUTPUT, $CFG;
-    $url = new moodle_url('/course/search.php', $search);
-    if ($perpage !== 'all' && $totalcount > $perpage) {
-        echo $OUTPUT->paging_bar($totalcount, $page, $perpage, $url->out(false, array('perpage' => $perpage)));
-        echo "<center><p>";
-        echo html_writer::link($url->out(false, array('perpage' => 'all')), get_string("showall", "", $totalcount));
-        echo "</p></center>";
-    } else if ($perpage === 'all') {
-        echo "<center><p>";
-        echo html_writer::link($url->out(false, array('perpage' => $CFG->coursesperpage)),
-                get_string("showperpage", "", $CFG->coursesperpage));
-        echo "</p></center>";
-    }
-}

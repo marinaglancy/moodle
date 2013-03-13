@@ -6,12 +6,12 @@
 .course-content ul.weeks li.section .right {padding:4px 0;}
 
 /** Course **/
-.coursebox {border:1px solid #DDD;border-color:#DDDDDD;}
-.coursebox .info {margin:5px;font-size:1em;}
-.coursebox .info .name {margin:3px 0;}
-.coursebox .info .teachers {margin:0 1em;font-size:0.9em;}
-.coursebox .cost {font-size:0.9em;padding-top: 20px;}
-.coursebox .summary {margin:5px;font-size:0.9em;}
+.coursebox.expanded {border:1px solid #DDD;border-color:#DDDDDD;}
+.coursebox .name {padding: 5px;margin:0;}
+.coursebox.collapsed .name {padding:3px 5px;}
+.coursebox .teachers {padding:3px 0 3px 21px;margin:0;font-size:0.9em;}
+.coursebox .coursecat,
+.coursebox .summary {padding:3px 5px;font-size:0.9em;}
 
 #page-course-recent h2.main {font-size:1.1em;}
 #page-course-recent .user {font-size:0.75em;}

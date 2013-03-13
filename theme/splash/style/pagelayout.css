@@ -248,7 +248,7 @@ a:hover,
 }
 #region-main h4{
     font-size:1.2em;
-    font-weight:700;
+    font-weight:400;
     line-height:1.2em;
     padding:10px 0;
 }
@@ -283,7 +283,7 @@ h2.main,h3.main,h4.main,h5.main,h6.main{
     margin:0 0 10px;
     padding:3px;
 }
-#region-main .coursebox h3{
+#region-main .course_category_tree.courses-only .courses .course h3{
     font-size:1em;
 }
 #region-main p{
@@ -474,12 +474,11 @@ input[type=text],textarea,select,input[type=password]{
     font-weight:700;
     padding:10px 0 0;
 }
-.course_category_tree .category .course{
-    padding-bottom:20px;
+.course_category_tree.courses-only .courses .course {
+    margin-bottom: 0;
 }
-.coursebox{
-    border:none;
-    padding-bottom:20px;
+.course_category_tree .courses .course .course_name, .course-info-box .course .course_name {
+    margin: 0;
 }
 .generaltable{
     border:1px solid #ddd;
