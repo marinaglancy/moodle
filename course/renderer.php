@@ -1053,6 +1053,9 @@ class core_course_renderer extends plugin_renderer_base {
             $course = new course_in_list($course);
         }
         $content = '';
+        if (can_access_course((object)convert_to_array($course))) {
+            $additionalclasses = 'can-access-course '. $additionalclasses;
+        }
         $classes = trim('coursebox clearfix '. $additionalclasses);
         if ($chelper->get_show_courses() >= self::COURSECAT_SHOW_COURSES_EXPANDED) {
             $nametag = 'h3';

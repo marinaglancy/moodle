@@ -116,6 +116,7 @@ li.section.hidden span.commands a.editing_show {cursor:default;}
 .coursebox.collapsed > .content {display:none;}
 .coursebox > .info > .name a {display:block;background-image:url([[pix:moodle|i/course]]);background-repeat: no-repeat;padding-left:21px;background-position: left top;}
 .coursebox.remotehost .name a {background-image:url([[pix:moodle|i/mnethost]]);}
+.coursebox.can-access-course > .info > .name a:before {content:">> "}
 .coursebox > .info > .name,
 .coursebox .content .teachers,
 .coursebox .content .courseimage,
