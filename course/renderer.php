@@ -1944,12 +1944,13 @@ class core_course_renderer extends plugin_renderer_base {
         if (($section && (!empty($modinfo->sections[1]) or !empty($section->summary))) or $editing) {
             $output .= $this->box_start('generalbox sitetopic');
 
-            /// If currently moving a file then show the current clipboard
+            // If currently moving a file then show the current clipboard
             if (ismoving($SITE->id)) {
-                $stractivityclipboard = strip_tags(get_string('activityclipboard', '', $USER->activitycopyname));
-                $output .= '<p><font size="2">';
-                $output .= "$stractivityclipboard&nbsp;&nbsp;(<a href=\"course/mod.php?cancelcopy=true&amp;sesskey=".sesskey()."\">". get_string('cancel') .'</a>)';
-                $output .= '</font></p>';
+                $url = new moodle_url('/course/mod.php', array('sesskey' => sesskey(), 'cancelcopy' => true));
+                $output .= html_writer::start_tag('div', array('class' => 'clipboard'));
+                $output .= strip_tags(get_string('activityclipboard', '', $USER->activitycopyname));
+                $output .= '&nbsp;&nbsp;('.html_writer::link($url, get_string('cancel')).')';
+                $output .= html_writer::end_tag('div');
             }
 
             $context = context_course::instance(SITEID);
@@ -1962,9 +1963,11 @@ class core_course_renderer extends plugin_renderer_base {
 
             if ($editing) {
                 $streditsummary = get_string('editsummary');
-                $output .= "<a title=\"$streditsummary\" ".
-                     " href=\"course/editsection.php?id=$section->id\"><img src=\"" . $this->pix_url('t/edit') . "\" ".
-                     " class=\"iconsmall\" alt=\"$streditsummary\" /></a><br /><br />";
+                $url = new moodle_url('/course/editsection.php', array('id' => $section->id));
+                $output .= html_writer::link($url,
+                    html_writer::empty_tag('img', array('src' => $this->output->pix_url('t/edit'),
+                        'class' => 'iconsmall edit')),
+                    array('title' => $streditsummary)). "<br /><br />";
             }
 
             $output .= $this->course_section_cm_list($SITE, $section);
@@ -1977,12 +1980,42 @@ class core_course_renderer extends plugin_renderer_base {
     }
 
     /**
+     * Output news for the frontpage (extract from site-wide news forum)
+     *
+     * @return string
+     */
+    protected function frontpage_news($newsforum) {
+        global $SITE, $CFG, $SESSION, $USER;
+        $output = '';
+        if (isloggedin()) {
+            $SESSION->fromdiscussion = $CFG->wwwroot;
+            $subtext = '';
+            if (forum_is_subscribed($USER->id, $newsforum)) {
+                if (!forum_is_forcesubscribed($newsforum)) {
+                    $subtext = get_string('unsubscribe', 'forum');
+                }
+            } else {
+                $subtext = get_string('subscribe', 'forum');
+            }
+            $suburl = new moodle_url('/mod/forum/subscribe.php', array('id' => $newsforum->id, 'sesskey' => sesskey()));
+            $output .= html_writer::tag('div', html_writer::link($suburl, $subtext), array('class' => 'subscribelink'));
+        }
+
+        ob_start();
+        forum_print_latest_discussions($SITE, $newsforum, $SITE->newsitems, 'plain', 'p.modified DESC');
+        $output .= ob_get_contents();
+        ob_end_clean();
+
+        return $output;
+    }
+
+    /**
      * Outputs contents for frontpage as configured in $CFG->frontpage or $CFG->frontpageloggedin
      *
      * @return string
      */
     public function frontpage() {
-        global $CFG, $SITE, $SESSION, $USER;
+        global $CFG, $SITE;
 
         $output = '';
         if (isloggedin() and !isguestuser() and isset($CFG->frontpageloggedin)) {
@@ -1992,61 +2025,46 @@ class core_course_renderer extends plugin_renderer_base {
         }
 
         foreach (explode(',', $frontpagelayout) as $v) {
-            switch ($v) {     /// Display the main part of the front page.
+            switch ($v) {
+                // Display the main part of the front page.
                 case FRONTPAGENEWS:
-                    if ($SITE->newsitems) { // Print forums only when needed
+                    if ($SITE->newsitems) {
+                        // Print forums only when needed
                         require_once($CFG->dirroot .'/mod/forum/lib.php');
 
-                        if (! $newsforum = forum_get_course_forum($SITE->id, 'news')) {
-                            break;
-                        }
+                        if (($newsforum = forum_get_course_forum($SITE->id, 'news')) &&
+                                ($forumcontent = $this->frontpage_news($newsforum))) {
 
-                        // fetch news forum context for proper filtering to happen
-                        $newsforumcm = get_coursemodule_from_instance('forum', $newsforum->id, $SITE->id, false, MUST_EXIST);
-                        $newsforumcontext = context_module::instance($newsforumcm->id, MUST_EXIST);
+                            // fetch news forum context for proper filtering to happen
+                            $modinfo = get_fast_modinfo($SITE);
+                            $newsforumcm = $modinfo->instances['forum'][$newsforum->id];
+                            $newsforumcontext = context_module::instance($newsforumcm->id);
+                            $forumname = format_string($newsforum->name, true, array('context' => $newsforumcontext));
 
-                        $forumname = format_string($newsforum->name, true, array('context' => $newsforumcontext));
-                        $output .= html_writer::tag('a', get_string('skipa', 'access', textlib::strtolower(strip_tags($forumname))), array('href'=>'#skipsitenews', 'class'=>'skip-block'));
+                            $output .= html_writer::tag('a', get_string('skipa', 'access', textlib::strtolower(strip_tags($newsforum->name))), array('href'=>'#skipsitenews', 'class'=>'skip-block'));
 
-                        // wraps site news forum in div container.
-                        $output .= html_writer::start_tag('div', array('id'=>'site-news-forum'));
+                            // wraps site news forum in div container.
+                            $output .= html_writer::start_tag('div', array('id' => 'site-news-forum'));
 
-                        if (isloggedin()) {
-                            $SESSION->fromdiscussion = $CFG->wwwroot;
-                            $subtext = '';
-                            if (forum_is_subscribed($USER->id, $newsforum)) {
-                                if (!forum_is_forcesubscribed($newsforum)) {
-                                    $subtext = get_string('unsubscribe', 'forum');
-                                }
-                            } else {
-                                $subtext = get_string('subscribe', 'forum');
-                            }
                             $output .= $this->heading($forumname, 2, 'headingblock header');
-                            $suburl = new moodle_url('/mod/forum/subscribe.php', array('id' => $newsforum->id, 'sesskey' => sesskey()));
-                            $output .= html_writer::tag('div', html_writer::link($suburl, $subtext), array('class' => 'subscribelink'));
-                        } else {
-                            $output .= $this->heading($forumname, 2, 'headingblock header');
+
+                            $output .= $forumcontent;
+                            //end site news forum div container
+                            $output .= html_writer::end_tag('div');
+
+                            $output .= html_writer::tag('span', '', array('class'=>'skip-block-to', 'id'=>'skipsitenews'));
                         }
-
-                        ob_start();
-                        forum_print_latest_discussions($SITE, $newsforum, $SITE->newsitems, 'plain', 'p.modified DESC');
-                        $output .= ob_get_contents();
-                        ob_end_clean();
-
-                        //end site news forum div container
-                        $output .= html_writer::end_tag('div');
-
-                        $output .= html_writer::tag('span', '', array('class'=>'skip-block-to', 'id'=>'skipsitenews'));
                     }
                 break;
 
                 case FRONTPAGEENROLLEDCOURSELIST:
                     $mycourseshtml = $this->frontpage_my_courses();
                     if (!empty($mycourseshtml)) {
-                        $output .= html_writer::tag('a', get_string('skipa', 'access', textlib::strtolower(get_string('mycourses'))), array('href'=>'#skipmycourses', 'class'=>'skip-block'));
+                        $output .= html_writer::tag('a', get_string('skipa', 'access', textlib::strtolower(get_string('mycourses'))),
+                                array('href' => '#skipmycourses', 'class' => 'skip-block'));
 
                         //wrap frontpage course list in div container
-                        $output .= html_writer::start_tag('div', array('id'=>'frontpage-course-list'));
+                        $output .= html_writer::start_tag('div', array('id' => 'frontpage-course-list'));
 
                         $output .= $this->heading(get_string('mycourses'), 2, 'headingblock header');
                         $output .= $mycourseshtml;
@@ -2054,7 +2072,7 @@ class core_course_renderer extends plugin_renderer_base {
                         //end frontpage course list div container
                         $output .= html_writer::end_tag('div');
 
-                        $output .= html_writer::tag('span', '', array('class'=>'skip-block-to', 'id'=>'skipmycourses'));
+                        $output .= html_writer::tag('span', '', array('class' => 'skip-block-to', 'id' => 'skipmycourses'));
                         break;
                     }
                     // No "break" here. If there are no enrolled courses - continue to 'Available courses'.
@@ -2062,10 +2080,11 @@ class core_course_renderer extends plugin_renderer_base {
                 case FRONTPAGEALLCOURSELIST:
                     $availablecourseshtml = $this->frontpage_available_courses();
                     if (!empty($availablecourseshtml)) {
-                        $output .= html_writer::tag('a', get_string('skipa', 'access', textlib::strtolower(get_string('availablecourses'))), array('href'=>'#skipavailablecourses', 'class'=>'skip-block'));
+                        $output .= html_writer::tag('a', get_string('skipa', 'access', textlib::strtolower(get_string('availablecourses'))),
+                                array('href' => '#skipavailablecourses', 'class' => 'skip-block'));
 
                         //wrap frontpage course list in div container
-                        $output .= html_writer::start_tag('div', array('id'=>'frontpage-course-list'));
+                        $output .= html_writer::start_tag('div', array('id' => 'frontpage-course-list'));
 
                         $output .= $this->heading(get_string('availablecourses'), 2, 'headingblock header');
                         $output .= $availablecourseshtml;
@@ -2073,15 +2092,17 @@ class core_course_renderer extends plugin_renderer_base {
                         //end frontpage course list div container
                         $output .= html_writer::end_tag('div');
 
-                        $output .= html_writer::tag('span', '', array('class'=>'skip-block-to', 'id'=>'skipavailablecourses'));
+                        $output .= html_writer::tag('span', '',
+                                array('class' => 'skip-block-to', 'id' => 'skipavailablecourses'));
                     }
                 break;
 
                 case FRONTPAGECATEGORYNAMES:
-                    $output .= html_writer::tag('a', get_string('skipa', 'access', textlib::strtolower(get_string('categories'))), array('href'=>'#skipcategories', 'class'=>'skip-block'));
+                    $output .= html_writer::tag('a', get_string('skipa', 'access', textlib::strtolower(get_string('categories'))),
+                            array('href' => '#skipcategories', 'class' => 'skip-block'));
 
                     //wrap frontpage category names in div container
-                    $output .= html_writer::start_tag('div', array('id'=>'frontpage-category-names'));
+                    $output .= html_writer::start_tag('div', array('id' => 'frontpage-category-names'));
 
                     $output .= $this->heading(get_string('categories'), 2, 'headingblock header');
                     $output .= $this->frontpage_categories_list();
@@ -2089,14 +2110,16 @@ class core_course_renderer extends plugin_renderer_base {
                     //end frontpage category names div container
                     $output .= html_writer::end_tag('div');
 
-                    $output .= html_writer::tag('span', '', array('class'=>'skip-block-to', 'id'=>'skipcategories'));
+                    $output .= html_writer::tag('span', '',
+                            array('class' => 'skip-block-to', 'id' => 'skipcategories'));
                 break;
 
                 case FRONTPAGECATEGORYCOMBO:
-                    $output .= html_writer::tag('a', get_string('skipa', 'access', textlib::strtolower(get_string('courses'))), array('href'=>'#skipcourses', 'class'=>'skip-block'));
+                    $output .= html_writer::tag('a', get_string('skipa', 'access', textlib::strtolower(get_string('courses'))),
+                            array('href' => '#skipcourses', 'class' => 'skip-block'));
 
                     //wrap frontpage category combo in div container
-                    $output .= html_writer::start_tag('div', array('id'=>'frontpage-category-combo'));
+                    $output .= html_writer::start_tag('div', array('id' => 'frontpage-category-combo'));
 
                     $output .= $this->heading(get_string('courses'), 2, 'headingblock header');
                     $output .= $this->frontpage_combo_list();
@@ -2104,7 +2127,8 @@ class core_course_renderer extends plugin_renderer_base {
                     //end frontpage category combo div container
                     $output .= html_writer::end_tag('div');
 
-                    $output .= html_writer::tag('span', '', array('class'=>'skip-block-to', 'id'=>'skipcourses'));
+                    $output .= html_writer::tag('span', '',
+                            array('class' => 'skip-block-to', 'id' => 'skipcourses'));
                 break;
 
                 case FRONTPAGECOURSESEARCH:
