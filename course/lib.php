@@ -3116,6 +3116,14 @@ function course_page_type_list($pagetype, $parentcontext, $currentcontext) {
             'course-view-*' => get_string('page-course-view-x', 'pagetype')
         );
     }
+    // If the string definition for current page is missing, add generic name so the form does not get broken
+    if (!get_string_manager()->string_exists('page-'. $pagetype, 'pagetype')) {
+        if (!preg_match('/^course-view-/', $pagetype) || !isset($pagetypes['course-view-*'])) {
+            // Special case. Course view page type include the course format, but we do not want to add the block format-specifically.
+            // See add_block_at_end_of_default_region()
+            $pagetypes[$pagetype] = $pagetype;
+        }
+    }
     return $pagetypes;
 }
 

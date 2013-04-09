@@ -1261,7 +1261,7 @@ class core_course_courselib_testcase extends advanced_testcase {
         // Create contexts.
         $coursecontext = context_course::instance($testcourse->id);
         $parentcontext = $coursecontext->get_parent_context(); // Not actually used.
-        $pagetype = 'page-course-x'; // Not used either.
+        $pagetype = 'course-view-'. $testcourse->format;
         $pagetypelist = course_page_type_list($pagetype, $parentcontext, $coursecontext);
 
         // Page type lists for normal courses.
