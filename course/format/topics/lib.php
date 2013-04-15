@@ -296,4 +296,52 @@ class format_topics extends format_base {
         }
         return $this->update_format_options($data);
     }
+
+    /**
+     * Returns the list of edit actions available for this section on this page
+     *
+     * This function may be used in renderers to display section editing actions.
+     * The default implementation allows to show/hide section and move it up
+     * and/or down. No edit actions if editing mode is off or this is a 0-section.
+     * Also no move up/down actions if we are on the section page.
+     *
+     * @param int|stdClass|section_info $section
+     * @return array of renderable objects (usually action_link)
+     */
+    public function get_section_edit_actions($section) {
+        global $PAGE;
+        if (!$PAGE->user_is_editing()) {
+            return array();
+        }
+        $section = $this->get_section($section);
+        if (!$section->section) {
+            // No edit controls for 0-section
+            return array();
+        }
+        $sectionreturn = optional_param('section', null, PARAM_INT);
+        $baseurl = course_get_url($this->courseid, $section->section, array('sr' => $sectionreturn));
+        $baseurl->param('sesskey', sesskey());
+        $coursecontext = context_course::instance($this->courseid);
+
+        $controls = array();
+        if (has_capability('moodle/course:setcurrentsection', $coursecontext)) {
+            // Show the "light globe" on/off.
+            $url = clone($baseurl);
+            if ($this->is_section_current($section)) {
+                $url->param('marker', 0);
+                $strmarkedthistopic = get_string('markedthistopic');
+                $controls['highlight'] = new action_link($url,
+                        new pix_icon('i/marked', $strmarkedthistopic, 'moodle', array('class' => 'icon')),
+                        null, array('title' => $strmarkedthistopic, 'class' => 'editing_highlight'));
+            } else {
+                $url->param('marker', $section->section);
+                $strmarkthistopic = get_string('markthistopic');
+                $controls['highlight'] = new action_link($url,
+                        new pix_icon('i/marker', $strmarkthistopic, 'moodle', array('class' => 'icon')),
+                        null, array('title' => $strmarkthistopic, 'class' => 'editing_highlight'));
+            }
+        }
+
+        return array_merge($controls, parent::get_section_edit_actions($section));
+    }
 }

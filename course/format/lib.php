@@ -883,6 +883,96 @@ abstract class format_base {
         }
         return ($sectionnum && ($course = $this->get_course()) && $course->marker == $sectionnum);
     }
+
+    /**
+     * Returns the list of edit actions available for this section on this page
+     *
+     * This function may be used in renderers to display section editing actions.
+     * The default implementation allows to show/hide section and move it up
+     * and/or down. No edit actions if editing mode is off or this is a 0-section.
+     * Also no move up/down actions if we are on the section page.
+     *
+     * @param int|stdClass|section_info $section
+     * @return array of renderable objects (usually action_link)
+     */
+    public function get_section_edit_actions($section) {
+        global $PAGE;
+
+        if (!$PAGE->user_is_editing() || !$this->uses_sections()) {
+            return array();
+        }
+
+        $section = $this->get_section($section);
+        if (!$section->section) {
+            // No edit controls for 0-section
+            return array();
+        }
+        $sectionreturn = optional_param('section', null, PARAM_INT);
+        $baseurl = course_get_url($this->courseid, $section->section, array('sr' => $sectionreturn));
+        $baseurl->param('sesskey', sesskey());
+        $coursecontext = context_course::instance($this->courseid);
+
+        $controls = array();
+        if (has_capability('moodle/course:sectionvisibility', $coursecontext)) {
+            $url = clone($baseurl);
+            // Show the hide/show eye.
+            if ($section->visible) {
+                if (get_string_manager()->string_exists('hidefromothers', 'format_'. $this->format)) {
+                    $strhidefromothers = new lang_string('hidefromothers', 'format_'. $this->format);
+                } else {
+                    $strhidefromothers = new lang_string('hide');
+                }
+                $url->param('hide', $section->section);
+                $controls['showhide'] = new action_link($url,
+                        new pix_icon('i/hide', $strhidefromothers, 'moodle', array('class' => 'icon hide')),
+                        null, array('title' => $strhidefromothers, 'class' => 'editing_showhide'));
+            } else {
+                if (get_string_manager()->string_exists('showfromothers', 'format_'. $this->format)) {
+                    $strshowfromothers = new lang_string('showfromothers', 'format_'. $this->format);
+                } else {
+                    $strshowfromothers = new lang_string('show');
+                }
+                $url->param('show',  $section->section);
+                $controls['showhide'] = new action_link($url,
+                        new pix_icon('i/show', $strshowfromothers, 'moodle', array('class' => 'icon hide')),
+                        null, array('title' => $strshowfromothers, 'class' => 'editing_showhide'));
+            }
+        }
+
+        if ($sectionreturn !== $section->section && has_capability('moodle/course:movesections', $coursecontext)) {
+            $url = clone($baseurl);
+            if ($section->section > 1) {
+                // Add a arrow to move section up.
+                $url->param('section', $section->section);
+                $url->param('move', -1);
+                $strmoveup = new lang_string('moveup');
+
+                $controls['moveup'] = new action_link($url,
+                        new pix_icon('i/up', $strmoveup, 'moodle', array('class' => 'icon up')),
+                        null, array('title' => $strmoveup, 'class' => 'moveup'));
+            }
+
+            $url = clone($baseurl);
+            if (($course = $this->get_course()) && isset($course->numsections)) {
+                $numsections = $course->numsections;
+            } else {
+                $allsections = $this->get_sections();
+                $numsections = count($allsections);
+            }
+            if ($section->section < $numsections) {
+                // Add a arrow to move section down.
+                $url->param('section', $section->section);
+                $url->param('move', 1);
+                $strmovedown = new lang_string('movedown');
+
+                $controls['moveup'] = new action_link($url,
+                        new pix_icon('i/down', $strmovedown, 'moodle', array('class' => 'icon down')),
+                        null, array('title' => $strmovedown, 'class' => 'movedown'));
+            }
+        }
+
+        return $controls;
+    }
 }
 
 /**

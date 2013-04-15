@@ -210,68 +210,11 @@ abstract class format_section_renderer_base extends plugin_renderer_base {
      * @return array of links with edit controls
      */
     protected function section_edit_controls($course, $section, $onsectionpage = false) {
-        global $PAGE;
-
-        if (!$PAGE->user_is_editing()) {
-            return array();
-        }
-
-        $coursecontext = context_course::instance($course->id);
-
-        if ($onsectionpage) {
-            $baseurl = course_get_url($course, $section->section);
-        } else {
-            $baseurl = course_get_url($course);
-        }
-        $baseurl->param('sesskey', sesskey());
-
+        $actions = course_get_format($course)->get_section_edit_actions($section);
         $controls = array();
-
-        $url = clone($baseurl);
-        if (has_capability('moodle/course:sectionvisibility', $coursecontext)) {
-            if ($section->visible) { // Show the hide/show eye.
-                $strhidefromothers = get_string('hidefromothers', 'format_'.$course->format);
-                $url->param('hide', $section->section);
-                $controls[] = html_writer::link($url,
-                    html_writer::empty_tag('img', array('src' => $this->output->pix_url('i/hide'),
-                    'class' => 'icon hide', 'alt' => $strhidefromothers)),
-                    array('title' => $strhidefromothers, 'class' => 'editing_showhide'));
-            } else {
-                $strshowfromothers = get_string('showfromothers', 'format_'.$course->format);
-                $url->param('show',  $section->section);
-                $controls[] = html_writer::link($url,
-                    html_writer::empty_tag('img', array('src' => $this->output->pix_url('i/show'),
-                    'class' => 'icon hide', 'alt' => $strshowfromothers)),
-                    array('title' => $strshowfromothers, 'class' => 'editing_showhide'));
-            }
+        foreach ($actions as $action) {
+            $controls[] .= $this->render($action);
         }
-
-        if (!$onsectionpage && has_capability('moodle/course:movesections', $coursecontext)) {
-            $url = clone($baseurl);
-            if ($section->section > 1) { // Add a arrow to move section up.
-                $url->param('section', $section->section);
-                $url->param('move', -1);
-                $strmoveup = get_string('moveup');
-
-                $controls[] = html_writer::link($url,
-                    html_writer::empty_tag('img', array('src' => $this->output->pix_url('i/up'),
-                    'class' => 'icon up', 'alt' => $strmoveup)),
-                    array('title' => $strmoveup, 'class' => 'moveup'));
-            }
-
-            $url = clone($baseurl);
-            if ($section->section < $course->numsections) { // Add a arrow to move section down.
-                $url->param('section', $section->section);
-                $url->param('move', 1);
-                $strmovedown =  get_string('movedown');
-
-                $controls[] = html_writer::link($url,
-                    html_writer::empty_tag('img', array('src' => $this->output->pix_url('i/down'),
-                    'class' => 'icon down', 'alt' => $strmovedown)),
-                    array('title' => $strmovedown, 'class' => 'movedown'));
-            }
-        }
-
         return $controls;
     }
 
