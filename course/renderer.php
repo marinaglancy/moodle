@@ -766,6 +766,110 @@ class core_course_renderer extends plugin_renderer_base {
     }
 
     /**
+     * Show if something is on on the course clipboard (moving around)
+     *
+     * @param stdClass $course The course entry from DB
+     * @param int $sectionreturn to be passed as 'sr' parameter in cancel copy URL
+     * @return string HTML to output.
+     */
+    public function course_clipboard($course, $sectionreturn = null) {
+        global $USER;
+
+        $o = '';
+        // If currently moving a file then show the current clipboard.
+        if (ismoving($course->id)) {
+            $url = new moodle_url('/course/mod.php',
+                array('sesskey' => sesskey(),
+                      'cancelcopy' => true,
+                )
+            );
+            if ($sectionreturn !== null) {
+                $url->param('sr', $sectionreturn);
+            }
+
+            $o .= html_writer::start_tag('div', array('class' => 'clipboard'));
+            $o .= strip_tags(get_string('activityclipboard', '', $USER->activitycopyname));
+            $o .= '&nbsp;&nbsp;('.html_writer::link($url, get_string('cancel')).')';
+            $o .= html_writer::end_tag('div');
+        }
+
+        return $o;
+    }
+
+    /**
+     * Renders HTML to display formatted section summary with edit link if applicable
+     *
+     * @param section_info $section
+     * @param int|null $sectionreturn used to pass in 'sr' parameter in editsection url
+     * @return string
+     */
+    public function course_section_summary(section_info $section, $sectionreturn = null) {
+        $o = html_writer::start_tag('div', array('class' => 'summary'));
+
+        $context = context_course::instance($section->course);
+        $summarytext = file_rewrite_pluginfile_urls($section->summary, 'pluginfile.php',
+            $context->id, 'course', 'section', $section->id);
+
+        $options = new stdClass();
+        $options->noclean = true;
+        $options->overflowdiv = true;
+        $options->context = $context;
+        $o .= format_text($summarytext, $section->summaryformat, $options);
+
+        if ($this->page->user_is_editing() && has_capability('moodle/course:update', $context)) {
+            $url = new moodle_url('/course/editsection.php', array('id' => $section->id));
+            if ($sectionreturn !== null) {
+                $url->param('sr', $sectionreturn);
+            }
+            $o .= html_writer::link($url,
+                html_writer::empty_tag('img', array('src' => $this->output->pix_url('t/edit'),
+                    'class' => 'iconsmall edit', 'alt' => get_string('edit'))),
+                array('title' => get_string('editsummary')));
+        }
+        $o .= html_writer::end_tag('div');
+        return $o;
+    }
+
+    /**
+     * If section is not visible, display the message about that ('Not available
+     * until...', that sort of thing). Otherwise, returns blank.
+     *
+     * For users with the ability to view hidden sections, it shows the
+     * information even though you can view the section and also may include
+     * slightly fuller information (so that teachers can tell when sections
+     * are going to be unavailable etc). This logic is the same as for
+     * activities.
+     *
+     * @param section_info $section The course section
+     * @return string HTML to output
+     */
+    public function course_section_availability(section_info $section) {
+        global $CFG;
+        $context = context_course::instance($section->course);
+        $canviewhidden = has_capability('moodle/course:viewhiddensections', $context);
+        $o = '';
+        if (!$section->uservisible) {
+            $o .= html_writer::start_tag('div', array('class' => 'availabilityinfo'));
+            // Note: We only get to this function if availableinfo is non-empty,
+            // so there is definitely something to print.
+            $o .= $section->availableinfo;
+            $o .= html_writer::end_tag('div');
+        } else if ($canviewhidden && !empty($CFG->enableavailability) && $section->visible) {
+            require_once($CFG->libdir. '/conditionlib.php');
+            $ci = new condition_info_section($section);
+            $fullinfo = $ci->get_full_information();
+            if ($fullinfo) {
+                $o .= html_writer::start_tag('div', array('class' => 'availabilityinfo'));
+                $o .= get_string(
+                        ($section->showavailability ? 'userrestriction_visible' : 'userrestriction_hidden'),
+                        'condition', $fullinfo);
+                $o .= html_writer::end_tag('div');
+            }
+        }
+        return $o;
+    }
+
+    /**
      * Renders HTML to show course module availability information (for someone who isn't allowed
      * to see the activity itself, or for staff)
      *
@@ -978,6 +1082,89 @@ class core_course_renderer extends plugin_renderer_base {
         }
 
         return $output;
+    }
+
+    /**
+     * Returns HTML to print the overview of activities in the section
+     * Used as section summary on course view page in course formats that
+     * display section on separate page.
+     *
+     * @param stdClass $course the course record from DB
+     * @param int|stdClass|section_info $section number or object with field $section->section
+     * @return string HTML to output.
+     */
+    public function course_section_cm_list_overview($course, $section) {
+        global $CFG;
+        require_once($CFG->libdir. '/completionlib.php');
+        $modinfo = get_fast_modinfo($course);
+        if (is_object($section)) {
+            $sectionnum = $section->section;
+        } else {
+            $sectionnum = $section;
+        }
+        if (empty($modinfo->sections[$sectionnum])) {
+            return '';
+        }
+
+        // Generate array with count of activities in this section:
+        $sectionmods = array();
+        $total = 0;
+        $complete = 0;
+        $cancomplete = isloggedin() && !isguestuser();
+        $completioninfo = new completion_info($course);
+        foreach ($modinfo->sections[$sectionnum] as $cmid) {
+            $thismod = $modinfo->cms[$cmid];
+
+            if ($thismod->modname === 'label') {
+                // Labels are special (not interesting for students)!
+                continue;
+            }
+
+            if ($thismod->uservisible) {
+                if (isset($sectionmods[$thismod->modname])) {
+                    $sectionmods[$thismod->modname]['name'] = $thismod->modplural;
+                    $sectionmods[$thismod->modname]['count']++;
+                } else {
+                    $sectionmods[$thismod->modname]['name'] = $thismod->modfullname;
+                    $sectionmods[$thismod->modname]['count'] = 1;
+                }
+                if ($cancomplete && $completioninfo->is_enabled($thismod) != COMPLETION_TRACKING_NONE) {
+                    $total++;
+                    $completiondata = $completioninfo->get_data($thismod, true);
+                    if ($completiondata->completionstate == COMPLETION_COMPLETE) {
+                        $complete++;
+                    }
+                }
+            }
+        }
+
+        if (empty($sectionmods)) {
+            // No sections
+            return '';
+        }
+
+        // Output section activities summary:
+        $o = '';
+        $o .= html_writer::start_tag('div', array('class' => 'section-summary-activities mdl-right'));
+        foreach ($sectionmods as $mod) {
+            $o .= html_writer::start_tag('span', array('class' => 'activity-count'));
+            $o .= $mod['name'].': '.$mod['count'];
+            $o .= html_writer::end_tag('span');
+        }
+        $o .= html_writer::end_tag('div');
+
+        // Output section completion data
+        if ($total > 0) {
+            $a = new stdClass;
+            $a->complete = $complete;
+            $a->total = $total;
+
+            $o .= html_writer::start_tag('div', array('class' => 'section-summary-activities mdl-right'));
+            $o .= html_writer::tag('span', get_string('progresstotal', 'completion', $a), array('class' => 'activity-count'));
+            $o .= html_writer::end_tag('div');
+        }
+
+        return $o;
     }
 
     /**
@@ -1927,7 +2114,7 @@ class core_course_renderer extends plugin_renderer_base {
      * @return string
      */
     public function frontpage_section1() {
-        global $SITE, $USER;
+        global $SITE;
 
         $output = '';
         $editing = $this->page->user_is_editing();
@@ -1943,35 +2130,12 @@ class core_course_renderer extends plugin_renderer_base {
         $section = $modinfo->get_section_info(1);
         if (($section && (!empty($modinfo->sections[1]) or !empty($section->summary))) or $editing) {
             $output .= $this->box_start('generalbox sitetopic');
-
-            // If currently moving a file then show the current clipboard
-            if (ismoving($SITE->id)) {
-                $url = new moodle_url('/course/mod.php', array('sesskey' => sesskey(), 'cancelcopy' => true));
-                $output .= html_writer::start_tag('div', array('class' => 'clipboard'));
-                $output .= strip_tags(get_string('activityclipboard', '', $USER->activitycopyname));
-                $output .= '&nbsp;&nbsp;('.html_writer::link($url, get_string('cancel')).')';
-                $output .= html_writer::end_tag('div');
-            }
-
-            $context = context_course::instance(SITEID);
-            $summarytext = file_rewrite_pluginfile_urls($section->summary, 'pluginfile.php', $context->id, 'course', 'section', $section->id);
-            $summaryformatoptions = new stdClass();
-            $summaryformatoptions->noclean = true;
-            $summaryformatoptions->overflowdiv = true;
-
-            $output .= format_text($summarytext, $section->summaryformat, $summaryformatoptions);
-
-            if ($editing) {
-                $streditsummary = get_string('editsummary');
-                $url = new moodle_url('/course/editsection.php', array('id' => $section->id));
-                $output .= html_writer::link($url,
-                    html_writer::empty_tag('img', array('src' => $this->output->pix_url('t/edit'),
-                        'class' => 'iconsmall edit')),
-                    array('title' => $streditsummary)). "<br /><br />";
-            }
-
+            // If currently moving a file then show the current clipboard.
+            $output .= $this->course_clipboard($SITE);
+            // Section summary.
+            $output .= $this->course_section_summary($section);
+            // List of activities.
             $output .= $this->course_section_cm_list($SITE, $section);
-
             $output .= $this->course_section_add_cm_control($SITE, $section->section);
             $output .= $this->box_end();
         }
