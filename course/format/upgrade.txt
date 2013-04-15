@@ -9,6 +9,8 @@ Overview of this plugin type at http://docs.moodle.org/dev/Course_formats
   make_editing_buttons()
   See functions' phpdocs in lib/deprecatedlib.php
 * Function get_print_section_cm_text() is deprecated, replaced with methods in cm_info
+* New method format_base::get_section_edit_actions() used in format_section_renderer_base
+* Changes in format_section_renderer_base, some functions are moved to core_course_renderer
 
 === 2.4 ===
 
