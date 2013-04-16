@@ -86,8 +86,14 @@ abstract class format_section_renderer_base extends plugin_renderer_base {
     public function section_title($section, $course) {
         $title = get_section_name($course, $section);
         $url = course_get_url($course, $section->section, array('navigation' => true));
-        if ($url) {
-            $title = html_writer::link($url, $title);
+        $attributes = array();
+        if (!$section->visible) {
+            $attributes = array('class' => 'dimmed_text');
+        }
+        if ($url && $section->uservisible) {
+            $title = html_writer::link($url, $title, $attributes);
+        } else if (!empty($attributes)) {
+            $title = html_writer::span($title, $attributes);
         }
         return $title;
     }
@@ -228,12 +234,10 @@ abstract class format_section_renderer_base extends plugin_renderer_base {
      */
     protected function section_summary($section, $course, $mods) {
         $classattr = 'section main section-summary clearfix';
-        $linkclasses = '';
 
         // If section is hidden then display grey section link
         if (!$section->visible) {
             $classattr .= ' hidden';
-            $linkclasses .= ' dimmed_text';
         } else if (course_get_format($course)->is_section_current($section)) {
             $classattr .= ' current';
         }
@@ -245,12 +249,7 @@ abstract class format_section_renderer_base extends plugin_renderer_base {
         $o .= html_writer::tag('div', '', array('class' => 'right side'));
         $o .= html_writer::start_tag('div', array('class' => 'content'));
 
-        $title = get_section_name($course, $section);
-        if ($section->uservisible) {
-            $title = html_writer::tag('a', $title,
-                    array('href' => course_get_url($course, $section->section), 'class' => $linkclasses));
-        }
-        $o .= $this->output->heading($title, 3, 'section-title');
+        $o .= $this->output->heading($this->section_title($section, $course), 3, 'section-title');
 
         $o.= $this->courserenderer->course_section_summary($section);
         $o.= $this->section_activity_summary($section, $course, null);
@@ -309,45 +308,31 @@ abstract class format_section_renderer_base extends plugin_renderer_base {
      * Generate next/previous section links for naviation
      *
      * @param stdClass $course The course entry from DB
-     * @param array $sections array of section_info objects
+     * @param array $sections (argument not used)
      * @param int $sectionno The section number in the coruse which is being dsiplayed
      * @return array associative array with previous and next section link
      */
-    protected function get_nav_links($course, $sections, $sectionno) {
-        // FIXME: This is really evil and should by using the navigation API.
-        $course = course_get_format($course)->get_course();
-        $canviewhidden = has_capability('moodle/course:viewhiddensections', context_course::instance($course->id))
-            or !$course->hiddensections;
-
+    protected function get_nav_links($section) {
+        //if (!isset($section->id)) {
+        //    $section = course_get_format($course)->get_section($section);
+        //}
         $links = array('previous' => '', 'next' => '');
-        $back = $sectionno - 1;
-        while ($back > 0 and empty($links['previous'])) {
-            if ($canviewhidden || $sections[$back]->uservisible) {
-                $params = array();
-                if (!$sections[$back]->visible) {
-                    $params = array('class' => 'dimmed_text');
-                }
-                $previouslink = html_writer::tag('span', $this->output->larrow(), array('class' => 'larrow'));
-                $previouslink .= get_section_name($course, $sections[$back]);
-                $links['previous'] = html_writer::link(course_get_url($course, $back), $previouslink, $params);
+        if (($nav = $this->page->navigation->find($section->course, navigation_node::TYPE_COURSE))
+                && ($items = $nav->children->type(navigation_node::TYPE_SECTION))
+                && isset($items[$section->id])) {
+            $keys = array_keys($items);
+            $idx = array_search($section->id, $keys);
+            if ($idx) {
+                $n = $items[$keys[$idx - 1]];
+                $text = html_writer::tag('span', $this->output->larrow(), array('class' => 'larrow')). $n->text;
+                $links['previous'] =  html_writer::link($n->action, $text, $n->hidden ? array('class' => 'dimmed_text') : array());
             }
-            $back--;
-        }
-
-        $forward = $sectionno + 1;
-        while ($forward <= $course->numsections and empty($links['next'])) {
-            if ($canviewhidden || $sections[$forward]->uservisible) {
-                $params = array();
-                if (!$sections[$forward]->visible) {
-                    $params = array('class' => 'dimmed_text');
-                }
-                $nextlink = get_section_name($course, $sections[$forward]);
-                $nextlink .= html_writer::tag('span', $this->output->rarrow(), array('class' => 'rarrow'));
-                $links['next'] = html_writer::link(course_get_url($course, $forward), $nextlink, $params);
+            if ($idx < count($keys) - 1) {
+                $n = $items[$keys[$idx + 1]];
+                $text = $n->text . html_writer::tag('span', $this->output->rarrow(), array('class' => 'rarrow'));
+                $links['next'] =  html_writer::link($n->action, $text, $n->hidden ? array('class' => 'dimmed_text') : array());
             }
-            $forward++;
         }
-
         return $links;
     }
 
@@ -479,7 +464,7 @@ abstract class format_section_renderer_base extends plugin_renderer_base {
         $thissection = $modinfo->get_section_info($displaysection);
 
         // Title with section navigation links.
-        $sectionnavlinks = $this->get_nav_links($course, $modinfo->get_section_info_all(), $displaysection);
+        $sectionnavlinks = $this->get_nav_links($thissection);
         $sectiontitle = '';
         $sectiontitle .= html_writer::start_tag('div', array('class' => 'section-navigation header headingblock'));
         $sectiontitle .= html_writer::tag('span', $sectionnavlinks['previous'], array('class' => 'mdl-left'));
