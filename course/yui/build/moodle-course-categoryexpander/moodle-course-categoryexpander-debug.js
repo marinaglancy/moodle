@@ -53,6 +53,12 @@ NS.init = function() {
     Y.one(Y.config.doc).delegate('click', this.toggle_category_expansion, SELECTORS.CATEGORYLISTENLINK, this);
     Y.one(Y.config.doc).delegate('click', this.toggle_coursebox_expansion, SELECTORS.COURSEBOXLISTENLINK, this);
     Y.one(Y.config.doc).delegate('click', this.collapse_expand_all, SELECTORS.COLLAPSEEXPAND, this);
+    Y.all(SELECTORS.COLLAPSEEXPAND).each(function(el){
+        var ancestor = el.ancestor(SELECTORS.COURSECATEGORYTREE);
+        if (ancestor) {
+            NS.update_collapsible_actions(ancestor);
+        }
+    });
 };
 
 /**
@@ -235,8 +241,11 @@ NS.run_expansion = function(categorynode) {
 };
 
 NS.collapse_expand_all = function(e) {
-    var ancestor = e.currentTarget.ancestor(SELECTORS.COURSECATEGORYTREE),
-        collapseall = ancestor.one(SELECTORS.COLLAPSEEXPAND);
+    var ancestor = e.currentTarget.ancestor(SELECTORS.COURSECATEGORYTREE);
+    if (!ancestor) {
+        return;
+    }
+    var collapseall = ancestor.one(SELECTORS.COLLAPSEEXPAND);
     if (collapseall.hasClass(CSS.COLLAPSEALL)) {
         this.collapse_all(ancestor);
     } else {
@@ -297,10 +306,15 @@ NS.update_collapsible_actions = function(ancestor) {
         // At least one maximised child found. Show the collapseall.
         togglelink.setHTML(M.util.get_string('collapseall', 'moodle'))
             .addClass(CSS.COLLAPSEALL);
-    } else {
-        // No maximised children found. Show the expandall.
+        togglelink.removeClass('hiddenifjs');
+    } else if (ancestor.all(SELECTORS.CATEGORYWITHCOLLAPSEDLOADEDCHILDREN).size()) {
+        // No maximised children found but there are collapsed children. Show the expandall.
         togglelink.setHTML(M.util.get_string('expandall', 'moodle'))
             .removeClass(CSS.COLLAPSEALL);
+        togglelink.removeClass('hiddenifjs');
+    } else {
+        // Nothing can be either expanded or collapsed
+        togglelink.addClass('hiddenifjs');
     }
 };
 

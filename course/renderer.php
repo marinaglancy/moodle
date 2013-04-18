@@ -1488,23 +1488,16 @@ class core_course_renderer extends plugin_renderer_base {
         $attributes = $chelper->get_and_erase_attributes('course_category_tree clearfix');
         $content .= html_writer::start_tag('div', $attributes);
 
-        $content .= $this->coursecat_tree_options();
-        $content .= html_writer::tag('div', $categorycontent, array('class' => 'content'));
-
-        $content .= html_writer::end_tag('div'); // .course_category_tree
-
-        return $content;
-    }
-
-    private function coursecat_tree_options() {
-        $content = '';
-        // We don't need to display "Expand all"/"Collapse all" buttons if there are no
-        // subcategories or there is only one level of subcategories loaded
         $content .= html_writer::start_tag('div', array('class' => 'collapsible-actions'));
         $content .= html_writer::link('#', get_string('collapseall'), array('class' => 'collapseexpand collapse-all'));
         $content .= html_writer::end_tag('div');
 
         $this->page->requires->strings_for_js(array('collapseall', 'expandall'), 'moodle');
+
+        $content .= html_writer::tag('div', $categorycontent, array('class' => 'content'));
+
+        $content .= html_writer::end_tag('div'); // .course_category_tree
+
         return $content;
     }
 
