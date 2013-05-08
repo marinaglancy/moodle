@@ -200,9 +200,9 @@ if ($hassiteconfig) { // speedup for non-admins, add all caps used on this page
             new lang_string('courselistshortnames_desc', 'admin'), 0));
     $temp->add(new admin_setting_configtext('coursesperpage', new lang_string('coursesperpage', 'admin'), new lang_string('configcoursesperpage', 'admin'), 20, PARAM_INT));
     $temp->add(new admin_setting_configtext('courseswithsummarieslimit', new lang_string('courseswithsummarieslimit', 'admin'), new lang_string('configcourseswithsummarieslimit', 'admin'), 10, PARAM_INT));
-    $temp->add(new admin_setting_configtext('courseoverviewfileslimit', new lang_string('coursesummaryfileslimit'),
+    $temp->add(new admin_setting_configtext('coursesummaryfileslimit', new lang_string('coursesummaryfileslimit'),
             new lang_string('configcoursesummaryfileslimit', 'admin'), 1, PARAM_INT));
-    $temp->add(new admin_setting_configtext('courseoverviewfilesext', new lang_string('coursesummaryfilesext'),
+    $temp->add(new admin_setting_configtext('coursesummaryfilesext', new lang_string('coursesummaryfilesext'),
             new lang_string('configcoursesummaryfilesext', 'admin'), '.jpg,.gif,.png'));
     $ADMIN->add('appearance', $temp);
 

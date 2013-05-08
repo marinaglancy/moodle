@@ -2189,14 +2189,14 @@ function save_local_role_names($courseid, $data) {
  */
 function course_overviewfiles_options($course) {
     global $CFG;
-    if (empty($CFG->courseoverviewfileslimit)) {
+    if (empty($CFG->coursesummaryfileslimit)) {
         return null;
     }
-    $accepted_types = preg_split('/\s*,\s*/', trim($CFG->courseoverviewfilesext), -1, PREG_SPLIT_NO_EMPTY);
+    $accepted_types = preg_split('/\s*,\s*/', trim($CFG->coursesummaryfilesext), -1, PREG_SPLIT_NO_EMPTY);
     if (in_array('*', $accepted_types) || empty($accepted_types)) {
         $accepted_types = '*';
     } else {
-        // Since config for $CFG->courseoverviewfilesext is a text box, human factor must be considered.
+        // Since config for $CFG->coursesummaryfilesext is a text box, human factor must be considered.
         // Make sure extensions are prefixed with dot unless they are valid typegroups
         foreach ($accepted_types as $i => $type) {
             if (substr($type, 0, 1) !== '.') {
@@ -2209,11 +2209,11 @@ function course_overviewfiles_options($course) {
             }
         }
         if (!empty($corrected)) {
-            set_config('courseoverviewfilesext', join(',', $accepted_types));
+            set_config('coursesummaryfilesext', join(',', $accepted_types));
         }
     }
     $options = array(
-        'maxfiles' => $CFG->courseoverviewfileslimit,
+        'maxfiles' => $CFG->coursesummaryfileslimit,
         'maxbytes' => $CFG->maxbytes,
         'subdirs' => 0,
         'accepted_types' => $accepted_types

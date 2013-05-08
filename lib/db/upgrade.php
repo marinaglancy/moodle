@@ -2164,5 +2164,21 @@ function xmldb_main_upgrade($oldversion) {
     // Put any upgrade step following this.
 
 
+    if ($oldversion < 2013052900.00) {
+        // Rename $CFG->courseoverviewfileslimit -> $CFG->coursesummaryfileslimit
+        if (isset($CFG->courseoverviewfileslimit) && !isset($CFG->coursesummaryfileslimit)) {
+            set_config('coursesummaryfileslimit', $CFG->courseoverviewfileslimit);
+            unset_config('courseoverviewfileslimit');
+        }
+        // Rename $CFG->courseoverviewfilesext -> $CFG->coursesummaryfilesext
+        if (isset($CFG->courseoverviewfilesext) && !isset($CFG->coursesummaryfilesext)) {
+            set_config('coursesummaryfilesext', $CFG->courseoverviewfilesext);
+            unset_config('courseoverviewfilesext');
+        }
+
+        // Main savepoint reached.
+        upgrade_main_savepoint(true, 2013052900.00);
+    }
+
     return true;
 }

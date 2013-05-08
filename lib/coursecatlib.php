@@ -2138,7 +2138,7 @@ class course_in_list implements IteratorAggregate {
      */
     public function has_course_overviewfiles() {
         global $CFG;
-        if (empty($CFG->courseoverviewfileslimit)) {
+        if (empty($CFG->coursesummaryfileslimit)) {
             return 0;
         }
         require_once($CFG->libdir. '/filestorage/file_storage.php');
@@ -2154,7 +2154,7 @@ class course_in_list implements IteratorAggregate {
      */
     public function get_course_overviewfiles() {
         global $CFG;
-        if (empty($CFG->courseoverviewfileslimit)) {
+        if (empty($CFG->coursesummaryfileslimit)) {
             return array();
         }
         require_once($CFG->libdir. '/filestorage/file_storage.php');
@@ -2174,9 +2174,9 @@ class course_in_list implements IteratorAggregate {
                     }
                 }
             }
-            if (count($files) > $CFG->courseoverviewfileslimit) {
-                // return no more than $CFG->courseoverviewfileslimit files
-                $files = array_slice($files, 0, $CFG->courseoverviewfileslimit, true);
+            if (count($files) > $CFG->coursesummaryfileslimit) {
+                // return no more than $CFG->coursesummaryfileslimit files
+                $files = array_slice($files, 0, $CFG->coursesummaryfileslimit, true);
             }
         }
         return $files;
