@@ -130,8 +130,8 @@ class course_edit_form extends moodleform {
         $summaryfields = 'summary_editor';
 
         if ($overviewfilesoptions = course_overviewfiles_options($course)) {
-            $mform->addElement('filemanager', 'overviewfiles_filemanager', get_string('courseoverviewfiles'), null, $overviewfilesoptions);
-            $mform->addHelpButton('overviewfiles_filemanager', 'courseoverviewfiles');
+            $mform->addElement('filemanager', 'overviewfiles_filemanager', get_string('coursesummaryfiles'), null, $overviewfilesoptions);
+            $mform->addHelpButton('overviewfiles_filemanager', 'coursesummaryfiles');
             $summaryfields .= ',overviewfiles_filemanager';
         }
 
