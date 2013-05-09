@@ -130,9 +130,9 @@ class course_edit_form extends moodleform {
         $summaryfields = 'summary_editor';
 
         if ($summaryfilesoptions = course_summaryfiles_options($course)) {
-            $mform->addElement('filemanager', 'overviewfiles_filemanager', get_string('coursesummaryfiles'), null, $summaryfilesoptions);
-            $mform->addHelpButton('overviewfiles_filemanager', 'coursesummaryfiles');
-            $summaryfields .= ',overviewfiles_filemanager';
+            $mform->addElement('filemanager', 'summaryfiles_filemanager', get_string('coursesummaryfiles'), null, $summaryfilesoptions);
+            $mform->addHelpButton('summaryfiles_filemanager', 'coursesummaryfiles');
+            $summaryfields .= ',summaryfiles_filemanager';
         }
 
         if (!empty($course->id) and !has_capability('moodle/course:changesummary', $coursecontext)) {

@@ -2144,7 +2144,7 @@ class course_in_list implements IteratorAggregate {
         require_once($CFG->libdir. '/filestorage/file_storage.php');
         $fs = get_file_storage();
         $context = context_course::instance($this->id);
-        return $fs->is_area_empty($context->id, 'course', 'overviewfiles');
+        return $fs->is_area_empty($context->id, 'course', 'summaryfiles');
     }
 
     /**
@@ -2161,7 +2161,7 @@ class course_in_list implements IteratorAggregate {
         require_once($CFG->dirroot. '/course/lib.php');
         $fs = get_file_storage();
         $context = context_course::instance($this->id);
-        $files = $fs->get_area_files($context->id, 'course', 'overviewfiles', false, 'filename', false);
+        $files = $fs->get_area_files($context->id, 'course', 'summaryfiles', false, 'filename', false);
         if (count($files)) {
             $summaryfilesoptions = course_summaryfiles_options($this->id);
             $acceptedtypes = $summaryfilesoptions['accepted_types'];

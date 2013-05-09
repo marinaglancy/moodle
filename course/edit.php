@@ -72,7 +72,7 @@ if (!empty($course)) {
     $editoroptions['context'] = $coursecontext;
     $course = file_prepare_standard_editor($course, 'summary', $editoroptions, $coursecontext, 'course', 'summary', 0);
     if ($summaryfilesoptions) {
-        file_prepare_standard_filemanager($course, 'overviewfiles', $summaryfilesoptions, $coursecontext, 'course', 'overviewfiles', 0);
+        file_prepare_standard_filemanager($course, 'summaryfiles', $summaryfilesoptions, $coursecontext, 'course', 'summaryfiles', 0);
     }
 
     // Inject current aliases
@@ -86,7 +86,7 @@ if (!empty($course)) {
     $editoroptions['context'] = $catcontext;
     $course = file_prepare_standard_editor($course, 'summary', $editoroptions, null, 'course', 'summary', null);
     if ($summaryfilesoptions) {
-        file_prepare_standard_filemanager($course, 'overviewfiles', $summaryfilesoptions, null, 'course', 'overviewfiles', 0);
+        file_prepare_standard_filemanager($course, 'summaryfiles', $summaryfilesoptions, null, 'course', 'summaryfiles', 0);
     }
 }
 

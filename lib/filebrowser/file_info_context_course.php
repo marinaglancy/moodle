@@ -128,7 +128,7 @@ class file_info_context_course extends file_info {
      * @param string $filename file name
      * @return file_info|null file_info instance or null if not found or access not allowed
      */
-    protected function get_area_course_overviewfiles($itemid, $filepath, $filename) {
+    protected function get_area_course_summaryfiles($itemid, $filepath, $filename) {
         global $CFG;
 
         if (!has_capability('moodle/course:update', $this->context)) {
@@ -142,9 +142,9 @@ class file_info_context_course extends file_info {
 
         $filepath = is_null($filepath) ? '/' : $filepath;
         $filename = is_null($filename) ? '.' : $filename;
-        if (!$storedfile = $fs->get_file($this->context->id, 'course', 'overviewfiles', 0, $filepath, $filename)) {
+        if (!$storedfile = $fs->get_file($this->context->id, 'course', 'summaryfiles', 0, $filepath, $filename)) {
             if ($filepath === '/' and $filename === '.') {
-                $storedfile = new virtual_root_file($this->context->id, 'course', 'overviewfiles', 0);
+                $storedfile = new virtual_root_file($this->context->id, 'course', 'summaryfiles', 0);
             } else {
                 // not found
                 return null;
@@ -399,7 +399,7 @@ class file_info_context_course extends file_info {
     private function get_filtered_children($extensions = '*', $countonly = false, $returnemptyfolders = false) {
         $areas = array(
             array('course', 'summary'),
-            array('course', 'overviewfiles'),
+            array('course', 'summaryfiles'),
             array('course', 'section'),
             array('backup', 'section'),
             array('backup', 'course'),

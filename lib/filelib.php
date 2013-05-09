@@ -4130,7 +4130,7 @@ function file_pluginfile($relativepath, $forcedownload, $preview = null) {
             send_file_not_found();
         }
 
-        if ($filearea === 'summary' || $filearea === 'overviewfiles') {
+        if ($filearea === 'summary' || $filearea === 'summaryfiles') {
             if ($CFG->forcelogin) {
                 require_login();
             }

@@ -1469,7 +1469,7 @@ class restore_course_structure_step extends restore_structure_step {
 
         // Add course related files, without itemid to match
         $this->add_related_files('course', 'summary', null);
-        $this->add_related_files('course', 'overviewfiles', null);
+        $this->add_related_files('course', 'summaryfiles', null);
 
         // Deal with legacy allowed modules.
         if ($this->legacyrestrictmodules) {

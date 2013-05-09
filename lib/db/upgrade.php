@@ -2180,5 +2180,34 @@ function xmldb_main_upgrade($oldversion) {
         upgrade_main_savepoint(true, 2013052900.00);
     }
 
+    if ($oldversion < 2013052900.01) {
+        // Rename filearea course-overviewfiles to course-summaryfiles
+        $rs = $DB->get_recordset('files', array('component' => 'course',
+                    'filearea' => 'overviewfiles'), 'id, contextid, itemid, filepath, filename');
+        foreach ($rs as $record) {
+            // update records in {files}
+            $pathnamehash = sha1("/{$record->contextid}/course/summaryfiles/{$record->itemid}".$record->filepath.$record->filename);
+            $DB->update_record('files', array('id' => $record->id,
+                'filearea' => 'summaryfiles', 'pathnamehash' => $pathnamehash));
+            // update records in {files_reference} (if any shortcut to the course summary files existed)
+            $args = array('contextid' => $record->contextid,
+                'component' => 'course',
+                'itemid' => $record->itemid,
+                'filearea' => 'overviewfiles',
+                'filepath' => $record->filepath,
+                'filename' => $record->filename);
+            $params = array();
+            $params['oldrefhash'] = sha1(base64_encode(serialize($args)));
+            $args['filearea'] = 'summaryfiles';
+            $params['newref'] = base64_encode(serialize($args));
+            $params['newrefhash'] = sha1($params['newref']);
+            $DB->execute("UPDATE {files_reference} SET referencehash = :newrefhash, reference = :newref WHERE referencehash = :oldrefhash", $params);
+        }
+        $rs->close();
+
+        // Main savepoint reached.
+        upgrade_main_savepoint(true, 2013052900.01);
+    }
+
     return true;
 }

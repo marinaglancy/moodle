@@ -2180,7 +2180,7 @@ function save_local_role_names($courseid, $data) {
 }
 
 /**
- * Returns options to use in course overviewfiles filemanager
+ * Returns options to use in course summaryfiles filemanager
  *
  * @param null|stdClass|course_in_list|int $course either object that has 'id' property or just the course id;
  *     may be empty if course does not exist yet (course create form)
@@ -2285,7 +2285,7 @@ function create_course($data, $editoroptions = NULL) {
     }
     if ($summaryfilesoptions = course_summaryfiles_options($newcourseid)) {
         // Save the course summary files
-        $data = file_postupdate_standard_filemanager($data, 'overviewfiles', $summaryfilesoptions, $context, 'course', 'overviewfiles', 0);
+        $data = file_postupdate_standard_filemanager($data, 'summaryfiles', $summaryfilesoptions, $context, 'course', 'summaryfiles', 0);
     }
 
     // update course format options
@@ -2342,7 +2342,7 @@ function update_course($data, $editoroptions = NULL) {
         $data = file_postupdate_standard_editor($data, 'summary', $editoroptions, $context, 'course', 'summary', 0);
     }
     if ($summaryfilesoptions = course_summaryfiles_options($data->id)) {
-        $data = file_postupdate_standard_filemanager($data, 'overviewfiles', $summaryfilesoptions, $context, 'course', 'overviewfiles', 0);
+        $data = file_postupdate_standard_filemanager($data, 'summaryfiles', $summaryfilesoptions, $context, 'course', 'summaryfiles', 0);
     }
 
     if (!isset($data->category) or empty($data->category)) {
