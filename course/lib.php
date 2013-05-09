@@ -2185,9 +2185,9 @@ function save_local_role_names($courseid, $data) {
  * @param null|stdClass|course_in_list|int $course either object that has 'id' property or just the course id;
  *     may be empty if course does not exist yet (course create form)
  * @return array|null array of options such as maxfiles, maxbytes, accepted_types, etc.
- *     or null if overviewfiles are disabled
+ *     or null if summary files are disabled
  */
-function course_overviewfiles_options($course) {
+function course_summaryfiles_options($course) {
     global $CFG;
     if (empty($CFG->coursesummaryfileslimit)) {
         return null;
@@ -2283,9 +2283,9 @@ function create_course($data, $editoroptions = NULL) {
         $DB->set_field('course', 'summary', $data->summary, array('id'=>$newcourseid));
         $DB->set_field('course', 'summaryformat', $data->summary_format, array('id'=>$newcourseid));
     }
-    if ($overviewfilesoptions = course_overviewfiles_options($newcourseid)) {
-        // Save the course overviewfiles
-        $data = file_postupdate_standard_filemanager($data, 'overviewfiles', $overviewfilesoptions, $context, 'course', 'overviewfiles', 0);
+    if ($summaryfilesoptions = course_summaryfiles_options($newcourseid)) {
+        // Save the course summary files
+        $data = file_postupdate_standard_filemanager($data, 'overviewfiles', $summaryfilesoptions, $context, 'course', 'overviewfiles', 0);
     }
 
     // update course format options
@@ -2341,8 +2341,8 @@ function update_course($data, $editoroptions = NULL) {
     if ($editoroptions) {
         $data = file_postupdate_standard_editor($data, 'summary', $editoroptions, $context, 'course', 'summary', 0);
     }
-    if ($overviewfilesoptions = course_overviewfiles_options($data->id)) {
-        $data = file_postupdate_standard_filemanager($data, 'overviewfiles', $overviewfilesoptions, $context, 'course', 'overviewfiles', 0);
+    if ($summaryfilesoptions = course_summaryfiles_options($data->id)) {
+        $data = file_postupdate_standard_filemanager($data, 'overviewfiles', $summaryfilesoptions, $context, 'course', 'overviewfiles', 0);
     }
 
     if (!isset($data->category) or empty($data->category)) {

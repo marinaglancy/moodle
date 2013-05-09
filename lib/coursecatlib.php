@@ -2132,11 +2132,11 @@ class course_in_list implements IteratorAggregate {
     }
 
     /**
-     * Checks if course has any associated overview files
+     * Checks if course has any associated summary files
      *
      * @return bool
      */
-    public function has_course_overviewfiles() {
+    public function has_course_summaryfiles() {
         global $CFG;
         if (empty($CFG->coursesummaryfileslimit)) {
             return 0;
@@ -2148,11 +2148,11 @@ class course_in_list implements IteratorAggregate {
     }
 
     /**
-     * Returns all course overview files
+     * Returns all course summary files
      *
      * @return array array of stored_file objects
      */
-    public function get_course_overviewfiles() {
+    public function get_course_summaryfiles() {
         global $CFG;
         if (empty($CFG->coursesummaryfileslimit)) {
             return array();
@@ -2163,8 +2163,8 @@ class course_in_list implements IteratorAggregate {
         $context = context_course::instance($this->id);
         $files = $fs->get_area_files($context->id, 'course', 'overviewfiles', false, 'filename', false);
         if (count($files)) {
-            $overviewfilesoptions = course_overviewfiles_options($this->id);
-            $acceptedtypes = $overviewfilesoptions['accepted_types'];
+            $summaryfilesoptions = course_summaryfiles_options($this->id);
+            $acceptedtypes = $summaryfilesoptions['accepted_types'];
             if ($acceptedtypes !== '*') {
                 // filter only files with allowed extensions
                 require_once($CFG->libdir. '/filelib.php');
