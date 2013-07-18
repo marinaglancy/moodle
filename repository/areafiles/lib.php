@@ -64,12 +64,36 @@ class repository_areafiles extends repository {
             return $ret;
         }
 
+        // In the most cases files embedded in textarea do not have subfolders. Do not show path by default.
+        $retpath = array(array('name' => get_string('files'), 'path' => ''));
+        if (!empty($path)) {
+            $pathchunks = preg_split('|/|', trim($path, '/'));
+            foreach ($pathchunks as $i => $chunk) {
+                $retpath[] = array(
+                    'name' => $chunk,
+                    'path' => '/'. join('/', array_slice($pathchunks, 0, $i + 1)). '/'
+                );
+            }
+            $ret['path'] = $retpath; // Show path if already inside subfolder.
+        }
+
         $context = context_user::instance($USER->id);
         $fs = get_file_storage();
-        $files = $fs->get_directory_files($context->id, 'user', 'draft', $itemid, '/');
+        $files = $fs->get_directory_files($context->id, 'user', 'draft', $itemid,
+                empty($path) ? '/' : $path, false, true);
         foreach ($files as $file) {
             if ($file->is_directory()) {
-                // Files embedded in texteditor do not support subfolders
+                $node = array(
+                    'title' => basename($file->get_filepath()),
+                    'path' => $file->get_filepath(),
+                    'children' => array(),
+                    'datemodified' => $file->get_timemodified(),
+                    'datecreated' => $file->get_timecreated(),
+                    'icon' => $OUTPUT->pix_url(file_folder_icon(24))->out(false),
+                    'thumbnail' => $OUTPUT->pix_url(file_folder_icon(90))->out(false)
+                );
+                $ret['list'][] = $node;
+                $ret['path'] = $retpath; // Show path if subfolders exist.
                 continue;
             }
             $fileurl = moodle_url::make_draftfile_url($itemid, $file->get_filepath(), $file->get_filename());
