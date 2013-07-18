@@ -48,6 +48,8 @@ class tinymce_managefiles_manage_form extends moodleform {
         $mform->setType('itemid', PARAM_INT);
         $mform->addElement('hidden', 'maxbytes');
         $mform->setType('maxbytes', PARAM_INT);
+        $mform->addElement('hidden', 'subdirs');
+        $mform->setType('subdirs', PARAM_INT);
         $mform->addElement('hidden', 'accepted_types');
         $mform->setType('accepted_types', PARAM_RAW);
         $mform->addElement('hidden', 'return_types');
@@ -79,6 +81,7 @@ class tinymce_managefiles_manage_form extends moodleform {
 
         $this->set_data(array('files_filemanager' => $itemid,
             'itemid' => $itemid,
+            'subdirs' => $options['subdirs'],
             'maxbytes' => $options['maxbytes'],
             'areamaxbytes' => $options['areamaxbytes'],
             'accepted_types' => $options['accepted_types'],
