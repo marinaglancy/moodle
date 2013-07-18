@@ -45,11 +45,17 @@ class tinymce_managefiles_manage_form extends moodleform {
         $files            = $this->_customdata['files'];
 
         $mform->addElement('hidden', 'itemid');
+        $mform->setType('itemid', PARAM_INT);
         $mform->addElement('hidden', 'maxbytes');
+        $mform->setType('maxbytes', PARAM_INT);
         $mform->addElement('hidden', 'accepted_types');
+        $mform->setType('accepted_types', PARAM_RAW);
         $mform->addElement('hidden', 'return_types');
+        $mform->setType('return_types', PARAM_INT);
         $mform->addElement('hidden', 'context');
+        $mform->setType('context', PARAM_INT);
         $mform->addElement('hidden', 'areamaxbytes');
+        $mform->setType('areamaxbytes', PARAM_INT);
 
         $mform->addElement('filemanager', 'files_filemanager', '', null, $options);
 
@@ -64,6 +70,7 @@ class tinymce_managefiles_manage_form extends moodleform {
                 html_writer::tag('span', get_string('unusedfilesdesc', 'tinymce_managefiles'), array('class' => 'managefilesunuseddesc')));
         foreach ($files as $file) {
             $mform->addElement('checkbox', 'deletefile['.$file.']', '', $file);
+            $mform->setType('deletefile['.$file.']', PARAM_INT);
         }
         $mform->addElement('submit', 'delete', get_string('deleteselected', 'tinymce_managefiles'));
 
