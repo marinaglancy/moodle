@@ -65,55 +65,23 @@ class theme_bootstrapbase_core_renderer extends core_renderer {
     }
 
     /*
-     * Overriding the custom_menu function ensures the custom menu is
-     * always shown, even if no menu items are configured in the global
-     * theme settings page.
-     */
-    public function custom_menu($custommenuitems = '') {
-        global $CFG;
-
-        if (!empty($CFG->custommenuitems)) {
-            $custommenuitems .= $CFG->custommenuitems;
-        }
-        $custommenu = new custom_menu($custommenuitems, current_language());
-        return $this->render_custom_menu($custommenu);
-    }
-
-    /*
      * This renders the bootstrap top menu.
      *
      * This renderer is needed to enable the Bootstrap style navigation.
      */
     protected function render_custom_menu(custom_menu $menu) {
         global $CFG;
-
-        // TODO: eliminate this duplicated logic, it belongs in core, not
-        // here. See MDL-39565.
-        $addlangmenu = true;
-        $langs = get_string_manager()->get_list_of_translations();
-        if (count($langs) < 2
-            or empty($CFG->langmenu)
-            or ($this->page->course != SITEID and !empty($this->page->course->lang))) {
-            $addlangmenu = false;
-        }
-
-        if (!$menu->has_children() && $addlangmenu === false) {
+        // If the menu has no children return an empty string.
+        if (!$menu->has_children()) {
             return '';
         }
 
-        if ($addlangmenu) {
-            $language = $menu->add(get_string('language'), new moodle_url('#'), get_string('language'), 10000);
-            foreach ($langs as $langtype => $langname) {
-                $language->add($langname, new moodle_url($this->page->url, array('lang' => $langtype)), $langname);
-            }
-        }
-
-        $content = '<ul class="nav">';
+        $content = html_writer::start_tag('ul', array('class' => 'nav'));
         foreach ($menu->get_children() as $item) {
             $content .= $this->render_custom_menu_item($item, 1);
         }
-
-        return $content.'</ul>';
+        $content .= html_writer::end_tag('ul');
+        return $content;
     }
 
     /*
