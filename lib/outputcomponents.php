@@ -2591,7 +2591,7 @@ class custom_menu_item implements renderable {
         $this->text = $text;
         $this->url = $url;
         $this->title = $title;
-        $this->sort = (int)$sort;
+        $this->sort = $sort;
         $this->parent = $parent;
     }
 
@@ -2605,12 +2605,24 @@ class custom_menu_item implements renderable {
      * @return custom_menu_item
      */
     public function add($text, moodle_url $url = null, $title = null, $sort = null) {
+        $child = new custom_menu_item($text, $url, $title, $sort, $this);
+        return $this->add_child($child);
+    }
+
+    /**
+     * Adds a child to this menu item.
+     *
+     * @param custom_menu_item $child
+     * @return custom_menu_item
+     */
+    public function add_child(custom_menu_item $child) {
         $key = count($this->children);
-        if (empty($sort)) {
-            $sort = $this->lastsort + 1;
+        if (is_null($child->get_sort_order())) {
+            $child->set_sort_order($this->lastsort + 1);
+            $this->lastsort++;
         }
-        $this->children[$key] = new custom_menu_item($text, $url, $title, $sort, $this);
-        $this->lastsort = (int)$sort;
+        $child->set_parent($this);
+        $this->children[$key] = $child;
         return $this->children[$key];
     }
 
@@ -2701,6 +2713,40 @@ class custom_menu_item implements renderable {
     public function set_url(moodle_url $url) {
         $this->url = $url;
     }
+
+    public function set_sort_order($sort) {
+        $this->sort = $sort;
+    }
+
+    public function set_parent(custom_menu_item $parent) {
+        $this->parent = $parent;
+    }
+
+    public function display() {
+        return true;
+    }
+}
+
+/**
+ * A language selector dropdown for the custom menu,
+ *
+ * @copyright 2013 Sam Hemelryk
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @since Moodle 2.6
+ * @package core
+ * @category output
+ */
+class custom_menu_language_item extends custom_menu_item {
+    /**
+     * Constructs the custom menu language item.
+     */
+    public function __construct() {
+        global $PAGE;
+        parent::__construct(get_string('language'));
+        foreach (get_string_manager()->get_list_of_translations() as $langtype => $langname) {
+            $this->add($langname, new moodle_url($PAGE->url, array('lang' => $langtype)), $langname);
+        }
+    }
 }
 
 /**
@@ -2786,73 +2832,87 @@ class custom_menu extends custom_menu_item {
         $children = array();
         $lastchild = null;
         $lastdepth = null;
-        $lastsort = 0;
+        $specials = array(
+            '[languages]'
+        );
+        $sort = 0;
         foreach ($lines as $line) {
             $line = trim($line);
-            $bits = explode('|', $line, 4);    // name|url|title|langs
-            if (!array_key_exists(0, $bits) or empty($bits[0])) {
-                // Every item must have a name to be valid
-                continue;
+            if (in_array($line, $specials)) {
+                // Create the special item as required.
+                switch ($line) {
+                    case '[languages]':
+                        $child = new custom_menu_language_item();
+                        break;
+                }
             } else {
-                $bits[0] = ltrim($bits[0],'-');
-            }
-            if (!array_key_exists(1, $bits) or empty($bits[1])) {
-                // Set the url to null
-                $bits[1] = null;
-            } else {
-                // Make sure the url is a moodle url
-                $bits[1] = new moodle_url(trim($bits[1]));
-            }
-            if (!array_key_exists(2, $bits) or empty($bits[2])) {
-                // Set the title to null seeing as there isn't one
-                $bits[2] = $bits[0];
-            }
-            if (!array_key_exists(3, $bits) or empty($bits[3])) {
-                // The item is valid for all languages
-                $itemlangs = null;
-            } else {
-                $itemlangs = array_map('trim', explode(',', $bits[3]));
-            }
-            if (!empty($language) and !empty($itemlangs)) {
-                // check that the item is intended for the current language
-                if (!in_array($language, $itemlangs)) {
+                // Its just a normal string that will take the format of:
+                //   name|url|title|langs
+                // Where the first param is required but all other params are optional.
+                $bits = explode('|', $line, 4);
+                if (!array_key_exists(0, $bits) or empty($bits[0])) {
+                    // Every item must have a name to be valid
                     continue;
-                }
-            }
-            // Set an incremental sort order to keep it simple.
-            $lastsort++;
-            if (preg_match('/^(\-*)/', $line, $match) && $lastchild != null && $lastdepth !== null) {
-                $depth = strlen($match[1]);
-                if ($depth < $lastdepth) {
-                    $difference = $lastdepth - $depth;
-                    if ($lastdepth > 1 && $lastdepth != $difference) {
-                        $tempchild = $lastchild->get_parent();
-                        for ($i =0; $i < $difference; $i++) {
-                            $tempchild = $tempchild->get_parent();
-                        }
-                        $lastchild = $tempchild->add($bits[0], $bits[1], $bits[2], $lastsort);
-                    } else {
-                        $depth = 0;
-                        $lastchild = new custom_menu_item($bits[0], $bits[1], $bits[2], $lastsort);
-                        $children[] = $lastchild;
-                    }
-                } else if ($depth > $lastdepth) {
-                    $depth = $lastdepth + 1;
-                    $lastchild = $lastchild->add($bits[0], $bits[1], $bits[2], $lastsort);
                 } else {
-                    if ($depth == 0) {
-                        $lastchild = new custom_menu_item($bits[0], $bits[1], $bits[2], $lastsort);
-                        $children[] = $lastchild;
-                    } else {
-                        $lastchild = $lastchild->get_parent()->add($bits[0], $bits[1], $bits[2], $lastsort);
+                    $bits[0] = ltrim($bits[0],'-');
+                }
+                if (!array_key_exists(1, $bits) or empty($bits[1])) {
+                    // Set the url to null
+                    $bits[1] = null;
+                } else {
+                    // Make sure the url is a moodle url
+                    $bits[1] = new moodle_url(trim($bits[1]));
+                }
+                if (!array_key_exists(2, $bits) or empty($bits[2])) {
+                    // Set the title to null seeing as there isn't one
+                    $bits[2] = $bits[0];
+                }
+                if (!array_key_exists(3, $bits) or empty($bits[3])) {
+                    // The item is valid for all languages
+                    $itemlangs = null;
+                } else {
+                    $itemlangs = array_map('trim', explode(',', $bits[3]));
+                }
+                if (!empty($language) and !empty($itemlangs)) {
+                    // check that the item is intended for the current language
+                    if (!in_array($language, $itemlangs)) {
+                        continue;
                     }
                 }
-            } else {
-                $depth = 0;
-                $lastchild = new custom_menu_item($bits[0], $bits[1], $bits[2], $lastsort);
-                $children[] = $lastchild;
+                $child = new custom_menu_item($bits[0], $bits[1], $bits[2]);
             }
-            $lastdepth = $depth;
+            $child->set_sort_order(++$sort);
+            if (isset($child) && $child->display()) {
+                if (preg_match('/^(\-*)/', $line, $match) && $lastchild != null && $lastdepth !== null) {
+                    $depth = strlen($match[1]);
+                    if ($depth < $lastdepth) {
+                        $difference = $lastdepth - $depth;
+                        if ($lastdepth > 1 && $lastdepth != $difference) {
+                            $tempchild = $lastchild->get_parent();
+                            for ($i =0; $i < $difference; $i++) {
+                                $tempchild = $tempchild->get_parent();
+                            }
+                            $lastchild = $tempchild->add_child($child);
+                        } else {
+                            $depth = 0;
+                            $children[] = $lastchild = $child;
+                        }
+                    } else if ($depth > $lastdepth) {
+                        $depth = $lastdepth + 1;
+                        $lastchild = $lastchild->add_child($child);
+                    } else {
+                        if ($depth == 0) {
+                            $children[] = $lastchild = $child;
+                        } else {
+                            $lastchild = $lastchild->get_parent()->add_child($child);
+                        }
+                    }
+                } else {
+                    $depth = 0;
+                    $children[] = $lastchild = $child;
+                }
+                $lastdepth = $depth;
+            }
         }
         return $children;
     }

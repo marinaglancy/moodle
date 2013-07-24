@@ -176,6 +176,10 @@ Moodle community|http://moodle.org
 -Moodle News|http://moodle.org/news Moodle company
 -Moodle commercial hosting|http://moodle.com/hosting
 -Moodle commercial support|http://moodle.com/support
+</pre>
+You can also add a languages drop down to your custom menu by adding the following:
+<pre>
+[languages]
 </pre>';
 $string['configdbsessions'] = 'If enabled, this setting will use the database to store information about current sessions.  This is especially useful for large/busy sites or sites built on cluster of servers.  For most sites this should probably be left disabled so that the server disk is used instead.  Note that changing this setting now will log out all current users (including you). If you are using MySQL please make sure that \'max_allowed_packet\' in my.cnf (or my.ini) is at least 4M.';
 $string['configdebug'] = 'If you turn this on, then PHP\'s error_reporting will be increased so that more warnings are printed.  This is only useful for developers.';
