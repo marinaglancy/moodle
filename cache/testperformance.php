@@ -78,31 +78,34 @@ foreach (core_component::get_plugin_list_with_file('cachestore', 'lib.php', true
         } else if (!$store->is_ready()) {
             $applicationtable->data[] = array($plugin, $strnotready, '-', '-', '-', '-');
         } else {
+            $cacheclass = $application->get_cache_class();
+            $cacheapplication = new $cacheclass($application, $store);
             $result = array($plugin, $strtested, 0, 0, 0);
             $start = microtime(true);
             for ($i = 0; $i < $count; $i++) {
-                $store->set('key'.$i, 'test data '.$i);
+                $cacheapplication->set('key'.$i, 'test data '.$i);
             }
             $result[2] = sprintf('%01.4f', microtime(true) - $start);
 
             $start = microtime(true);
             for ($i = 0; $i < $count; $i++) {
-                $store->get('key'.$i);
+                $cacheapplication->get('key'.$i);
             }
             $result[3] = sprintf('%01.4f', microtime(true) - $start);
 
             $start = microtime(true);
             for ($i = 0; $i < $count; $i++) {
-                $store->get('fake'.$i);
+                $cacheapplication->get('fake'.$i);
             }
             $result[4] = sprintf('%01.4f', microtime(true) - $start);
 
             $start = microtime(true);
             for ($i = 0; $i < $count; $i++) {
-                $store->delete('key'.$i);
+                $cacheapplication->delete('key'.$i);
             }
             $result[5] = sprintf('%01.4f', microtime(true) - $start);
             $applicationtable->data[] = $result;
+            $cacheapplication->purge();
             $store->instance_deleted();
         }
     }
@@ -116,31 +119,34 @@ foreach (core_component::get_plugin_list_with_file('cachestore', 'lib.php', true
         } else if (!$store->is_ready()) {
             $sessiontable->data[] = array($plugin, $strnotready, '-', '-', '-', '-');
         } else {
+            $cacheclass = $session->get_cache_class();
+            $cachesession = new $cacheclass($session, $store);
             $result = array($plugin, $strtested, 0, 0, 0);
             $start = microtime(true);
             for ($i = 0; $i < $count; $i++) {
-                $store->set('key'.$i, 'test data '.$i);
+                $cachesession->set('key'.$i, 'test data '.$i);
             }
             $result[2] = sprintf('%01.4f', microtime(true) - $start);
 
             $start = microtime(true);
             for ($i = 0; $i < $count; $i++) {
-                $store->get('key'.$i);
+                $cachesession->get('key'.$i);
             }
             $result[3] = sprintf('%01.4f', microtime(true) - $start);
 
             $start = microtime(true);
             for ($i = 0; $i < $count; $i++) {
-                $store->get('fake'.$i);
+                $cachesession->get('fake'.$i);
             }
             $result[4] = sprintf('%01.4f', microtime(true) - $start);
 
             $start = microtime(true);
             for ($i = 0; $i < $count; $i++) {
-                $store->delete('key'.$i);
+                $cachesession->delete('key'.$i);
             }
             $result[5] = sprintf('%01.4f', microtime(true) - $start);
             $sessiontable->data[] = $result;
+            $cachesession->purge();
             $store->instance_deleted();
         }
     }
@@ -154,31 +160,34 @@ foreach (core_component::get_plugin_list_with_file('cachestore', 'lib.php', true
         } else if (!$store->is_ready()) {
             $requesttable->data[] = array($plugin, $strnotready, '-', '-', '-', '-');
         } else {
+            $cacheclass = $request->get_cache_class();
+            $cacherequest = new $cacheclass($request, $store);
             $result = array($plugin, $strtested, 0, 0, 0);
             $start = microtime(true);
             for ($i = 0; $i < $count; $i++) {
-                $store->set('key'.$i, 'test data '.$i);
+                $cacherequest->set('key'.$i, 'test data '.$i);
             }
             $result[2] = sprintf('%01.4f', microtime(true) - $start);
 
             $start = microtime(true);
             for ($i = 0; $i < $count; $i++) {
-                $store->get('key'.$i);
+                $cacherequest->get('key'.$i);
             }
             $result[3] = sprintf('%01.4f', microtime(true) - $start);
 
             $start = microtime(true);
             for ($i = 0; $i < $count; $i++) {
-                $store->get('fake'.$i);
+                $cacherequest->get('fake'.$i);
             }
             $result[4] = sprintf('%01.4f', microtime(true) - $start);
 
             $start = microtime(true);
             for ($i = 0; $i < $count; $i++) {
-                $store->delete('key'.$i);
+                $cacherequest->delete('key'.$i);
             }
             $result[5] = sprintf('%01.4f', microtime(true) - $start);
             $requesttable->data[] = $result;
+            $cacherequest->purge();
             $store->instance_deleted();
         }
     }
