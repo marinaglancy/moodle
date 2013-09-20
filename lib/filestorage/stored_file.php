@@ -191,6 +191,21 @@ class stored_file {
         if ($this->fs->file_exists($this->get_contextid(), $this->get_component(), $this->get_filearea(), $this->get_itemid(), $filepath, $filename)) {
             throw new file_exception('storedfilenotcreated', '', 'file exists, cannot rename');
         }
+        if ($filename == '.') {
+            if ($filepath == '/') {
+                throw new file_exception('storedfilenotcreated', '', 'can not rename to root');
+            }
+            $parentfilepath = dirname(rtrim($filepath, '/')).'/';
+        } else {
+            $parentfilepath = $filepath;
+        }
+        if (!$this->fs->file_exists($this->get_contextid(), $this->get_component(), $this->get_filearea(), $this->get_itemid(), $parentfilepath, '.')) {
+            if ($parentfilepath == '/') {
+                $this->fs->create_directory($this->get_contextid(), $this->get_component(), $this->get_filearea(), $this->get_itemid(), $parentfilepath);
+            } else {
+                throw new file_exception('storedfilenotcreated', '', 'target folder does not exist');
+            }
+        }
         $filerecord = new stdClass;
         $filerecord->filepath = $filepath;
         $filerecord->filename = $filename;
