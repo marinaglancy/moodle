@@ -360,11 +360,14 @@ ORDER BY
      *
      * @param qubaid_condition $qubaids used to restrict which usages are included
      *                                  in the query. See {@link qubaid_condition}.
-     * @param array            $slots   A list of slots for the questions you want to konw about.
+     * @param array            $slots   A list of slots for the questions you want to know about.
      * @param string|null      $fields
      * @return array of records. See the SQL in this function to see the fields available.
      */
     public function load_questions_usages_latest_steps(qubaid_condition $qubaids, $slots, $fields = null) {
+        if (empty($slots)) {
+            return array();
+        }
         list($slottest, $params) = $this->db->get_in_or_equal($slots, SQL_PARAMS_NAMED, 'slot');
 
         if ($fields === null) {
