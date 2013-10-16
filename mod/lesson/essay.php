@@ -129,8 +129,25 @@ switch ($mode) {
             $updategrade->id = $grade->id;
             $updategrade->grade = $gradeinfo->grade;
             $DB->update_record('lesson_grades', $updategrade);
-            // Log it
-            add_to_log($course->id, 'lesson', 'update grade', "essay.php?id=$cm->id", $lesson->name, $cm->id);
+
+            // Update the grade object to pass to the event.
+            $grade->grade = $updategrade->grade;
+
+            // Log the grade update.
+            $event = \mod_lesson\event\grade_updated::create(array(
+                'objectid' => $grade->id,
+                'relateduserid' => $grade->userid,
+                'context' => $context,
+                'courseid' => $course->id,
+                'other' => array(
+                    'lessonid' => $lesson->id,
+                    'lessonname' => $lesson->name,
+                    'cmid' => $cm->id
+                )
+            ));
+            $event->add_record_snapshot('lesson', $lesson);
+            $event->add_record_snapshot('lesson_grades', $grade);
+            $event->trigger();
 
             $lesson->add_message(get_string('changessaved'), 'notifysuccess');
 
