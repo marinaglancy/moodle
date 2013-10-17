@@ -87,4 +87,34 @@ class mod_lesson_events_testcase extends advanced_testcase {
         $expected = array(2, 'lesson', 'view grade', 'essay.php?id=3', get_string('manualgrading', 'lesson'), 3);
         $this->assertEventLegacyLogData($expected, $event);
     }
+
+    /**
+     * Test the highscore added event.
+     *
+     * There is no external API for adding a highscore, so the unit test will simply create
+     * and trigger the event and ensure the legacy log data is returned as expected.
+     */
+    public function test_highscore_added() {
+        // Create a highscore added event.
+        $event = \mod_lesson\event\highscore_added::create(array(
+            'objectid' => 1,
+            'contextid' => 2,
+            'courseid' => 2,
+            'other' => array(
+                'cmid' => 3,
+                'lessonname' => 4,
+                'nickname' => 'nick'
+            )
+        ));
+
+        // Trigger and capture the event.
+        $sink = $this->redirectEvents();
+        $event->trigger();
+        $events = $sink->get_events();
+        $event = reset($events);
+
+        // Check that the legacy log data is valid.
+        $expected = array(2, 'lesson', 'update highscores', 'highscores.php?id=3', 'nick', 3);
+        $this->assertEventLegacyLogData($expected, $event);
+    }
 }
