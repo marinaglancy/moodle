@@ -117,4 +117,33 @@ class mod_lesson_events_testcase extends advanced_testcase {
         $expected = array(2, 'lesson', 'update highscores', 'highscores.php?id=3', 'nick', 3);
         $this->assertEventLegacyLogData($expected, $event);
     }
+
+    /**
+     * Test the highscores viewed event.
+     *
+     * There is no external API for viewing highscores, so the unit test will simply create
+     * and trigger the event and ensure the legacy log data is returned as expected.
+     */
+    public function test_highscores_viewed() {
+        // Create a highscore viewed event.
+        $event = \mod_lesson\event\highscores_viewed::create(array(
+            'contextid' => 1,
+            'courseid' => 2,
+            'other' => array(
+                'cmid' => 3,
+                'lessonid' => 4,
+                'lessonname' => 'lessonname'
+            )
+        ));
+
+        // Trigger and capture the event.
+        $sink = $this->redirectEvents();
+        $event->trigger();
+        $events = $sink->get_events();
+        $event = reset($events);
+
+        // Check that the legacy log data is valid.
+        $expected = array(2, 'lesson', 'view highscores', 'highscores.php?id=3', 'lessonname', 3);
+        $this->assertEventLegacyLogData($expected, $event);
+    }
 }

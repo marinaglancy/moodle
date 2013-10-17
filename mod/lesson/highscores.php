@@ -169,8 +169,18 @@ switch ($mode) {
         break;
 }
 
-// Log it
-add_to_log($course->id, 'lesson', 'view highscores', "highscores.php?id=$cm->id", $lesson->name, $cm->id);
+// Trigger highscore viewed event.
+$event = \mod_lesson\event\highscores_viewed::create(array(
+    'context' => $context,
+    'courseid' => $course->id,
+    'other' => array(
+        'cmid' => $cm->id,
+        'lessonid' => $lesson->id,
+        'lessonname' => $lesson->name
+    )
+));
+$event->add_record_snapshot('lesson', $lesson);
+$event->trigger();
 
 $lessonoutput = $PAGE->get_renderer('mod_lesson');
 echo $lessonoutput->header($lesson, $cm, 'highscores', false, null, get_string('viewhighscores', 'lesson'));
