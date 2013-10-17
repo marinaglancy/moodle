@@ -179,7 +179,17 @@ if (empty($pageid)) {
         }
     }
 
-    add_to_log($course->id, 'lesson', 'start', 'view.php?id='. $cm->id, $lesson->id, $cm->id);
+    // Trigger lesson started event.
+    $event = \mod_lesson\event\lesson_started::create(array(
+        'objectid' => $lesson->id,
+        'context' => $context,
+        'courseid' => $course->id,
+        'other' => array(
+            'cmid' => $cm->id
+        )
+    ));
+    $event->add_record_snapshot('lesson', $lesson);
+    $event->trigger();
 
     // if no pageid given see if the lesson has been started
     $retries = $DB->count_records('lesson_grades', array("lessonid" => $lesson->id, "userid" => $USER->id));

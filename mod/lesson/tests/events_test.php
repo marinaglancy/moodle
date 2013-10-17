@@ -146,4 +146,32 @@ class mod_lesson_events_testcase extends advanced_testcase {
         $expected = array(2, 'lesson', 'view highscores', 'highscores.php?id=3', 'lessonname', 3);
         $this->assertEventLegacyLogData($expected, $event);
     }
+
+    /**
+     * Test the lesson started event.
+     *
+     * There is no external API for starting a lesson, so the unit test will simply create
+     * and trigger the event and ensure the legacy log data is returned as expected.
+     */
+    public function test_lesson_started() {
+        // Create a lesson started event.
+        $event = \mod_lesson\event\lesson_started::create(array(
+            'objectid' => 1,
+            'contextid' => 2,
+            'courseid' => 3,
+            'other' => array(
+                'cmid' => 4
+            )
+        ));
+
+        // Trigger and capture the event.
+        $sink = $this->redirectEvents();
+        $event->trigger();
+        $events = $sink->get_events();
+        $event = reset($events);
+
+        // Check that the legacy log data is valid.
+        $expected = array(3, 'lesson', 'start', 'view.php?id=4', 1, 4);
+        $this->assertEventLegacyLogData($expected, $event);
+    }
 }
