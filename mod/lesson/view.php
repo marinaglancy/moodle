@@ -439,8 +439,18 @@ if ($pageid != LESSON_EOL) {
     // Used to check to see if the student ran out of time
     $outoftime = optional_param('outoftime', '', PARAM_ALPHA);
 
-    // Update the clock / get time information for this user
-    add_to_log($course->id, "lesson", "end", "view.php?id=".$PAGE->cm->id, "$lesson->id", $PAGE->cm->id);
+    // Update the clock / get time information for this user.
+    // Trigger lesson ended event.
+    $event = \mod_lesson\event\lesson_ended::create(array(
+        'objectid' => $lesson->id,
+        'context' => $context,
+        'courseid' => $course->id,
+        'other' => array(
+            'cmid' => $cm->id
+        )
+    ));
+    $event->add_record_snapshot('lesson', $lesson);
+    $event->trigger();
 
     // We are using level 3 header because the page title is a sub-heading of lesson title (MDL-30911).
     $lessoncontent .= $OUTPUT->heading(get_string("congratulations", "lesson"), 3);

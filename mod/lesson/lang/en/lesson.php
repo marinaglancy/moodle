@@ -175,6 +175,7 @@ $string['eventgradeupdated'] = 'Grade updated';
 $string['eventhighscoreadded'] = 'Highscore added';
 $string['eventhighscoresviewed'] = 'Highscores viewed';
 $string['eventinstanceslistviewed'] = 'Lesson instances list viewed';
+$string['eventlessonended'] = 'Lesson ended';
 $string['eventlessonstarted'] = 'Lesson started';
 $string['fileformat'] = 'File format';
 $string['finish'] = 'Finish';
