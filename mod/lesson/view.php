@@ -287,7 +287,19 @@ if ($pageid != LESSON_EOL) {
         $page = $lesson->load_page($newpageid);
     }
 
-    add_to_log($PAGE->course->id, 'lesson', 'view', 'view.php?id='. $PAGE->cm->id, $page->id, $PAGE->cm->id);
+    // Trigger module viewed event.
+    $event = \mod_lesson\event\course_module_viewed::create(array(
+        'objectid' => $lesson->id,
+        'context' => $context,
+        'courseid' => $course->id,
+        'other' => array(
+            'cmid' => $cm->id,
+            'pageid' => $page->id,
+            'content' => 'lessonmoduleview'
+        )
+    ));
+    $event->add_record_snapshot('lesson', $lesson);
+    $event->trigger();
 
     // This is where several messages (usually warnings) are displayed
     // all of this is displayed above the actual page
