@@ -60,4 +60,31 @@ class mod_lesson_events_testcase extends advanced_testcase {
         $expected = array(5, 'lesson', 'update grade', 'essay.php?id=7', 'name', 7);
         $this->assertEventLegacyLogData($expected, $event);
     }
+
+    /**
+     * Test the essay list viewed event.
+     *
+     * There is no external API for viewing the list of essay submissions, so the unit test will
+     * simply create and trigger the event and ensure the legacy log data is returned as expected.
+     */
+    public function test_essay_list_viewed() {
+        // Create a essays list viewed event
+        $event = \mod_lesson\event\essay_list_viewed::create(array(
+            'contextid' => 1,
+            'courseid' => 2,
+            'other' => array(
+                'cmid' => 3
+            )
+        ));
+
+        // Trigger and capture the event.
+        $sink = $this->redirectEvents();
+        $event->trigger();
+        $events = $sink->get_events();
+        $event = reset($events);
+
+        // Check that the legacy log data is valid.
+        $expected = array(2, 'lesson', 'view grade', 'essay.php?id=3', get_string('manualgrading', 'lesson'), 3);
+        $this->assertEventLegacyLogData($expected, $event);
+    }
 }

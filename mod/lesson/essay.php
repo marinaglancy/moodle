@@ -316,8 +316,18 @@ switch ($mode) {
         }
         break;
 }
-// Log it
-add_to_log($course->id, 'lesson', 'view grade', "essay.php?id=$cm->id", get_string('manualgrading', 'lesson'), $cm->id);
+
+// Trigger the essay list viewed event.
+$event = \mod_lesson\event\essay_list_viewed::create(array(
+    'context' => $context,
+    'courseid' => $course->id,
+    'other' => array(
+        'lessonid' => $lesson->id,
+        'cmid' => $cm->id
+    )
+));
+$event->add_record_snapshot('lesson', $lesson);
+$event->trigger();
 
 $lessonoutput = $PAGE->get_renderer('mod_lesson');
 echo $lessonoutput->header($lesson, $cm, 'essay', false, null, get_string('manualgrading', 'lesson'));
