@@ -202,4 +202,37 @@ class mod_lesson_events_testcase extends advanced_testcase {
         $expected = array(3, 'lesson', 'end', 'view.php?id=4', 1, 4);
         $this->assertEventLegacyLogData($expected, $event);
     }
+
+    /**
+     * Test the grade sent event.
+     *
+     * There is no external API for sending a grade, so the unit test will simply create
+     * and trigger the event and ensure the legacy log data is returned as expected.
+     */
+    public function test_grade_sent() {
+        // Create a grade sent event.
+        $event = \mod_lesson\event\grade_sent::create(array(
+            'objectid' => 1,
+            'relateduserid' => 2,
+            'contextid' => 3,
+            'courseid' => 4,
+            'other' => array(
+                'lessonid' => 5,
+                'cmid' => 6,
+                'userfullname' => 'Rudiga McHammerhead',
+                'title' => 'You have failed this test miserably, lol.'
+            )
+        ));
+
+        // Trigger and capture the event.
+        $sink = $this->redirectEvents();
+        $event->trigger();
+        $events = $sink->get_events();
+        $event = reset($events);
+
+        // Check that the legacy log data is valid.
+        $expected = array(4, 'lesson', 'update email essay grade', 'essay.php?id=6',
+            'You have failed this test miserably, lol.: Rudiga McHammerhead', 6);
+        $this->assertEventLegacyLogData($expected, $event);
+    }
 }

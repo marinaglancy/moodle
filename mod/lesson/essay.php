@@ -240,7 +240,8 @@ switch ($mode) {
                 $plaintext = format_text_email($message, FORMAT_HTML);
 
                 // Subject
-                $subject = get_string('essayemailsubject', 'lesson', format_string($pages[$attempt->pageid]->title,true));
+                $title = format_string($pages[$attempt->pageid]->title, true);
+                $subject = get_string('essayemailsubject', 'lesson', $title);
 
                 $eventdata = new stdClass();
                 $eventdata->modulename       = 'lesson';
@@ -260,8 +261,23 @@ switch ($mode) {
                 $essayinfo->sent = 1;
                 $attempt->useranswer = serialize($essayinfo);
                 $DB->update_record('lesson_attempts', $attempt);
-                // Log it
-                add_to_log($course->id, 'lesson', 'update email essay grade', "essay.php?id=$cm->id", format_string($pages[$attempt->pageid]->title,true).': '.fullname($users[$attempt->userid]), $cm->id);
+
+                // Trigger the grade_sent event.
+                $event = \mod_lesson\event\grade_sent::create(array(
+                    'objectid' => $grade->id,
+                    'relateduserid' => $attempt->userid,
+                    'context' => $context,
+                    'courseid' => $course->id,
+                    'other' => array(
+                        'lessonid' => $lesson->id,
+                        'cmid' => $cm->id,
+                        'userfullname' => fullname($users[$attempt->userid]),
+                        'title' => $title
+                    )
+                ));
+                $event->add_record_snapshot('lesson', $lesson);
+                $event->add_record_snapshot('lesson_grades', $grade);
+                $event->trigger();
             }
         }
         $lesson->add_message(get_string('emailsuccess', 'lesson'), 'notifysuccess');
