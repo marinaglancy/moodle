@@ -137,6 +137,7 @@ $string['framewidth'] = 'The width of the stage frame or window.';
 $string['fromleft'] = 'From left';
 $string['fromtop'] = 'From top';
 $string['fullscreen'] = 'Fill the whole screen';
+$string['eventattemptdeleted'] = 'Attempt deleted';
 $string['general'] = 'General data';
 $string['gradeaverage'] = 'Average grade';
 $string['gradeforattempt'] = 'Grade for attempt';
