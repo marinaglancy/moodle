@@ -288,12 +288,22 @@ $wikipage = new page_wiki_view($wiki, $subwiki, $cm);
 $wikipage->set_gid($currentgroup);
 $wikipage->set_page($page);
 
+$params = array();
 if($pageid) {
-    add_to_log($course->id, 'wiki', 'view', "view.php?pageid=".$pageid, $pageid, $cm->id);
+    $params['other'] = array('pageid' => $pageid);
 } else if($id) {
-    add_to_log($course->id, 'wiki', 'view', "view.php?id=".$id, $id, $cm->id);
+    $params['other'] = array('id' => $pageid);
 } else if($wid && $title) {
-    add_to_log($course->id, 'wiki', 'view', "view.php?wid=".$wid."&title=".$title, $wid, $cm->id);
+    $params['other'] = array('wid' => $wid, 'title' => $title);
+}
+
+// Trigger event if other param is set.
+if (isset($params['other'])) {
+    $params['context'] = $context;
+    $params['objectid'] = $wiki->id;
+    $event = \wiki\event\page_viewed::create($params);
+    $event->add_record_snapshot('wiki', $wiki);
+    $event->trigger();
 }
 
 $wikipage->print_header();
