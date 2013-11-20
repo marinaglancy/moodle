@@ -90,10 +90,18 @@ if ($data = $mform->get_data()) {
         list($parentid, $contextid) = explode(',', $data->parent);
         $categoryid = $qcobject->add_category($data->parent, $data->name, '', true);
         $includesubcategories = 0;
-        add_to_log($quiz->course, 'quiz', 'addcategory',
-                'view.php?id=' . $cm->id, $categoryid, $cm->id);
-        $returnurl->param('cat', $categoryid . ',' . $contextid);
 
+        // Log the creation of this category.
+        $params = array(
+            'objectid' => $categoryid,
+            'courseid' => $course->id,
+            'contextid' => $contextid,
+            'other' => array('cmid' => $cmid)
+        );
+        $event = \core\event\question_category_created::create($params);
+        $event->trigger();
+
+        $returnurl->param('cat', $categoryid . ',' . $contextid);
     } else {
         throw new coding_exception(
                 'It seems a form was submitted without any button being pressed???');
