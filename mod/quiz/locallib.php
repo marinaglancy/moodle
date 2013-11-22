@@ -286,8 +286,17 @@ function quiz_attempt_save_started($quizobj, $quba, $attempt) {
         $event->add_record_snapshot('quiz_attempts', $attempt);
         $event->trigger();
     } else {
-        add_to_log($quizobj->get_courseid(), 'quiz', 'attempt', 'review.php?attempt='.$attempt->id,
-                   $quizobj->get_quizid(), $quizobj->get_cmid());
+        $params = array(
+            'objectid' => $attempt->id,
+            'relateduserid' => $attempt->userid,
+            'context' => $quizobj->get_context(),
+            'courseid' => $quizobj->get_courseid(),
+            'other' => array('cmid' => $quizobj->get_cmid(),
+                             'quizid' => $quizobj->get_quizid())
+        );
+        $event = \mod_quiz\event\attempt_created::create($params);
+        $event->add_record_snapshot('quiz_attempts', $attempt);
+        $event->trigger();
     }
     return $attempt;
 }
