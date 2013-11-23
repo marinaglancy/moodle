@@ -315,6 +315,7 @@ $string['eventattemptsummaryviewed'] = 'Quiz attempt summary viewed';
 $string['eventinstanceslistviewed'] = 'Instances list viewed';
 $string['eventoverridedeleted'] = 'Quiz override deleted';
 $string['eventoverrideupdated'] = 'Quiz override updated';
+$string['eventquestionmanuallygraded'] = 'Question manually graded';
 $string['eventquestionsupdated'] = 'Questions updated';
 $string['eventquizattemptabandoned'] = 'Quiz attempt abandoned';
 $string['eventquizattempttimelimitexceeded'] = 'Quiz attempt time limit exceeded';
