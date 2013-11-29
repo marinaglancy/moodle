@@ -67,7 +67,18 @@ if ($confirm) {
     $wikipage = new page_wiki_confirmrestore($wiki, $subwiki, $cm);
     $wikipage->set_page($page);
     $wikipage->set_versionid($versionid);
-
+    $event = \mod_wiki\event\page_version_restored::create(
+            array(
+                'context' => context_module::instance($cm->id),
+                'objectid' => $pageid,
+                'other' => array(
+                    'versionid' => $versionid
+                    )
+                ));
+    $event->add_record_snapshot('wiki_pages', $page);
+    $event->add_record_snapshot('wiki', $wiki);
+    $event->add_record_snapshot('wiki_subwikis', $subwiki);
+    $event->trigger();
 } else {
 
     $wikipage = new page_wiki_restoreversion($wiki, $subwiki, $cm);
@@ -75,7 +86,6 @@ if ($confirm) {
     $wikipage->set_versionid($versionid);
 
 }
-add_to_log($course->id, "wiki", "restore", "view.php?pageid=".$pageid, $pageid, $cm->id);
 
 $wikipage->print_header();
 $wikipage->print_content();
