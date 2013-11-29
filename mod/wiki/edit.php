@@ -85,7 +85,17 @@ if ($option == get_string('save', 'wiki')) {
     $wikipage->set_page($page);
     $wikipage->set_newcontent($newcontent);
     $wikipage->set_upload(true);
-    add_to_log($course->id, 'wiki', 'edit', "view.php?pageid=".$pageid, $pageid, $cm->id);
+    $event = \mod_wiki\event\page_updated::create(
+            array(
+                'context' => $context,
+                'objectid' => $pageid,
+                'other' => array(
+                    'newcontent' => $newcontent
+                    )
+                ));
+    $event->add_record_snapshot('wiki', $wiki);
+    $event->add_record_snapshot('wiki_subwikis', $subwiki);
+    $event->trigger();
 } else {
     if ($option == get_string('preview')) {
         if (!confirm_sesskey()) {
