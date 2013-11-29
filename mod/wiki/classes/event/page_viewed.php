@@ -32,7 +32,7 @@ defined('MOODLE_INTERNAL') || die();
  * @copyright  2013 Rajesh Taneja <rajesh@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class page_viewed extends \core\event\content_viewed {
+class page_viewed extends \core\event\base {
     /**
      * Init method.
      *
@@ -41,7 +41,7 @@ class page_viewed extends \core\event\content_viewed {
     protected function init() {
         $this->data['crud'] = 'r';
         $this->data['level'] = self::LEVEL_PARTICIPATING;
-        $this->data['objecttable'] = 'wiki';
+        $this->data['objecttable'] = 'wiki_pages';
     }
 
     /**
@@ -50,7 +50,7 @@ class page_viewed extends \core\event\content_viewed {
      * @return string
      */
     public static function get_name() {
-        return get_string('event_page_viewed', 'mod_wiki');
+        return get_string('eventpageviewed', 'mod_wiki');
     }
 
     /**
@@ -65,20 +65,20 @@ class page_viewed extends \core\event\content_viewed {
     /**
      * Return the legacy event log data.
      *
-     * @return array|null
+     * @return array
      */
     protected function get_legacy_logdata() {
-        if (isset($this->data['other']['pageid'])) {
-            $url = 'view.php?pageid=' . $this->data['other']['pageid'];
-            $id = $this->data['other']['pageid'];
-        } else if (isset($this->data['other']['wid'])) {
-            $url = 'view.php?wid=' . $this->data['other']['wid'] . '&title=' . $this->data['other']['title'];
-            $id = $this->data['other']['wid'];
+        if (!empty($this->other['wid'])) {
+            return(array($this->courseid, 'wiki', 'view',
+                'view.php?wid=' . $this->data['other']['wid'] . '&title=' . $this->data['other']['title'],
+                $this->data['other']['wid'], $this->context->instanceid));
+        } else if (!empty($this->other['prettyview'])) {
+            return(array($this->courseid, 'wiki', 'view',
+                'prettyview.php?pageid=' . $this->objectid, $this->objectid, $this->context->instanceid));
         } else {
-            $url = 'view.php?id=' . $this->context->instanceid;
-            $id = $this->context->instanceid;
+            return(array($this->courseid, 'wiki', 'view',
+                'view.php?pageid=' . $this->objectid, $this->objectid, $this->context->instanceid));
         }
-        return(array($course->id, 'wiki', 'view', $url, $id, $this->context->instanceid));
     }
 
     /**
@@ -87,19 +87,17 @@ class page_viewed extends \core\event\content_viewed {
      * @return \moodle_url
      */
     public function get_url() {
-        return new \moodle_url('/mod/wiki/view.php', array('id' => $this->context->instanceid));
+        if (!empty($this->data->other['wid'])) {
+            return new \moodle_url('/mod/wiki/view.php', array('wid' => $this->data['other']['wid'],
+                    'title' => $this->data['other']['title'],
+                    'uid' => $this->relateduserid,
+                    'groupanduser' => $this->data['other']['groupanduser'],
+                    'group' => $this->data['other']['group']
+                ));
+        } else if (!empty($this->other['prettyview'])) {
+            return new \moodle_url('/mod/wiki/prettyview.php', array('pageid' => $this->objectid));
+        } else {
+            return new \moodle_url('/mod/wiki/view.php', array('pageid' => $this->objectid));
+        }
     }
-
-    /**
-     * Custom validation.
-     *
-     * @throws \coding_exception
-     * @return void
-     */
-    protected function validate_data() {
-        // Hack to please the parent class. 'view' was the key used in old add_to_log().
-        $this->data['other']['content'] = 'view';
-        parent::validate_data();
-    }
-
 }

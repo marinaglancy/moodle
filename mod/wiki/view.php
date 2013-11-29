@@ -290,18 +290,30 @@ $wikipage->set_page($page);
 
 $params = array();
 if($pageid) {
-    $params['other'] = array('pageid' => $pageid);
+    $event = \mod_wiki\event\page_viewed::create(
+            array(
+                'context' => $context,
+                'objectid' => $pageid
+                )
+            );
+    $event->add_record_snapshot('wiki_pages', $page);
+    $event->trigger();
 } else if($id) {
-    $params['other'] = array('id' => $pageid);
+    add_to_log($course->id, 'wiki', 'view', "view.php?id=".$id, $id, $cm->id);
 } else if($wid && $title) {
-    $params['other'] = array('wid' => $wid, 'title' => $title);
-}
-
-// Trigger event if other param is set.
-if (isset($params['other'])) {
-    $params['context'] = $context;
-    $params['objectid'] = $wiki->id;
-    $event = \wiki\event\page_viewed::create($params);
+    $event = \mod_wiki\event\page_viewed::create(
+            array(
+                'context' => $context,
+                'objectid' => $page->id,
+                'relateduserid' => $uid,
+                'other' => array(
+                    'title' => $title,
+                    'wid' => $wid,
+                    'group' => $gid,
+                    'groupanduser' => $groupanduser)
+                )
+            );
+    $event->add_record_snapshot('wiki_pages', $page);
     $event->add_record_snapshot('wiki', $wiki);
     $event->trigger();
 }
