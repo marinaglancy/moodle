@@ -1109,6 +1109,13 @@ function wiki_delete_pages($context, $pageids = null, $subwikiid = null) {
         foreach ($tags as $tagid => $tagvalue) {
             tag_delete_instance('wiki_pages', $pageid, $tagid);
         }
+        // Trigger page_deleted event.
+        $event = \mod_wiki\event\page_deleted::create(
+                array(
+                    'context' => $context,
+                    'objectid' => $pageid
+                    ));
+        $event->trigger();
 
         //Delete Synonym
         wiki_delete_synonym($subwikiid, $pageid);
@@ -1147,6 +1154,17 @@ function wiki_delete_page_versions($deleteversions) {
                 $params['version'] = $version;
             }
             $DB->delete_records('wiki_versions', $params, IGNORE_MISSING);
+
+            // Trigger page version deleted event.
+            $event = \mod_wiki\event\page_version_deleted::create(
+                    array(
+                        'context' => $context,
+                        'objectid' => $pageid,
+                        'other' => array(
+                            'versionid' => $version
+                        )
+                    ));
+            $event->trigger();
         }
     }
 }
