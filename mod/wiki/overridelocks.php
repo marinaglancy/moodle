@@ -77,7 +77,18 @@ $wikipage->set_page($page);
 if (!empty($section)) {
     $wikipage->set_section($sectioncontent, $section);
 }
-add_to_log($course->id, "wiki", "overridelocks", "view.php?pageid=".$pageid, $pageid, $cm->id);
+$event = \mod_wiki\event\page_locks_deleted::create(
+        array(
+            'context' => $context,
+            'objectid' => $pageid,
+            'other' => array(
+                'section' => $section
+                )
+            ));
+$event->add_record_snapshot('wiki_pages', $page);
+$event->add_record_snapshot('wiki', $wiki);
+$event->add_record_snapshot('wiki_subwikis', $subwiki);
+$event->trigger();
 
 $wikipage->print_header();
 
