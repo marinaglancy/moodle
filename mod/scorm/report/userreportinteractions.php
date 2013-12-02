@@ -57,7 +57,7 @@ require_capability('mod/scorm:viewreport', $contextmodule);
 $event = \mod_scorm\event\interactions_viewed::create(array(
     'context' => $contextmodule,
     'relateduserid' => $userid,
-    'other' => array('attemptid' => $attempt, 'instanceid' => $scorm->id, 'content' => 'scorm_userreport_interactions')
+    'other' => array('attemptid' => $attempt, 'instanceid' => $scorm->id)
 ));
 $event->add_record_snapshot('course_modules', $cm);
 $event->add_record_snapshot('scorm', $scorm);

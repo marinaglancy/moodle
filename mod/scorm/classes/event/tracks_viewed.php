@@ -32,7 +32,7 @@ defined('MOODLE_INTERNAL') || die();
  * @copyright  2013 onwards Ankit Agarwal
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class tracks_viewed extends \core\event\content_viewed {
+class tracks_viewed extends \core\event\base {
 
     /**
      * Init method.

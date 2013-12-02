@@ -32,7 +32,7 @@ defined('MOODLE_INTERNAL') || die();
  * @copyright  2013 onwards Ankit Agarwal
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class userreport_viewed extends \core\event\content_viewed {
+class userreport_viewed extends \core\event\base {
 
     /**
      * Init method.
@@ -98,6 +98,5 @@ class userreport_viewed extends \core\event\content_viewed {
         if (empty($this->other['instanceid'])) {
             throw new \coding_exception('The \\mod_scorm\\event\\userreport_viewed must specify instanceid of the activity.');
         }
-        parent::validate_data();
     }
 }

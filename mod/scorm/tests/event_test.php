@@ -147,7 +147,7 @@ class mod_scorm_event_testcase extends advanced_testcase {
             \mod_scorm\event\interactions_viewed::create(array(
                 'context' => context_module::instance($this->eventcm->id),
                 'courseid' => $this->eventcourse->id,
-                'other' => array('content' => 'Boo!', 'attemptid' => 2)
+                'other' => array('attemptid' => 2)
             ));
             $this->fail("Event validation should not allow \\mod_scorm\\event\\interactions_viewed to be triggered without
                     other['instanceid']");
@@ -158,7 +158,7 @@ class mod_scorm_event_testcase extends advanced_testcase {
             \mod_scorm\event\interactions_viewed::create(array(
                 'context' => context_module::instance($this->eventcm->id),
                 'courseid' => $this->eventcourse->id,
-                'other' => array('content' => 'you are a content', 'instanceid' => 2)
+                'other' => array('instanceid' => 2)
             ));
             $this->fail("Event validation should not allow \\mod_scorm\\event\\interactions_viewed to be triggered without
                     other['attemptid']");
@@ -177,7 +177,7 @@ class mod_scorm_event_testcase extends advanced_testcase {
              'objectid' => $this->eventscorm->id,
              'context' => context_module::instance($this->eventcm->id),
              'courseid' => $this->eventcourse->id,
-             'other' => array('content' => 'scormreport', 'mode' => 'basic')
+             'other' => array('mode' => 'basic')
         ));
 
         // Trigger and capture the event.
@@ -196,8 +196,7 @@ class mod_scorm_event_testcase extends advanced_testcase {
         \mod_scorm\event\report_viewed::create(array(
             'objectid' => $this->eventscorm->id,
             'context' => context_module::instance($this->eventcm->id),
-            'courseid' => $this->eventcourse->id,
-            'other' => array('content' => 'scormreport')
+            'courseid' => $this->eventcourse->id
         ));
         $this->fail('Event \\mod_scorm\\event\\report_viewed is not validating "mode" properly');
     }
@@ -246,7 +245,7 @@ class mod_scorm_event_testcase extends advanced_testcase {
             \mod_scorm\event\tracks_viewed::create(array(
                 'context' => context_module::instance($this->eventcm->id),
                 'courseid' => $this->eventcourse->id,
-                'other' => array('content' => 'cookies', 'attemptid' => 2)
+                'other' => array('attemptid' => 2)
             ));
             $this->fail("Event validation should not allow \\mod_scorm\\event\\tracks_viewed to be triggered without
                     other['instanceid']");
@@ -257,7 +256,7 @@ class mod_scorm_event_testcase extends advanced_testcase {
             \mod_scorm\event\tracks_viewed::create(array(
                 'context' => context_module::instance($this->eventcm->id),
                 'courseid' => $this->eventcourse->id,
-                'other' => array('content' => 'blackhole', 'instanceid' => 2)
+                'other' => array('instanceid' => 2)
             ));
             $this->fail("Event validation should not allow \\mod_scorm\\event\\tracks_viewed to be triggered without
                     other['attemptid']");
@@ -276,7 +275,7 @@ class mod_scorm_event_testcase extends advanced_testcase {
             \mod_scorm\event\userreport_viewed::create(array(
                 'context' => context_module::instance($this->eventcm->id),
                 'courseid' => $this->eventcourse->id,
-                'other' => array('content' => 'scormuserreport', 'attemptid' => 2)
+                'other' => array('attemptid' => 2)
             ));
             $this->fail("Event validation should not allow \\mod_scorm\\event\\userreport_viewed to be triggered without
                     other['instanceid']");
@@ -287,7 +286,7 @@ class mod_scorm_event_testcase extends advanced_testcase {
             \mod_scorm\event\userreport_viewed::create(array(
                 'context' => context_module::instance($this->eventcm->id),
                 'courseid' => $this->eventcourse->id,
-                'other' => array('content' => 'scormuserreport', 'instanceid' => 2)
+                'other' => array('instanceid' => 2)
             ));
             $this->fail("Event validation should not allow \\mod_scorm\\event\\userreport_viewed to be triggered without
                     other['attemptid']");
