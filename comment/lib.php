@@ -651,6 +651,20 @@ class comment {
             }
             $newcmt->time = userdate($newcmt->timecreated, $newcmt->strftimeformat);
 
+            // Trigger comment created event.
+            $eventclassname = '\\' . $this->component . '\\event\comment_created';
+            if (class_exists($eventclassname)) {
+                $event = $eventclassname::create(
+                        array(
+                            'context' => $this->context,
+                            'objectid' => $newcmt->id,
+                            'other' => array(
+                                'itemid' => $this->itemid
+                                )
+                            ));
+                $event->trigger();
+            }
+
             return $newcmt;
         } else {
             throw new comment_exception('dbupdatefailed');
@@ -672,7 +686,24 @@ class comment {
         if (empty($param['contextid'])) {
             return false;
         }
+        // Get comment record before deleting it for events.
+        $comment = $DB->get_record('comments', $param);
+
         $DB->delete_records('comments', $param);
+        // Trigger comment delete event.
+        $eventclassname = '\\' . $this->component . '\\event\comment_deleted';
+        if (class_exists($eventclassname)) {
+            $event = $eventclassname::create(
+                    array(
+                        'context' => $this->context,
+                        'objectid' => $idcomment,
+                        'other' => array(
+                            'itemid' => $this->itemid,
+                            'comment' => (array)$comment
+                            )
+                        ));
+            $event->trigger();
+        }
         return true;
     }
 
