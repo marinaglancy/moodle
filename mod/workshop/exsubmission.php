@@ -160,15 +160,29 @@ if ($edit and $canmanage) {
         $formdata->content            = '';          // updated later
         $formdata->contentformat      = FORMAT_HTML; // updated later
         $formdata->contenttrust       = 0;           // updated later
+
+        // Event information.
+        $params = array(
+            'context' => $workshop->context,
+            'userid' => $USER->id,
+            'courseid' => $course->id,
+            'other' => array(
+                'title' => $formdata->title
+            )
+        );
+
         if (is_null($example->id)) {
             $example->id = $formdata->id = $DB->insert_record('workshop_submissions', $formdata);
-            $workshop->log('add example', $workshop->exsubmission_url($example->id), $example->id);
+            $params['objectid'] = $example->id;
+            $event = \mod_workshop\event\example_assessment_created::create($params);
+            $event->trigger();
         } else {
-            $workshop->log('update example', $workshop->exsubmission_url($example->id), $example->id);
             if (empty($formdata->id) or empty($example->id) or ($formdata->id != $example->id)) {
                 throw new moodle_exception('err_examplesubmissionid', 'workshop');
             }
         }
+        $params['objectid'] = $example->id;
+
         // save and relink embedded images and save attachments
         $formdata = file_postupdate_standard_editor($formdata, 'content', $contentopts, $workshop->context,
                                                       'mod_workshop', 'submission_content', $example->id);
@@ -180,6 +194,8 @@ if ($edit and $canmanage) {
         }
         // store the updated values or re-save the new example (re-saving needed because URLs are now rewritten)
         $DB->update_record('workshop_submissions', $formdata);
+        $event = \mod_workshop\event\example_assessment_updated::create($params);
+        $event->trigger();
         redirect($workshop->exsubmission_url($formdata->id));
     }
 }
