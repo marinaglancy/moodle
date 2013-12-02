@@ -117,7 +117,6 @@ $pagetitle = strip_tags($shortname.': '.format_string($scorm->name));
 $event = \mod_scorm\event\course_module_viewed::create(array(
     'objectid' => $scorm->id,
     'context' => $contextmodule,
-    'other' => array('content' => 'scormactivityview')
 ));
 $event->add_record_snapshot('scorm', $scorm);
 $event->add_record_snapshot('course_modules', $cm);

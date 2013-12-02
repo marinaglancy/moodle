@@ -99,8 +99,7 @@ class mod_scorm_event_testcase extends advanced_testcase {
         $event = \mod_scorm\event\course_module_viewed::create(array(
             'objectid' => $this->eventscorm->id,
             'context' => context_module::instance($this->eventcm->id),
-            'courseid' => $this->eventcourse->id,
-            'other' => array('content' => 'scormviewed')
+            'courseid' => $this->eventcourse->id
         ));
 
         // Trigger and capture the event.
