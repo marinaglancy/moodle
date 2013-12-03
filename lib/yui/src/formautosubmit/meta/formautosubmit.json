@@ -2,6 +2,7 @@
   "moodle-core-formautosubmit": {
     "requires": [
       "base",
+      "node",
       "event-key"
     ]
   }
