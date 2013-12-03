@@ -63,8 +63,16 @@ if ($confirm) {
 
     quiz_delete_override($quiz, $override->id);
 
-    add_to_log($cm->course, 'quiz', 'delete override',
-        "overrides.php?cmid=$cm->id", $quiz->id, $cm->id);
+    $params = array(
+        'objectid' => $override->id,
+        'relateduserid' => $override->userid,
+        'context' => $context,
+        'other' => array('cmid' => $cm->id,
+                         'quizid' => $override->quiz)
+    );
+    $event = \mod_quiz\event\override_deleted::create($params);
+    $event->add_record_snapshot('quiz_overrides', $override);
+    $event->trigger();
 
     redirect($cancelurl);
 }
