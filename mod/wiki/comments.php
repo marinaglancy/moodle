@@ -59,8 +59,14 @@ $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST)
 
 require_login($course, true, $cm);
 
-add_to_log($course->id, 'wiki', 'comments', "comments.php?pageid=".$pageid, $pageid, $cm->id);
-
+// Trigger comment viewed event.
+$event = \mod_wiki\event\comment_viewed::create(
+        array(
+            'context' => $context,
+            'objectid' => $idcomment,
+            'other' => array('pageid' => $pageid)
+            ));
+$event->trigger();
 /// Print the page header
 $wikipage = new page_wiki_comments($wiki, $subwiki, $cm);
 

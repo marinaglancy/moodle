@@ -955,6 +955,13 @@ class page_wiki_create extends page_wiki {
             $id = wiki_create_page($this->subwiki->id, $pagetitle, $PAGE->activityrecord->defaultformat, $USER->id);
         }
         $this->page = $id;
+        $event = \mod_wiki\event\page_created::create(
+                array(
+                    'context' => $this->modcontext,
+                    'objectid' => $id
+                    )
+                );
+        $event->trigger();
         return $id;
     }
 }
