@@ -179,7 +179,17 @@ if (empty($pageid)) {
         }
     }
 
-    add_to_log($course->id, 'lesson', 'start', 'view.php?id='. $cm->id, $lesson->id, $cm->id);
+    // Trigger lesson started event.
+    $event = \mod_lesson\event\lesson_started::create(array(
+        'objectid' => $lesson->id,
+        'context' => $context,
+        'courseid' => $course->id,
+        'other' => array(
+            'cmid' => $cm->id
+        )
+    ));
+    $event->add_record_snapshot('lesson', $lesson);
+    $event->trigger();
 
     // if no pageid given see if the lesson has been started
     $retries = $DB->count_records('lesson_grades', array("lessonid" => $lesson->id, "userid" => $USER->id));
@@ -287,7 +297,19 @@ if ($pageid != LESSON_EOL) {
         $page = $lesson->load_page($newpageid);
     }
 
-    add_to_log($PAGE->course->id, 'lesson', 'view', 'view.php?id='. $PAGE->cm->id, $page->id, $PAGE->cm->id);
+    // Trigger module viewed event.
+    $event = \mod_lesson\event\course_module_viewed::create(array(
+        'objectid' => $lesson->id,
+        'context' => $context,
+        'courseid' => $course->id,
+        'other' => array(
+            'cmid' => $cm->id,
+            'pageid' => $page->id,
+            'content' => 'lessonmoduleview'
+        )
+    ));
+    $event->add_record_snapshot('lesson', $lesson);
+    $event->trigger();
 
     // This is where several messages (usually warnings) are displayed
     // all of this is displayed above the actual page
@@ -417,8 +439,18 @@ if ($pageid != LESSON_EOL) {
     // Used to check to see if the student ran out of time
     $outoftime = optional_param('outoftime', '', PARAM_ALPHA);
 
-    // Update the clock / get time information for this user
-    add_to_log($course->id, "lesson", "end", "view.php?id=".$PAGE->cm->id, "$lesson->id", $PAGE->cm->id);
+    // Update the clock / get time information for this user.
+    // Trigger lesson ended event.
+    $event = \mod_lesson\event\lesson_ended::create(array(
+        'objectid' => $lesson->id,
+        'context' => $context,
+        'courseid' => $course->id,
+        'other' => array(
+            'cmid' => $cm->id
+        )
+    ));
+    $event->add_record_snapshot('lesson', $lesson);
+    $event->trigger();
 
     // We are using level 3 header because the page title is a sub-heading of lesson title (MDL-30911).
     $lessoncontent .= $OUTPUT->heading(get_string("congratulations", "lesson"), 3);

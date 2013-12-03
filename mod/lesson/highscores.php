@@ -143,10 +143,23 @@ switch ($mode) {
             $newhighscore->gradeid = $newgrade->id;
             $newhighscore->nickname = $name;
 
-            $DB->insert_record('lesson_high_scores', $newhighscore);
+            $newhighscore->id = $DB->insert_record('lesson_high_scores', $newhighscore);
 
-            // Log it
-            add_to_log($course->id, 'lesson', 'update highscores', "highscores.php?id=$cm->id", $name, $cm->id);
+            // Trigger highscore updated event.
+            $event = \mod_lesson\event\highscore_added::create(array(
+                'objectid' => $newhighscore->id,
+                'context' => $context,
+                'courseid' => $course->id,
+                'other' => array(
+                    'cmid' => $cm->id,
+                    'lessonid' => $lesson->id,
+                    'lessonname' => $lesson->name,
+                    'nickname' => $newhighscore->nickname
+                )
+            ));
+            $event->add_record_snapshot('lesson', $lesson);
+            $event->add_record_snapshot('lesson_high_scores', $newhighscore);
+            $event->trigger();
 
             $lesson->add_message(get_string('postsuccess', 'lesson'), 'notifysuccess');
             redirect("$CFG->wwwroot/mod/lesson/highscores.php?id=$cm->id&amp;link=1");
@@ -156,8 +169,18 @@ switch ($mode) {
         break;
 }
 
-// Log it
-add_to_log($course->id, 'lesson', 'view highscores', "highscores.php?id=$cm->id", $lesson->name, $cm->id);
+// Trigger highscore viewed event.
+$event = \mod_lesson\event\highscores_viewed::create(array(
+    'context' => $context,
+    'courseid' => $course->id,
+    'other' => array(
+        'cmid' => $cm->id,
+        'lessonid' => $lesson->id,
+        'lessonname' => $lesson->name
+    )
+));
+$event->add_record_snapshot('lesson', $lesson);
+$event->trigger();
 
 $lessonoutput = $PAGE->get_renderer('mod_lesson');
 echo $lessonoutput->header($lesson, $cm, 'highscores', false, null, get_string('viewhighscores', 'lesson'));

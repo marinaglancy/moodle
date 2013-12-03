@@ -39,8 +39,9 @@ if (!$course = $DB->get_record("course", array("id" => $id))) {
 require_login($course);
 $PAGE->set_pagelayout('incourse');
 
-add_to_log($course->id, "lesson", "view all", "index.php?id=$course->id", "");
-
+// Trigger instances list viewed event.
+$event = \mod_lesson\event\instances_list_viewed::create(array('context' => context_course::instance($course->id)));
+$event->trigger();
 
 /// Get all required strings
 
