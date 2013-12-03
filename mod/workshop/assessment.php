@@ -161,14 +161,22 @@ if (is_null($assessment->grade) and !$assessmenteditable) {
     if ($mform->is_cancelled()) {
         redirect($workshop->view_url());
     } elseif ($assessmenteditable and ($data = $mform->get_data())) {
-        if (is_null($assessment->grade)) {
-            $workshop->log('add assessment', $workshop->assess_url($assessment->id), $assessment->submissionid);
-        } else {
-            $workshop->log('update assessment', $workshop->assess_url($assessment->id), $assessment->submissionid);
-        }
 
         // Let the grading strategy subplugin save its data.
         $rawgrade = $strategy->save_assessment($assessment, $data);
+
+        $params = array(
+            'context' => $workshop->context,
+            'other' => array()
+        );
+        if (is_null($assessment->grade)) {
+            // Add assessment_created event.
+
+            $workshop->log('add assessment', $workshop->assess_url($assessment->id), $assessment->submissionid);
+        } else {
+            // Add assessment_updated event.
+            $workshop->log('update assessment', $workshop->assess_url($assessment->id), $assessment->submissionid);
+        }
 
         // Store the data managed by the workshop core.
         $coredata = (object)array('id' => $assessment->id);

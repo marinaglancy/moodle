@@ -24,6 +24,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+$string['aggregategradesupdated'] = 'Aggregate grades cleared';
 $string['aggregategrades'] = 'Re-calculate grades';
 $string['aggregation'] = 'Grades aggregation';
 $string['allocate'] = 'Allocate submissions';
@@ -60,6 +61,7 @@ $string['assessmentofsubmission'] = '<a href="{$a->assessmenturl}">Assessment</a
 $string['assessmentreference'] = 'Reference assessment';
 $string['assessmentreferenceconflict'] = 'It is not possible to assess an example submission for which you provided a reference assessment.';
 $string['assessmentreferenceneeded'] = 'You have to assess this example submission to provide a reference assessment. Click \'Continue\' button to assess the submission.';
+$string['assessmentsupdated'] = 'Assessments cleared';
 $string['assessmentsettings'] = 'Assessment settings';
 $string['assessmentstart'] = 'Open for assessment from';
 $string['assessmentstartevent'] = '{$a} (opens for assessment)';
@@ -108,6 +110,8 @@ $string['evaluationmethod_help'] = 'The grading evaluation method determines how
 $string['evaluationsettings'] = 'Grading evaluation settings';
 $string['event_assessable_uploaded'] = 'A submission has been uploaded.';
 $string['example'] = 'Example submission';
+$string['example_assessment_created'] = 'Example assessment created';
+$string['example_assessment_updated'] = 'Example assessment updated';
 $string['exampleadd'] = 'Add example submission';
 $string['exampleassess'] = 'Assess example submission';
 $string['exampleassesstask'] = 'Assess examples';
@@ -235,9 +239,10 @@ $string['strategy_help'] = 'The grading strategy determines the assessment form 
 * Rubric - A level assessment is given regarding specified criteria';
 $string['strategyhaschanged'] = 'The workshop grading strategy has changed since the form was opened for editing.';
 $string['submission'] = 'Submission';
-$string['submissionby'] = 'Submission by {$a}';
 $string['submissionattachment'] = 'Attachment';
+$string['submissionby'] = 'Submission by {$a}';
 $string['submissioncontent'] = 'Submission content';
+$string['submissioncreated'] = 'Submission created';
 $string['submissionend'] = 'Submissions deadline';
 $string['submissionendbeforestart'] = 'Submissions deadline can not be specified before the open for submissions date';
 $string['submissionendevent'] = '{$a} (submissions deadline)';
@@ -254,6 +259,8 @@ $string['submissionstart'] = 'Open for submissions from';
 $string['submissionstartevent'] = '{$a} (opens for submissions)';
 $string['submissionstartdatetime'] = 'Open for submissions from {$a->daydatetime} ({$a->distanceday})';
 $string['submissiontitle'] = 'Title';
+$string['submissionupdated'] = 'Submission updated';
+$string['submissionviewed'] = 'Submission viewed';
 $string['subplugintype_workshopallocation'] = 'Submissions allocation method';
 $string['subplugintype_workshopallocation_plural'] = 'Submissions allocation methods';
 $string['subplugintype_workshopeval'] = 'Grading evaluation method';
