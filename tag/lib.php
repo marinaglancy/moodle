@@ -122,8 +122,8 @@ function tag_set($record_type, $record_id, $tags) {
         $current_tagged_tag_name = tag_get_name($record_id);
     }
 
-    $tags_ids = tag_get_id($tags, TAG_RETURN_ARRAY); // force an array, even if we only have one tag.
     $cleaned_tags = tag_normalize($tags);
+    $tags_ids = tag_get_id(array_values($cleaned_tags), TAG_RETURN_ARRAY); // force an array, even if we only have one tag.
     //echo 'tags-in-tag_set'; var_dump($tags); var_dump($tags_ids); var_dump($cleaned_tags);
 
     $current_ids = tag_get_tags_ids($record_type, $record_id);
