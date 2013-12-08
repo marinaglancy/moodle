@@ -671,6 +671,10 @@ $CFG->admin = 'admin';
 // be thrown when using them. The setting is disabled by default.
 // Example:
 //   $CFG->behat_usedeprecated = true;
+// Including feature files from directories outside the dirroot is possible if required. The setting
+// requires that the running user has executable permissions on all parent directories in the paths.
+// Example:
+//   $CFG->behat_additionalfeatures = array('/home/developer/code/wipfeatures');
 //
 //=========================================================================
 // 12. DEVELOPER DATA GENERATOR
