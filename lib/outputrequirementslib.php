@@ -95,6 +95,12 @@ class page_requirements_manager {
     protected $jsinitcode = array();
 
     /**
+     * @var array Javascript code used for initialisation of YUI modules. It
+     * should be relatviely small.
+     */
+    protected $yuiinitcode = array();
+
+    /**
      * @var array of moodle_url Theme sheets, initialised only from core_renderer
      */
     protected $cssthemeurls = array();
@@ -979,31 +985,37 @@ class page_requirements_manager {
      * @param array|string $modules One or more modules
      * @param string $function The function to call once modules have been loaded
      * @param array $arguments An array of arguments to pass to the function
-     * @param string $galleryversion The gallery version to use
+     * @param string $deprecated The gallery version to use
      * @param bool $ondomready
      */
-    public function yui_module($modules, $function, array $arguments = null, $galleryversion = null, $ondomready = false) {
-        global $CFG;
-
-        if (!$galleryversion) {
-            $galleryversion = '2010.04.08-12-35';
-        }
-
+    public function yui_module($modules, $function, array $arguments = null, $deprecated = null, $ondomready = false) {
         if (!is_array($modules)) {
             $modules = array($modules);
         }
-        if (empty($CFG->useexternalyui)) {
-            // We need to set the M.yui.galleryversion to the correct version
-            $jscode = 'M.yui.galleryversion='.json_encode($galleryversion).';';
-        } else {
-            // Set Y's config.gallery to the version
-            $jscode = 'Y.config.gallery='.json_encode($galleryversion).';';
-        }
-        $jscode .= 'Y.use('.join(',', array_map('json_encode', convert_to_array($modules))).',function() {'.js_writer::function_call($function, $arguments).'});';
+
+        // This is a temporary fix whilst we ensure that all dependencies
+        // are correct. It will be removed in Moodle 2.9 as per deprecation
+        // policy.
+        $modules[] = 'node';
+
+        // Handle any per-instance configuration.
+        $yuiconfig = new stdClass();
         if ($ondomready) {
-            $jscode = "Y.on('domready', function() { $jscode });";
+            $yuiconfig->delayUntil = 'domready';
         }
-        $this->jsinitcode[] = $jscode;
+        $yuiconfig = json_encode($yuiconfig);
+
+        // Convert the module list as appropriate.
+        $modulelist = '"' . join('","', convert_to_array($modules)) . '"';
+
+        // Generate the instance code.
+        $jscode = "";
+        $jscode .= "YUI({$yuiconfig}).use({$modulelist}, function(Y) {";
+        $jscode .= js_writer::function_call($function, $arguments);
+        $jscode .= "});";
+
+        // Add the generated instance code.
+        $this->yuiinitcode[] = $jscode;
     }
 
     /**
@@ -1500,6 +1512,9 @@ class page_requirements_manager {
         $js = "YUI().use('node', function(Y) {\n{$inyuijs}{$ondomreadyjs}{$jsinit}{$handlersjs}\n});";
 
         $output .= html_writer::script($js);
+
+        // Include the YUI initialisation code.
+        $output .= html_writer::script(implode("\n", $this->yuiinitcode));
 
         return $output;
     }
