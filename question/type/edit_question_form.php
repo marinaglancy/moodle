@@ -241,6 +241,9 @@ abstract class question_edit_form extends question_wizard_form {
         $mform->addElement('hidden', 'qtype');
         $mform->setType('qtype', PARAM_ALPHA);
 
+        $mform->addElement('hidden', 'makecopy');
+        $mform->setType('makecopy', PARAM_INT);
+        
         $buttonarray = array();
         if (!empty($this->question->id)) {
             // Editing / moving question.
@@ -250,10 +253,6 @@ abstract class question_edit_form extends question_wizard_form {
             } else if ($this->question->formoptions->canedit) {
                 $buttonarray[] = $mform->createElement('submit', 'submitbutton',
                         get_string('savechanges'));
-            }
-            if ($this->question->formoptions->cansaveasnew) {
-                $buttonarray[] = $mform->createElement('submit', 'makecopy',
-                        get_string('makecopy', 'question'));
             }
             $buttonarray[] = $mform->createElement('cancel');
         } else {
