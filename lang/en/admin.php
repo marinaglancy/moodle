@@ -172,7 +172,13 @@ Moodle community|https://moodle.org
 -Moodle development|https://moodle.org/development
 --Moodle Docs|http://docs.moodle.org|Moodle Docs
 --German Moodle Docs|http://docs.moodle.org/de|Documentation in German|de
-Moodle.com|http://moodle.com/
+-Moodle News|http://moodle.org/news Moodle company
+-Moodle commercial hosting|http://moodle.com/hosting
+-Moodle commercial support|http://moodle.com/support
+</pre>
+You can also add a languages drop down to your custom menu by adding the following:
+<pre>
+[languages]
 </pre>';
 $string['configdbsessions'] = 'If enabled, this setting will use the database to store information about current sessions. Note that changing this setting now will log out all current users (including you). If you are using MySQL please make sure that \'max_allowed_packet\' in my.cnf (or my.ini) is at least 4M. Other session drivers can be configured directly in config.php, see config-dist.php for more information. This option disappears if you specify session driver in config.php file.';
 $string['configdebug'] = 'If you turn this on, then PHP\'s error_reporting will be increased so that more warnings are printed.  This is only useful for developers.';
