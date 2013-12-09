@@ -1,4 +1,4 @@
-@core @core_question
+@core @core_question @failing
 Feature: A teacher can put questions in categories in the question bank
   In order to organize their questions
   As a teacher

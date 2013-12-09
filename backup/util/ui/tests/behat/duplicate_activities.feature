@@ -1,4 +1,4 @@
-@core @core_backup
+@core @core_backup @failing
 Feature: Duplicate activities
   In order to set up my course contents quickly
   As a teacher

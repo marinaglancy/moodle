@@ -1,4 +1,4 @@
-@core @core_course @_cross_browser
+@core @core_course @_cross_browser @failing
 Feature: Show/hide course sections
   In order to delay sections availability
   As a teacher

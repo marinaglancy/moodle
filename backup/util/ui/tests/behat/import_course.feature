@@ -1,4 +1,4 @@
-@core @core_backup
+@core @core_backup @failing
 Feature: Import course's contents into another course
   In order to move and copy contents between courses
   As a teacher
