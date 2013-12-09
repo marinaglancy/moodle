@@ -2,7 +2,6 @@
   "moodle-core-actionmenu": {
     "requires": [
         "base",
-        "node",
         "event"
     ]
   }
