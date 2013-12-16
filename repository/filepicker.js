@@ -202,7 +202,10 @@ YUI.add('moodle-core_filepicker', function(Y) {
             el.one('.fp-filename').setContent(file_get_displayname(node));
             // TODO add tooltip with node.title or node.thumbnail_title
             var tmpnodedata = {className:options.classnamecallback(node)};
-            el.get('children').addClass(tmpnodedata.className);
+            console.log(node)
+            el.get('children').addClass(tmpnodedata.className).
+                    setAttribute('data-filepath', node.filepath ? node.filepath : '').
+                    setAttribute('data-filename', node.fullname ? node.fullname : '');
             if (node.icon) {
                 el.one('.fp-icon').appendChild(Y.Node.create('<img/>'));
                 el.one('.fp-icon img').setImgSrc(node.icon, node.realicon, lazyloading);
@@ -305,7 +308,9 @@ YUI.add('moodle-core_filepicker', function(Y) {
         var formatTitle = function(o) {
             var el = Y.Node.create('<div/>');
             el.appendChild(options.filenode.cloneNode(true)); // TODO not node but string!
-            el.get('children').addClass(o.data['classname']);
+            el.get('children').addClass(o.data['classname']).
+                    setAttribute('data-filepath', o.data['filepath']).
+                    setAttribute('data-filename', o.data['fullname']);
             el.one('.fp-filename').setContent(o.value);
             if (o.data['icon']) {
                 el.one('.fp-icon').appendChild(Y.Node.create('<img/>'));
@@ -393,7 +398,9 @@ YUI.add('moodle-core_filepicker', function(Y) {
                 var node = fileslist[k];
                 var element = options.filenode.cloneNode(true);
                 parent.appendChild(element);
-                element.addClass(options.classnamecallback(node));
+                element.addClass(options.classnamecallback(node)).
+                    setAttribute('data-filepath', node.filepath).
+                    setAttribute('data-filename', node.fullname);
                 var filenamediv = element.one('.fp-filename');
                 filenamediv.setContent(file_get_displayname(node));
                 var imgdiv = element.one('.fp-thumbnail'), width, height, src;

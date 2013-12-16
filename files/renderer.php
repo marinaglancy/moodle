@@ -205,6 +205,10 @@ class core_files_renderer extends plugin_renderer_base {
                 <div class="{!}fp-btn-mkdir"><a role="button" title="'.$strmakedir.'" href="#"><img src="'.$this->pix_url('a/create_folder').'" alt="" /></a></div>
                 <div class="{!}fp-btn-download"><a role="button" title="'.$strdownload.'" href="#"><img src="'.$this->pix_url('a/download_all').'" alt="" /></a></div>
             </div>
+            <div class="fp-multimodebar">
+                <a title="'. get_string('selectmultiplefiles', 'repository') .'" class="{!}fp-mm-switch" href="#"><img alt="" src="'. $this->pix_url('fp/select_multiple_files', 'theme') .'" /></a>
+                <a title="'. get_string('withselected', 'repository') .'" class="{!}fp-mm-action" href="#"><img alt="" src="'. $this->pix_url('fp/multiple_files_action', 'theme') .'" /></a>
+            </div>
             <div class="{!}fp-viewbar">
                 <a title="'. get_string('displayicons', 'repository') .'" class="{!}fp-vb-icons" href="#"><img alt="" src="'. $this->pix_url('fp/view_icon_active', 'theme') .'" /></a>
                 <a title="'. get_string('displaydetails', 'repository') .'" class="{!}fp-vb-details" href="#"><img alt="" src="'. $this->pix_url('fp/view_list_active', 'theme') .'" /></a>
@@ -252,6 +256,7 @@ class core_files_renderer extends plugin_renderer_base {
         <div class="{!}fp-thumbnail"></div>
         <div class="fp-reficons1"></div>
         <div class="fp-reficons2"></div>
+        <div class="fp-mmselect"></div>
     </div>
     <div class="fp-filename-field">
         <div class="{!}fp-filename"></div>
@@ -279,6 +284,7 @@ class core_files_renderer extends plugin_renderer_base {
         $rv = '
 <span class="fp-filename-icon">
     <a href="#">
+    <span class="fp-mmselect"></span>
     <span class="{!}fp-icon"></span>
     <span class="fp-reficons1"></span>
     <span class="fp-reficons2"></span>
