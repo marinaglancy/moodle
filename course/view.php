@@ -117,7 +117,8 @@
     add_to_log($course->id, 'course', $loglabel, "view.php?". $logparam, $infoid);
 
     // Fix course format if it is no longer installed
-    $course->format = course_get_format($course)->get_format();
+    $cformat = course_get_format($course);
+    $course->format = $cformat->get_format();
 
     $PAGE->set_pagelayout('course');
     $PAGE->set_pagetype('course-view-' . $course->format);
@@ -239,7 +240,15 @@
         $PAGE->set_button($buttons);
     }
 
-    $PAGE->set_title(get_string('course') . ': ' . $course->fullname);
+    // If viewing a section, make the title more specific
+    if ($section) {
+        $sectionname = get_string('sectionname', "format_$course->format");
+        $sectiontitle = $cformat->get_section_name($section, MUST_EXIST);
+        $PAGE->set_title(get_string('coursesectiontitle', 'moodle', array('course' => $course->fullname, 'sectiontitle' => $sectiontitle, 'sectionname' => $sectionname)));
+    } else {
+        $PAGE->set_title(get_string('coursetitle', 'moodle', array('course' => $course->fullname)));
+    }
+
     $PAGE->set_heading($course->fullname);
     echo $OUTPUT->header();
 
