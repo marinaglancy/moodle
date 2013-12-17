@@ -17,6 +17,12 @@ YUI:
     changed in Moodle 2.2, but has only been marked as deprecated now. It
     will be removed in Moodle 2.9.
 
+DEPRECATIONS:
+
+JavaSript:
+    * The findChildNodes global function has been deprecated. Y.all should
+      be used instead.
+
 === 2.6 ===
 
 * Use new methods from core_component class instead of get_core_subsystems(), get_plugin_types(),
