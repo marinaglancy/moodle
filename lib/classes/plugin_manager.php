@@ -1023,6 +1023,10 @@ class core_plugin_manager {
             'local' => array(
             ),
 
+            'logstore' => array(
+                'database', 'legacy', 'standard',
+            ),
+
             'message' => array(
                 'email', 'jabber', 'popup'
             ),
@@ -1112,7 +1116,7 @@ class core_plugin_manager {
             'tool' => array(
                 'assignmentupgrade', 'behat', 'capability', 'customlang',
                 'dbtransfer', 'generator', 'health', 'innodb', 'installaddon',
-                'langimport', 'multilangupgrade', 'phpunit', 'profiling',
+                'langimport', 'log', 'multilangupgrade', 'phpunit', 'profiling',
                 'qeupgradehelper', 'replace', 'spamcleaner', 'timezoneimport',
                 'unittest', 'uploadcourse', 'uploaduser', 'unsuproles', 'xmldb'
             ),

@@ -107,14 +107,6 @@ function cron_run() {
         }
 
 
-        // Delete old logs to save space (this might need a timer to slow it down...)
-        if (!empty($CFG->loglifetime)) {  // value in days
-            $loglifetime = $timenow - ($CFG->loglifetime * 3600 * 24);
-            $DB->delete_records_select("log", "time < ?", array($loglifetime));
-            mtrace(" Deleted old log records");
-        }
-
-
         // Delete old backup_controllers and logs.
         $loglifetime = get_config('backup', 'loglifetime');
         if (!empty($loglifetime)) {  // Value in days.
