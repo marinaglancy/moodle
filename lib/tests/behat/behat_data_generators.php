@@ -115,7 +115,7 @@ class behat_data_generators extends behat_base {
         'activities' => array(
             'datagenerator' => 'activity',
             'required' => array('activity', 'idnumber', 'course'),
-            'switchids' => array('course' => 'course')
+            'switchids' => array('course' => 'course', 'grouping' => 'groupingid')
         ),
         'group members' => array(
             'datagenerator' => 'group_member',
