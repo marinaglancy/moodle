@@ -373,20 +373,17 @@ function feedback_get_recent_mod_activity(&$activities, &$index,
 
     global $CFG, $COURSE, $USER, $DB;
 
-    if ($COURSE->id == $courseid) {
-        $course = $COURSE;
-    } else {
-        $course = $DB->get_record('course', array('id'=>$courseid));
-    }
-
+    $course = get_course($courseid);
     $modinfo = get_fast_modinfo($course);
 
     $cm = $modinfo->cms[$cmid];
+    if (!$cm->uservisible) {
+        return;
+    }
 
     $sqlargs = array();
 
-    //TODO: user user_picture::fields;
-    $sql = " SELECT fk . * , fc . * , u.firstname, u.lastname, u.email, u.picture, u.email
+    $sql = " SELECT fk.id , fc.timemodified , ".\user_picture::fields('u', null, 'userid')."
                                             FROM {feedback_completed} fc
                                                 JOIN {feedback} fk ON fk.id = fc.feedback
                                                 JOIN {user} u ON u.id = fc.userid ";
@@ -413,22 +410,11 @@ function feedback_get_recent_mod_activity(&$activities, &$index,
         return;
     }
 
-    $cm_context = context_module::instance($cm->id);
-
-    if (!has_capability('mod/feedback:view', $cm_context)) {
-        return;
-    }
-
-    $accessallgroups = has_capability('moodle/site:accessallgroups', $cm_context);
-    $viewfullnames   = has_capability('moodle/site:viewfullnames', $cm_context);
+    $accessallgroups = has_capability('moodle/site:accessallgroups', $cm->context);
+    $viewfullnames   = has_capability('moodle/site:viewfullnames', $cm->context);
     $groupmode       = groups_get_activity_groupmode($cm, $course);
 
-    if (is_null($modinfo->groups)) {
-        // load all my groups and cache it in modinfo
-        $modinfo->groups = groups_get_user_groups($course->id);
-    }
-
-    $aname = format_string($cm->name, true);
+    $aname = $cm->get_formatted_name();
     foreach ($feedbackitems as $feedbackitem) {
         if ($feedbackitem->userid != $USER->id) {
 
@@ -440,7 +426,7 @@ function feedback_get_recent_mod_activity(&$activities, &$index,
                     continue;
                 }
                 $usersgroups = array_keys($usersgroups);
-                $intersect = array_intersect($usersgroups, $modinfo->groups[$cm->id]);
+                $intersect = array_intersect($usersgroups, $modinfo->groups[$cm->groupingid]);
                 if (empty($intersect)) {
                     continue;
                 }
@@ -459,19 +445,7 @@ function feedback_get_recent_mod_activity(&$activities, &$index,
         $tmpactivity->content->feedbackid = $feedbackitem->id;
         $tmpactivity->content->feedbackuserid = $feedbackitem->userid;
 
-        $userfields = explode(',', user_picture::fields());
-        $tmpactivity->user = new stdClass();
-        foreach ($userfields as $userfield) {
-            if ($userfield == 'id') {
-                $tmpactivity->user->{$userfield} = $feedbackitem->userid; // aliased in SQL above
-            } else {
-                if (!empty($feedbackitem->{$userfield})) {
-                    $tmpactivity->user->{$userfield} = $feedbackitem->{$userfield};
-                } else {
-                    $tmpactivity->user->{$userfield} = null;
-                }
-            }
-        }
+        $tmpactivity->user = user_picture::unalias($feedbackitem, null, 'userid');
         $tmpactivity->user->fullname = fullname($feedbackitem, $viewfullnames);
 
         $activities[$index++] = $tmpactivity;

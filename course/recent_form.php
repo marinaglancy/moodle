@@ -107,25 +107,19 @@ class recent_form extends moodleform {
         $modsused = array();
 
         foreach($modinfo->cms as $cm) {
-            if (!$cm->uservisible) {
+            if (!empty($modsused[$cm->modname]) || !$cm->uservisible) {
                 continue;
             }
             $modsused[$cm->modname] = true;
         }
 
         foreach ($modsused as $modname=>$unused) {
-            $libfile = "$CFG->dirroot/mod/$modname/lib.php";
-            if (!file_exists($libfile)) {
-                unset($modsused[$modname]);
+            if ($types = \core_course\recentactivity::get_plugin_recentactivity_types('mod_'. $modname)) {
+                $options["mod/$modname"] = get_string('allmods', '', get_string('modulenameplural', $modname));
+            } else {
+                $modsused[$modname] = false;
                 continue;
             }
-            include_once($libfile);
-            $libfunction = $modname."_get_recent_mod_activity";
-            if (!function_exists($libfunction)) {
-                unset($modsused[$modname]);
-                continue;
-            }
-            $options["mod/$modname"] = get_string('allmods', '', get_string('modulenameplural', $modname));
         }
 
         foreach ($modinfo->sections as $section=>$cmids) {

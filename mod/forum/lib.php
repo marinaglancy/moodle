@@ -6045,11 +6045,7 @@ function forum_print_posts_nested($course, &$cm, $forum, $discussion, $parent, $
 function forum_get_recent_mod_activity(&$activities, &$index, $timestart, $courseid, $cmid, $userid=0, $groupid=0)  {
     global $CFG, $COURSE, $USER, $DB;
 
-    if ($COURSE->id == $courseid) {
-        $course = $COURSE;
-    } else {
-        $course = $DB->get_record('course', array('id' => $courseid));
-    }
+    $course = get_course($courseid);
 
     $modinfo = get_fast_modinfo($course);
 
@@ -6084,8 +6080,8 @@ function forum_get_recent_mod_activity(&$activities, &$index, $timestart, $cours
          return;
     }
 
-    $groupmode       = groups_get_activity_groupmode($cm, $course);
-    $cm_context      = context_module::instance($cm->id);
+    $groupmode       = $cm->effectivegroupmode;
+    $cm_context      = $cm->context;
     $viewhiddentimed = has_capability('mod/forum:viewhiddentimedposts', $cm_context);
     $accessallgroups = has_capability('moodle/site:accessallgroups', $cm_context);
 

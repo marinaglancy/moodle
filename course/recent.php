@@ -157,18 +157,20 @@ foreach ($sections as $sectionnum => $section) {
             continue;
         }
 
-        $libfile = "$CFG->dirroot/mod/$cm->modname/lib.php";
-
-        if (file_exists($libfile)) {
-            require_once($libfile);
-            $get_recent_mod_activity = $cm->modname."_get_recent_mod_activity";
-
-            if (function_exists($get_recent_mod_activity)) {
-                $activity = new stdClass();
-                $activity->type    = 'activity';
-                $activity->cmid    = $cmid;
-                $activities[$index++] = $activity;
-                $get_recent_mod_activity($activities, $index, $param->date, $course->id, $cmid, $param->user, $param->group);
+        if (\core_course\recentactivity::get_plugin_recentactivity_types('mod_'.$cm->modname)) {
+            $moduleactivity = \core_course\recentactivity::get_plugin_recentactivity(
+                    'mod_'.$cm->modname, $cm->get_course(), $param->date, array(
+                        'cm' => $cm,
+                        'userid' => $param->user,
+                        'groupid' => $param->group
+                    )
+            );
+            $activity = new stdClass();
+            $activity->type    = 'activity';
+            $activity->cmid    = $cmid;
+            $activities[$index++] = $activity;
+            foreach ($moduleactivity as $a) {
+                $activities[$index++] = $a;
             }
         }
     }
@@ -240,23 +242,14 @@ if (!empty($activities)) {
                 echo html_writer::tag('h3', "$image $modfullname $link");
            }
 
-        } else {
-
-            if (!isset($viewfullnames[$activity->cmid])) {
-                $cm_context = context_module::instance($activity->cmid);
-                $viewfullnames[$activity->cmid] = has_capability('moodle/site:viewfullnames', $cm_context);
-            }
+        } else if ($activity instanceof \core_course\recentactivity) {
 
             if (!$inbox) {
                 echo $OUTPUT->box_start();
                 $inbox = true;
             }
 
-            $print_recent_mod_activity = $activity->type.'_print_recent_mod_activity';
-
-            if (function_exists($print_recent_mod_activity)) {
-                $print_recent_mod_activity($activity, $course->id, $detail, $modnames, $viewfullnames[$activity->cmid]);
-            }
+            $activity->display($detail);
         }
     }
 

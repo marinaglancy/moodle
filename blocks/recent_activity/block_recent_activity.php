@@ -183,7 +183,8 @@ class block_recent_activity extends block_base {
     /**
      * Returns list of recent activity within modules
      *
-     * For each used module type executes callback MODULE_print_recent_activity()
+     * Each module type may define what to display in \mod_XXX\recentactivity
+     * in legacy mode (developed before Moodle 2.7) executes callback MODULE_print_recent_activity()
      *
      * @return array array of pairs moduletype => content
      */
@@ -197,15 +198,10 @@ class block_recent_activity extends block_base {
         $recentactivity = array();
         foreach ($usedmodules as $modname => $modfullname) {
             // Each module gets it's own logs and prints them
-            ob_start();
-            $hascontent = component_callback('mod_'. $modname, 'print_recent_activity',
-                    array($this->page->course, $viewfullnames, $this->get_timestart()), false);
-            if ($hascontent) {
-                $recentactivity[$modname] = ob_get_contents();
-            }
-            ob_end_clean();
+            $recentactivity[$modname] = \core_course\recentactivity::get_plugin_content_for_block(
+                    'mod_'.$modname, $this->page->course, $this->get_timestart());
         }
-        return $recentactivity;
+        return array_filter($recentactivity);
     }
 
     /**
