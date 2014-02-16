@@ -232,7 +232,7 @@ class mod_forum_external_testcase extends externallib_advanced_testcase {
 
         // Check the discussions were correctly created.
         $this->assertEquals(3, $DB->count_records_select('forum_discussions', 'forum = :forum1 OR forum = :forum2
-                OR id = :forum3', array('forum1' => $forum1->id, 'forum2' => $forum2->id, 'forum3' => $forum3->id)));
+                OR forum = :forum3', array('forum1' => $forum1->id, 'forum2' => $forum2->id, 'forum3' => $forum3->id)));
 
         // Check the posts were correctly created, don't forget each discussion created also creates a post.
         $this->assertEquals(7, $DB->count_records_select('forum_posts', 'discussion = :discussion1 OR discussion = :discussion2',
