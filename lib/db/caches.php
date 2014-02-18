@@ -152,6 +152,15 @@ $definitions = array(
         'staticaccelerationsize' => 2,
     ),
 
+    // Cache for the list of hook callbacks.
+    'hookcallbacks' => array(
+        'mode' => cache_store::MODE_APPLICATION,
+        'simplekeys' => true,
+        'simpledata' => true,
+        'staticacceleration' => true,
+        'staticaccelerationsize' => 2,
+    ),
+
     // Cache used by the {@link core_plugin_manager} class.
     // NOTE: this must be a shared cache.
     'plugin_manager' => array(
