@@ -840,4 +840,64 @@ class behat_course extends behat_base {
         $this->getSession()->wait(1000, false);
     }
 
+    /**
+     * Click on the link to show course recent activity report and adjust the date range so all data is shown.
+     *
+     * @Then /^I open course recent activity report$/
+     */
+    public function i_open_course_recent_activity_report() {
+        $table = new TableNode();
+        $table->addRow(array('id_date_year', '2000'));
+        $str1 = $this->escape(get_string('recentactivityreport'));
+        $str2 = $this->escape(get_string('pluginname', 'block_recent_activity'));
+        $str3 = $this->escape(get_string('showrecent'));
+        return array(
+            new Given("I click on \"$str1\" \"link\" in the \"$str2\" \"block\""),
+            new Given("I set the following fields to these values:", $table),
+            new Given("I press \"$str3\"")
+        );
+    }
+
+    /**
+     * Ensures that course recent activity report looks exactly as we expect.
+     *
+     * @Then /^I should see in course recent activity report:$/
+     * @param TableNode $table each row represents a row in a block, first column contains
+     *     css descriptor and second and additional columns may contain chunks of text that has to be present.
+     * @throws ElementNotFoundException
+     */
+    public function i_should_see_in_course_recent_activity_report(TableNode $table) {
+        $parentpath = "//div[@role='main']/div[contains(concat(' ',normalize-space(@class),' '),' box ')]";
+        $childrenselector = "*[name()='H3' or name()='TABLE' or "
+                . "(name()='DIV' and ("
+                    . "contains(concat(' ',normalize-space(@class),' '),' submission ') or "
+                    . "contains(concat(' ',normalize-space(@class),' '),' assessment ') or "
+                    . "contains(concat(' ',normalize-space(@class),' '),' glossary-activity ')"
+                . "))]";
+        $rows = $table->getRows();
+        $xpathcount = $parentpath.'/.[count('.$childrenselector.')='.count($rows).']';
+        $subpaths = array();
+        for ($i=0; $i<count($rows); $i++) {
+            $chunks = array();
+            if (substr($rows[$i][0], 0, 1) === '.') {
+                $classname = $this->getSession()->getSelectorsHandler()->xpathLiteral(' '.substr($rows[$i][0], 1).' ');
+                $chunks[] = "contains(concat(' ',normalize-space(@class),' '),$classname";
+            } else if (!empty($rows[$i][0])) {
+                $elementname = $this->getSession()->getSelectorsHandler()->xpathLiteral(strtoupper($rows[$i][0]));
+                $chunks[] = "name()=$elementname";
+            }
+            for ($j=1; $j<count($rows[$i]); $j++) {
+                if (!empty($rows[$i][$j])) {
+                    $chunks[] = "contains(.,".$this->getSession()->getSelectorsHandler()->xpathLiteral($rows[$i][$j]).")";
+                }
+            }
+            // XPath portion that ensures that ($i+1)th child has required tag/class name and contains required text.
+            $subpaths[] = $childrenselector."[".($i+1)."][".join(' and ', $chunks)."]";
+        }
+        $xpath = $parentpath.'/.['.join(' and ', $subpaths).']';
+        return array(
+            new Given('"'.$this->escape($xpathcount).'" "xpath_element" should exist'),
+            new Given('"'.$this->escape($xpath).'" "xpath_element" should exist'),
+        );
+    }
 }
