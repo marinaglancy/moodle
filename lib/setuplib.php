@@ -344,7 +344,23 @@ function default_exception_handler($ex) {
         redirect(get_login_url());
     }
 
+    if ($PAGE->loginpending && !CLI_SCRIPT && !AJAX_SCRIPT && !($PAGE->logintype & PAGELOGIN_PREVENT_REDIRECT)
+            && (!isloggedin() || isguestuser())) {
+        // During login validation redirect non-logged in users to the login page instead of showing the error.
+        $SESSION->wantsurl = qualified_me();
+        redirect(get_login_url());
+    }
+
     $info = get_exception_info($ex);
+
+    if ($PAGE->loginpending && !($ex instanceof require_login_exception)) {
+        // During login, hide any particular exception under "require login exception".
+        // Add information about original exception to original debuginfo, keep the backtrace.
+        $backtrace = $info->backtrace;
+        $newex = new require_login_exception(get_class($ex).': '.$ex->getMessage()."\n".$ex->debuginfo);
+        $info = get_exception_info($newex);
+        $info->backtrace = $backtrace;
+    }
 
     if (debugging('', DEBUG_MINIMAL)) {
         $logerrmsg = "Default exception handler: ".$info->message.' Debug: '.$info->debuginfo."\n".format_backtrace($info->backtrace, true);

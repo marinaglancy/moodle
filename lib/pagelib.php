@@ -27,6 +27,11 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+define('PAGELOGIN_ALLOW_FRONTPAGE_GUEST', 2);
+define('PAGELOGIN_NO_AUTOLOGIN', 4);
+define('PAGELOGIN_DO_NOT_SET_WANTSURL', 8);
+define('PAGELOGIN_PREVENT_REDIRECT', 16);
+
 /**
  * $PAGE is a central store of information about the current page we are
  * generating in response to the user's request.
@@ -93,6 +98,10 @@ defined('MOODLE_INTERNAL') || die();
  * @property-read theme_config $theme The theme for this page.
  * @property-read string $title The title that should go in the <head> section of the HTML of this page.
  * @property-read moodle_url $url The moodle url object for this page.
+ * @property-read int $logintype combination of PAGELOGIN_ constants that describes how this
+ *      page should behave if user is not logged in - redirect to login page or
+ *      show error, allow guest access to frontpage course, etc.
+ * @property-read bool $loginpending Indicates that page is in the process of login verification and all DB errors should be masked.
  */
 class moodle_page {
 
@@ -336,6 +345,19 @@ class moodle_page {
      * such as upgrading or completing a quiz.
      */
     protected $_popup_notification_allowed = true;
+
+    /**
+     * @var int combination of PAGELOGIN_ constants that describes how this
+     * page should behave if user is not logged in - redirect to login page or
+     * show error, allow guest access to frontpage course, etc.
+     */
+    protected $_logintype = 0;
+
+    /**
+     * Indicates that page is in the process of login verification and all DB errors should be masked.
+     * @var type
+     */
+    protected $_loginpending = false;
 
     // Magic getter methods =============================================================
     // Due to the __get magic below, you normally do not call these as $PAGE->magic_get_x
@@ -720,6 +742,22 @@ class moodle_page {
     }
 
     /**
+     * Returns the logintype used by the page (combination of PAGELOGIN_ constants).
+     * @return int
+     */
+    protected function magic_get_logintype() {
+        return $this->_logintype;
+    }
+
+    /**
+     * Returns if the page is in the process of login when any DB error should be masked.
+     * @return bool
+     */
+    protected function magic_get_loginpending() {
+        return $this->_loginpending;
+    }
+
+    /**
      * PHP overloading magic to make the $PAGE->course syntax work by redirecting
      * it to the corresponding $PAGE->magic_get_course() method if there is one, and
      * throwing an exception if not.
@@ -876,6 +914,10 @@ class moodle_page {
 
         if (empty($course->id)) {
             throw new coding_exception('$course passed to moodle_page::set_course does not look like a proper course object.');
+        }
+
+        if (isset($this->_course->id) && $this->_course->id == $course->id) {
+            return;
         }
 
         $this->ensure_theme_not_set();
@@ -1332,6 +1374,152 @@ class moodle_page {
         if (!is_null($this->_theme)) {
             $this->_theme = theme_config::load($this->_theme->name);
         }
+    }
+
+    /**
+     * Can be called on the page before performing DB queries to mask the exceptions.
+     *
+     * @param int $logintype any combination of PAGELOGIN_ constants
+     */
+    public function login_expected($logintype = null) {
+        if ($logintype !== null) {
+            $this->_logintype = $logintype;
+        }
+        $this->_loginpending = true;
+    }
+
+    /**
+     * Makes sure that user can access course content.
+     *
+     * Otherwise will redirect to login page or display error, depending on
+     * the page logintype.
+     *
+     * @global moodle_database $DB
+     * @param int|stdClass $courseorid course id or record, may be omitted if this is a site page.
+     * @param int $logintype any combination of PAGELOGIN_ constants
+     * @return array of two elements: course context and course record
+     */
+    public function login($courseorid = null, $logintype = null) {
+        global $SITE, $DB;
+        $this->login_expected($logintype);
+        if ($courseorid == SITEID || empty($courseorid)) {
+            $course = $SITE;
+        } else if (is_object($courseorid)) {
+            $course = $courseorid;
+        } else {
+            $course = $DB->get_record('course', array('id' => $courseorid), '*', MUST_EXIST);
+        }
+        validate_login($this->logintype, $course, null);
+        $this->_loginpending = false;
+        $this->set_course($course);
+        return array($this->context, $this->course);
+    }
+
+    /**
+     * Makes sure that user can access course module.
+     *
+     * Otherwise will redirect to login page or display error, depending on
+     * the page logintype.
+     *
+     * Note that login_to_cm() will not redirect to course enrolment page
+     * if user is not enroled in the course.
+     *
+     * If this is a desired behaviour, you'll need to call separately:
+     * $PAGE->login($courseorid);
+     * $PAGE->login_to_cm($modname, $cmorid, $courseorid);
+     *
+     * @global moodle_database $DB
+     * @param string $modname module name used for validation of cmid, use 'null' if unknown
+     * @param int|stdClass|cm_info $cmorid course module id or record
+     * @param int|stdClass $courseorid course id or record (if known)
+     * @param int $logintype any combination of PAGELOGIN_ constants
+     * @return array of three elements: context_module (module context), stdClass (coruse record),
+     *     cm_info (course module). Activity record may be retrieved additionally using
+     *     $PAGE->activityrecord, it will perform additional DB query
+     */
+    public function login_to_cm($modname, $cmorid, $courseorid = null, $logintype = null) {
+        global $DB;
+        if (!is_object($cmorid)) {
+            $cmid = $cmorid;
+        } else if (isset($cmorid->id)) {
+            $cmid = $cmorid->id;
+        } else {
+            throw new coding_exception('Parameter $cmorid must be either an int or a record from course_modules table.');
+        }
+        $this->login_expected($logintype);
+        if (empty($courseorid) && isset($cmorid->course)) {
+            $courseorid = $cmorid->course;
+        }
+        if (is_object($courseorid)) {
+            $course = $courseorid;
+        } else if ($courseorid) {
+            $course = $DB->get_record('course', array('id' => $courseorid), '*', MUST_EXIST);
+        } else {
+            $course = $DB->get_record_sql('SELECT c.* '
+                    . 'FROM {course} c '
+                    . 'JOIN {course_modules} cm ON cm.course = c.id '
+                    . 'WHERE cm.id = ?', array($cmid), MUST_EXIST);
+        }
+        $modinfo = get_fast_modinfo($course);
+        $cm = $modinfo->get_cm($cmid);
+        if (!empty($modname) && $cm->modname !== $modname) {
+            throw new moodle_exception('invalidcoursemodule');
+        }
+        validate_login($this->logintype, $course, $cm);
+        $this->_loginpending = false;
+        $this->set_cm($cm, $course);
+        $this->set_pagelayout('incourse');
+        return array($this->context, $this->course, $this->cm);
+    }
+
+    /**
+     * Makes sure that user can access activity.
+     *
+     * Otherwise will redirect to login page or display error, depending on
+     * the page logintype.
+     *
+     * @global moodle_database $DB
+     * @param string $instancename name of the activity module
+     * @param int|stdClass $instanceorid instance id or record
+     * @param int|stdClass $courseorid course id or record (if known)
+     * @param int $logintype any combination of PAGELOGIN_ constants
+     * @return array of three elements: context_module (module context), stdClass (coruse record),
+     *     cm_info (course module). Activity record may be retrieved additionally using
+     *     $PAGE->activityrecord, it will perform additional DB query
+     */
+    public function login_to_activity($instancename, $instanceorid, $courseorid = null, $logintype = null) {
+        global $DB;
+        $this->login_expected($logintype);
+        if (is_object($instanceorid)) {
+            $instanceid = $instanceorid->id;
+        } else {
+            $instanceid = $instanceorid;
+        }
+        if (empty($courseorid) && isset($instanceorid->course)) {
+            $courseorid = $instanceorid->course;
+        }
+        if (is_object($courseorid)) {
+            $course = $courseorid;
+        } else if (is_int($courseorid)) {
+            $course = $DB->get_record('course', array('id' => $courseorid), '*', MUST_EXIST);
+        } else {
+            $course = $DB->get_record_sql('SELECT c.* '
+                    . 'FROM {modules} m '
+                    . 'JOIN {course_modules} cm ON m.id = cm.module '
+                    . 'JOIN {course} c ON cm.course = c.id '
+                    . 'WHERE m.name = ? AND cm.instance = ?',
+                    array($instancename, $instanceid), MUST_EXIST);
+        }
+        $modinfo = get_fast_modinfo($course);
+        $cm = $modinfo->instances[$instancename][$instanceid];
+        validate_login($this->logintype, $course, $cm);
+        $this->_loginpending = false;
+        $this->set_cm($cm, $course);
+        $this->set_pagelayout('incourse');
+        if (is_object($instanceorid)) {
+            $this->set_activity_record($instanceorid);
+        }
+        return array($this->context, $this->course, $this->cm);
     }
 
     /**
