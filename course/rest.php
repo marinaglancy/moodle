@@ -49,16 +49,13 @@ $PAGE->set_url('/course/rest.php', array('courseId'=>$courseid,'class'=>$class))
 
 //NOTE: when making any changes here please make sure it is using the same access control as course/mod.php !!
 
-$course = $DB->get_record('course', array('id' => $courseid), '*', MUST_EXIST);
 // Check user is logged in and set contexts if we are dealing with resource
 if (in_array($class, array('resource'))) {
-    $cm = get_coursemodule_from_id(null, $id, $course->id, false, MUST_EXIST);
-    require_login($course, false, $cm);
-    $modcontext = context_module::instance($cm->id);
+    list($modcontext, $course, $cm) = $PAGE->login_to_cm(null, $id, $courseid, PAGELOGIN_NO_AUTOLOGIN);
+    $coursecontext = context_course::instance($course->id);
 } else {
-    require_login($course);
+    list($coursecontext, $course) = $PAGE->login($courseid, PAGELOGIN_NO_AUTOLOGIN);
 }
-$coursecontext = context_course::instance($course->id);
 require_sesskey();
 
 echo $OUTPUT->header(); // send headers

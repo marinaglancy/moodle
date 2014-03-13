@@ -42,26 +42,13 @@ require_once($CFG->dirroot.'/course/completion_form.php');
 $id = required_param('id', PARAM_INT);       // course id
 
 // Perform some basic access control checks.
-if ($id) {
-
-    if($id == SITEID){
-        // Don't allow editing of 'site course' using this form.
-        print_error('cannoteditsiteform');
-    }
-
-    if (!$course = $DB->get_record('course', array('id'=>$id))) {
-        print_error('invalidcourseid');
-    }
-    require_login($course);
-    require_capability('moodle/course:update', context_course::instance($course->id));
-
-} else {
-    require_login();
-    print_error('needcourseid');
+list($context, $course) = $PAGE->login($id);
+require_capability('moodle/course:update', $context);
+if ($course->id == SITEID) {
+    print_error('cannoteditsiteform');
 }
 
 // Set up the page.
-$PAGE->set_course($course);
 $PAGE->set_url('/course/completion.php', array('id' => $course->id));
 $PAGE->set_title($course->shortname);
 $PAGE->set_heading($course->fullname);

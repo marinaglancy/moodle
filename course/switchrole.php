@@ -50,17 +50,11 @@ $PAGE->set_url('/course/switchrole.php', array('id'=>$id));
 
 require_sesskey();
 
-if (!$course = $DB->get_record('course', array('id'=>$id))) {
-    redirect(new moodle_url('/'));
-}
-
-$context = context_course::instance($course->id);
-
 // Remove any switched roles before checking login.
-if ($switchrole == 0) {
+if ($switchrole == 0 && ($context = context_course::instance($id, IGNORE_MISSING))) {
     role_switch(0, $context);
 }
-require_login($course);
+list($context, $course) = $PAGE->login($id);
 
 // Switchrole - sanity check in cost-order...
 if ($switchrole > 0 && has_capability('moodle/role:switchroles', $context)) {

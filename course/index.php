@@ -42,16 +42,14 @@ if ($categoryid) {
     $PAGE->set_context(context_system::instance());
 }
 
-$PAGE->set_pagelayout('coursecategory');
-$courserenderer = $PAGE->get_renderer('core', 'course');
-
-if ($CFG->forcelogin) {
-    require_login();
-}
+$PAGE->login(0, PAGELOGIN_IF_REQUIRED_ONLY);
 
 if ($categoryid && !$category->visible && !has_capability('moodle/category:viewhiddencategories', $PAGE->context)) {
     throw new moodle_exception('unknowncategory');
 }
+
+$PAGE->set_pagelayout('coursecategory');
+$courserenderer = $PAGE->get_renderer('core', 'course');
 
 $PAGE->set_heading($site->fullname);
 $content = $courserenderer->course_category($categoryid);

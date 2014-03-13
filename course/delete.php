@@ -28,10 +28,7 @@ require_once($CFG->dirroot . '/course/lib.php');
 $id = required_param('id', PARAM_INT); // Course ID.
 $delete = optional_param('delete', '', PARAM_ALPHANUM); // Confirmation hash.
 
-$course = $DB->get_record('course', array('id' => $id), '*', MUST_EXIST);
-$coursecontext = context_course::instance($course->id);
-
-require_login();
+list($coursecontext, $course) = $PAGE->login($id);
 
 if ($SITE->id == $course->id || !can_delete_course($id)) {
     // Can not delete frontpage or don't have permission to delete the course.

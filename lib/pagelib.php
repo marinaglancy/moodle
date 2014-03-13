@@ -31,6 +31,7 @@ define('PAGELOGIN_ALLOW_FRONTPAGE_GUEST', 2);
 define('PAGELOGIN_NO_AUTOLOGIN', 4);
 define('PAGELOGIN_DO_NOT_SET_WANTSURL', 8);
 define('PAGELOGIN_PREVENT_REDIRECT', 16);
+define('PAGELOGIN_IF_REQUIRED_ONLY', 32);
 
 /**
  * $PAGE is a central store of information about the current page we are

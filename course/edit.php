@@ -40,31 +40,30 @@ $PAGE->set_url('/course/edit.php', $pageparams);
 // Basic access control checks.
 if ($id) {
     // Editing course.
-    if ($id == SITEID){
+
+    // Login and check capability (no editing of site page).
+    list($coursecontext, $course) = $PAGE->login($id);
+    if ($course->id == SITEID){
         // Don't allow editing of  'site course' using this from.
         print_error('cannoteditsiteform');
     }
-
-    // Login to the course and retrieve also all fields defined by course format.
-    $course = get_course($id);
-    require_login($course);
-    $course = course_get_format($course)->get_course();
-
-    $category = $DB->get_record('course_categories', array('id'=>$course->category), '*', MUST_EXIST);
-    $coursecontext = context_course::instance($course->id);
     require_capability('moodle/course:update', $coursecontext);
+
+    // Retrieve also all fields defined by course format and course category.
+    $course = course_get_format($course)->get_course();
+    $category = $DB->get_record('course_categories', array('id'=>$course->category), '*', MUST_EXIST);
 
 } else if ($categoryid) {
     // Creating new course in this category.
     $course = null;
-    require_login();
+    $PAGE->login();
     $category = $DB->get_record('course_categories', array('id'=>$categoryid), '*', MUST_EXIST);
     $catcontext = context_coursecat::instance($category->id);
     require_capability('moodle/course:create', $catcontext);
     $PAGE->set_context($catcontext);
 
 } else {
-    require_login();
+    $PAGE->login();
     print_error('needcoursecategroyid');
 }
 

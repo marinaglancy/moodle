@@ -53,8 +53,7 @@ if (!empty($add)) {
     $url->param('course', $course);
     $PAGE->set_url($url);
 
-    $course = $DB->get_record('course', array('id'=>$course), '*', MUST_EXIST);
-    require_login($course);
+    list($coursecontext, $course) = $PAGE->login($course);
 
     // There is no page for this in the navigation. The closest we'll have is the course section.
     // If the course section isn't displayed on the navigation this will fall back to the course which
@@ -129,14 +128,9 @@ if (!empty($add)) {
     // Select the "Edit settings" from navigation.
     navigation_node::override_active_url(new moodle_url('/course/modedit.php', array('update'=>$update, 'return'=>1)));
 
-    // Check the course module exists.
-    $cm = get_coursemodule_from_id('', $update, 0, false, MUST_EXIST);
-
-    // Check the course exists.
-    $course = $DB->get_record('course', array('id'=>$cm->course), '*', MUST_EXIST);
-
-    // require_login
-    require_login($course, false, $cm); // needed to setup proper $COURSE
+    // Login to course and check access.
+    list($modcontext, $course, $cminfo) = $PAGE->login_to_cm(null, $update, null, PAGELOGIN_NO_AUTOLOGIN);
+    $cm = $cminfo->get_course_module_record(true);
 
     list($cm, $context, $module, $data, $cw) = can_update_moduleinfo($cm);
 
@@ -144,7 +138,7 @@ if (!empty($add)) {
     $data->section            = $cw->section;  // The section number itself - relative!!! (section column in course_sections)
     $data->visible            = $cm->visible; //??  $cw->visible ? $cm->visible : 0; // section hiding overrides
     $data->cmidnumber         = $cm->idnumber;          // The cm IDnumber
-    $data->groupmode          = groups_get_activity_groupmode($cm); // locked later if forced
+    $data->groupmode          = groups_get_activity_groupmode($cm, $course); // locked later if forced
     $data->groupingid         = $cm->groupingid;
     $data->groupmembersonly   = $cm->groupmembersonly;
     $data->course             = $course->id;
@@ -232,7 +226,7 @@ if (!empty($add)) {
     $navbaraddition = null;
 
 } else {
-    require_login();
+    $PAGE->login();
     print_error('invalidaction');
 }
 

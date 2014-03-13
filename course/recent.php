@@ -29,18 +29,12 @@ require_once('recent_form.php');
 
 $id = required_param('id', PARAM_INT);
 
+list($context, $course) = $PAGE->login($id);
+
 $PAGE->set_url('/course/recent.php', array('id'=>$id));
 $PAGE->set_pagelayout('report');
 
-if (!$course = $DB->get_record('course', array('id'=>$id))) {
-    print_error("That's an invalid course id");
-}
-
-require_login($course);
-
 add_to_log($course->id, "course", "recent", "recent.php?id=$course->id", $course->id);
-
-$context = context_course::instance($course->id);
 
 $lastlogin = time() - COURSE_MAX_RECENT_PERIOD;
 if (!isguestuser() and !empty($USER->lastcourseaccess[$COURSE->id])) {

@@ -40,9 +40,7 @@ if ($courseid) {
     $PAGE->set_url(new moodle_url('/course/togglecompletion.php', array('course'=>$courseid)));
 
     // Check user is logged in
-    $course = $DB->get_record('course', array('id' => $courseid), '*', MUST_EXIST);
-    $context = context_course::instance($course->id);
-    require_login($course);
+    list($context, $course) = $PAGE->login($courseid);
 
     $completion = new completion_info($course);
     if (!$completion->is_enabled()) {
@@ -127,12 +125,7 @@ switch($targetstate) {
         print_error('unsupportedstate');
 }
 
-// Get course-modules entry
-$cm = get_coursemodule_from_id(null, $cmid, null, true, MUST_EXIST);
-$course = $DB->get_record('course', array('id'=>$cm->course), '*', MUST_EXIST);
-
-// Check user is logged in
-require_login($course, false, $cm);
+list($context, $course, $cm) = $PAGE->login_to_cm(null, $cmid, null, PAGELOGIN_NO_AUTOLOGIN);
 
 if (isguestuser() or !confirm_sesskey()) {
     print_error('error');

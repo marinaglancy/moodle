@@ -40,8 +40,7 @@ require_once($CFG->libdir . '/filelib.php');
 //check user access capability to this page
 $id = required_param('id', PARAM_INT);
 
-$course = $DB->get_record('course', array('id' => $id), '*', MUST_EXIST);
-require_login($course);
+list($context, $course) = $PAGE->login($id);
 
 //page settings
 $PAGE->set_url('/course/publish/metadata.php', array('id' => $course->id));

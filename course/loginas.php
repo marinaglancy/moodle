@@ -33,47 +33,32 @@ if ($redirect) {
 $userid = required_param('user', PARAM_INT);
 
 require_sesskey();
-$course = $DB->get_record('course', array('id'=>$id), '*', MUST_EXIST);
 
-// User must be logged in.
+// User must have access to the course himself and have capability to login as.
+list($context, $course) = $PAGE->login($id);
+require_capability('moodle/user:loginas', $context);
 
-$systemcontext = context_system::instance();
-$coursecontext = context_course::instance($course->id);
+if (is_siteadmin($userid)) {
+    print_error('nologinas');
+}
+if (!is_enrolled($context, $userid)) {
+    print_error('usernotincourse');
+}
 
-require_login();
-
-if (has_capability('moodle/user:loginas', $systemcontext)) {
-    if (is_siteadmin($userid)) {
-        print_error('nologinas');
-    }
-    $context = $systemcontext;
-    $PAGE->set_context($context);
-} else {
-    require_login($course);
-    require_capability('moodle/user:loginas', $coursecontext);
-    if (is_siteadmin($userid)) {
-        print_error('nologinas');
-    }
-    if (!is_enrolled($coursecontext, $userid)) {
-        print_error('usernotincourse');
-    }
-    $context = $coursecontext;
-
-    // Check if course has SEPARATEGROUPS and user is part of that group.
-    if (groups_get_course_groupmode($course) == SEPARATEGROUPS &&
-            !has_capability('moodle/site:accessallgroups', $context)) {
-        $samegroup = false;
-        if ($groups = groups_get_all_groups($course->id, $USER->id)) {
-            foreach ($groups as $group) {
-                if (groups_is_member($group->id, $userid)) {
-                    $samegroup = true;
-                    break;
-                }
+// Check if course has SEPARATEGROUPS and user is part of that group.
+if (groups_get_course_groupmode($course) == SEPARATEGROUPS &&
+        !has_capability('moodle/site:accessallgroups', $context)) {
+    $samegroup = false;
+    if ($groups = groups_get_all_groups($course->id, $USER->id)) {
+        foreach ($groups as $group) {
+            if (groups_is_member($group->id, $userid)) {
+                $samegroup = true;
+                break;
             }
         }
-        if (!$samegroup) {
-            print_error('nologinas');
-        }
+    }
+    if (!$samegroup) {
+        print_error('nologinas');
     }
 }
 

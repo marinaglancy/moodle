@@ -406,16 +406,14 @@ class dndupload_ajax_processor {
      * @param string $modulename The name of the module requested to handle this upload
      */
     public function __construct($courseid, $section, $type, $modulename) {
-        global $DB;
+        global $DB, $PAGE;
 
         if (!defined('AJAX_SCRIPT')) {
             throw new coding_exception('dndupload_ajax_processor should only be used within AJAX requests');
         }
 
-        $this->course = $DB->get_record('course', array('id' => $courseid), '*', MUST_EXIST);
-
-        require_login($this->course, false);
-        $this->context = context_course::instance($this->course->id);
+        list($context, $course) = $PAGE->login($courseid, PAGELOGIN_NO_AUTOLOGIN);
+        $this->context = $context;
 
         if (!is_number($section) || $section < 0) {
             throw new coding_exception("Invalid section number $section");

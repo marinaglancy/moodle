@@ -62,7 +62,7 @@ if ($groupmode !== '') {
 }
 $PAGE->set_url($url);
 
-require_login();
+$PAGE->login(0, PAGELOGIN_NO_AUTOLOGIN);
 
 //check if we are adding / editing a module that has new forms using formslib
 if (!empty($add)) {
@@ -79,12 +79,8 @@ if (!empty($add)) {
     redirect("$CFG->wwwroot/course/modedit.php?update=$update&return=$returntomod&sr=$sectionreturn");
 
 } else if (!empty($duplicate)) {
-    $cm     = get_coursemodule_from_id('', $duplicate, 0, true, MUST_EXIST);
-    $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
-
-    require_login($course, false, $cm);
+    list($modcontext, $course, $cm) = $PAGE->login_to_cm(null, $duplicate);
     $coursecontext = context_course::instance($course->id);
-    $modcontext = context_module::instance($cm->id);
     require_capability('moodle/course:manageactivities', $coursecontext);
 
     if (!$confirm or !confirm_sesskey()) {
@@ -116,11 +112,7 @@ if (!empty($add)) {
     }
 
 } else if (!empty($delete)) {
-    $cm     = get_coursemodule_from_id('', $delete, 0, true, MUST_EXIST);
-    $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
-
-    require_login($course, false, $cm);
-    $modcontext = context_module::instance($cm->id);
+    list($modcontext, $course, $cm) = $PAGE->login_to_cm(null, $delete);
     require_capability('moodle/course:manageactivities', $modcontext);
 
     $return = course_get_url($course, $cm->sectionnum, array('sr' => $sectionreturn));
@@ -157,12 +149,8 @@ if (!empty($add)) {
 
 
 if ((!empty($movetosection) or !empty($moveto)) and confirm_sesskey()) {
-    $cm     = get_coursemodule_from_id('', $USER->activitycopy, 0, true, MUST_EXIST);
-    $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
-
-    require_login($course, false, $cm);
+    list($modcontext, $course, $cm) = $PAGE->login_to_cm(null, $USER->activitycopy);
     $coursecontext = context_course::instance($course->id);
-    $modcontext = context_module::instance($cm->id);
     require_capability('moodle/course:manageactivities', $modcontext);
 
     if (!empty($movetosection)) {
@@ -195,14 +183,8 @@ if ((!empty($movetosection) or !empty($moveto)) and confirm_sesskey()) {
     redirect(course_get_url($course, $section->section, array('sr' => $sectionreturn)));
 
 } else if (!empty($indent) and confirm_sesskey()) {
-    $id = required_param('id', PARAM_INT);
-
-    $cm     = get_coursemodule_from_id('', $id, 0, true, MUST_EXIST);
-    $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
-
-    require_login($course, false, $cm);
+    list($modcontext, $course, $cm) = $PAGE->login_to_cm(null, $id);
     $coursecontext = context_course::instance($course->id);
-    $modcontext = context_module::instance($cm->id);
     require_capability('moodle/course:manageactivities', $modcontext);
 
     $cm->indent += $indent;
@@ -218,12 +200,8 @@ if ((!empty($movetosection) or !empty($moveto)) and confirm_sesskey()) {
     redirect(course_get_url($course, $cm->sectionnum, array('sr' => $sectionreturn)));
 
 } else if (!empty($hide) and confirm_sesskey()) {
-    $cm     = get_coursemodule_from_id('', $hide, 0, true, MUST_EXIST);
-    $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
-
-    require_login($course, false, $cm);
+    list($modcontext, $course, $cm) = $PAGE->login_to_cm(null, $hide);
     $coursecontext = context_course::instance($course->id);
-    $modcontext = context_module::instance($cm->id);
     require_capability('moodle/course:activityvisibility', $modcontext);
 
     set_coursemodule_visible($cm->id, 0);
@@ -231,12 +209,8 @@ if ((!empty($movetosection) or !empty($moveto)) and confirm_sesskey()) {
     redirect(course_get_url($course, $cm->sectionnum, array('sr' => $sectionreturn)));
 
 } else if (!empty($show) and confirm_sesskey()) {
-    $cm     = get_coursemodule_from_id('', $show, 0, true, MUST_EXIST);
-    $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
-
-    require_login($course, false, $cm);
+    list($modcontext, $course, $cm) = $PAGE->login_to_cm(null, $show);
     $coursecontext = context_course::instance($course->id);
-    $modcontext = context_module::instance($cm->id);
     require_capability('moodle/course:activityvisibility', $modcontext);
 
     $section = $DB->get_record('course_sections', array('id'=>$cm->section), '*', MUST_EXIST);
@@ -251,13 +225,8 @@ if ((!empty($movetosection) or !empty($moveto)) and confirm_sesskey()) {
 
 } else if ($groupmode > -1 and confirm_sesskey()) {
     $id = required_param('id', PARAM_INT);
-
-    $cm     = get_coursemodule_from_id('', $id, 0, true, MUST_EXIST);
-    $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
-
-    require_login($course, false, $cm);
+    list($modcontext, $course, $cm) = $PAGE->login_to_cm(null, $id);
     $coursecontext = context_course::instance($course->id);
-    $modcontext = context_module::instance($cm->id);
     require_capability('moodle/course:manageactivities', $modcontext);
 
     set_coursemodule_groupmode($cm->id, $groupmode);
@@ -265,12 +234,8 @@ if ((!empty($movetosection) or !empty($moveto)) and confirm_sesskey()) {
     redirect(course_get_url($course, $cm->sectionnum, array('sr' => $sectionreturn)));
 
 } else if (!empty($copy) and confirm_sesskey()) { // value = course module
-    $cm     = get_coursemodule_from_id('', $copy, 0, true, MUST_EXIST);
-    $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
-
-    require_login($course, false, $cm);
+    list($modcontext, $course, $cm) = $PAGE->login_to_cm(null, $copy);
     $coursecontext = context_course::instance($course->id);
-    $modcontext = context_module::instance($cm->id);
     require_capability('moodle/course:manageactivities', $modcontext);
 
     $section = $DB->get_record('course_sections', array('id'=>$cm->section), '*', MUST_EXIST);
@@ -285,9 +250,8 @@ if ((!empty($movetosection) or !empty($moveto)) and confirm_sesskey()) {
 } else if (!empty($cancelcopy) and confirm_sesskey()) { // value = course module
 
     $courseid = $USER->activitycopycourse;
-    $course = $DB->get_record('course', array('id' => $courseid), '*', MUST_EXIST);
+    list($modcontext, $course, $cm) = $PAGE->login_to_cm(null, $USER->activitycopy, $courseid);
 
-    $cm     = get_coursemodule_from_id('', $USER->activitycopy, 0, true, IGNORE_MISSING);
     $sectionreturn = $USER->activitycopysectionreturn;
     unset($USER->activitycopy);
     unset($USER->activitycopycourse);

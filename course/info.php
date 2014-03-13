@@ -8,29 +8,26 @@
     $id   = optional_param('id', false, PARAM_INT); // Course id
     $name = optional_param('name', false, PARAM_RAW); // Course short name
 
+    $PAGE->login(0, PAGELOGIN_IF_REQUIRED_ONLY);
+
     if (!$id and !$name) {
         print_error("unspecifycourseid");
     }
 
     if ($name) {
-        if (!$course = $DB->get_record("course", array("shortname"=>$name))) {
-            print_error("invalidshortname");
-        }
+        $errorcode = "invalidshortname";
+        $params = array("shortname"=>$name);
     } else {
-        if (!$course = $DB->get_record("course", array("id"=>$id))) {
-            print_error("invalidcourseid");
-        }
+        $errorcode = "invalidcourseid";
+        $params = array("id"=>$id);
     }
-
-    $site = get_site();
-
-    if ($CFG->forcelogin) {
-        require_login();
+    if (!$course = $DB->get_record("course", $params)) {
+        print_error($errorcode);
     }
 
     $context = context_course::instance($course->id);
     if (!$course->visible and !has_capability('moodle/course:viewhiddencourses', $context)) {
-        print_error('coursehidden', '', $CFG->wwwroot .'/');
+        print_error($errorcode);
     }
 
     $PAGE->set_course($course);

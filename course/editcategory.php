@@ -36,9 +36,8 @@ $id = optional_param('id', 0, PARAM_INT);
 
 $url = new moodle_url('/course/editcategory.php');
 if ($id) {
-    $coursecat = coursecat::get($id, MUST_EXIST, true);
-    $category = $coursecat->get_db_record();
-    $context = context_coursecat::instance($id);
+    $PAGE->set_category_by_id($id);
+    $category = $PAGE->category;
 
     $url->param('id', $id);
     $strtitle = new lang_string('editcategorysettings');
@@ -50,10 +49,9 @@ if ($id) {
     $parent = required_param('parent', PARAM_INT);
     $url->param('parent', $parent);
     if ($parent) {
-        $DB->record_exists('course_categories', array('id' => $parent), '*', MUST_EXIST);
-        $context = context_coursecat::instance($parent);
+        $PAGE->set_category_by_id($parent);
     } else {
-        $context = context_system::instance();
+        $PAGE->set_context(context_system::instance());
     }
     navigation_node::override_active_url(new moodle_url('/course/editcategory.php', array('parent' => $parent)));
 
@@ -66,9 +64,9 @@ if ($id) {
     $fullname = $SITE->fullname;
 }
 
+$context = $PAGE->context;
 require_capability('moodle/category:manage', $context);
 
-$PAGE->set_context($context);
 $PAGE->set_url($url);
 $PAGE->set_pagelayout('admin');
 $PAGE->set_title($title);

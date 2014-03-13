@@ -2838,6 +2838,15 @@ function validate_login($logintype, $course, $cm) {
     $setwantsurltome = !($logintype & PAGELOGIN_DO_NOT_SET_WANTSURL);
     $preventredirect = $logintype & PAGELOGIN_PREVENT_REDIRECT;
     $allowfrontpageguest = $logintype & PAGELOGIN_ALLOW_FRONTPAGE_GUEST;
+    $ifrequiredonly = $logintype & PAGELOGIN_IF_REQUIRED_ONLY;
+
+    if ($ifrequiredonly && ($cm || $course->id != SITEID)) {
+        throw new coding_exception('Login type PAGELOGIN_IF_REQUIRED_ONLY can only be used without specifying course or course module.');
+    }
+
+    if ($ifrequiredonly && empty($CFG->forcelogin)) {
+        return;
+    }
 
     if ($allowfrontpageguest && $course->id == SITEID && empty($CFG->forcelogin) && (!$cm || $cm->uservisible)) {
         // Some site pages may not require login (for example viewing site news forum or other activities on the front page).
@@ -3006,10 +3015,7 @@ function validate_login($logintype, $course, $cm) {
             $realuser = \core\session\manager::get_realuser();
             if (!is_enrolled($coursecontext, $realuser->id, '', true) and
                     !is_viewing($coursecontext, $realuser->id) and !is_siteadmin($realuser->id)) {
-                if ($preventredirect) {
-                    throw new require_login_exception('Invalid course login-as access');
-                }
-                notice(get_string('studentnotallowed', '', fullname($USER, true)), $CFG->wwwroot . '/');
+                throw new require_login_exception('Invalid course login-as access');
             }
         }
 
