@@ -28,20 +28,15 @@ require_once("$CFG->dirroot/mod/folder/locallib.php");
 require_once("$CFG->dirroot/mod/folder/edit_form.php");
 require_once("$CFG->dirroot/repository/lib.php");
 
-$id = required_param('id', PARAM_INT);  // Course module ID
+$cmid = required_param('id', PARAM_INT);  // Course module ID
 
-$cm = get_coursemodule_from_id('folder', $id, 0, true, MUST_EXIST);
-$context = context_module::instance($cm->id, MUST_EXIST);
-$folder = $DB->get_record('folder', array('id'=>$cm->instance), '*', MUST_EXIST);
-$course = $DB->get_record('course', array('id'=>$cm->course), '*', MUST_EXIST);
-
-require_login($course, false, $cm);
+list($context, $course, $cm) = $PAGE->login_to_cm('folder', $cmid, null, PAGELOGIN_NO_AUTOLOGIN);
 require_capability('mod/folder:managefiles', $context);
+$folder = $PAGE->activityrecord;
 
 $PAGE->set_url('/mod/folder/edit.php', array('id' => $cm->id));
 $PAGE->set_title($course->shortname.': '.$folder->name);
 $PAGE->set_heading($course->fullname);
-$PAGE->set_activity_record($folder);
 
 $data = new stdClass();
 $data->id = $cm->id;

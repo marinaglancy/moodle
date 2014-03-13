@@ -30,6 +30,7 @@ class mod_lesson_renderer extends plugin_renderer_base {
      * Returns the header for the lesson module
      *
      * @param lesson $lesson a lesson object.
+     * @param stdClass|cm_info $cm
      * @param string $currenttab current tab that is shown.
      * @param bool   $extraeditbuttons if extra edit buttons should be displayed.
      * @param int    $lessonpageid id of the lesson page that needs to be displayed.

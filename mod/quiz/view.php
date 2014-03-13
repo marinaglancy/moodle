@@ -30,31 +30,15 @@ require_once($CFG->dirroot.'/mod/quiz/locallib.php');
 require_once($CFG->libdir . '/completionlib.php');
 require_once($CFG->dirroot . '/course/format/lib.php');
 
-$id = optional_param('id', 0, PARAM_INT); // Course Module ID, or ...
+$cmid = optional_param('id', 0, PARAM_INT); // Course Module ID, or ...
 $q = optional_param('q',  0, PARAM_INT);  // Quiz ID.
 
-if ($id) {
-    if (!$cm = get_coursemodule_from_id('quiz', $id)) {
-        print_error('invalidcoursemodule');
-    }
-    if (!$course = $DB->get_record('course', array('id' => $cm->course))) {
-        print_error('coursemisconf');
-    }
+// Check login and access.
+if ($cmid) {
+    list($context, $course, $cm) = $PAGE->login_to_cm('quiz', $cmid, null, PAGELOGIN_NO_AUTOLOGIN);
 } else {
-    if (!$quiz = $DB->get_record('quiz', array('id' => $q))) {
-        print_error('invalidquizid', 'quiz');
-    }
-    if (!$course = $DB->get_record('course', array('id' => $quiz->course))) {
-        print_error('invalidcourseid');
-    }
-    if (!$cm = get_coursemodule_from_instance("quiz", $quiz->id, $course->id)) {
-        print_error('invalidcoursemodule');
-    }
+    list($context, $course, $cm) = $PAGE->login_to_activity('quiz', $q, null, PAGELOGIN_NO_AUTOLOGIN);
 }
-
-// Check login and get context.
-require_login($course, false, $cm);
-$context = context_module::instance($cm->id);
 require_capability('mod/quiz:view', $context);
 
 // Cache some other capabilities we use several times.

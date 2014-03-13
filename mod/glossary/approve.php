@@ -12,14 +12,9 @@ $hook = optional_param('hook', 'ALL', PARAM_CLEAN);
 $url = new moodle_url('/mod/glossary/approve.php', array('eid' => $eid, 'mode' => $mode, 'hook' => $hook, 'newstate' => $newstate));
 $PAGE->set_url($url);
 
+$PAGE->login_expected(PAGELOGIN_NO_AUTOLOGIN);
 $entry = $DB->get_record('glossary_entries', array('id'=> $eid), '*', MUST_EXIST);
-$glossary = $DB->get_record('glossary', array('id'=> $entry->glossaryid), '*', MUST_EXIST);
-$cm = get_coursemodule_from_instance('glossary', $glossary->id, 0, false, MUST_EXIST);
-$course = $DB->get_record('course', array('id'=> $cm->course), '*', MUST_EXIST);
-
-require_login($course, false, $cm);
-
-$context = context_module::instance($cm->id);
+list($context, $course, $cm) = $PAGE->login_to_activity('glossary', $entry->glossaryid);
 require_capability('mod/glossary:approve', $context);
 
 if (($newstate != $entry->approved) && confirm_sesskey()) {
@@ -31,7 +26,9 @@ if (($newstate != $entry->approved) && confirm_sesskey()) {
 
     // Update completion state
     $completion = new completion_info($course);
-    if ($completion->is_enabled($cm) == COMPLETION_TRACKING_AUTOMATIC && $glossary->completionentries) {
+    if (($completion->is_enabled($cm) == COMPLETION_TRACKING_AUTOMATIC) &&
+            ($glossary = $PAGE->activityrecord) &&
+            $glossary->completionentries) {
         $completion->update_state($cm, COMPLETION_COMPLETE, $entry->userid);
     }
 

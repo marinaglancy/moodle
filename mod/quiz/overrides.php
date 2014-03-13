@@ -32,13 +32,12 @@ require_once($CFG->dirroot.'/mod/quiz/override_form.php');
 $cmid = required_param('cmid', PARAM_INT);
 $mode = optional_param('mode', '', PARAM_ALPHA); // One of 'user' or 'group', default is 'group'.
 
-if (! $cm = get_coursemodule_from_id('quiz', $cmid)) {
-    print_error('invalidcoursemodule');
-}
-if (! $quiz = $DB->get_record('quiz', array('id' => $cm->instance))) {
-    print_error('invalidcoursemodule');
-}
-$course = $DB->get_record('course', array('id'=>$cm->course), '*', MUST_EXIST);
+list($context, $course, $cminfo) = $PAGE->login_to_cm('quiz', $cmid, null, PAGELOGIN_NO_AUTOLOGIN);
+$cm = $cminfo->get_course_module_record(true);
+$quiz = $PAGE->activityrecord;
+
+// Check the user has the required capabilities to list overrides.
+require_capability('mod/quiz:manageoverrides', $context);
 
 // Get the course groups.
 $groups = groups_get_all_groups($cm->course);
@@ -59,13 +58,6 @@ $groupmode = ($mode == "group");
 $url = new moodle_url('/mod/quiz/overrides.php', array('cmid'=>$cm->id, 'mode'=>$mode));
 
 $PAGE->set_url($url);
-
-require_login($course, false, $cm);
-
-$context = context_module::instance($cm->id);
-
-// Check the user has the required capabilities to list overrides.
-require_capability('mod/quiz:manageoverrides', $context);
 
 // Display a list of overrides.
 $PAGE->set_pagelayout('admin');

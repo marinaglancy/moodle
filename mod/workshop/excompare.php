@@ -29,16 +29,14 @@ $cmid   = required_param('cmid', PARAM_INT);    // course module id
 $sid    = required_param('sid', PARAM_INT);     // example submission id
 $aid    = required_param('aid', PARAM_INT);     // the user's assessment id
 
-$cm     = get_coursemodule_from_id('workshop', $cmid, 0, false, MUST_EXIST);
-$course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
+list($context, $course, $cm) = $PAGE->login_to_cm('workshop', $cmid, null, PAGELOGIN_NO_AUTOLOGIN);
 
-require_login($course, false, $cm);
 if (isguestuser()) {
     print_error('guestsarenotallowed');
 }
 
-$workshop = $DB->get_record('workshop', array('id' => $cm->instance), '*', MUST_EXIST);
-$workshop = new workshop($workshop, $cm, $course);
+$workshoprecord = $PAGE->activityrecord;
+$workshop = new workshop($workshoprecord, $cm, $course);
 $strategy = $workshop->grading_strategy_instance();
 
 $PAGE->set_url($workshop->excompare_url($sid, $aid));

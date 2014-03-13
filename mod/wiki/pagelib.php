@@ -87,16 +87,16 @@ abstract class page_wiki {
      */
     protected $wikioutput;
     /**
-     * @var stdClass course module.
+     * @var stdClass|cm_info course module.
      */
     protected $cm;
 
     /**
      * page_wiki constructor
      *
-     * @param $wiki. Current wiki
-     * @param $subwiki. Current subwiki.
-     * @param $cm. Current course_module.
+     * @param stdClass $wiki Current wiki
+     * @param stdClass $subwiki Current subwiki.
+     * @param stdClass|cm_info $cm Current course_module.
      */
     function __construct($wiki, $subwiki, $cm) {
         global $PAGE, $CFG;
@@ -107,8 +107,6 @@ abstract class page_wiki {
         // initialise wiki renderer
         $this->wikioutput = $PAGE->get_renderer('mod_wiki');
         $PAGE->set_cacheable(true);
-        $PAGE->set_cm($cm);
-        $PAGE->set_activity_record($wiki);
         // the search box
         $PAGE->set_button(wiki_search_form($cm));
     }

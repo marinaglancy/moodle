@@ -44,6 +44,7 @@ $pageid = required_param('pageid', PARAM_TEXT);
 $compare = required_param('compare', PARAM_INT);
 $comparewith = required_param('comparewith', PARAM_INT);
 
+$PAGE->login_expected();
 if (!$page = wiki_get_page($pageid)) {
     print_error('incorrectpageid', 'wiki');
 }
@@ -56,17 +57,11 @@ if (!$wiki = wiki_get_wiki($subwiki->wikiid)) {
     print_error('incorrectwikiid', 'wiki');
 }
 
-if (!$cm = get_coursemodule_from_instance('wiki', $wiki->id)) {
-    print_error('invalidcoursemodule');
-}
-
-$course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
+list($modulecontext, $course, $cm) = $PAGE->login_to_activity('wiki', $wiki);
 
 if ($compare >= $comparewith) {
     print_error("A page version can only be compared with an older version.");
 }
-
-require_login($course, true, $cm);
 
 if (!wiki_user_can_view($subwiki, $wiki)) {
     print_error('cannotviewpage', 'wiki');

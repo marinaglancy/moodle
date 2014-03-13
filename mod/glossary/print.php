@@ -5,7 +5,7 @@ global $CFG;
 require_once("../../config.php");
 require_once("lib.php");
 
-$id            = required_param('id', PARAM_INT);                     // Course Module ID
+$cmid          = required_param('id', PARAM_INT);                     // Course Module ID
 $sortorder     = optional_param('sortorder', 'asc', PARAM_ALPHA);     // Sorting order
 $offset        = optional_param('offset', 0, PARAM_INT);              // number of entries to bypass
 $displayformat = optional_param('displayformat',-1, PARAM_INT);
@@ -14,7 +14,7 @@ $mode    = required_param('mode', PARAM_ALPHA);             // mode to show the 
 $hook    = optional_param('hook','ALL', PARAM_CLEAN);       // what to show
 $sortkey = optional_param('sortkey','UPDATE', PARAM_ALPHA); // Sorting key
 
-$url = new moodle_url('/mod/glossary/print.php', array('id'=>$id));
+$url = new moodle_url('/mod/glossary/print.php', array('id'=>$cmid));
 if ($sortorder !== 'asc') {
     $url->param('sortorder', $sortorder);
 }
@@ -35,24 +35,12 @@ if ($hook !== 'ALL') {
 }
 $PAGE->set_url($url);
 
-if (! $cm = get_coursemodule_from_id('glossary', $id)) {
-    print_error('invalidcoursemodule');
-}
-
-if (! $course = $DB->get_record("course", array("id"=>$cm->course))) {
-    print_error('coursemisconf');
-}
-
-if (! $glossary = $DB->get_record("glossary", array("id"=>$cm->instance))) {
-    print_error('invalidid', 'glossary');
-}
+list($context, $course, $cminfo) = $PAGE->login_to_cm('glossary', $cmid, null, PAGELOGIN_NO_AUTOLOGIN);
+$glossary = $PAGE->activityrecord;
 
 if ( !$entriesbypage = $glossary->entbypage ) {
     $entriesbypage = $CFG->glossary_entbypage;
 }
-
-require_course_login($course, true, $cm);
-$context = context_module::instance($cm->id);
 
 // Prepare format_string/text options
 $fmtoptions = array(
@@ -185,6 +173,7 @@ $modname = get_string("modulename","glossary") . ': <span class="strong">' . for
 echo html_writer::tag('div', $modname, array('class' => 'modname'));
 
 if ( $allentries ) {
+    $cm = $cminfo->get_course_module_record(true);
     foreach ($allentries as $entry) {
 
         // Setting the pivot for the current entry

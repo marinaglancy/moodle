@@ -26,42 +26,28 @@ require_once("../../config.php");
 require_once("lib.php");
 
 // get parameters
-$id = required_param('id', PARAM_INT);
+$cmid = required_param('id', PARAM_INT);
 $action = optional_param('action', false, PARAM_ALPHA);
 
-$url = new moodle_url('/mod/feedback/export.php', array('id'=>$id));
+$url = new moodle_url('/mod/feedback/export.php', array('id'=>$cmid));
 if ($action !== false) {
     $url->param('action', $action);
 }
 $PAGE->set_url($url);
 
-if (! $cm = get_coursemodule_from_id('feedback', $id)) {
-    print_error('invalidcoursemodule');
-}
-
-if (! $course = $DB->get_record("course", array("id"=>$cm->course))) {
-    print_error('coursemisconf');
-}
-
-if (! $feedback = $DB->get_record("feedback", array("id"=>$cm->instance))) {
-    print_error('invalidcoursemodule');
-}
-
-$context = context_module::instance($cm->id);
-
-require_login($course, true, $cm);
-
+list($context, $course, $cm) = $PAGE->login_to_cm('feedback', $cmid);
+$feedbackid = $cm->instance;
 require_capability('mod/feedback:edititems', $context);
 
 if ($action == 'exportfile') {
-    if (!$exportdata = feedback_get_xml_data($feedback->id)) {
+    if (!$exportdata = feedback_get_xml_data($feedbackid)) {
         print_error('nodata');
     }
-    @feedback_send_xml_data($exportdata, 'feedback_'.$feedback->id.'.xml');
+    @feedback_send_xml_data($exportdata, 'feedback_'.$feedbackid.'.xml');
     exit;
 }
 
-redirect('view.php?id='.$id);
+redirect('view.php?id='.$cmid);
 exit;
 
 function feedback_get_xml_data($feedbackid) {

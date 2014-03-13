@@ -156,7 +156,7 @@ function book_get_chapter_title($chid, $chapters, $book, $context) {
  * @param array $chapters
  * @param stdClass $chapter
  * @param stdClass $book
- * @param stdClass $cm
+ * @param stdClass|cm_info $cm
  * @param bool $edit
  */
 function book_add_fake_block($chapters, $chapter, $book, $cm, $edit) {
@@ -179,7 +179,7 @@ function book_add_fake_block($chapters, $chapter, $book, $cm, $edit) {
  * @param array $chapters
  * @param stdClass $chapter
  * @param stdClass $book
- * @param stdClass $cm
+ * @param stdClass|cm_info $cm
  * @param bool $edit
  * @return string
  */

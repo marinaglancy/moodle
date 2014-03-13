@@ -28,7 +28,7 @@ require_once($CFG->dirroot.'/mod/lti/edit_form.php');
 
 $courseid = required_param('course', PARAM_INT);
 
-require_login($courseid, false);
+list($context, $course) = $PAGE->login($courseid, PAGELOGIN_NO_AUTOLOGIN);
 $url = new moodle_url('/mod/lti/instructor_edit_tool_type.php');
 $PAGE->set_url($url);
 $PAGE->set_pagelayout('popup');
@@ -36,7 +36,7 @@ $PAGE->set_pagelayout('popup');
 $action = optional_param('action', null, PARAM_TEXT);
 $typeid = optional_param('typeid', null, PARAM_INT);
 
-require_capability('mod/lti:addcoursetool', context_course::instance($courseid));
+require_capability('mod/lti:addcoursetool', $context);
 
 if (!empty($typeid)) {
     $type = lti_get_type($typeid);

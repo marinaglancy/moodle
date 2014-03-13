@@ -30,17 +30,12 @@ require_once($CFG->dirroot.'/mod/lesson/locallib.php');
 $id = required_param('id', PARAM_INT);   // course
 
 $PAGE->set_url('/mod/lesson/index.php', array('id'=>$id));
-
-if (!$course = $DB->get_record("course", array("id" => $id))) {
-    print_error('invalidcourseid');
-}
-
-require_login($course);
+list($coursecontext, $course) = $PAGE->login($id, PAGELOGIN_ALLOW_FRONTPAGE_GUEST);
 $PAGE->set_pagelayout('incourse');
 
 // Trigger instances list viewed event.
 $params = array(
-    'context' => context_course::instance($course->id)
+    'context' => $coursecontext
 );
 $event = \mod_lesson\event\course_module_instance_list_viewed::create($params);
 $event->add_record_snapshot('course', $course);

@@ -31,6 +31,7 @@ $slot = required_param('slot', PARAM_INT); // The question number in the attempt
 
 $PAGE->set_url('/mod/quiz/comment.php', array('attempt' => $attemptid, 'slot' => $slot));
 
+$PAGE->login_expected(PAGELOGIN_NO_AUTOLOGIN);
 $attemptobj = quiz_attempt::create($attemptid);
 
 // Can only grade finished attempts.

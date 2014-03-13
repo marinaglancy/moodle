@@ -28,11 +28,7 @@ require_once("locallib.php");
 
 $id = required_param('id', PARAM_INT);
 $PAGE->set_url('/mod/quiz/index.php', array('id'=>$id));
-if (!$course = $DB->get_record('course', array('id' => $id))) {
-    print_error('invalidcourseid');
-}
-$coursecontext = context_course::instance($id);
-require_login($course);
+list($coursecontext, $course) = $PAGE->login($id);
 $PAGE->set_pagelayout('incourse');
 
 add_to_log($course->id, "quiz", "view all", "index.php?id=$course->id", "");

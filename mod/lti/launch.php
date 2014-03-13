@@ -50,14 +50,11 @@ require_once("../../config.php");
 require_once($CFG->dirroot.'/mod/lti/lib.php');
 require_once($CFG->dirroot.'/mod/lti/locallib.php');
 
-$id = required_param('id', PARAM_INT); // Course Module ID
+$cmid = required_param('id', PARAM_INT); // Course Module ID
 
-$cm = get_coursemodule_from_id('lti', $id, 0, false, MUST_EXIST);
-$lti = $DB->get_record('lti', array('id' => $cm->instance), '*', MUST_EXIST);
-$course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
+list($context, $course, $cm) = $PAGE->login_to_cm('lti', $cmid);
 
-require_login($course);
-
+$lti = clone($PAGE->activityrecord);
 $lti->cmid = $cm->id;
 lti_view($lti);
 

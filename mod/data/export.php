@@ -35,27 +35,15 @@ $exportapproval = optional_param('exportapproval', false, PARAM_BOOL); // Flag f
 
 $PAGE->set_url('/mod/data/export.php', array('d'=>$d));
 
-if (! $data = $DB->get_record('data', array('id'=>$d))) {
-    print_error('wrongdataid', 'data');
-}
+list($context, $course, $cm) = $PAGE->login_to_activity('data', $d, null, PAGELOGIN_NO_AUTOLOGIN);
 
-if (! $cm = get_coursemodule_from_instance('data', $data->id, $data->course)) {
-    print_error('invalidcoursemodule');
-}
-
-if(! $course = $DB->get_record('course', array('id'=>$cm->course))) {
-    print_error('invalidcourseid');
-}
+require_capability(DATA_CAP_EXPORT, $context);
 
 // fill in missing properties needed for updating of instance
+$data = clone($PAGE->activityrecord);
 $data->course     = $cm->course;
 $data->cmidnumber = $cm->idnumber;
 $data->instance   = $cm->instance;
-
-$context = context_module::instance($cm->id);
-
-require_login($course, false, $cm);
-require_capability(DATA_CAP_EXPORT, $context);
 
 // get fields for this database
 $fieldrecords = $DB->get_records('data_fields', array('dataid'=>$data->id), 'id');

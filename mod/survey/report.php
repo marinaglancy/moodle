@@ -28,7 +28,7 @@
 
 // Check that all the parameters have been provided.
 
-    $id      = required_param('id', PARAM_INT);           // Course Module ID
+    $cmid    = required_param('id', PARAM_INT);           // Course Module ID
     $action  = optional_param('action', '', PARAM_ALPHA); // What to look at
     $qid     = optional_param('qid', 0, PARAM_RAW);       // Question IDs comma-separated list
     $student = optional_param('student', 0, PARAM_INT);   // Student ID
@@ -38,15 +38,10 @@
     $qids = clean_param_array($qids, PARAM_INT);
     $qid = implode (',', $qids);
 
-    if (! $cm = get_coursemodule_from_id('survey', $id)) {
-        print_error('invalidcoursemodule');
-    }
+    list($context, $course, $cm) = $PAGE->login_to_cm('survey', $cmid, null, PAGELOGIN_NO_AUTOLOGIN);
+    require_capability('mod/survey:readresponses', $context);
 
-    if (! $course = $DB->get_record("course", array("id"=>$cm->course))) {
-        print_error('coursemisconf');
-    }
-
-    $url = new moodle_url('/mod/survey/report.php', array('id'=>$id));
+    $url = new moodle_url('/mod/survey/report.php', array('id'=>$cmid));
     if ($action !== '') {
         $url->param('action', $action);
     }
@@ -61,15 +56,7 @@
     }
     $PAGE->set_url($url);
 
-    require_login($course, false, $cm);
-
-    $context = context_module::instance($cm->id);
-
-    require_capability('mod/survey:readresponses', $context);
-
-    if (! $survey = $DB->get_record("survey", array("id"=>$cm->instance))) {
-        print_error('invalidsurveyid', 'survey');
-    }
+    $survey = $PAGE->activityrecord;
 
     if (! $template = $DB->get_record("survey", array("id"=>$survey->template))) {
         print_error('invalidtmptid', 'survey');
@@ -154,21 +141,21 @@
 
     echo $OUTPUT->box_start("generalbox boxaligncenter");
     if ($showscales) {
-        echo "<a href=\"report.php?action=summary&amp;id=$id\">$strsummary</a>";
-        echo "&nbsp;&nbsp;&nbsp;&nbsp;<a href=\"report.php?action=scales&amp;id=$id\">$strscales</a>";
-        echo "&nbsp;&nbsp;&nbsp;&nbsp;<a href=\"report.php?action=questions&amp;id=$id\">$strquestions</a>";
-        echo "&nbsp;&nbsp;&nbsp;&nbsp;<a href=\"report.php?action=students&amp;id=$id\">".get_string('participants')."</a>";
+        echo "<a href=\"report.php?action=summary&amp;id=$cmid\">$strsummary</a>";
+        echo "&nbsp;&nbsp;&nbsp;&nbsp;<a href=\"report.php?action=scales&amp;id=$cmid\">$strscales</a>";
+        echo "&nbsp;&nbsp;&nbsp;&nbsp;<a href=\"report.php?action=questions&amp;id=$cmid\">$strquestions</a>";
+        echo "&nbsp;&nbsp;&nbsp;&nbsp;<a href=\"report.php?action=students&amp;id=$cmid\">".get_string('participants')."</a>";
         if (has_capability('mod/survey:download', $context)) {
-            echo "&nbsp;&nbsp;&nbsp;&nbsp;<a href=\"report.php?action=download&amp;id=$id\">$strdownload</a>";
+            echo "&nbsp;&nbsp;&nbsp;&nbsp;<a href=\"report.php?action=download&amp;id=$cmid\">$strdownload</a>";
         }
         if (empty($action)) {
             $action = "summary";
         }
     } else {
-        echo "<a href=\"report.php?action=questions&amp;id=$id\">$strquestions</a>";
-        echo "&nbsp;&nbsp;&nbsp;&nbsp;<a href=\"report.php?action=students&amp;id=$id\">".get_string('participants')."</a>";
+        echo "<a href=\"report.php?action=questions&amp;id=$cmid\">$strquestions</a>";
+        echo "&nbsp;&nbsp;&nbsp;&nbsp;<a href=\"report.php?action=students&amp;id=$cmid\">".get_string('participants')."</a>";
         if (has_capability('mod/survey:download', $context)) {
-            echo "&nbsp;&nbsp;&nbsp;&nbsp;<a href=\"report.php?action=download&amp;id=$id\">$strdownload</a>";
+            echo "&nbsp;&nbsp;&nbsp;&nbsp;<a href=\"report.php?action=download&amp;id=$cmid\">$strdownload</a>";
         }
         if (empty($action)) {
             $action = "questions";
@@ -189,8 +176,8 @@
         echo $OUTPUT->heading($strsummary, 3);
 
         if (survey_count_responses($survey->id, $currentgroup, $groupingid)) {
-            echo "<div class='reportsummary'><a href=\"report.php?action=scales&amp;id=$id\">";
-            survey_print_graph("id=$id&amp;group=$currentgroup&amp;type=overall.png");
+            echo "<div class='reportsummary'><a href=\"report.php?action=scales&amp;id=$cmid\">";
+            survey_print_graph("id=$cmid&amp;group=$currentgroup&amp;type=overall.png");
             echo "</a></div>";
         } else {
             echo $OUTPUT->notification(get_string("nobodyyet","survey"));
@@ -222,8 +209,8 @@
                     if (!empty($virtualscales) && $question->type > 0) {  // Don't show non-virtual scales if virtual
                         continue;
                     }
-                    echo "<p class=\"centerpara\"><a title=\"$strseemoredetail\" href=\"report.php?action=questions&amp;id=$id&amp;qid=$question->multi\">";
-                    survey_print_graph("id=$id&amp;qid=$question->id&amp;group=$currentgroup&amp;type=multiquestion.png");
+                    echo "<p class=\"centerpara\"><a title=\"$strseemoredetail\" href=\"report.php?action=questions&amp;id=$cmid&amp;qid=$question->multi\">";
+                    survey_print_graph("id=$cmid&amp;qid=$question->id&amp;group=$currentgroup&amp;type=multiquestion.png");
                     echo "</a></p><br />";
                 }
             }
@@ -281,15 +268,15 @@
                         $subquestion = $subquestions[$val];
                         if ($subquestion->type > 0) {
                             echo "<p class=\"centerpara\">";
-                            echo "<a title=\"$strseemoredetail\" href=\"report.php?action=question&amp;id=$id&amp;qid=$subquestion->id\">";
-                            survey_print_graph("id=$id&amp;qid=$subquestion->id&amp;group=$currentgroup&amp;type=question.png");
+                            echo "<a title=\"$strseemoredetail\" href=\"report.php?action=question&amp;id=$cmid&amp;qid=$subquestion->id\">";
+                            survey_print_graph("id=$cmid&amp;qid=$subquestion->id&amp;group=$currentgroup&amp;type=question.png");
                             echo "</a></p>";
                         }
                     }
                 } else if ($question->type > 0 ) {
                     echo "<p class=\"centerpara\">";
-                    echo "<a title=\"$strseemoredetail\" href=\"report.php?action=question&amp;id=$id&amp;qid=$question->id\">";
-                    survey_print_graph("id=$id&amp;qid=$question->id&amp;group=$currentgroup&amp;type=question.png");
+                    echo "<a title=\"$strseemoredetail\" href=\"report.php?action=question&amp;id=$cmid&amp;qid=$question->id\">";
+                    survey_print_graph("id=$cmid&amp;qid=$question->id&amp;group=$currentgroup&amp;type=question.png");
                     echo "</a></p>";
 
                 } else {
@@ -356,7 +343,7 @@
                 }
                 $table->data[] = array(
                        $OUTPUT->user_picture($a, array('courseid'=>$course->id)),
-                       "<a href=\"report.php?id=$id&amp;action=student&amp;student=$a->userid\">".fullname($a)."</a>",
+                       "<a href=\"report.php?id=$cmid&amp;action=student&amp;student=$a->userid\">".fullname($a)."</a>",
                        userdate($a->time),
                        $answer1, $answer2);
 
@@ -412,7 +399,7 @@
          if ($showscales) {
              // Print overall summary
              echo "<p <p class=\"centerpara\">>";
-             survey_print_graph("id=$id&amp;sid=$student&amp;type=student.png");
+             survey_print_graph("id=$cmid&amp;sid=$student&amp;type=student.png");
              echo "</p>";
 
              // Print scales
@@ -432,8 +419,8 @@
                          continue;
                      }
                      echo "<p class=\"centerpara\">";
-                     echo "<a title=\"$strseemoredetail\" href=\"report.php?action=questions&amp;id=$id&amp;qid=$question->multi\">";
-                     survey_print_graph("id=$id&amp;qid=$question->id&amp;sid=$student&amp;type=studentmultiquestion.png");
+                     echo "<a title=\"$strseemoredetail\" href=\"report.php?action=questions&amp;id=$cmid&amp;qid=$question->multi\">";
+                     survey_print_graph("id=$cmid&amp;qid=$question->id&amp;sid=$student&amp;type=studentmultiquestion.png");
                      echo "</a></p><br />";
                  }
              }

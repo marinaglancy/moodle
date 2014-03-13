@@ -28,41 +28,22 @@ require_once($CFG->dirroot . '/mod/quiz/locallib.php');
 require_once($CFG->dirroot . '/mod/quiz/report/reportlib.php');
 require_once($CFG->dirroot . '/mod/quiz/report/default.php');
 
-$id = optional_param('id', 0, PARAM_INT);
+$cmid = optional_param('id', 0, PARAM_INT);
 $q = optional_param('q', 0, PARAM_INT);
 $mode = optional_param('mode', '', PARAM_ALPHA);
 
-if ($id) {
-    if (!$cm = get_coursemodule_from_id('quiz', $id)) {
-        print_error('invalidcoursemodule');
-    }
-    if (!$course = $DB->get_record('course', array('id' => $cm->course))) {
-        print_error('coursemisconf');
-    }
-    if (!$quiz = $DB->get_record('quiz', array('id' => $cm->instance))) {
-        print_error('invalidcoursemodule');
-    }
-
+if ($cmid) {
+    list($context, $course, $cm) = $PAGE->login_to_cm('quiz', $cmid, null, PAGELOGIN_NO_AUTOLOGIN);
 } else {
-    if (!$quiz = $DB->get_record('quiz', array('id' => $q))) {
-        print_error('invalidquizid', 'quiz');
-    }
-    if (!$course = $DB->get_record('course', array('id' => $quiz->course))) {
-        print_error('invalidcourseid');
-    }
-    if (!$cm = get_coursemodule_from_instance("quiz", $quiz->id, $course->id)) {
-        print_error('invalidcoursemodule');
-    }
+    list($context, $course, $cm) = $PAGE->login_to_activity('quiz', $q, null, PAGELOGIN_NO_AUTOLOGIN);
 }
+$quiz = $PAGE->activityrecord;
 
 $url = new moodle_url('/mod/quiz/report.php', array('id' => $cm->id));
 if ($mode !== '') {
     $url->param('mode', $mode);
 }
 $PAGE->set_url($url);
-
-require_login($course, false, $cm);
-$context = context_module::instance($cm->id);
 $PAGE->set_pagelayout('report');
 
 $reportlist = quiz_report_list($context);
@@ -96,7 +77,7 @@ if (!class_exists($reportclassname)) {
 }
 
 $report = new $reportclassname();
-$report->display($quiz, $cm, $course);
+$report->display($quiz, $cm->get_course_module_record(true), $course);
 
 // Print footer.
 echo $OUTPUT->footer();

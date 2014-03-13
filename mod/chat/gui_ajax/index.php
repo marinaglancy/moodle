@@ -14,16 +14,13 @@ $PAGE->set_url($url);
 $PAGE->set_popup_notification_allowed(false); // No popup notifications in the chat window
 $PAGE->requires->strings_for_js(array('coursetheme', 'bubble', 'compact'), 'mod_chat');
 
-$chat = $DB->get_record('chat', array('id'=>$id), '*', MUST_EXIST);
-$course = $DB->get_record('course', array('id'=>$chat->course), '*', MUST_EXIST);
-$cm = get_coursemodule_from_instance('chat', $chat->id, $course->id, false, MUST_EXIST);
+list($context, $course, $cm) = $PAGE->login_to_activity('chat', $id, null, PAGELOGIN_NO_AUTOLOGIN);
+require_capability('mod/chat:chat', $PAGE->context);
 
-$context = context_module::instance($cm->id);
-require_login($course, false, $cm);
-require_capability('mod/chat:chat', $context);
+$chat = $PAGE->activityrecord;
 
 /// Check to see if groups are being used here
- if ($groupmode = groups_get_activity_groupmode($cm)) {   // Groups are being used
+ if ($cm->effectivegroupmode) {   // Groups are being used
     if ($groupid = groups_get_activity_group($cm)) {
         if (!$group = groups_get_group($groupid)) {
             print_error('invalidgroupid');

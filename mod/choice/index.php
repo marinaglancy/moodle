@@ -7,14 +7,10 @@
 
     $PAGE->set_url('/mod/choice/index.php', array('id'=>$id));
 
-    if (!$course = $DB->get_record('course', array('id'=>$id))) {
-        print_error('invalidcourseid');
-    }
-
-    require_course_login($course);
+    list($context, $course) = $PAGE->login($id, PAGELOGIN_ALLOW_FRONTPAGE_GUEST);
     $PAGE->set_pagelayout('incourse');
 
-    $eventdata = array('context' => context_course::instance($id));
+    $eventdata = array('context' => $context);
     $event = \mod_choice\event\course_module_instance_list_viewed::create($eventdata);
     $event->add_record_snapshot('course', $course);
     $event->trigger();

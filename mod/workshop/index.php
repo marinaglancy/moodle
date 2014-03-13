@@ -28,9 +28,7 @@ require_once(dirname(__FILE__).'/lib.php');
 
 $id = required_param('id', PARAM_INT);   // course
 
-$course = $DB->get_record('course', array('id' => $id), '*', MUST_EXIST);
-
-require_course_login($course);
+list($context, $course) = $PAGE->login($id, PAGELOGIN_ALLOW_FRONTPAGE_GUEST);
 
 $PAGE->set_pagelayout('incourse');
 $PAGE->set_url('/mod/workshop/index.php', array('id' => $course->id));
@@ -42,7 +40,7 @@ $PAGE->navbar->add(get_string('modulenameplural', 'workshop'));
 
 echo $OUTPUT->header();
 
-$params = array('context' => context_course::instance($course->id));
+$params = array('context' => $context);
 $event = \mod_workshop\event\course_module_instance_list_viewed::create($params);
 $event->add_record_snapshot('course', $course);
 $event->trigger();

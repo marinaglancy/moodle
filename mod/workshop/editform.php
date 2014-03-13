@@ -28,14 +28,11 @@ require_once(dirname(__FILE__).'/locallib.php');
 
 $cmid       = required_param('cmid', PARAM_INT);
 
-$cm         = get_coursemodule_from_id('workshop', $cmid, 0, false, MUST_EXIST);
-$course     = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
-
-require_login($course, false, $cm);
+list($context, $course, $cm) = $PAGE->login_to_cm('workshop', $cmid, null, PAGELOGIN_NO_AUTOLOGIN);
 require_capability('mod/workshop:editdimensions', $PAGE->context);
 
-$workshop   = $DB->get_record('workshop', array('id' => $cm->instance), '*', MUST_EXIST);
-$workshop   = new workshop($workshop, $cm, $course);
+$workshoprecord = $PAGE->activityrecord;
+$workshop = new workshop($workshoprecord, $cm, $course);
 
 // todo: check if there already is some assessment done and do not allowed the change of the form
 // once somebody already used it to assess

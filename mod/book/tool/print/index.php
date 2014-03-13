@@ -25,22 +25,18 @@
 require(dirname(__FILE__).'/../../../../config.php');
 require_once(dirname(__FILE__).'/locallib.php');
 
-$id        = required_param('id', PARAM_INT);           // Course Module ID
+$cmid      = required_param('id', PARAM_INT);           // Course Module ID
 $chapterid = optional_param('chapterid', 0, PARAM_INT); // Chapter ID
 
 // =========================================================================
 // security checks START - teachers and students view
 // =========================================================================
 
-$cm = get_coursemodule_from_id('book', $id, 0, false, MUST_EXIST);
-$course = $DB->get_record('course', array('id'=>$cm->course), '*', MUST_EXIST);
-$book = $DB->get_record('book', array('id'=>$cm->instance), '*', MUST_EXIST);
-
-require_course_login($course, true, $cm);
-
-$context = context_module::instance($cm->id);
+list($context, $course, $cm) = $PAGE->login_to_cm('book', $cmid, null, PAGELOGIN_ALLOW_FRONTPAGE_GUEST);
 require_capability('mod/book:read', $context);
 require_capability('booktool/print:print', $context);
+
+$book = $PAGE->activityrecord;
 
 // Check all variables.
 if ($chapterid) {
@@ -51,9 +47,9 @@ if ($chapterid) {
     $chapter = false;
 }
 
-$PAGE->set_url('/mod/book/print.php', array('id'=>$id, 'chapterid'=>$chapterid));
+$PAGE->set_url('/mod/book/print.php', array('id'=>$cmid, 'chapterid'=>$chapterid));
 
-unset($id);
+unset($cmid);
 unset($chapterid);
 
 // Security checks END.

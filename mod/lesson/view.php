@@ -28,17 +28,14 @@ require_once($CFG->dirroot.'/mod/lesson/locallib.php');
 require_once($CFG->dirroot.'/mod/lesson/view_form.php');
 require_once($CFG->libdir . '/completionlib.php');
 
-$id      = required_param('id', PARAM_INT);             // Course Module ID
+$cmid    = required_param('id', PARAM_INT);             // Course Module ID
 $pageid  = optional_param('pageid', null, PARAM_INT);   // Lesson Page ID
 $edit    = optional_param('edit', -1, PARAM_BOOL);
 $userpassword = optional_param('userpassword','',PARAM_RAW);
 $backtocourse = optional_param('backtocourse', false, PARAM_RAW);
 
-$cm = get_coursemodule_from_id('lesson', $id, 0, false, MUST_EXIST);
-$course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
-$lesson = new lesson($DB->get_record('lesson', array('id' => $cm->instance), '*', MUST_EXIST));
-
-require_login($course, false, $cm);
+list($context, $course, $cm) = $PAGE->login_to_cm('lesson', $cmid, null, PAGELOGIN_ALLOW_FRONTPAGE_GUEST);
+$lesson = new lesson($PAGE->activityrecord);
 
 if ($backtocourse) {
     redirect(new moodle_url('/course/view.php', array('id'=>$course->id)));
@@ -48,13 +45,12 @@ if ($backtocourse) {
 $completion = new completion_info($course);
 $completion->set_module_viewed($cm);
 
-$url = new moodle_url('/mod/lesson/view.php', array('id'=>$id));
+$url = new moodle_url('/mod/lesson/view.php', array('id'=>$cmid));
 if ($pageid !== null) {
     $url->param('pageid', $pageid);
 }
 $PAGE->set_url($url);
 
-$context = context_module::instance($cm->id);
 $canmanage = has_capability('mod/lesson:manage', $context);
 
 $lessonoutput = $PAGE->get_renderer('mod_lesson');

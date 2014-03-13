@@ -12,24 +12,11 @@ if ($groupid !== 0) {
 }
 $PAGE->set_url($url);
 
-if (!$chat = $DB->get_record('chat', array('id'=>$id))) {
-    print_error('invalidid', 'chat');
-}
-
-if (!$course = $DB->get_record('course', array('id'=>$chat->course))) {
-    print_error('invalidcourseid');
-}
-
-if (!$cm = get_coursemodule_from_instance('chat', $chat->id, $course->id)) {
-    print_error('invalidcoursemodule');
-}
-
-require_login($course, false, $cm);
-$context = context_module::instance($cm->id);
+list($context, $course, $cm) = $PAGE->login_to_activity('chat', $id, null, PAGELOGIN_NO_AUTOLOGIN);
 require_capability('mod/chat:chat', $context);
 
 /// Check to see if groups are being used here
- if ($groupmode = groups_get_activity_groupmode($cm)) {   // Groups are being used
+ if ($cm->effectivegroupmode) {   // Groups are being used
     if ($groupid = groups_get_activity_group($cm)) {
         if (!$group = groups_get_group($groupid)) {
             print_error('invalidgroupid');
@@ -45,7 +32,7 @@ require_capability('mod/chat:chat', $context);
 
 $strchat = get_string('modulename', 'chat'); // must be before current_language() in chat_login_user() to force course language!!!
 
-if (!$chat_sid = chat_login_user($chat->id, 'sockets', $groupid, $course)) {
+if (!$chat_sid = chat_login_user($id, 'sockets', $groupid, $course)) {
     print_error('cantlogin');
 }
 
@@ -57,7 +44,7 @@ $courseshortname = format_string($course->shortname, true, array('context' => co
  <head>
   <meta http-equiv="content-type" content="text/html; charset=utf-8" />
   <title>
-   <?php echo "$strchat: " . $courseshortname . ": " . format_string($chat->name, true, array('context' => $context)) . "$groupname" ?>
+   <?php echo "$strchat: " . $courseshortname . ": " . $cm->get_formatted_name() . "$groupname" ?>
   </title>
  </head>
  <frameset cols="*,200" border="5" framespacing="no" frameborder="yes" marginwidth="2" marginheight="1">

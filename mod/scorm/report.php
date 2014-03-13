@@ -28,20 +28,19 @@ define('SCORM_REPORT_ATTEMPTS_ALL_STUDENTS', 0);
 define('SCORM_REPORT_ATTEMPTS_STUDENTS_WITH', 1);
 define('SCORM_REPORT_ATTEMPTS_STUDENTS_WITH_NO', 2);
 
-$id = required_param('id', PARAM_INT);// Course Module ID, or
+$cmid = required_param('id', PARAM_INT); // Course Module ID.
 $download = optional_param('download', '', PARAM_RAW);
 $mode = optional_param('mode', '', PARAM_ALPHA); // Report mode
 
-$cm = get_coursemodule_from_id('scorm', $id, 0, false, MUST_EXIST);
-$course = $DB->get_record('course', array('id'=>$cm->course), '*', MUST_EXIST);
-$scorm = $DB->get_record('scorm', array('id'=>$cm->instance), '*', MUST_EXIST);
+list($contextmodule, $course, $cm) = $PAGE->login_to_cm('scorm', $cmid, null, PAGELOGIN_NO_AUTOLOGIN);
+require_capability('mod/scorm:viewreport', $contextmodule);
+$scorm = $PAGE->activityrecord;
 
-$contextmodule = context_module::instance($cm->id);
 $reportlist = scorm_report_list($contextmodule);
 
 $url = new moodle_url('/mod/scorm/report.php');
 
-$url->param('id', $id);
+$url->param('id', $cmid);
 if (empty($mode)) {
     $mode = reset($reportlist);
 } else if (!in_array($mode, $reportlist)) {
@@ -50,10 +49,6 @@ if (empty($mode)) {
 $url->param('mode', $mode);
 
 $PAGE->set_url($url);
-
-require_login($course, false, $cm);
-
-require_capability('mod/scorm:viewreport', $contextmodule);
 
 if (count($reportlist) < 1) {
     print_error('erroraccessingreport', 'scorm');
@@ -91,7 +86,7 @@ if (empty($noheader)) {
 // Open the selected Scorm report and display it
 $reportclassname = "scorm_{$mode}_report";
 $report = new $reportclassname();
-$report->display($scorm, $cm, $course, $download); // Run the report!
+$report->display($scorm, $cm->get_course_module_record(), $course, $download); // Run the report!
 
 // Print footer
 

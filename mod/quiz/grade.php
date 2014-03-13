@@ -33,12 +33,11 @@ require_once($CFG->dirroot . '/mod/quiz/report/reportlib.php');
 $id = required_param('id', PARAM_INT);
 $userid = optional_param('userid', 0, PARAM_INT);
 
-$cm = get_coursemodule_from_id('quiz', $id, 0, false, MUST_EXIST);
-$course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
-$quiz = $DB->get_record('quiz', array('id' => $cm->instance), '*', MUST_EXIST);
-require_login($course, false, $cm);
+list($context, $course, $cminfo) = $PAGE->login_to_cm('quiz', $id, null, PAGELOGIN_NO_AUTOLOGIN);
+$cm = $cminfo->get_course_module_record(true);
+$quiz = $PAGE->activityrecord;
 
-$reportlist = quiz_report_list(context_module::instance($cm->id));
+$reportlist = quiz_report_list($context);
 if (empty($reportlist) || $userid == $USER->id) {
     // If the user cannot see reports, or can see reports but is looking
     // at their own grades, redirect them to the view.php page.

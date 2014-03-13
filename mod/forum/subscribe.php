@@ -50,11 +50,9 @@ if (!is_null($sesskey)) {
     $url->param('sesskey', $sesskey);
 }
 $PAGE->set_url($url);
+list($context, $course, $cm) = $PAGE->login_to_activity('forum', $id, PAGELOGIN_NO_AUTOLOGIN);
 
-$forum   = $DB->get_record('forum', array('id' => $id), '*', MUST_EXIST);
-$course  = $DB->get_record('course', array('id' => $forum->course), '*', MUST_EXIST);
-$cm      = get_coursemodule_from_instance('forum', $forum->id, $course->id, false, MUST_EXIST);
-$context = context_module::instance($cm->id);
+$forum   = $PAGE->activityrecord;
 
 if ($user) {
     require_sesskey();
@@ -66,18 +64,12 @@ if ($user) {
     $user = $USER;
 }
 
-if (isset($cm->groupmode) && empty($course->groupmodeforce)) {
-    $groupmode = $cm->groupmode;
-} else {
-    $groupmode = $course->groupmode;
-}
+$groupmode = $cm->effectivegroupmode;
 if ($groupmode && !forum_is_subscribed($user->id, $forum) && !has_capability('moodle/site:accessallgroups', $context)) {
     if (!groups_get_all_groups($course->id, $USER->id)) {
         print_error('cannotsubscribe', 'forum');
     }
 }
-
-require_login($course, false, $cm);
 
 if (is_null($mode) and !is_enrolled($context, $USER, '', true)) {   // Guests and visitors can't subscribe - only enrolled
     $PAGE->set_title($course->shortname);

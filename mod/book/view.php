@@ -26,7 +26,7 @@ require(dirname(__FILE__).'/../../config.php');
 require_once(dirname(__FILE__).'/locallib.php');
 require_once($CFG->libdir.'/completionlib.php');
 
-$id        = optional_param('id', 0, PARAM_INT);        // Course Module ID
+$cmid      = optional_param('id', 0, PARAM_INT);        // Course Module ID
 $bid       = optional_param('b', 0, PARAM_INT);         // Book id
 $chapterid = optional_param('chapterid', 0, PARAM_INT); // Chapter ID
 $edit      = optional_param('edit', -1, PARAM_BOOL);    // Edit mode
@@ -34,20 +34,14 @@ $edit      = optional_param('edit', -1, PARAM_BOOL);    // Edit mode
 // =========================================================================
 // security checks START - teachers edit; students view
 // =========================================================================
-if ($id) {
-    $cm = get_coursemodule_from_id('book', $id, 0, false, MUST_EXIST);
-    $course = $DB->get_record('course', array('id'=>$cm->course), '*', MUST_EXIST);
-    $book = $DB->get_record('book', array('id'=>$cm->instance), '*', MUST_EXIST);
+if ($cmid) {
+    list($context, $course, $cm) = $PAGE->login_to_cm('book', $cmid, null, PAGELOGIN_ALLOW_FRONTPAGE_GUEST);
 } else {
-    $book = $DB->get_record('book', array('id'=>$bid), '*', MUST_EXIST);
-    $cm = get_coursemodule_from_instance('book', $book->id, 0, false, MUST_EXIST);
-    $course = $DB->get_record('course', array('id'=>$cm->course), '*', MUST_EXIST);
-    $id = $cm->id;
+    list($context, $course, $cm) = $PAGE->login_to_activity('book', $bid, null, PAGELOGIN_ALLOW_FRONTPAGE_GUEST);
+    $cmid = $cm->id;
 }
+$book = $PAGE->activityrecord;
 
-require_course_login($course, true, $cm);
-
-$context = context_module::instance($cm->id);
 require_capability('mod/book:read', $context);
 
 $allowedit  = has_capability('mod/book:edit', $context);
@@ -101,7 +95,7 @@ $courseurl = new moodle_url('/course/view.php', array('id' => $course->id));
 
 // No content in the book.
 if (!$chapterid) {
-    $PAGE->set_url('/mod/book/view.php', array('id' => $id));
+    $PAGE->set_url('/mod/book/view.php', array('id' => $cmid));
     notice(get_string('nocontent', 'mod_book'), $courseurl->out(false));
 }
 // Chapter doesnt exist or it is hidden for students
@@ -109,11 +103,11 @@ if ((!$chapter = $DB->get_record('book_chapters', array('id' => $chapterid, 'boo
     print_error('errorchapter', 'mod_book', $courseurl);
 }
 
-$PAGE->set_url('/mod/book/view.php', array('id'=>$id, 'chapterid'=>$chapterid));
+$PAGE->set_url('/mod/book/view.php', array('id'=>$cmid, 'chapterid'=>$chapterid));
 
 
 // Unset all page parameters.
-unset($id);
+unset($cmid);
 unset($bid);
 unset($chapterid);
 
@@ -172,8 +166,7 @@ if ($nextid) {
     $chnavigation .= '<a title="'.get_string('navnext', 'book').'" href="view.php?id='.$cm->id.
             '&amp;chapterid='.$nextid.'"><img src="'.$OUTPUT->pix_url($navnexticon, 'mod_book').'" class="icon" alt="'.get_string('navnext', 'book').'" /></a>';
 } else {
-    $sec = $DB->get_field('course_sections', 'section', array('id' => $cm->section));
-    $returnurl = course_get_url($course, $sec);
+    $returnurl = course_get_url($course, $cm->sectionnum);
     $chnavigation .= '<a title="'.get_string('navexit', 'book').'" href="'.$returnurl.'"><img src="'.$OUTPUT->pix_url('nav_exit', 'mod_book').
             '" class="icon" alt="'.get_string('navexit', 'book').'" /></a>';
 

@@ -26,7 +26,7 @@
 require_once('../../config.php');
 require_once('lib.php');
 
-$id    = optional_param('id', 0, PARAM_INT);  // course module id
+$cmid  = optional_param('id', 0, PARAM_INT);  // course module id
 $d     = optional_param('d', 0, PARAM_INT);   // database id
 $mode  = optional_param('mode', 'singletemplate', PARAM_ALPHA);
 $disableeditor = optional_param('switcheditor', false, PARAM_RAW);
@@ -37,38 +37,19 @@ if ($mode !== 'singletemplate') {
     $url->param('mode', $mode);
 }
 
-if ($id) {
-    $url->param('id', $id);
+if ($cmid) {
+    $url->param('id', $cmid);
     $PAGE->set_url($url);
-    if (! $cm = get_coursemodule_from_id('data', $id)) {
-        print_error('invalidcoursemodule');
-    }
-    if (! $course = $DB->get_record('course', array('id'=>$cm->course))) {
-        print_error('coursemisconf');
-    }
-    if (! $data = $DB->get_record('data', array('id'=>$cm->instance))) {
-        print_error('invalidcoursemodule');
-    }
-
+    list($context, $course, $cm) = $PAGE->login_to_cm('data', $cmid, null, PAGELOGIN_NO_AUTOLOGIN);
+    $d = $cm->instance;
 } else {
     $url->param('d', $d);
     $PAGE->set_url($url);
-    if (! $data = $DB->get_record('data', array('id'=>$d))) {
-        print_error('invalidid', 'data');
-    }
-    if (! $course = $DB->get_record('course', array('id'=>$data->course))) {
-        print_error('coursemisconf');
-    }
-    if (! $cm = get_coursemodule_from_instance('data', $data->id, $course->id)) {
-        print_error('invalidcoursemodule');
-    }
+    list($context, $course, $cm) = $PAGE->login_to_activity('data', $d, null, PAGELOGIN_NO_AUTOLOGIN);
 }
-
-require_login($course, false, $cm);
-
-$context = context_module::instance($cm->id);
 require_capability('mod/data:managetemplates', $context);
 
+$data = clone($PAGE->activityrecord);
 if (!$DB->count_records('data_fields', array('dataid'=>$data->id))) {      // Brand new database!
     redirect($CFG->wwwroot.'/mod/data/field.php?d='.$data->id);  // Redirect to field entry
 }

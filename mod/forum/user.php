@@ -28,14 +28,14 @@ require_once($CFG->dirroot.'/mod/forum/lib.php');
 require_once($CFG->dirroot.'/rating/lib.php');
 
 $courseid  = optional_param('course', null, PARAM_INT); // Limit the posts to just this course
-$userid = optional_param('id', $USER->id, PARAM_INT);        // User id whose posts we want to view
+$userid = optional_param('id', 0, PARAM_INT);           // User id whose posts we want to view
 $mode = optional_param('mode', 'posts', PARAM_ALPHA);   // The mode to use. Either posts or discussions
 $page = optional_param('page', 0, PARAM_INT);           // The page number to display
 $perpage = optional_param('perpage', 5, PARAM_INT);     // The number of posts to display per page
 
 if (empty($userid)) {
     if (!isloggedin()) {
-        require_login();
+        $PAGE->login();
     }
     $userid = $USER->id;
 }
@@ -62,32 +62,27 @@ if ($perpage != 5) {
     $url->param('perpage', $perpage);
 }
 
-$user = $DB->get_record("user", array("id" => $userid), '*', MUST_EXIST);
-$usercontext = context_user::instance($user->id, MUST_EXIST);
-// Check if the requested user is the guest user
-if (isguestuser($user)) {
-    // The guest user cannot post, so it is not possible to view any posts.
-    // May as well just bail aggressively here.
-    print_error('invaliduserid');
+if ($iscurrentuser) {
+    $user = $USER;
+} else if ($user = $DB->get_record("user", array("id" => $userid))) {
+    if (isguestuser($user) || $user->deleted) {
+        // Not valid user is treated the same as non-existing user.
+        $user = null;
+    }
 }
-// Make sure the user has not been deleted
-if ($user->deleted) {
-    $PAGE->set_title(get_string('userdeleted'));
-    $PAGE->set_context(context_system::instance());
-    echo $OUTPUT->header();
-    echo $OUTPUT->heading($PAGE->title);
-    echo $OUTPUT->footer();
-    die;
+// Do not die with error if user does not exist. Proceed through process as if we had 0 results and can not view user details.
+$usercontext = null;
+if ($user) {
+    $usercontext = context_user::instance($user->id, MUST_EXIST);
 }
 
-$isloggedin = isloggedin();
-$isguestuser = $isloggedin && isguestuser();
-$isparent = !$iscurrentuser && $DB->record_exists('role_assignments', array('userid'=>$USER->id, 'contextid'=>$usercontext->id));
+$isparent = !$iscurrentuser && $usercontext && $DB->record_exists('role_assignments', array('userid'=>$USER->id, 'contextid'=>$usercontext->id));
 $hasparentaccess = $isparent && has_all_capabilities(array('moodle/user:viewdetails', 'moodle/user:readuserposts'), $usercontext);
 
 // Check whether a specific course has been requested
 if ($isspecificcourse) {
     // Get the requested course and its context
+    $PAGE->login_expected();
     $course = $DB->get_record('course', array('id' => $courseid), '*', MUST_EXIST);
     $coursecontext = context_course::instance($courseid, MUST_EXIST);
     // We have a specific course to search, which we will also assume we are within.
@@ -95,37 +90,46 @@ if ($isspecificcourse) {
         // A `parent` role won't likely have access to the course so we won't attempt
         // to enter it. We will however still make them jump through the normal
         // login hoops
-        require_login();
+        $PAGE->login();
         $PAGE->set_context($coursecontext);
         $PAGE->set_course($course);
     } else {
         // Enter the course we are searching
-        require_login($course);
+        $PAGE->login($course);
     }
     // Get the course ready for access checks
     $courses = array($courseid => $course);
 } else {
     // We are going to search for all of the users posts in all courses!
     // a general require login here as we arn't actually within any course.
-    require_login();
+    $PAGE->login();
     $PAGE->set_context(context_system::instance());
 
     // Now we need to get all of the courses to search.
     // All courses where the user has posted within a forum will be returned.
-    $courses = forum_get_courses_user_posted_in($user, $discussionsonly);
+    if ($user) {
+        $courses = forum_get_courses_user_posted_in($user, $discussionsonly);
+    } else {
+        $courses = array();
+    }
 }
 
 
 $params = array(
     'context' => $PAGE->context,
-    'relateduserid' => $user->id,
+    'relateduserid' => $userid,
     'other' => array('reportmode' => $mode),
 );
 $event = \mod_forum\event\userreport_viewed::create($params);
 $event->trigger();
 
 // Get the posts by the requested user that the current user can access.
-$result = forum_get_posts_by_user($user, $courses, $isspecificcourse, $discussionsonly, ($page * $perpage), $perpage);
+if ($user) {
+    $result = forum_get_posts_by_user($user, $courses, $isspecificcourse, $discussionsonly, ($page * $perpage), $perpage);
+} else {
+    $result = new stdClass();
+    $result->posts = array();
+}
 
 // Check whether there are not posts to display.
 if (empty($result->posts)) {
@@ -139,24 +143,28 @@ if (empty($result->posts)) {
     // provided (require_login has been called), or they have a course contact role.
     // True to any of those and the current user can see the details of the
     // requested user.
-    $canviewuser = ($iscurrentuser || $isspecificcourse || empty($CFG->forceloginforprofiles) || has_coursecontact_role($userid));
-    // Next we'll check the caps, if the current user has the view details and a
-    // specific course has been requested, or if they have the view all details
-    $canviewuser = ($canviewuser || ($isspecificcourse && has_capability('moodle/user:viewdetails', $coursecontext) || has_capability('moodle/user:viewalldetails', $usercontext)));
+    if ($user) {
+        $canviewuser = $user && ($iscurrentuser || $isspecificcourse || empty($CFG->forceloginforprofiles) || has_coursecontact_role($userid));
+        // Next we'll check the caps, if the current user has the view details and a
+        // specific course has been requested, or if they have the view all details
+        $canviewuser = $user && ($canviewuser || ($isspecificcourse && has_capability('moodle/user:viewdetails', $coursecontext) || has_capability('moodle/user:viewalldetails', $usercontext)));
 
-    // If none of the above was true the next step is to check a shared relation
-    // through some course
-    if (!$canviewuser) {
-        // Get all of the courses that the users have in common
-        $sharedcourses = enrol_get_shared_courses($USER->id, $user->id, true);
-        foreach ($sharedcourses as $sharedcourse) {
-            // Check the view cap within the course context
-            if (has_capability('moodle/user:viewdetails', context_course::instance($sharedcourse->id))) {
-                $canviewuser = true;
-                break;
+        // If none of the above was true the next step is to check a shared relation
+        // through some course
+        if ($user && !$canviewuser) {
+            // Get all of the courses that the users have in common
+            $sharedcourses = enrol_get_shared_courses($USER->id, $user->id, true);
+            foreach ($sharedcourses as $sharedcourse) {
+                // Check the view cap within the course context
+                if (has_capability('moodle/user:viewdetails', context_course::instance($sharedcourse->id))) {
+                    $canviewuser = true;
+                    break;
+                }
             }
+            unset($sharedcourses);
         }
-        unset($sharedcourses);
+    } else {
+        $canviewuser = false;
     }
 
     // Prepare the page title

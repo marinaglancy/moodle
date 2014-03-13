@@ -27,44 +27,17 @@ require_once("lib.php");
 
 $current_tab = 'analysis';
 
-$id = required_param('id', PARAM_INT);  //the POST dominated the GET
+$cmid = required_param('id', PARAM_INT);  //the POST dominated the GET
 $courseid = optional_param('courseid', false, PARAM_INT);
 
-$url = new moodle_url('/mod/feedback/analysis.php', array('id'=>$id));
+$url = new moodle_url('/mod/feedback/analysis.php', array('id'=>$cmid));
 if ($courseid !== false) {
     $url->param('courseid', $courseid);
 }
 $PAGE->set_url($url);
 
-if (! $cm = get_coursemodule_from_id('feedback', $id)) {
-    print_error('invalidcoursemodule');
-}
-
-if (! $course = $DB->get_record("course", array("id"=>$cm->course))) {
-    print_error('coursemisconf');
-}
-
-if (! $feedback = $DB->get_record("feedback", array("id"=>$cm->instance))) {
-    print_error('invalidcoursemodule');
-}
-
-$context = context_module::instance($cm->id);
-
-if ($course->id == SITEID) {
-    require_login($course, true);
-} else {
-    require_login($course, true, $cm);
-}
-
-//check whether the given courseid exists
-if ($courseid AND $courseid != SITEID) {
-    if ($course2 = $DB->get_record('course', array('id'=>$courseid))) {
-        require_course_login($course2); //this overwrites the object $course :-(
-        $course = $DB->get_record("course", array("id"=>$cm->course)); // the workaround
-    } else {
-        print_error('invalidcourseid');
-    }
-}
+list($context, $course, $cm) = $PAGE->login_to_cm('feedback', $cmid, $courseid, PAGELOGIN_ALLOW_FRONTPAGE_GUEST);
+$feedback = $PAGE->activityrecord;
 
 if ( !( ((intval($feedback->publish_stats) == 1) AND
         has_capability('mod/feedback:viewanalysepage', $context)) OR
@@ -101,7 +74,7 @@ if ( has_capability('mod/feedback:viewreports', $context) ) {
 
     //button "export to excel"
     echo $OUTPUT->container_start('form-buttons');
-    $aurl = new moodle_url('analysis_to_excel.php', array('sesskey'=>sesskey(), 'id'=>$id));
+    $aurl = new moodle_url('analysis_to_excel.php', array('sesskey'=>sesskey(), 'id'=>$cmid));
     echo $OUTPUT->single_button($aurl, get_string('export_to_excel', 'feedback'));
     echo $OUTPUT->container_end();
 }

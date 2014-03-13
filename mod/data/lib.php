@@ -2039,7 +2039,7 @@ function data_delete_site_preset($name) {
  * Prints the heads for a page
  *
  * @param stdClass $course
- * @param stdClass $cm
+ * @param stdClass|cm_info $cm
  * @param stdClass $data
  * @param string $currenttab
  */

@@ -29,20 +29,16 @@ require_once('editpage_form.php');
 
 // first get the preceeding page
 $pageid = required_param('pageid', PARAM_INT);
-$id     = required_param('id', PARAM_INT);         // Course Module ID
+$cmid   = required_param('id', PARAM_INT);         // Course Module ID
 $qtype  = optional_param('qtype', 0, PARAM_INT);
 $edit   = optional_param('edit', false, PARAM_BOOL);
 
-$cm = get_coursemodule_from_id('lesson', $id, 0, false, MUST_EXIST);
-$course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
-$lesson = new lesson($DB->get_record('lesson', array('id' => $cm->instance), '*', MUST_EXIST));
+list($context, $course, $cm) = $PAGE->login_to_cm('lesson', $cmid, null, PAGELOGIN_NO_AUTOLOGIN);
 
-require_login($course, false, $cm);
-
-$context = context_module::instance($cm->id);
+$lesson = new lesson($PAGE->activityrecord);
 require_capability('mod/lesson:edit', $context);
 
-$PAGE->set_url('/mod/lesson/editpage.php', array('pageid'=>$pageid, 'id'=>$id, 'qtype'=>$qtype));
+$PAGE->set_url('/mod/lesson/editpage.php', array('pageid'=>$pageid, 'id'=>$cmid, 'qtype'=>$qtype));
 
 if ($edit) {
     $editpage = lesson_page::load($pageid, $lesson);
@@ -67,7 +63,7 @@ $editoroptions = array('noclean'=>true, 'maxfiles'=>EDITOR_UNLIMITED_FILES, 'max
 if ($qtype) {
     $mformdummy = $manager->get_page_form(0, array('editoroptions'=>$editoroptions, 'jumpto'=>$jumpto, 'lesson'=>$lesson, 'edit'=>$edit, 'maxbytes'=>$PAGE->course->maxbytes));
     if ($mformdummy->is_cancelled()) {
-        redirect("$CFG->wwwroot/mod/lesson/edit.php?id=$id");
+        redirect("$CFG->wwwroot/mod/lesson/edit.php?id=$cmid");
         exit;
     }
 }
@@ -75,7 +71,7 @@ if ($qtype) {
 $mform = $manager->get_page_form($qtype, array('editoroptions'=>$editoroptions, 'jumpto'=>$jumpto, 'lesson'=>$lesson, 'edit'=>$edit, 'maxbytes'=>$PAGE->course->maxbytes));
 
 if ($mform->is_cancelled()) {
-    redirect("$CFG->wwwroot/mod/lesson/edit.php?id=$id");
+    redirect("$CFG->wwwroot/mod/lesson/edit.php?id=$cmid");
     exit;
 }
 
@@ -86,7 +82,7 @@ if ($edit) {
     $editoroptions['context'] = $context;
     $data = file_prepare_standard_editor($data, 'contents', $editoroptions, $context, 'mod_lesson', 'page_contents',  $editpage->id);
     $mform->set_data($data);
-    $PAGE->navbar->add(get_string('edit'), new moodle_url('/mod/lesson/edit.php', array('id'=>$id)));
+    $PAGE->navbar->add(get_string('edit'), new moodle_url('/mod/lesson/edit.php', array('id'=>$cmid)));
     $PAGE->navbar->add(get_string('editingquestionpage', 'lesson', get_string($mform->qtypestring, 'lesson')));
 } else {
     // Give the page type being created a chance to override the creation process

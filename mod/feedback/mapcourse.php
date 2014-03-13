@@ -26,12 +26,12 @@ require_once("../../config.php");
 require_once("lib.php");
 require_once("$CFG->libdir/tablelib.php");
 
-$id = required_param('id', PARAM_INT); // Course Module ID, or
+$cmid = required_param('id', PARAM_INT); // Course Module ID, or
 $searchcourse = optional_param('searchcourse', '', PARAM_NOTAGS);
 $coursefilter = optional_param('coursefilter', '', PARAM_INT);
 $courseid = optional_param('courseid', false, PARAM_INT);
 
-$url = new moodle_url('/mod/feedback/mapcourse.php', array('id'=>$id));
+$url = new moodle_url('/mod/feedback/mapcourse.php', array('id'=>$cmid));
 if ($searchcourse !== '') {
     $url->param('searchcourse', $searchcourse);
 }
@@ -49,27 +49,13 @@ if (($formdata = data_submitted()) AND !confirm_sesskey()) {
 
 $current_tab = 'mapcourse';
 
-if (! $cm = get_coursemodule_from_id('feedback', $id)) {
-    print_error('invalidcoursemodule');
-}
-
-if (! $course = $DB->get_record("course", array("id"=>$cm->course))) {
-    print_error('coursemisconf');
-}
-
-if (! $feedback = $DB->get_record("feedback", array("id"=>$cm->instance))) {
-    print_error('invalidcoursemodule');
-}
-
-$context = context_module::instance($cm->id);
-
-require_login($course, true, $cm);
-
+list($context, $course, $cm) = $PAGE->login_to_cm('feedback', $cmid);
+$feedbackid = $PAGE->cm->instance;
 require_capability('mod/feedback:mapcourse', $context);
 
 if ($coursefilter) {
     $map = new stdClass;
-    $map->feedbackid = $feedback->id;
+    $map->feedbackid = $feedbackid;
     $map->courseid = $coursefilter;
     // insert a map only if it does exists yet
     $sql = "SELECT id, feedbackid
@@ -85,16 +71,16 @@ $strfeedbacks = get_string("modulenameplural", "feedback");
 $strfeedback  = get_string("modulename", "feedback");
 
 $PAGE->set_heading($course->fullname);
-$PAGE->set_title($feedback->name);
+$PAGE->set_title($cm->name);
 echo $OUTPUT->header();
-echo $OUTPUT->heading(format_string($feedback->name));
+echo $OUTPUT->heading($cm->get_formatted_name());
 
 require('tabs.php');
 
 echo $OUTPUT->box(get_string('mapcourseinfo', 'feedback'), 'generalbox boxaligncenter boxwidthwide');
 echo $OUTPUT->box_start('generalbox boxaligncenter boxwidthwide');
 echo '<form method="post">';
-echo '<input type="hidden" name="id" value="'.$id.'" />';
+echo '<input type="hidden" name="id" value="'.$cmid.'" />';
 echo '<input type="hidden" name="sesskey" value="'.sesskey().'" />';
 
 $sql = "select c.id, c.shortname
@@ -110,10 +96,10 @@ if (($courses = $DB->get_records_sql_menu($sql, $params)) && !empty($searchcours
     echo $OUTPUT->help_icon('mapcourses', 'feedback');
     echo '<input type="button" '.
                 'value="'.get_string('searchagain').'" '.
-                'onclick="document.location=\'mapcourse.php?id='.$id.'\'"/>';
+                'onclick="document.location=\'mapcourse.php?id='.$cmid.'\'"/>';
 
     echo '<input type="hidden" name="searchcourse" value="'.$searchcourse.'"/>';
-    echo '<input type="hidden" name="feedbackid" value="'.$feedback->id.'"/>';
+    echo '<input type="hidden" name="feedbackid" value="'.$feedbackid.'"/>';
     echo $OUTPUT->help_icon('searchcourses', 'feedback');
 } else {
     echo '<input type="text" name="searchcourse" value="'.$searchcourse.'"/> ';
@@ -123,7 +109,7 @@ if (($courses = $DB->get_records_sql_menu($sql, $params)) && !empty($searchcours
 
 echo '</form>';
 
-if ($coursemap = feedback_get_courses_from_sitecourse_map($feedback->id)) {
+if ($coursemap = feedback_get_courses_from_sitecourse_map($feedbackid)) {
     $table = new flexible_table('coursemaps');
     $table->baseurl = $url;
     $table->define_columns( array('course'));
@@ -136,7 +122,7 @@ if ($coursemap = feedback_get_courses_from_sitecourse_map($feedback->id)) {
         $coursecontext = context_course::instance($cmap->courseid);
         $cmapshortname = format_string($cmap->shortname, true, array('context' => $coursecontext));
         $cmapfullname = format_string($cmap->fullname, true, array('context' => $coursecontext));
-        $unmapurl->params(array('id'=>$id, 'cmapid'=>$cmap->id));
+        $unmapurl->params(array('id'=>$cmid, 'cmapid'=>$cmap->id));
         $anker = '<a href="'.$unmapurl->out().'">';
         $anker .= '<img src="'.$OUTPUT->pix_url('t/delete').'" alt="Delete" />';
         $anker .= '</a>';

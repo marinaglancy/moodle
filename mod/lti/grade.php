@@ -50,24 +50,17 @@ require_once("../../config.php");
 require_once($CFG->dirroot.'/mod/lti/lib.php');
 require_once($CFG->libdir.'/plagiarismlib.php');
 
-$id   = optional_param('id', 0, PARAM_INT);          // Course module ID
+$cmid = optional_param('id', 0, PARAM_INT);          // Course module ID
 $l    = optional_param('l', 0, PARAM_INT);           // lti instance ID
 $mode = optional_param('mode', 'all', PARAM_ALPHA);  // What mode are we in?
 $download = optional_param('download' , 'none', PARAM_ALPHA); //ZIP download asked for?
 
 if ($l) {  // Two ways to specify the module
-    $lti = $DB->get_record('lti', array('id' => $l), '*', MUST_EXIST);
-    $cm = get_coursemodule_from_instance('lti', $lti->id, $lti->course, false, MUST_EXIST);
-
+    list($context, $course, $cm) = $PAGE->login_to_activity('lti', $l, null, PAGELOGIN_NO_AUTOLOGIN);
 } else {
-    $cm = get_coursemodule_from_id('lti', $id, 0, false, MUST_EXIST);
-    $lti = $DB->get_record('lti', array('id' => $cm->instance), '*', MUST_EXIST);
+    list($context, $course, $cm) = $PAGE->login_to_cm('lti', $cmid, null, PAGELOGIN_NO_AUTOLOGIN);
 }
 
-$course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
-
-require_login($course, false, $cm);
-$context = context_module::instance($cm->id);
 require_capability('mod/lti:grade', $context);
 
 $url = new moodle_url('/mod/lti/grade.php', array('id' => $cm->id));
@@ -93,7 +86,7 @@ $submissionquery = '
     ORDER BY s.datesubmitted DESC
 ';
 
-$submissions = $DB->get_records_sql($submissionquery, array('ltiid' => $lti->id));
+$submissions = $DB->get_records_sql($submissionquery, array('ltiid' => $cm->instance));
 
 $html = '
 <noscript>
@@ -152,13 +145,13 @@ foreach ($submissions as $submission) {
 
 $table = str_replace('<!--table body-->', $rows, $html);
 
-$title = get_string('submissionsfor', 'lti', $lti->name);
+$title = get_string('submissionsfor', 'lti', $cm->name);
 
 $PAGE->set_title($title);
 $PAGE->set_heading($course->fullname);
 
 echo $OUTPUT->header();
-echo $OUTPUT->heading(format_string($lti->name, true, array('context' => $context)));
+echo $OUTPUT->heading($cm->get_formatted_name());
 echo $OUTPUT->heading(get_string('submissions', 'lti'), 3);
 
 echo $table;

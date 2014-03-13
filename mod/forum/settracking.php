@@ -34,20 +34,8 @@ if ($returnpage !== 'index.php') {
     $url->param('returnpage', $returnpage);
 }
 $PAGE->set_url($url);
-
-if (! $forum = $DB->get_record("forum", array("id" => $id))) {
-    print_error('invalidforumid', 'forum');
-}
-
-if (! $course = $DB->get_record("course", array("id" => $forum->course))) {
-    print_error('invalidcoursemodule');
-}
-
-if (! $cm = get_coursemodule_from_instance("forum", $forum->id, $course->id)) {
-    print_error('invalidcoursemodule');
-}
-
-require_course_login($course, false, $cm);
+list($context, $course, $cminfo) = $PAGE->login_to_activity('forum', $id, null, PAGELOGIN_ALLOW_FRONTPAGE_GUEST | PAGELOGIN_NO_AUTOLOGIN);
+$forum = $PAGE->activityrecord;
 
 $returnto = forum_go_back_to($returnpage.'?id='.$course->id.'&f='.$forum->id);
 
@@ -60,7 +48,7 @@ $info->name  = fullname($USER);
 $info->forum = format_string($forum->name);
 
 $eventparams = array(
-    'context' => context_module::instance($cm->id),
+    'context' => $context,
     'relateduserid' => $USER->id,
     'other' => array('forumid' => $forum->id),
 );

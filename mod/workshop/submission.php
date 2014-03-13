@@ -32,16 +32,13 @@ $id     = optional_param('id', 0, PARAM_INT);           // submission id
 $edit   = optional_param('edit', false, PARAM_BOOL);    // open for editing?
 $assess = optional_param('assess', false, PARAM_BOOL);  // instant assessment required
 
-$cm     = get_coursemodule_from_id('workshop', $cmid, 0, false, MUST_EXIST);
-$course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
-
-require_login($course, false, $cm);
+list($context, $course, $cminfo) = $PAGE->login_to_cm('workshop', $cmid, null, PAGELOGIN_NO_AUTOLOGIN);
 if (isguestuser()) {
     print_error('guestsarenotallowed');
 }
 
-$workshop = $DB->get_record('workshop', array('id' => $cm->instance), '*', MUST_EXIST);
-$workshop = new workshop($workshop, $cm, $course);
+$cm = $cminfo->get_course_module_record(true);
+$workshop = new workshop($PAGE->activityrecord, $cm, $course);
 
 $PAGE->set_url($workshop->submission_url(), array('cmid' => $cmid, 'id' => $id));
 
@@ -232,7 +229,7 @@ if ($edit) {
         // store the updated values or re-save the new submission (re-saving needed because URLs are now rewritten)
         $DB->update_record('workshop_submissions', $formdata);
         $event = \mod_workshop\event\submission_updated::create($params);
-        $event->add_record_snapshot('workshop', $workshop);
+        $event->add_record_snapshot('workshop', $PAGE->activityrecord);
         $event->trigger();
 
         // send submitted content for plagiarism detection

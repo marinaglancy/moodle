@@ -30,7 +30,7 @@ require_once($CFG->dirroot . '/mod/lti/locallib.php');
 
 $courseid = required_param('course', PARAM_INT);
 
-require_login($courseid, false);
+$PAGE->login($courseid, PAGELOGIN_NO_AUTOLOGIN);
 
 $action = required_param('action', PARAM_TEXT);
 

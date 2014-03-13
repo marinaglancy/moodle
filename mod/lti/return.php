@@ -35,12 +35,7 @@ $unsigned = optional_param('unsigned', '0', PARAM_INT);
 
 $launchcontainer = optional_param('launch_container', LTI_LAUNCH_CONTAINER_WINDOW, PARAM_INT);
 
-$course = $DB->get_record('course', array('id' => $courseid), '*', MUST_EXIST);
-$lti = $DB->get_record('lti', array('id' => $instanceid), '*', MUST_EXIST);
-$cm = get_coursemodule_from_instance('lti', $lti->id, $lti->course, false, MUST_EXIST);
-$context = context_module::instance($cm->id);
-
-require_login($course);
+list($context, $course, $cm) = $PAGE->login_to_activity('lti', $instanceid);
 
 if (!empty($errormsg)) {
     $url = new moodle_url('/mod/lti/return.php', array('course' => $courseid));
@@ -58,7 +53,7 @@ if (!empty($errormsg)) {
     }
 
     echo $OUTPUT->header();
-    echo $OUTPUT->heading(format_string($lti->name, true, array('context' => $context)));
+    echo $OUTPUT->heading($cm->get_formatted_name());
 
     echo get_string('lti_launch_error', 'lti');
 

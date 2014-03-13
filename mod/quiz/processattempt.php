@@ -45,6 +45,7 @@ $timeup        = optional_param('timeup',        0,      PARAM_BOOL); // True if
 $scrollpos     = optional_param('scrollpos',     '',     PARAM_RAW);
 
 $transaction = $DB->start_delegated_transaction();
+$PAGE->login_expected(PAGELOGIN_NO_AUTOLOGIN);
 $attemptobj = quiz_attempt::create($attemptid);
 
 // Set $nexturl now.

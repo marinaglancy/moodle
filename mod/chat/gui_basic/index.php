@@ -28,26 +28,14 @@ if ($newonly !== 0) {
 }
 $PAGE->set_url($url);
 
-if (!$chat = $DB->get_record('chat', array('id'=>$id))) {
-    print_error('invalidid', 'chat');
-}
+list($context, $course, $cm) = $PAGE->login_to_activity('chat', $id, null, PAGELOGIN_NO_AUTOLOGIN);
+require_capability('mod/chat:chat', $PAGE->context);
 
-if (!$course = $DB->get_record('course', array('id'=>$chat->course))) {
-    print_error('invalidcourseid');
-}
-
-if (!$cm = get_coursemodule_from_instance('chat', $chat->id, $course->id)) {
-    print_error('invalidcoursemodule');
-}
-
-$context = context_module::instance($cm->id);
-require_login($course, false, $cm);
-require_capability('mod/chat:chat', $context);
 $PAGE->set_pagelayout('base');
 $PAGE->set_popup_notification_allowed(false);
 
 /// Check to see if groups are being used here
- if ($groupmode = groups_get_activity_groupmode($cm)) {   // Groups are being used
+ if ($cm->effectivegroupmode) {   // Groups are being used
     if ($groupid = groups_get_activity_group($cm)) {
         if (!$group = groups_get_group($groupid)) {
             print_error('invalidgroupid');
@@ -64,11 +52,11 @@ $PAGE->set_popup_notification_allowed(false);
 $strchat  = get_string('modulename', 'chat'); // must be before current_language() in chat_login_user() to force course language!!!
 $strchats = get_string('modulenameplural', 'chat');
 $stridle  = get_String('idle', 'chat');
-if (!$chat_sid = chat_login_user($chat->id, 'basic', $groupid, $course)) {
+if (!$chat_sid = chat_login_user($id, 'basic', $groupid, $course)) {
     print_error('cantlogin', 'chat');
 }
 
-if (!$chatusers = chat_get_users($chat->id, $groupid, $cm->groupingid)) {
+if (!$chatusers = chat_get_users($id, $groupid, $cm->groupingid)) {
     print_error('errornousers', 'chat');
 }
 
@@ -77,11 +65,11 @@ $DB->set_field('chat_users', 'lastping', time(), array('sid'=>$chat_sid));
 if (!isset($SESSION->chatprefs)) {
     $SESSION->chatprefs = array();
 }
-if (!isset($SESSION->chatprefs[$chat->id])) {
-    $SESSION->chatprefs[$chat->id] = array();
-    $SESSION->chatprefs[$chat->id]['chatentered'] = time();
+if (!isset($SESSION->chatprefs[$id])) {
+    $SESSION->chatprefs[$id] = array();
+    $SESSION->chatprefs[$id]['chatentered'] = time();
 }
-$chatentered = $SESSION->chatprefs[$chat->id]['chatentered'];
+$chatentered = $SESSION->chatprefs[$id]['chatentered'];
 
 $refreshedmessage = '';
 
@@ -106,12 +94,12 @@ if (!empty($refresh) and data_submitted()) {
     redirect($url);
 }
 
-$PAGE->set_title("$strchat: $course->shortname: ".format_string($chat->name,true)."$groupname");
+$PAGE->set_title("$strchat: $course->shortname: ".$cm->get_formatted_name()."$groupname");
 echo $OUTPUT->header();
 echo $OUTPUT->container_start(null, 'page-mod-chat-gui_basic');
 
 echo $OUTPUT->heading(format_string($course->shortname), 1);
-echo $OUTPUT->heading(format_string($chat->name), 2);
+echo $OUTPUT->heading($cm->get_formatted_name(), 2);
 
 echo $OUTPUT->heading(get_string('participants'), 3);
 
@@ -158,7 +146,7 @@ $options = new stdClass();
 $options->para = false;
 $options->newlines = true;
 
-$params = array('last'=>$last, 'groupid'=>$groupid, 'chatid'=>$chat->id, 'chatentered'=>$chatentered);
+$params = array('last'=>$last, 'groupid'=>$groupid, 'chatid'=>$id, 'chatentered'=>$chatentered);
 
 if ($newonly) {
     $lastsql = "AND timestamp > :last";

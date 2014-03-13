@@ -36,23 +36,13 @@ if ($subscribe !== null) {
 }
 $PAGE->set_url($url);
 
-if ($id) {
-    if (! $course = $DB->get_record('course', array('id' => $id))) {
-        print_error('invalidcourseid');
-    }
-} else {
-    $course = get_site();
-}
-
-require_course_login($course);
+list($coursecontext, $course) = $PAGE->login($id, PAGELOGIN_ALLOW_FRONTPAGE_GUEST);
 $PAGE->set_pagelayout('incourse');
-$coursecontext = context_course::instance($course->id);
-
 
 unset($SESSION->fromdiscussion);
 
 $params = array(
-    'context' => context_course::instance($course->id)
+    'context' => $coursecontext
 );
 $event = \mod_forum\event\course_module_instance_list_viewed::create($params);
 $event->add_record_snapshot('course', $course);
@@ -174,7 +164,7 @@ foreach ($modinfo->get_instances_of('forum') as $forumid=>$cm) {
 if (!is_null($subscribe)) {
     if (isguestuser() or !$can_subscribe) {
         // there should not be any links leading to this place, just redirect
-        redirect(new moodle_url('/mod/forum/index.php', array('id' => $id)), get_string('subscribeenrolledonly', 'forum'));
+        redirect(new moodle_url('/mod/forum/index.php', array('id' => $course->id)), get_string('subscribeenrolledonly', 'forum'));
     }
     // Can proceed now, the user is not guest and is enrolled
     foreach ($modinfo->get_instances_of('forum') as $forumid=>$cm) {
@@ -200,7 +190,7 @@ if (!is_null($subscribe)) {
         }
     }
     $returnto = forum_go_back_to("index.php?id=$course->id");
-    $shortname = format_string($course->shortname, true, array('context' => context_course::instance($course->id)));
+    $shortname = format_string($course->shortname, true, array('context' => $coursecontext));
     if ($subscribe) {
         redirect($returnto, get_string('nowallsubscribed', 'forum', $shortname), 1);
     } else {

@@ -96,58 +96,13 @@ if ($gopage < 0 AND !$savevalues) {
     $gonextpage = $gopreviouspage = false;
 }
 
-if (! $cm = get_coursemodule_from_id('feedback', $id)) {
-    print_error('invalidcoursemodule');
-}
-
-if (! $course = $DB->get_record("course", array("id"=>$cm->course))) {
-    print_error('coursemisconf');
-}
-
-if (! $feedback = $DB->get_record("feedback", array("id"=>$cm->instance))) {
-    print_error('invalidcoursemodule');
-}
-
-$context = context_module::instance($cm->id);
-
-$feedback_complete_cap = false;
-
-if (isset($CFG->feedback_allowfullanonymous)
-            AND $CFG->feedback_allowfullanonymous
-            AND $course->id == SITEID
-            AND (!$courseid OR $courseid == SITEID)
-            AND $feedback->anonymous == FEEDBACK_ANONYMOUS_YES ) {
-    $feedback_complete_cap = true;
-}
+list($context, $course, $cm) = $PAGE->login_to_cm('feedback', $cmid, $courseid, PAGELOGIN_ALLOW_FRONTPAGE_GUEST);
+$feedback = $PAGE->activityrecord;
 
 //check whether the feedback is anonymous
-if (isset($CFG->feedback_allowfullanonymous)
-                AND $CFG->feedback_allowfullanonymous
-                AND $feedback->anonymous == FEEDBACK_ANONYMOUS_YES
-                AND $course->id == SITEID ) {
-    $feedback_complete_cap = true;
-}
-if ($feedback->anonymous != FEEDBACK_ANONYMOUS_YES) {
-    print_error('feedback_is_not_for_anonymous', 'feedback');
-}
-
-//check whether the user has a session
-// there used to be a sesskey test - this could not work - sorry
-
-//check whether the feedback is located and! started from the mainsite
-if ($course->id == SITEID AND !$courseid) {
-    $courseid = SITEID;
-}
-
-require_course_login($course);
-
-if ($courseid AND $courseid != SITEID) {
-    $course2 = $DB->get_record('course', array('id'=>$courseid));
-    require_course_login($course2); //this overwrites the object $course :-(
-    $course = $DB->get_record("course", array("id"=>$cm->course)); // the workaround
-}
-
-if (!$feedback_complete_cap) {
+if ($feedback->anonymous != FEEDBACK_ANONYMOUS_YES ||
+        empty($CFG->feedback_allowfullanonymous) ||
+        $course->id != SITEID ) {
     print_error('error');
 }
 
@@ -156,23 +111,12 @@ if (!$feedback_complete_cap) {
 $strfeedbacks = get_string("modulenameplural", "feedback");
 $strfeedback  = get_string("modulename", "feedback");
 
-$PAGE->set_cm($cm, $course); // set's up global $COURSE
-$PAGE->set_pagelayout('incourse');
-
 $urlparams = array('id'=>$course->id);
 $PAGE->navbar->add($strfeedbacks, new moodle_url('/mod/feedback/index.php', $urlparams));
 $PAGE->navbar->add(format_string($feedback->name));
 $PAGE->set_heading($course->fullname);
 $PAGE->set_title($feedback->name);
 echo $OUTPUT->header();
-
-//ishidden check.
-//hidden feedbacks except feedbacks on mainsite are only accessible with related capabilities
-if ((empty($cm->visible) AND
-        !has_capability('moodle/course:viewhiddenactivities', $context)) AND
-        $course->id != SITEID) {
-    notice(get_string("activityiscurrentlyhidden"));
-}
 
 //check, if the feedback is open (timeopen, timeclose)
 $checktime = time();

@@ -29,12 +29,10 @@ require_once(dirname(__FILE__).'/locallib.php');
 $id         = required_param('id', PARAM_INT); // course_module ID
 $tool       = required_param('tool', PARAM_ALPHA);
 
-$cm         = get_coursemodule_from_id('workshop', $id, 0, false, MUST_EXIST);
-$course     = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
-$workshop   = $DB->get_record('workshop', array('id' => $cm->instance), '*', MUST_EXIST);
+list($context, $course, $cm) = $PAGE->login_to_cm('workshop', $cmid, null, PAGELOGIN_NO_AUTOLOGIN);
+$workshoprecord = $PAGE->activityrecord;
+$workshop = new workshop($workshoprecord, $cm, $course);
 
-require_login($course, false, $cm);
-$workshop = new workshop($workshop, $cm, $course);
 require_sesskey();
 
 $params = array(

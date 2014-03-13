@@ -865,7 +865,7 @@ function feedback_check_is_switchrole() {
  *
  * @global object
  * @uses CONTEXT_MODULE
- * @param object $cm
+ * @param stdClass|cm_info $cm
  * @param int $group single groupid
  * @param string $sort
  * @param int $startpage
@@ -920,7 +920,7 @@ function feedback_get_incomplete_users($cm,
  * count users which have not completed the feedback
  *
  * @global object
- * @param object $cm
+ * @param stdClass|cm_info $cm
  * @param int $group single groupid
  * @return int count of userrecords
  */
@@ -936,7 +936,7 @@ function feedback_count_incomplete_users($cm, $group = false) {
  *
  * @global object
  * @uses FEEDBACK_ANONYMOUS_NO
- * @param object $cm
+ * @param stdClass|cm_info $cm
  * @param int $group single groupid
  * @return int count of userrecords
  */
@@ -967,7 +967,7 @@ function feedback_count_complete_users($cm, $group = false) {
  * @global object
  * @uses CONTEXT_MODULE
  * @uses FEEDBACK_ANONYMOUS_NO
- * @param object $cm
+ * @param stdClass|cm_info $cm
  * @param int $group single groupid
  * @param string $where a sql where condition (must end with " AND ")
  * @param array parameters used in $where
@@ -2968,7 +2968,7 @@ function feedback_send_email($cm, $feedback, $course, $userid) {
  *
  * @global object
  * @uses FORMAT_PLAIN
- * @param object $cm the coursemodule-record
+ * @param stdClass|cm_info $cm the coursemodule-record
  * @param object $feedback
  * @param object $course
  * @return void
@@ -3044,6 +3044,7 @@ function feedback_send_email_text($info, $course) {
  * @global object
  * @param object $info includes some infos about the feedback you want to send
  * @param object $course
+ * @param stdClass|cm_info $cm
  * @return string the text you want to post
  */
 function feedback_send_email_html($info, $course, $cm) {

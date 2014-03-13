@@ -6,12 +6,12 @@ require_once("$CFG->dirroot/course/lib.php");
 require_once("$CFG->dirroot/course/modlib.php");
 require_once('import_form.php');
 
-$id = required_param('id', PARAM_INT);    // Course Module ID
+$cmid = required_param('id', PARAM_INT);    // Course Module ID
 
 $mode     = optional_param('mode', 'letter', PARAM_ALPHA );
 $hook     = optional_param('hook', 'ALL', PARAM_ALPHANUM);
 
-$url = new moodle_url('/mod/glossary/import.php', array('id'=>$id));
+$url = new moodle_url('/mod/glossary/import.php', array('id'=>$cmid));
 if ($mode !== 'letter') {
     $url->param('mode', $mode);
 }
@@ -20,21 +20,8 @@ if ($hook !== 'ALL') {
 }
 $PAGE->set_url($url);
 
-if (! $cm = get_coursemodule_from_id('glossary', $id)) {
-    print_error('invalidcoursemodule');
-}
-
-if (! $course = $DB->get_record("course", array("id"=>$cm->course))) {
-    print_error('coursemisconf');
-}
-
-if (! $glossary = $DB->get_record("glossary", array("id"=>$cm->instance))) {
-    print_error('invalidid', 'glossary');
-}
-
-require_login($course, false, $cm);
-
-$context = context_module::instance($cm->id);
+list($context, $course, $cm) = $PAGE->login_to_cm('glossary', $cmid, null, PAGELOGIN_NO_AUTOLOGIN);
+$glossary = $PAGE->activityrecord;
 require_capability('mod/glossary:import', $context);
 
 $strglossaries = get_string("modulenameplural", "glossary");
@@ -59,7 +46,7 @@ if ( !$data = $form->get_data() ) {
     echo $OUTPUT->box_start('glossarydisplay generalbox');
     // display upload form
     $data = new stdClass();
-    $data->id = $id;
+    $data->id = $cmid;
     $form->set_data($data);
     $form->display();
     echo $OUTPUT->box_end();
@@ -71,7 +58,7 @@ $result = $form->get_file_content('file');
 
 if (empty($result)) {
     echo $OUTPUT->box_start('glossarydisplay generalbox');
-    echo $OUTPUT->continue_button('import.php?id='.$id);
+    echo $OUTPUT->continue_button('import.php?id='.$cmid);
     echo $OUTPUT->box_end();
     echo $OUTPUT->footer();
     die();
@@ -317,15 +304,15 @@ if ($xml = glossary_read_imported_file($result)) {
     }
 /// Print continue button, based on results
     if ($importedentries) {
-        echo $OUTPUT->continue_button('view.php?id='.$id);
+        echo $OUTPUT->continue_button('view.php?id='.$cmid);
     } else {
-        echo $OUTPUT->continue_button('import.php?id='.$id);
+        echo $OUTPUT->continue_button('import.php?id='.$cmid);
     }
     echo $OUTPUT->box_end();
 } else {
     echo $OUTPUT->box_start('glossarydisplay generalbox');
     echo get_string('errorparsingxml', 'glossary');
-    echo $OUTPUT->continue_button('import.php?id='.$id);
+    echo $OUTPUT->continue_button('import.php?id='.$cmid);
     echo $OUTPUT->box_end();
 }
 

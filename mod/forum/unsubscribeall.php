@@ -30,7 +30,7 @@ $PAGE->set_url('/mod/forum/unsubscribeall.php');
 $PAGE->set_context(context_user::instance($USER->id));
 
 // Do not autologin guest. Only proper users can have forum subscriptions.
-require_login(null, false);
+list($context, $course) = $PAGE->login(0, PAGELOGIN_NO_AUTOLOGIN);
 
 $return = $CFG->wwwroot.'/';
 
@@ -42,7 +42,7 @@ $strunsubscribeall = get_string('unsubscribeall', 'forum');
 $PAGE->navbar->add(get_string('modulename', 'forum'));
 $PAGE->navbar->add($strunsubscribeall);
 $PAGE->set_title($strunsubscribeall);
-$PAGE->set_heading($COURSE->fullname);
+$PAGE->set_heading($course->fullname);
 echo $OUTPUT->header();
 echo $OUTPUT->heading($strunsubscribeall);
 

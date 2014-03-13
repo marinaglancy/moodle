@@ -27,22 +27,15 @@ require('../../config.php');
 require_once("$CFG->dirroot/mod/imscp/locallib.php");
 require_once($CFG->libdir . '/completionlib.php');
 
-$id = optional_param('id', 0, PARAM_INT);  // Course module ID
+$cmid = optional_param('id', 0, PARAM_INT);  // Course module ID
 $i  = optional_param('i', 0, PARAM_INT);   // IMS CP instance id
 
 if ($i) {  // Two ways to specify the module
-    $imscp = $DB->get_record('imscp', array('id'=>$i), '*', MUST_EXIST);
-    $cm = get_coursemodule_from_instance('imscp', $imscp->id, $imscp->course, false, MUST_EXIST);
-
+    list($context, $course, $cm) = $PAGE->login_to_activity('imscp', $i, null, PAGELOGIN_ALLOW_FRONTPAGE_GUEST);
 } else {
-    $cm = get_coursemodule_from_id('imscp', $id, 0, false, MUST_EXIST);
-    $imscp = $DB->get_record('imscp', array('id'=>$cm->instance), '*', MUST_EXIST);
+    list($context, $course, $cm) = $PAGE->login_to_cm('imscp', $cmid, null, PAGELOGIN_ALLOW_FRONTPAGE_GUEST);
 }
-
-$course = $DB->get_record('course', array('id'=>$cm->course), '*', MUST_EXIST);
-
-require_course_login($course, true, $cm);
-$context = context_module::instance($cm->id);
+$imscp = $PAGE->activityrecord;
 require_capability('mod/imscp:view', $context);
 
 $params = array(

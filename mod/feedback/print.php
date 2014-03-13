@@ -25,26 +25,12 @@
 require_once("../../config.php");
 require_once("lib.php");
 
-$id = required_param('id', PARAM_INT);
+$cmid = required_param('id', PARAM_INT);
 
-$PAGE->set_url('/mod/feedback/print.php', array('id'=>$id));
+$PAGE->set_url('/mod/feedback/print.php', array('id'=>$cmid));
 
-if (! $cm = get_coursemodule_from_id('feedback', $id)) {
-    print_error('invalidcoursemodule');
-}
-
-if (! $course = $DB->get_record("course", array("id"=>$cm->course))) {
-    print_error('coursemisconf');
-}
-
-if (! $feedback = $DB->get_record("feedback", array("id"=>$cm->instance))) {
-    print_error('invalidcoursemodule');
-}
-
-$context = context_module::instance($cm->id);
-
-require_login($course, true, $cm);
-
+list($context, $course, $cm) = $PAGE->login_to_cm('feedback', $cmid);
+$feedback = $PAGE->activityrecord;
 require_capability('mod/feedback:view', $context);
 $PAGE->set_pagelayout('embedded');
 
@@ -54,9 +40,9 @@ $strfeedback  = get_string("modulename", "feedback");
 
 $feedback_url = new moodle_url('/mod/feedback/index.php', array('id'=>$course->id));
 $PAGE->navbar->add($strfeedbacks, $feedback_url);
-$PAGE->navbar->add(format_string($feedback->name));
+$PAGE->navbar->add($cm->get_formatted_name());
 
-$PAGE->set_title($feedback->name);
+$PAGE->set_title($cm->name);
 $PAGE->set_heading($course->fullname);
 echo $OUTPUT->header();
 
@@ -64,11 +50,11 @@ echo $OUTPUT->header();
 ///////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////
-echo $OUTPUT->heading(format_text($feedback->name));
+echo $OUTPUT->heading($cm->get_formatted_name());
 
 $feedbackitems = $DB->get_records('feedback_item', array('feedback'=>$feedback->id), 'position');
 echo $OUTPUT->box_start('generalbox boxaligncenter boxwidthwide');
-echo $OUTPUT->continue_button('view.php?id='.$id);
+echo $OUTPUT->continue_button('view.php?id='.$cmid);
 if (is_array($feedbackitems)) {
     $itemnr = 0;
     $align = right_to_left() ? 'right' : 'left';
@@ -110,7 +96,7 @@ if (is_array($feedbackitems)) {
     echo $OUTPUT->box(get_string('no_items_available_yet', 'feedback'),
                     'generalbox boxaligncenter boxwidthwide');
 }
-echo $OUTPUT->continue_button('view.php?id='.$id);
+echo $OUTPUT->continue_button('view.php?id='.$cmid);
 echo $OUTPUT->box_end();
 /// Finish the page
 ///////////////////////////////////////////////////////////////////////////

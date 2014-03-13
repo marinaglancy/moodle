@@ -54,22 +54,9 @@ if (($formdata = data_submitted()) AND !confirm_sesskey()) {
     print_error('invalidsesskey');
 }
 
-if (! $cm = get_coursemodule_from_id('feedback', $cmid)) {
-    print_error('invalidcoursemodule');
-}
-
-if (! $course = $DB->get_record("course", array("id"=>$cm->course))) {
-    print_error('coursemisconf');
-}
-
-if (! $feedback = $DB->get_record("feedback", array("id"=>$cm->instance))) {
-    print_error('invalidcoursemodule');
-}
-
-$context = context_module::instance($cm->id);
-
-require_login($course, true, $cm);
-
+list($context, $course, $cminfo) = $PAGE->login_to_cm('feedback', $cmid);
+$cm = $cminfo->get_course_module_record(true);
+$feedback = $PAGE->activityrecord;
 require_capability('mod/feedback:edititems', $context);
 
 //if the typ is pagebreak so the item will be saved directly

@@ -4,13 +4,13 @@
     require_once("$CFG->libdir/graphlib.php");
     require_once("lib.php");
 
-    $id    = required_param('id', PARAM_INT);    // Course Module ID
+    $cmid  = required_param('id', PARAM_INT);    // Course Module ID
     $type  = required_param('type', PARAM_FILE);  // Graph Type
     $group = optional_param('group', 0, PARAM_INT);  // Group ID
     $sid   = optional_param('sid', false, PARAM_INT);  // Student ID
     $qid   = optional_param('qid', 0, PARAM_INT);  // Group ID
 
-    $url = new moodle_url('/mod/survey/graph.php', array('id'=>$id, 'type'=>$type));
+    $url = new moodle_url('/mod/survey/graph.php', array('id'=>$cmid, 'type'=>$type));
     if ($group !== 0) {
         $url->param('group', $group);
     }
@@ -22,24 +22,15 @@
     }
     $PAGE->set_url($url);
 
-    if (! $cm = get_coursemodule_from_id('survey', $id)) {
-        print_error('invalidcoursemodule');
-    }
-
-    if (! $course = $DB->get_record("course", array("id"=>$cm->course))) {
-        print_error('coursemisconf');
-    }
-
+    $PAGE->login_expected(PAGELOGIN_NO_AUTOLOGIN);
     if ($sid) {
         if (!$user = $DB->get_record("user", array("id"=>$sid))) {
             print_error('invaliduserid');
         }
     }
-
-    require_login($course, false, $cm);
+    list($context, $course, $cm) = $PAGE->login_to_cm('survey', $cmid);
 
     $groupmode = groups_get_activity_groupmode($cm);   // Groups are being used
-    $context = context_module::instance($cm->id);
 
     if (!has_capability('mod/survey:readresponses', $context)) {
         if ($type != "student.png" or $sid != $USER->id ) {
@@ -49,9 +40,7 @@
         }
     }
 
-    if (! $survey = $DB->get_record("survey", array("id"=>$cm->instance))) {
-        print_error('invalidsurveyid', 'survey');
-    }
+    $survey = $PAGE->activityrecord;
 
 /// Check to see if groups are being used in this survey
     if ($group) {

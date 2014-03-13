@@ -26,12 +26,12 @@ require_once(dirname(__FILE__) . '/../../config.php');
 require_once($CFG->dirroot . '/mod/quiz/locallib.php');
 
 // Look for old-style URLs, such as may be in the logs, and redirect them to startattemtp.php.
-if ($id = optional_param('id', 0, PARAM_INT)) {
-    redirect($CFG->wwwroot . '/mod/quiz/startattempt.php?cmid=' . $id . '&sesskey=' . sesskey());
+$PAGE->login_expected(PAGELOGIN_NO_AUTOLOGIN);
+if ($cmid = optional_param('id', 0, PARAM_INT)) {
+    list($context, $course, $cm) = $PAGE->login_to_cm('quiz', $cmid);
+    redirect($CFG->wwwroot . '/mod/quiz/startattempt.php?cmid=' . $cmid . '&sesskey=' . sesskey());
 } else if ($qid = optional_param('q', 0, PARAM_INT)) {
-    if (!$cm = get_coursemodule_from_instance('quiz', $qid)) {
-        print_error('invalidquizid', 'quiz');
-    }
+    list($context, $course, $cm) = $PAGE->login_to_activity('quiz', $qid);
     redirect(new moodle_url('/mod/quiz/startattempt.php',
             array('cmid' => $cm->id, 'sesskey' => sesskey())));
 }
@@ -45,7 +45,7 @@ $page = $attemptobj->force_page_number_into_range($page);
 $PAGE->set_url($attemptobj->attempt_url(null, $page));
 
 // Check login.
-require_login($attemptobj->get_course(), false, $attemptobj->get_cm());
+$PAGE->login_to_cm('quiz', $attemptobj->get_cm(), $attemptobj->get_course());
 
 // Check that this attempt belongs to this user.
 if ($attemptobj->get_userid() != $USER->id) {
@@ -136,4 +136,4 @@ if ($attemptobj->is_last_page($page)) {
     $nextpage = $page + 1;
 }
 
-echo $output->attempt_page($attemptobj, $page, $accessmanager, $messages, $slots, $id, $nextpage);
+echo $output->attempt_page($attemptobj, $page, $accessmanager, $messages, $slots, $cmid, $nextpage);

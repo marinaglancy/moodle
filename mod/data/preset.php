@@ -33,21 +33,19 @@ require_once($CFG->dirroot.'/mod/data/lib.php');
 require_once($CFG->dirroot.'/mod/data/preset_form.php');
 require_once($CFG->libdir.'/xmlize.php');
 
-$id     = optional_param('id', 0, PARAM_INT);           // course module id
-if ($id) {
-    $cm = get_coursemodule_from_id('data', $id, null, null, MUST_EXIST);
-    $course = $DB->get_record('course', array('id'=>$cm->course), '*', MUST_EXIST);
-    $data = $DB->get_record('data', array('id'=>$cm->instance), '*', MUST_EXIST);
+$cmid = optional_param('id', 0, PARAM_INT);           // course module id
+if ($cmid) {
+    list($context, $course, $cminfo) = $PAGE->login_to_cm('data', $cmid, null, PAGELOGIN_NO_AUTOLOGIN);
 } else {
     $d = required_param('d', PARAM_INT);     // database activity id
-    $data = $DB->get_record('data', array('id'=>$d), '*', MUST_EXIST);
-    $course = $DB->get_record('course', array('id'=>$data->course), '*', MUST_EXIST);
-    $cm = get_coursemodule_from_instance('data', $data->id, $course->id, null, MUST_EXIST);
+    list($context, $course, $cminfo) = $PAGE->login_to_activity('data', $d, null, PAGELOGIN_NO_AUTOLOGIN);
 }
 
-$context = context_module::instance($cm->id, MUST_EXIST);
-require_login($course, false, $cm);
 require_capability('mod/data:managetemplates', $context);
+
+$cm = $cminfo->get_course_module_record(true);
+$data = clone($PAGE->activityrecord);
+
 $PAGE->set_url(new moodle_url('/mod/data/preset.php', array('d'=>$data->id)));
 $PAGE->set_title(get_string('course') . ': ' . $course->fullname);
 $PAGE->set_heading($course->fullname);
@@ -101,8 +99,8 @@ if (!$form_export->is_submitted()) {
 
     // Needed for tabs.php
     $currenttab = 'presets';
-    $currentgroup = groups_get_activity_group($cm);
-    $groupmode = groups_get_activity_groupmode($cm);
+    $currentgroup = groups_get_activity_group($cminfo);
+    $groupmode = $cminfo->effectivegroupmode;
     echo $OUTPUT->box(format_module_intro('data', $data, $cm->id), 'generalbox', 'intro');
 
     include('tabs.php');

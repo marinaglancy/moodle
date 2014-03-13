@@ -25,28 +25,23 @@
 require_once("../../config.php");
 require_once('locallib.php');
 
-$id = optional_param('id', 0, PARAM_INT);       // Course Module ID, or
+$cmid = optional_param('id', 0, PARAM_INT);       // Course Module ID, or
 $a = optional_param('a', 0, PARAM_INT);         // scorm ID.
 $scoid = required_param('scoid', PARAM_INT);     // sco ID.
 $mode = optional_param('mode', '', PARAM_ALPHA); // navigation mode.
 $currentorg = optional_param('currentorg', '', PARAM_RAW); // Selected organization.
 $attempt = required_param('attempt', PARAM_INT); // new attempt.
 
-if (!empty($id)) {
-    $cm = get_coursemodule_from_id('scorm', $id, 0, false, MUST_EXIST);
-    $course = $DB->get_record('course', array('id'=>$cm->course), '*', MUST_EXIST);
-    $scorm = $DB->get_record('scorm', array('id'=>$cm->instance), '*', MUST_EXIST);
+if (!empty($cmid)) {
+    list($context, $course, $cm) = $PAGE->login_to_cm('scorm', $cmid, null, PAGELOGIN_NO_AUTOLOGIN | PAGELOGIN_DO_NOT_SET_WANTSURL);
 } else if (!empty($a)) {
-    $scorm = $DB->get_record('scorm', array('id'=>$a), '*', MUST_EXIST);
-    $course = $DB->get_record('course', array('id'=>$scorm->course), '*', MUST_EXIST);
-    $cm = get_coursemodule_from_instance('scorm', $scorm->id, $course->id, false, MUST_EXIST);
+    list($context, $course, $cm) = $PAGE->login_to_activity('scorm', $a, null, PAGELOGIN_NO_AUTOLOGIN | PAGELOGIN_DO_NOT_SET_WANTSURL);
 } else {
     print_error('missingparameter');
 }
+$scorm = clone($PAGE->activityrecord);
 
 $PAGE->set_url('/mod/scorm/loaddatamodel.php', array('scoid'=>$scoid, 'id'=>$cm->id));
-
-require_login($course, false, $cm);
 
 $userdata = new stdClass();
 if ($usertrack = scorm_get_tracks($scoid, $USER->id, $attempt)) {

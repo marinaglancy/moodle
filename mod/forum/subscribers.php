@@ -38,19 +38,10 @@ if ($edit !== 0) {
     $url->param('edit', $edit);
 }
 $PAGE->set_url($url);
+list($context, $course, $cm) = $PAGE->login_to_activity('forum', $id, PAGELOGIN_NO_AUTOLOGIN);
+$forum = $PAGE->activityrecord;
 
-$forum = $DB->get_record('forum', array('id'=>$id), '*', MUST_EXIST);
-$course = $DB->get_record('course', array('id'=>$forum->course), '*', MUST_EXIST);
-if (! $cm = get_coursemodule_from_instance('forum', $forum->id, $course->id)) {
-    $cm->id = 0;
-}
-
-require_login($course, false, $cm);
-
-$context = context_module::instance($cm->id);
-if (!has_capability('mod/forum:viewsubscribers', $context)) {
-    print_error('nopermissiontosubscribe', 'forum');
-}
+require_capability('mod/forum:viewsubscribers', $context, null, true, 'nopermissiontosubscribe', 'forum');
 
 unset($SESSION->fromdiscussion);
 

@@ -33,6 +33,7 @@ $currentgroup = optional_param('group', 0, PARAM_INT); // Group ID
 $userid       = optional_param('uid', 0, PARAM_INT); // User ID
 $groupanduser = optional_param('groupanduser', null, PARAM_TEXT);
 
+$PAGE->login_expected();
 if (!$page = wiki_get_page($pageid)) {
     print_error('incorrectpageid', 'wiki');
 }
@@ -45,12 +46,10 @@ if ($groupanduser) {
 
 if ($wid) {
     // in group mode
-    if (!$wiki = wiki_get_wiki($wid)) {
-        print_error('incorrectwikiid', 'wiki');
-    }
-    if (!$subwiki = wiki_get_subwiki_by_group($wiki->id, $currentgroup, $userid)) {
+    list($context, $course, $cm) = $PAGE->login_to_activity('wiki', $wid);
+    if (!$subwiki = wiki_get_subwiki_by_group($wid, $currentgroup, $userid)) {
         // create subwiki if doesn't exist
-        $subwikiid = wiki_add_subwiki($wiki->id, $currentgroup, $userid);
+        $subwikiid = wiki_add_subwiki($wid, $currentgroup, $userid);
         $subwiki = wiki_get_subwiki($subwikiid);
     }
 } else {
@@ -58,26 +57,11 @@ if ($wid) {
     if (!$subwiki = wiki_get_subwiki($page->subwikiid)) {
         print_error('incorrectsubwikiid', 'wiki');
     }
-
-    // Checking wiki instance of that subwiki
-    if (!$wiki = wiki_get_wiki($subwiki->wikiid)) {
-        print_error('incorrectwikiid', 'wiki');
-    }
+    list($context, $course, $cm) = $PAGE->login_to_activity('wiki', $subwiki->wikiid);
 }
-
-// Checking course module instance
-if (!$cm = get_coursemodule_from_instance("wiki", $subwiki->wikiid)) {
-    print_error('invalidcoursemodule');
-}
-
-// Checking course instance
-$course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
-
-$context = context_module::instance($cm->id);
-
+$wiki = $PAGE->activityrecord;
 
 $PAGE->set_url('/mod/wiki/files.php', array('pageid'=>$pageid));
-require_login($course, true, $cm);
 
 if (!wiki_user_can_view($subwiki, $wiki)) {
     print_error('cannotviewfiles', 'wiki');

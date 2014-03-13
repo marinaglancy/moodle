@@ -22,19 +22,19 @@
 
 
     $browserow[] = new tabobject(GLOSSARY_STANDARD_VIEW,
-                                 $CFG->wwwroot.'/mod/glossary/view.php?id='.$id.'&amp;mode=letter',
+                                 $CFG->wwwroot.'/mod/glossary/view.php?id='.$cmid.'&amp;mode=letter',
                                  get_string('standardview', 'glossary'));
 
     $browserow[] = new tabobject(GLOSSARY_CATEGORY_VIEW,
-                                 $CFG->wwwroot.'/mod/glossary/view.php?id='.$id.'&amp;mode=cat',
+                                 $CFG->wwwroot.'/mod/glossary/view.php?id='.$cmid.'&amp;mode=cat',
                                  get_string('categoryview', 'glossary'));
 
     $browserow[] = new tabobject(GLOSSARY_DATE_VIEW,
-                                 $CFG->wwwroot.'/mod/glossary/view.php?id='.$id.'&amp;mode=date',
+                                 $CFG->wwwroot.'/mod/glossary/view.php?id='.$cmid.'&amp;mode=date',
                                  get_string('dateview', 'glossary'));
 
     $browserow[] = new tabobject(GLOSSARY_AUTHOR_VIEW,
-                                 $CFG->wwwroot.'/mod/glossary/view.php?id='.$id.'&amp;mode=author',
+                                 $CFG->wwwroot.'/mod/glossary/view.php?id='.$cmid.'&amp;mode=author',
                                  get_string('authorview', 'glossary'));
 
     if ($tab < GLOSSARY_STANDARD_VIEW || $tab > GLOSSARY_AUTHOR_VIEW) {   // We are on second row

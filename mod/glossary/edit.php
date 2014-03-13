@@ -7,21 +7,8 @@ require_once('edit_form.php');
 $cmid = required_param('cmid', PARAM_INT);            // Course Module ID
 $id   = optional_param('id', 0, PARAM_INT);           // EntryID
 
-if (!$cm = get_coursemodule_from_id('glossary', $cmid)) {
-    print_error('invalidcoursemodule');
-}
-
-if (!$course = $DB->get_record('course', array('id'=>$cm->course))) {
-    print_error('coursemisconf');
-}
-
-require_login($course, false, $cm);
-
-$context = context_module::instance($cm->id);
-
-if (!$glossary = $DB->get_record('glossary', array('id'=>$cm->instance))) {
-    print_error('invalidid', 'glossary');
-}
+list($context, $course, $cm) = $PAGE->login_to_cm('glossary', $cmid, null, PAGELOGIN_NO_AUTOLOGIN);
+$glossary = $PAGE->activityrecord;
 
 $url = new moodle_url('/mod/glossary/edit.php', array('cmid'=>$cm->id));
 if (!empty($id)) {

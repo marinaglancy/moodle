@@ -7,15 +7,11 @@ $id = required_param('id', PARAM_INT);   // course
 
 $PAGE->set_url('/mod/chat/index.php', array('id'=>$id));
 
-if (! $course = $DB->get_record('course', array('id'=>$id))) {
-    print_error('invalidcourseid');
-}
-
-require_course_login($course);
+list($context, $course) = $PAGE->login($id, PAGELOGIN_ALLOW_FRONTPAGE_GUEST);
 $PAGE->set_pagelayout('incourse');
 
 $params = array(
-    'context' => context_course::instance($id)
+    'context' => $context
 );
 $event = \mod_chat\event\course_module_instance_list_viewed::create($params);
 $event->add_record_snapshot('course', $course);

@@ -26,18 +26,13 @@
 require_once('../../config.php');
 require_once($CFG->dirroot.'/mod/lesson/locallib.php');
 
-$id     = required_param('id', PARAM_INT);    // Course Module ID
+$cmid   = required_param('id', PARAM_INT);    // Course Module ID
 $pageid = optional_param('pageid', null, PARAM_INT);    // Lesson Page ID
 $action = optional_param('action', 'reportoverview', PARAM_ALPHA);  // action to take
 $nothingtodisplay = false;
 
-$cm = get_coursemodule_from_id('lesson', $id, 0, false, MUST_EXIST);
-$course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
-$lesson = new lesson($DB->get_record('lesson', array('id' => $cm->instance), '*', MUST_EXIST));
-
-require_login($course, false, $cm);
-
-$context = context_module::instance($cm->id);
+list($context, $course, $cm) = $PAGE->login_to_cm('lesson', $cmid, null, PAGELOGIN_NO_AUTOLOGIN);
+$lesson = new lesson($PAGE->activityrecord);
 require_capability('mod/lesson:manage', $context);
 
 $ufields = user_picture::fields('u'); // These fields are enough
@@ -68,7 +63,7 @@ if (! $students = $DB->get_records_sql($sql, $params)) {
     $nothingtodisplay = true;
 }
 
-$url = new moodle_url('/mod/lesson/report.php', array('id'=>$id));
+$url = new moodle_url('/mod/lesson/report.php', array('id'=>$cmid));
 if ($action !== 'reportoverview') {
     $url->param('action', $action);
 }

@@ -5,8 +5,8 @@
 require_once("../../config.php");
 require_once("lib.php");
 
-$id = required_param('id', PARAM_INT);                       // Course Module ID, or
-$usedynalink = optional_param('usedynalink', 0, PARAM_INT);  // category ID
+$cmid        = required_param('id', PARAM_INT);              // Course Module ID
+$usedynalink = optional_param('usedynalink', 0, PARAM_INT);
 $confirm     = optional_param('confirm', 0, PARAM_INT);      // confirm the action
 $name        = optional_param('name', '', PARAM_CLEAN);  // confirm the name
 
@@ -16,7 +16,7 @@ $mode   = optional_param('mode', '', PARAM_ALPHA);   // cat
 
 $action = strtolower($action);
 
-$url = new moodle_url('/mod/glossary/editcategories.php', array('id'=>$id));
+$url = new moodle_url('/mod/glossary/editcategories.php', array('id'=>$cmid));
 if ($usedynalink !== 0) {
     $url->param('usedynalink', $usedynalink);
 }
@@ -37,34 +37,21 @@ if ($mode !== 'mode') {
 }
 
 $PAGE->set_url($url);
+list($context, $course, $cm) = $PAGE->login_to_cm('glossary', $cmid, null, PAGELOGIN_NO_AUTOLOGIN);
+$glossaryid = $cm->instance;
 
-if (! $cm = get_coursemodule_from_id('glossary', $id)) {
-    print_error('invalidcoursemodule');
-}
-
-if (! $course = $DB->get_record("course", array("id"=>$cm->course))) {
-    print_error('coursemisconf');
-}
-
-if (! $glossary = $DB->get_record("glossary", array("id"=>$cm->instance))) {
-    print_error('invalidcoursemodule');
-}
+require_capability('mod/glossary:managecategories', $context);
 
 if ($hook > 0) {
     if ($category = $DB->get_record("glossary_categories", array("id"=>$hook))) {
         //Check it belongs to the same glossary
-        if ($category->glossaryid != $glossary->id) {
+        if ($category->glossaryid != $glossaryid) {
             print_error('invalidid', 'glossary');
         }
     } else {
         print_error('invalidcategoryid');
     }
 }
-
-require_login($course, false, $cm);
-
-$context = context_module::instance($cm->id);
-require_capability('mod/glossary:managecategories', $context);
 
 $strglossaries   = get_string("modulenameplural", "glossary");
 $strglossary     = get_string("modulename", "glossary");
@@ -75,7 +62,7 @@ if (!empty($action)) {
     $navaction = get_string($action). " " . core_text::strtolower(get_string("category","glossary"));
     $PAGE->navbar->add($navaction);
 }
-$PAGE->set_title($glossary->name);
+$PAGE->set_title($cm->name);
 $PAGE->set_heading($course->fullname);
 
 // Prepare format_string/text options
@@ -106,7 +93,7 @@ if ( $hook >0 ) {
 
         } else {
             echo $OUTPUT->header();
-            echo $OUTPUT->heading(format_string($glossary->name), 2);
+            echo $OUTPUT->heading($cm->get_formatted_name(), 2);
             echo $OUTPUT->heading(format_string(get_string("edit"). " " . get_string("category","glossary")), 3);
 
             $name = $category->name;
@@ -126,7 +113,7 @@ if ( $hook >0 ) {
             redirect("editcategories.php?id=$cm->id", get_string("categorydeleted", "glossary"), 2);
         } else {
             echo $OUTPUT->header();
-            echo $OUTPUT->heading(format_string($glossary->name), 2);
+            echo $OUTPUT->heading($cm->get_formatted_name(), 2);
             echo $OUTPUT->heading(format_string(get_string("delete"). " " . get_string("category","glossary")), 3);
 
             echo $OUTPUT->box_start('generalbox boxaligncenter errorboxcontent boxwidthnarrow');
@@ -159,7 +146,7 @@ if ( $hook >0 ) {
 
 <?php
             unset($options);
-            $options = array ("id" => $id);
+            $options = array ("id" => $cmid);
             echo $OUTPUT->single_button(new moodle_url("editcategories.php", $options), get_string("no"));
             echo "</td></tr></table>";
             echo "</div>";
@@ -169,7 +156,7 @@ if ( $hook >0 ) {
 
 } elseif ( $action == "add" ) {
     if ( $confirm ) {
-        $dupcategory = $DB->get_records_sql("SELECT * FROM {glossary_categories} WHERE ".$DB->sql_like('name','?', false)." AND glossaryid=?", array($name, $glossary->id));
+        $dupcategory = $DB->get_records_sql("SELECT * FROM {glossary_categories} WHERE ".$DB->sql_like('name','?', false)." AND glossaryid=?", array($name, $glossaryid));
         if ( $dupcategory ) {
             redirect("editcategories.php?id=$cm->id&amp;action=add&amp;name=$name", get_string("duplicatecategory", "glossary"), 2);
 
@@ -178,14 +165,14 @@ if ( $hook >0 ) {
             $cat = new stdClass();
             $cat->name = $name;
             $cat->usedynalink = $usedynalink;
-            $cat->glossaryid = $glossary->id;
+            $cat->glossaryid = $glossaryid;
 
             $cat->id = $DB->insert_record("glossary_categories", $cat);
             add_to_log($course->id, "glossary", "add category", "editcategories.php?id=$cm->id", $cat->id,$cm->id);
         }
     } else {
         echo $OUTPUT->header();
-        echo $OUTPUT->heading(format_string($glossary->name), 2);
+        echo $OUTPUT->heading($cm->get_formatted_name(), 2);
         echo "<h3 class=\"main\">" . get_string("add"). " " . get_string("category","glossary"). "</h3>";
         $name="";
         require "editcategories.html";
@@ -198,7 +185,7 @@ if ( $action ) {
 }
 
 echo $OUTPUT->header();
-echo $OUTPUT->heading(format_string($glossary->name), 2);
+echo $OUTPUT->heading($cm->get_formatted_name(), 2);
 
 ?>
 
@@ -215,7 +202,7 @@ echo $OUTPUT->heading(format_string($glossary->name), 2);
 
 
 <?php
-    $categories = $DB->get_records("glossary_categories", array("glossaryid"=>$glossary->id), "name ASC");
+    $categories = $DB->get_records("glossary_categories", array("glossaryid"=>$glossaryid), "name ASC");
 
     if ( $categories ) {
         echo '<table width="100%">';

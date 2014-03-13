@@ -30,15 +30,9 @@ require_once($CFG->dirroot.'/mod/scorm/locallib.php');
 
 $scoid = required_param('scoid', PARAM_INT);// SCO ID.
 
+$PAGE->login_expected(PAGELOGIN_NO_AUTOLOGIN);
 $sco = $DB->get_record('scorm_scoes', array('id' => $scoid), '*', MUST_EXIST);
-$scorm = $DB->get_record('scorm', array('id' => $sco->scorm), '*', MUST_EXIST);
-$cm = get_coursemodule_from_instance('scorm', $scorm->id, 0, false, MUST_EXIST);
-$course = $DB->get_record('course', array('id' => $scorm->course), '*', MUST_EXIST);
-
-
-// Capability Checks.
-require_login($course, false, $cm);
-$contextmodule = context_module::instance($cm->id);
+list($contextmodule, $course, $cm) = $PAGE->login_to_activity('scorm', $sco->scorm);
 require_capability('mod/scorm:viewreport', $contextmodule);
 
 // Find out current groups mode.

@@ -39,21 +39,15 @@ require_once($CFG->dirroot . '/mod/wiki/pagelib.php');
 $pageid = required_param('pageid', PARAM_INT); // Page ID
 $option = optional_param('option', 0, PARAM_INT); // Option ID
 
+$PAGE->login_expected();
 if (!$page = wiki_get_page($pageid)) {
     print_error('incorrectpageid', 'wiki');
 }
 if (!$subwiki = wiki_get_subwiki($page->subwikiid)) {
     print_error('incorrectsubwikiid', 'wiki');
 }
-if (!$cm = get_coursemodule_from_instance("wiki", $subwiki->wikiid)) {
-    print_error('invalidcoursemodule');
-}
-$course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
-if (!$wiki = wiki_get_wiki($subwiki->wikiid)) {
-    print_error('incorrectwikiid', 'wiki');
-}
-
-require_login($course, true, $cm);
+list($context, $course, $cm) = $PAGE->login_to_activity('wiki', $subwiki->wikiid);
+$wiki = $PAGE->activityrecord;
 
 if (!wiki_user_can_view($subwiki, $wiki)) {
     print_error('cannotviewpage', 'wiki');
@@ -61,7 +55,6 @@ if (!wiki_user_can_view($subwiki, $wiki)) {
 
 $wikipage = new page_wiki_map($wiki, $subwiki, $cm);
 
-$context = context_module::instance($cm->id);
 $event = \mod_wiki\event\page_map_viewed::create(
         array(
             'context' => $context,

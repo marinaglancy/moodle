@@ -50,30 +50,22 @@ require_once('../../config.php');
 require_once($CFG->dirroot.'/mod/lti/lib.php');
 require_once($CFG->dirroot.'/mod/lti/locallib.php');
 
-$id = optional_param('id', 0, PARAM_INT); // Course Module ID, or
-$l  = optional_param('l', 0, PARAM_INT);  // lti ID
+$cmid = optional_param('id', 0, PARAM_INT); // Course Module ID, or
+$l    = optional_param('l', 0, PARAM_INT);  // lti ID
 
 if ($l) {  // Two ways to specify the module
-    $lti = $DB->get_record('lti', array('id' => $l), '*', MUST_EXIST);
-    $cm = get_coursemodule_from_instance('lti', $lti->id, $lti->course, false, MUST_EXIST);
-
+    list($context, $course, $cm) = $PAGE->login_to_activity('lti', $l);
 } else {
-    $cm = get_coursemodule_from_id('lti', $id, 0, false, MUST_EXIST);
-    $lti = $DB->get_record('lti', array('id' => $cm->instance), '*', MUST_EXIST);
+    list($context, $course, $cm) = $PAGE->login_to_cm('lti', $cmid);
 }
 
-$course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
-
+$lti = $PAGE->activityrecord;
 $tool = lti_get_tool_by_url_match($lti->toolurl);
 if ($tool) {
     $toolconfig = lti_get_type_config($tool->id);
 } else {
     $toolconfig = array();
 }
-
-$PAGE->set_cm($cm, $course); // set's up global $COURSE
-$context = context_module::instance($cm->id);
-$PAGE->set_context($context);
 
 $url = new moodle_url('/mod/lti/view.php', array('id'=>$cm->id));
 $PAGE->set_url($url);
@@ -85,11 +77,7 @@ if ($launchcontainer == LTI_LAUNCH_CONTAINER_EMBED_NO_BLOCKS) {
     $PAGE->blocks->show_only_fake_blocks(); //Disable blocks for layouts which do include pre-post blocks
 } else if ($launchcontainer == LTI_LAUNCH_CONTAINER_REPLACE_MOODLE_WINDOW) {
     redirect('launch.php?id=' . $cm->id);
-} else {
-    $PAGE->set_pagelayout('incourse');
 }
-
-require_login($course);
 
 // Mark viewed by user (if required).
 $completion = new completion_info($course);

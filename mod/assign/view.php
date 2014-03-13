@@ -33,20 +33,16 @@ $urlparams = array('id' => $id,
                   'useridlistid' => optional_param('action', 0, PARAM_INT));
 
 $url = new moodle_url('/mod/assign/view.php', $urlparams);
-$cm = get_coursemodule_from_id('assign', $id, 0, false, MUST_EXIST);
-$course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
-
-require_login($course, true, $cm);
+list($context, $course, $cminfo) = $PAGE->login_to_cm('assign', $id);
+$cm = $cminfo->get_course_module_record(true);
 $PAGE->set_url($url);
-
-$context = context_module::instance($cm->id);
 
 require_capability('mod/assign:view', $context);
 
 $assign = new assign($context, $cm, $course);
 
 $completion=new completion_info($course);
-$completion->set_module_viewed($cm);
+$completion->set_module_viewed($PAGE->cm);
 
 // Get the assign class to
 // render the page.

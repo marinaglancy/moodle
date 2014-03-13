@@ -20,7 +20,7 @@ require_once('../../config.php');
 require_once($CFG->dirroot.'/mod/scorm/locallib.php');
 require_once($CFG->libdir . '/completionlib.php');
 
-$id = optional_param('cm', '', PARAM_INT);       // Course Module ID, or
+$cmid = optional_param('cm', '', PARAM_INT);       // Course Module ID, or
 $a = optional_param('a', '', PARAM_INT);         // scorm ID
 $scoid = required_param('scoid', PARAM_INT);  // sco ID
 $mode = optional_param('mode', 'normal', PARAM_ALPHA); // navigation mode
@@ -28,29 +28,14 @@ $currentorg = optional_param('currentorg', '', PARAM_RAW); // selected organizat
 $newattempt = optional_param('newattempt', 'off', PARAM_ALPHA); // the user request to start a new attempt.
 $displaymode = optional_param('display', '', PARAM_ALPHA);
 
-if (!empty($id)) {
-    if (! $cm = get_coursemodule_from_id('scorm', $id)) {
-        print_error('invalidcoursemodule');
-    }
-    if (! $course = $DB->get_record("course", array("id"=>$cm->course))) {
-        print_error('coursemisconf');
-    }
-    if (! $scorm = $DB->get_record("scorm", array("id"=>$cm->instance))) {
-        print_error('invalidcoursemodule');
-    }
+if (!empty($cmid)) {
+    list($context, $course, $cm) = $PAGE->login_to_cm('scorm', $cmid, null, PAGELOGIN_NO_AUTOLOGIN | PAGELOGIN_DO_NOT_SET_WANTSURL);
 } else if (!empty($a)) {
-    if (! $scorm = $DB->get_record("scorm", array("id"=>$a))) {
-        print_error('invalidcoursemodule');
-    }
-    if (! $course = $DB->get_record("course", array("id"=>$scorm->course))) {
-        print_error('coursemisconf');
-    }
-    if (! $cm = get_coursemodule_from_instance("scorm", $scorm->id, $course->id)) {
-        print_error('invalidcoursemodule');
-    }
+    list($context, $course, $cm) = $PAGE->login_to_activity('scorm', $a, null, PAGELOGIN_NO_AUTOLOGIN | PAGELOGIN_DO_NOT_SET_WANTSURL);
 } else {
     print_error('missingparameter');
 }
+$scorm = $PAGE->activityrecord;
 // If new attempt is being triggered set normal mode and increment attempt number.
 $attempt = scorm_get_last_attempt($scorm->id, $USER->id);
 
@@ -80,8 +65,6 @@ if (empty($collapsetocwinsize)) {
     $collapsetocwinsize = intval($collapsetocwinsize);
 }
 
-require_login($course, false, $cm);
-
 $strscorms = get_string('modulenameplural', 'scorm');
 $strscorm  = get_string('modulename', 'scorm');
 $strpopup = get_string('popup', 'scorm');
@@ -96,12 +79,6 @@ if ($displaymode == 'popup') {
     $pagetitle = strip_tags("$shortname: ".format_string($scorm->name));
     $PAGE->set_title($pagetitle);
     $PAGE->set_heading($course->fullname);
-}
-if (!$cm->visible and !has_capability('moodle/course:viewhiddenactivities', $coursecontext)) {
-    echo $OUTPUT->header();
-    notice(get_string("activityiscurrentlyhidden"));
-    echo $OUTPUT->footer();
-    die;
 }
 
 // Check if scorm closed.

@@ -28,7 +28,7 @@ require_once($CFG->libdir . '/completionlib.php');
 
 feedback_init_feedback_session();
 
-$id = required_param('id', PARAM_INT);
+$cmid = required_param('id', PARAM_INT);
 $completedid = optional_param('completedid', false, PARAM_INT);
 $preservevalues  = optional_param('preservevalues', 0,  PARAM_INT);
 $courseid = optional_param('courseid', false, PARAM_INT);
@@ -75,29 +75,19 @@ if ($gopage < 0 AND !$savevalues) {
     $gonextpage = $gopreviouspage = false;
 }
 
-if (! $cm = get_coursemodule_from_id('feedback', $id)) {
-    print_error('invalidcoursemodule');
+// First check if the course module is visible to the user.
+list($context, $course, $cm) = $PAGE->login_to_cm('feedback', $cmid, null, PAGELOGIN_ALLOW_FRONTPAGE_GUEST);
+$courseid = $course->id;
+$feedback = $PAGE->activityrecord;
+if ($feedback->anonymous != FEEDBACK_ANONYMOUS_YES) {
+    // For non-anonymous feedbacks require proper login even on the frontpage.
+    $PAGE->login_to_cm('feedback', $cm, $course, PAGELOGIN_NO_AUTOLOGIN);
 }
-
-if (! $course = $DB->get_record("course", array("id"=>$cm->course))) {
-    print_error('coursemisconf');
-}
-
-if (! $feedback = $DB->get_record("feedback", array("id"=>$cm->instance))) {
-    print_error('invalidcoursemodule');
-}
-
-$context = context_module::instance($cm->id);
 
 $feedback_complete_cap = false;
 
 if (has_capability('mod/feedback:complete', $context)) {
     $feedback_complete_cap = true;
-}
-
-//check whether the feedback is located and! started from the mainsite
-if ($course->id == SITEID AND !$courseid) {
-    $courseid = SITEID;
 }
 
 //check whether the feedback is mapped to the given courseid
@@ -107,30 +97,6 @@ if ($course->id == SITEID AND !has_capability('mod/feedback:edititems', $context
         if (!$DB->get_record('feedback_sitecourse_map', $params)) {
             print_error('notavailable', 'feedback');
         }
-    }
-}
-
-if ($feedback->anonymous != FEEDBACK_ANONYMOUS_YES) {
-    if ($course->id == SITEID) {
-        require_login($course, true);
-    } else {
-        require_login($course, true, $cm);
-    }
-} else {
-    if ($course->id == SITEID) {
-        require_course_login($course, true);
-    } else {
-        require_course_login($course, true, $cm);
-    }
-}
-
-//check whether the given courseid exists
-if ($courseid AND $courseid != SITEID) {
-    if ($course2 = $DB->get_record('course', array('id'=>$courseid))) {
-        require_course_login($course2); //this overwrites the object $course :-(
-        $course = $DB->get_record("course", array("id"=>$cm->course)); // the workaround
-    } else {
-        print_error('invalidcourseid');
     }
 }
 
@@ -334,7 +300,7 @@ if ($feedback_can_submit) {
     ///////////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////
-    $analysisurl = new moodle_url('/mod/feedback/analysis.php', array('id'=>$id));
+    $analysisurl = new moodle_url('/mod/feedback/analysis.php', array('id'=>$cmid));
     if ($courseid > 0) {
         $analysisurl->param('courseid', $courseid);
     }
@@ -517,7 +483,7 @@ if ($feedback_can_submit) {
                 }
             }
             echo $OUTPUT->box_end();
-            echo '<input type="hidden" name="id" value="'.$id.'" />';
+            echo '<input type="hidden" name="id" value="'.$cmid.'" />';
             echo '<input type="hidden" name="feedbackid" value="'.$feedback->id.'" />';
             echo '<input type="hidden" name="lastpage" value="'.$gopage.'" />';
             if (isset($feedbackcompletedtmp->id)) {

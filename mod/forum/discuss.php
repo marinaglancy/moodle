@@ -38,18 +38,17 @@
         $url->param('parent', $parent);
     }
     $PAGE->set_url($url);
+    $PAGE->login_expected(PAGELOGIN_ALLOW_FRONTPAGE_GUEST);
 
     $discussion = $DB->get_record('forum_discussions', array('id' => $d), '*', MUST_EXIST);
-    $course = $DB->get_record('course', array('id' => $discussion->course), '*', MUST_EXIST);
-    $forum = $DB->get_record('forum', array('id' => $discussion->forum), '*', MUST_EXIST);
-    $cm = get_coursemodule_from_instance('forum', $forum->id, $course->id, false, MUST_EXIST);
+    list($modcontext, $course, $cminfo) = $PAGE->login_to_activity('forum', $discussion->forum, $discussion->course);
 
-    require_course_login($course, true, $cm);
+    $forum = $PAGE->activityrecord;
+    $cm = $cminfo->get_course_module_record(true);
 
     // move this down fix for MDL-6926
     require_once($CFG->dirroot.'/mod/forum/lib.php');
 
-    $modcontext = context_module::instance($cm->id);
     require_capability('mod/forum:viewdiscussion', $modcontext, NULL, true, 'noviewdiscussionspermission', 'forum');
 
     if (!empty($CFG->enablerssfeeds) && !empty($CFG->forum_enablerssfeeds) && $forum->rsstype && $forum->rssarticles) {

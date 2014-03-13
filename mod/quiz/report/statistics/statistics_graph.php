@@ -39,12 +39,8 @@ $quizid = required_param('quizid', PARAM_INT);
 $currentgroup = required_param('currentgroup', PARAM_INT);
 $whichattempts = required_param('whichattempts', PARAM_INT);
 
-$quiz = $DB->get_record('quiz', array('id' => $quizid), '*', MUST_EXIST);
-$cm = get_coursemodule_from_instance('quiz', $quiz->id);
-
-// Check access.
-require_login($quiz->course, false, $cm);
-$modcontext = context_module::instance($cm->id);
+list($modcontext, $course, $cm) = $PAGE->login_to_activity('quiz', $quizid, null, PAGELOGIN_NO_AUTOLOGIN);
+$quiz = $PAGE->activityrecord;
 require_capability('quiz/statistics:view', $modcontext);
 
 if (groups_get_activity_groupmode($cm)) {

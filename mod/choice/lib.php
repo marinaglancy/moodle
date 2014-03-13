@@ -190,7 +190,7 @@ function choice_update_instance($choice) {
  * @global object
  * @param object $choice
  * @param object $user
- * @param object $coursemodule
+ * @param stdClass|cm_info $coursemodule
  * @param array $allresponses
  * @return array
  */
@@ -241,7 +241,7 @@ function choice_prepare_options($choice, $user, $coursemodule, $allresponses) {
  * @param object $choice
  * @param int $userid
  * @param object $course Course object
- * @param object $cm
+ * @param stdClass|cm_info $cm
  */
 function choice_user_submit_response($formanswer, $choice, $userid, $course, $cm) {
     global $DB, $CFG;
@@ -346,7 +346,7 @@ WHERE
 
 /**
  * @param array $user
- * @param object $cm
+ * @param stdClass|cm_info $cm
  * @return void Output is echo'd
  */
 function choice_show_reportlink($user, $cm) {
@@ -366,7 +366,7 @@ function choice_show_reportlink($user, $cm) {
  * @global object
  * @param object $choice
  * @param object $course
- * @param object $coursemodule
+ * @param stdClass|cm_info $cm
  * @param array $allresponses
 
  *  * @param bool $allresponses
@@ -551,7 +551,7 @@ function prepare_choice_show_results($choice, $course, $cm, $allresponses, $forc
  * @global object
  * @param array $attemptids
  * @param object $choice Choice main table row
- * @param object $cm Course-module object
+ * @param stdClass|cm_info $cm Course-module object
  * @param object $course Course object
  * @return bool
  */
@@ -730,7 +730,7 @@ function choice_reset_userdata($data) {
  * @global object
  * @uses CONTEXT_MODULE
  * @param object $choice
- * @param object $cm
+ * @param stdClass|cm_info $cm
  * @param int $groupmode
  * @return array
  */

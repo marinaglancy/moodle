@@ -698,7 +698,7 @@ function chat_update_chat_times($chatid=0) {
  * @param object $chatuser The chat user record.
  * @param string $messagetext The message to be sent.
  * @param bool $system False for non-system messages, true for system messages.
- * @param object $cm The course module object, pass it to save a database query when we trigger the event.
+ * @param stdClass|cm_info $cm The course module object, pass it to save a database query when we trigger the event.
  * @return int The message ID.
  * @since 2.6
  */

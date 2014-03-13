@@ -4,25 +4,16 @@
     require_once("lib.php");
     require_once($CFG->libdir . '/completionlib.php');
 
-    $id         = required_param('id', PARAM_INT);                 // Course Module ID
+    $cmid       = required_param('id', PARAM_INT);                 // Course Module ID
     $action     = optional_param('action', '', PARAM_ALPHA);
     $attemptids = optional_param_array('attemptid', array(), PARAM_INT); // array of attempt ids for delete action
 
-    $url = new moodle_url('/mod/choice/view.php', array('id'=>$id));
+    $url = new moodle_url('/mod/choice/view.php', array('id'=>$cmid));
+    list($context, $course, $cm) = $PAGE->login_to_cm('choice', $cmid, null, PAGELOGIN_ALLOW_FRONTPAGE_GUEST);
     if ($action !== '') {
         $url->param('action', $action);
     }
     $PAGE->set_url($url);
-
-    if (! $cm = get_coursemodule_from_id('choice', $id)) {
-        print_error('invalidcoursemodule');
-    }
-
-    if (! $course = $DB->get_record("course", array("id" => $cm->course))) {
-        print_error('coursemisconf');
-    }
-
-    require_course_login($course, false, $cm);
 
     if (!$choice = choice_get_choice($cm->instance)) {
         print_error('invalidcoursemodule');
@@ -30,8 +21,6 @@
 
     $strchoice = get_string('modulename', 'choice');
     $strchoices = get_string('modulenameplural', 'choice');
-
-    $context = context_module::instance($cm->id);
 
     if ($action == 'delchoice' and confirm_sesskey() and is_enrolled($context, NULL, 'mod/choice:choose') and $choice->allowupdate) {
         if ($answer = $DB->get_record('choice_answers', array('choiceid' => $choice->id, 'userid' => $USER->id))) {
@@ -88,11 +77,11 @@
     $event->trigger();
 
     /// Check to see if groups are being used in this choice
-    $groupmode = groups_get_activity_groupmode($cm);
+    $groupmode = $cm->effectivegroupmode;
 
     if ($groupmode) {
         groups_get_activity_group($cm, true);
-        groups_print_activity_menu($cm, $CFG->wwwroot . '/mod/choice/view.php?id='.$id);
+        groups_print_activity_menu($cm, $CFG->wwwroot . '/mod/choice/view.php?id='.$cmid);
     }
     $allresponses = choice_get_response_data($choice, $cm, $groupmode);   // Big function, approx 6 SQL calls per user
 

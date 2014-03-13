@@ -29,17 +29,13 @@ require_once($CFG->dirroot.'/mod/lesson/locallib.php');
 require_once($CFG->dirroot.'/mod/lesson/import_form.php');
 require_once($CFG->dirroot.'/mod/lesson/format.php');  // Parent class
 
-$id     = required_param('id', PARAM_INT);         // Course Module ID
+$cmid   = required_param('id', PARAM_INT);         // Course Module ID
 $pageid = optional_param('pageid', '', PARAM_INT); // Page ID
 
-$PAGE->set_url('/mod/lesson/import.php', array('id'=>$id, 'pageid'=>$pageid));
+$PAGE->set_url('/mod/lesson/import.php', array('id'=>$cmid, 'pageid'=>$pageid));
 
-$cm = get_coursemodule_from_id('lesson', $id, 0, false, MUST_EXIST);
-$course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
-$lesson = new lesson($DB->get_record('lesson', array('id' => $cm->instance), '*', MUST_EXIST));
-
-require_login($course, false, $cm);
-$context = context_module::instance($cm->id);
+list($context, $course, $cm) = $PAGE->login_to_cm('lesson', $cmid, null, PAGELOGIN_NO_AUTOLOGIN);
+$lesson = new lesson($PAGE->activityrecord);
 require_capability('mod/lesson:edit', $context);
 
 $strimportquestions = get_string("importquestions", "lesson");

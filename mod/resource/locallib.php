@@ -55,7 +55,7 @@ function resource_redirect_if_migrated($oldid, $cmid) {
 /**
  * Display embedded resource file.
  * @param object $resource
- * @param object $cm
+ * @param stdClass|cm_info $cm
  * @param object $course
  * @param stored_file $file main file
  * @return does not return
@@ -111,7 +111,7 @@ function resource_display_embed($resource, $cm, $course, $file) {
 /**
  * Display resource frames.
  * @param object $resource
- * @param object $cm
+ * @param stdClass|cm_info $cm
  * @param object $course
  * @param stored_file $file main file
  * @return does not return
@@ -194,7 +194,7 @@ function resource_get_clicktodownload($file, $revision) {
 /**
  * Print resource info and workaround link when JS not available.
  * @param object $resource
- * @param object $cm
+ * @param stdClass|cm_info $cm
  * @param object $course
  * @param stored_file $file main file
  * @return does not return
@@ -243,7 +243,7 @@ function resource_print_workaround($resource, $cm, $course, $file) {
 /**
  * Print resource header.
  * @param object $resource
- * @param object $cm
+ * @param stdClass|cm_info $cm
  * @param object $course
  * @return void
  */
@@ -260,7 +260,7 @@ function resource_print_header($resource, $cm, $course) {
 /**
  * Print resource heading.
  * @param object $resource
- * @param object $cm
+ * @param stdClass|cm_info $cm
  * @param object $course
  * @param bool $notused This variable is no longer used
  * @return void
@@ -277,7 +277,7 @@ function resource_print_heading($resource, $cm, $course, $notused = false) {
  * or blank if none.
  *
  * @param object $resource Resource table row
- * @param object $cm Course-module table row
+ * @param stdClass|cm_info $cm Course-module
  * @return string Size and type or empty string if show options are not enabled
  */
 function resource_get_optional_details($resource, $cm) {
@@ -331,7 +331,7 @@ function resource_get_optional_details($resource, $cm) {
 /**
  * Print resource introduction.
  * @param object $resource
- * @param object $cm
+ * @param stdClass|cm_info $cm
  * @param object $course
  * @param bool $ignoresettings print even if not specified in modedit
  * @return void
@@ -363,7 +363,7 @@ function resource_print_intro($resource, $cm, $course, $ignoresettings=false) {
 /**
  * Print warning that instance not migrated yet.
  * @param object $resource
- * @param object $cm
+ * @param stdClass|cm_info $cm
  * @param object $course
  * @return void, does not return
  */
@@ -382,7 +382,7 @@ function resource_print_tobemigrated($resource, $cm, $course) {
 /**
  * Print warning that file can not be found.
  * @param object $resource
- * @param object $cm
+ * @param stdClass|cm_info $cm
  * @param object $course
  * @return void, does not return
  */

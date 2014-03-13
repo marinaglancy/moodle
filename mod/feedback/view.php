@@ -24,24 +24,18 @@
 require_once("../../config.php");
 require_once("lib.php");
 
-$id = required_param('id', PARAM_INT);
+$cmid = required_param('id', PARAM_INT);
 $courseid = optional_param('courseid', false, PARAM_INT);
 
 $current_tab = 'view';
 
-if (! $cm = get_coursemodule_from_id('feedback', $id)) {
-    print_error('invalidcoursemodule');
+list($context, $course, $cm) = $PAGE->login_to_cm('feedback', $cmid, $courseid, PAGELOGIN_ALLOW_FRONTPAGE_GUEST);
+$courseid = $course->id;
+$feedback = $PAGE->activityrecord;
+if ($feedback->anonymous != FEEDBACK_ANONYMOUS_YES) {
+    // Guests can not answer non-anonymous feedback, request login.
+    $PAGE->login_to_cm('feedback', $cm, $course, 0);
 }
-
-if (! $course = $DB->get_record("course", array("id"=>$cm->course))) {
-    print_error('coursemisconf');
-}
-
-if (! $feedback = $DB->get_record("feedback", array("id"=>$cm->instance))) {
-    print_error('invalidcoursemodule');
-}
-
-$context = context_module::instance($cm->id);
 
 $feedback_complete_cap = false;
 
@@ -52,14 +46,8 @@ if (has_capability('mod/feedback:complete', $context)) {
 if (isset($CFG->feedback_allowfullanonymous)
             AND $CFG->feedback_allowfullanonymous
             AND $course->id == SITEID
-            AND (!$courseid OR $courseid == SITEID)
             AND $feedback->anonymous == FEEDBACK_ANONYMOUS_YES ) {
     $feedback_complete_cap = true;
-}
-
-//check whether the feedback is located and! started from the mainsite
-if ($course->id == SITEID AND !$courseid) {
-    $courseid = SITEID;
 }
 
 //check whether the feedback is mapped to the given courseid
@@ -69,30 +57,6 @@ if ($course->id == SITEID AND !has_capability('mod/feedback:edititems', $context
         if (!$DB->get_record('feedback_sitecourse_map', $params)) {
             print_error('invalidcoursemodule');
         }
-    }
-}
-
-if ($feedback->anonymous != FEEDBACK_ANONYMOUS_YES) {
-    if ($course->id == SITEID) {
-        require_login($course, true);
-    } else {
-        require_login($course, true, $cm);
-    }
-} else {
-    if ($course->id == SITEID) {
-        require_course_login($course, true);
-    } else {
-        require_course_login($course, true, $cm);
-    }
-}
-
-//check whether the given courseid exists
-if ($courseid AND $courseid != SITEID) {
-    if ($course2 = $DB->get_record('course', array('id'=>$courseid))) {
-        require_course_login($course2); //this overwrites the object $course :-(
-        $course = $DB->get_record("course", array("id"=>$cm->course)); // the workaround
-    } else {
-        print_error('invalidcourseid');
     }
 }
 
@@ -113,28 +77,10 @@ $event->trigger();
 $strfeedbacks = get_string("modulenameplural", "feedback");
 $strfeedback  = get_string("modulename", "feedback");
 
-if ($course->id == SITEID) {
-    $PAGE->set_context($context);
-    $PAGE->set_cm($cm, $course); // set's up global $COURSE
-    $PAGE->set_pagelayout('incourse');
-}
 $PAGE->set_url('/mod/feedback/view.php', array('id'=>$cm->id, 'do_show'=>'view'));
 $PAGE->set_title($feedback->name);
 $PAGE->set_heading($course->fullname);
 echo $OUTPUT->header();
-
-//ishidden check.
-//feedback in courses
-$cap_viewhiddenactivities = has_capability('moodle/course:viewhiddenactivities', $context);
-if ((empty($cm->visible) and !$cap_viewhiddenactivities) AND $course->id != SITEID) {
-    notice(get_string("activityiscurrentlyhidden"));
-}
-
-//ishidden check.
-//feedback on mainsite
-if ((empty($cm->visible) and !$cap_viewhiddenactivities) AND $courseid == SITEID) {
-    notice(get_string("activityiscurrentlyhidden"));
-}
 
 /// Print the main part of the page
 ///////////////////////////////////////////////////////////////////////////
@@ -142,7 +88,7 @@ if ((empty($cm->visible) and !$cap_viewhiddenactivities) AND $courseid == SITEID
 ///////////////////////////////////////////////////////////////////////////
 
 $previewimg = $OUTPUT->pix_icon('t/preview', get_string('preview'));
-$previewlnk = new moodle_url('/mod/feedback/print.php', array('id' => $id));
+$previewlnk = new moodle_url('/mod/feedback/print.php', array('id' => $cmid));
 $preview = html_writer::link($previewlnk, $previewimg);
 
 echo $OUTPUT->heading(format_string($feedback->name) . $preview);
@@ -235,7 +181,7 @@ if ( (intval($feedback->publish_stats) == 1) AND
 
     $params = array('userid'=>$USER->id, 'feedback'=>$feedback->id);
     if ($multiple_count = $DB->count_records('feedback_tracking', $params)) {
-        $url_params = array('id'=>$id, 'courseid'=>$courseid);
+        $url_params = array('id'=>$cmid, 'courseid'=>$courseid);
         $analysisurl = new moodle_url('/mod/feedback/analysis.php', $url_params);
         echo '<div class="mdl-align"><a href="'.$analysisurl->out().'">';
         echo get_string('completed_feedbacks', 'feedback').'</a>';
@@ -251,7 +197,7 @@ if (has_capability('mod/feedback:mapcourse', $context)) {
         echo '<form action="mapcourse.php" method="get">';
         echo '<fieldset>';
         echo '<input type="hidden" name="sesskey" value="'.sesskey().'" />';
-        echo '<input type="hidden" name="id" value="'.$id.'" />';
+        echo '<input type="hidden" name="id" value="'.$cmid.'" />';
         echo '<button type="submit">'.get_string('mapcourses', 'feedback').'</button>';
         echo $OUTPUT->help_icon('mapcourse', 'feedback');
         echo '</fieldset>';
@@ -294,7 +240,7 @@ if ($feedback_complete_cap) {
             $completefile = 'complete.php';
             $guestid = false;
         }
-        $url_params = array('id'=>$id, 'courseid'=>$courseid, 'gopage'=>0);
+        $url_params = array('id'=>$cmid, 'courseid'=>$courseid, 'gopage'=>0);
         $completeurl = new moodle_url('/mod/feedback/'.$completefile, $url_params);
 
         $feedbackcompletedtmp = feedback_get_current_completed($feedback->id, true, $courseid, $guestid);
@@ -308,11 +254,7 @@ if ($feedback_complete_cap) {
         }
     } else {
         echo $OUTPUT->notification(get_string('this_feedback_is_already_submitted', 'feedback'));
-        if ($courseid) {
-            echo $OUTPUT->continue_button($CFG->wwwroot.'/course/view.php?id='.$courseid);
-        } else {
-            echo $OUTPUT->continue_button($CFG->wwwroot.'/course/view.php?id='.$course->id);
-        }
+        echo $OUTPUT->continue_button($CFG->wwwroot.'/course/view.php?id='.$courseid);
     }
     echo $OUTPUT->box_end();
 }

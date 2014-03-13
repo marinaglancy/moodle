@@ -31,20 +31,16 @@
 require_once("../../config.php");
 require_once($CFG->dirroot.'/mod/lesson/locallib.php');
 
-$id     = required_param('id', PARAM_INT);         // Course Module ID
+$cmid   = required_param('id', PARAM_INT);         // Course Module ID
 $action = required_param('action', PARAM_ALPHA);   // Action
 $pageid = required_param('pageid', PARAM_INT);
 
-$cm = get_coursemodule_from_id('lesson', $id, 0, false, MUST_EXIST);
-$course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
-$lesson = new lesson($DB->get_record('lesson', array('id' => $cm->instance), '*', MUST_EXIST));
+list($context, $course, $cm) = $PAGE->login_to_cm('lesson', $cmid, null, PAGELOGIN_NO_AUTOLOGIN);
+$lesson = new lesson($PAGE->activityrecord);
 
-require_login($course, false, $cm);
-
-$url = new moodle_url('/mod/lesson/lesson.php', array('id'=>$id,'action'=>$action));
+$url = new moodle_url('/mod/lesson/lesson.php', array('id'=>$cmid,'action'=>$action));
 $PAGE->set_url($url);
 
-$context = context_module::instance($cm->id);
 require_capability('mod/lesson:edit', $context);
 require_sesskey();
 

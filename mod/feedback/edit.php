@@ -28,7 +28,7 @@ require_once('edit_form.php');
 
 feedback_init_feedback_session();
 
-$id = required_param('id', PARAM_INT);
+$cmid = required_param('id', PARAM_INT);
 
 if (($formdata = data_submitted()) AND !confirm_sesskey()) {
     print_error('invalidsesskey');
@@ -43,24 +43,10 @@ $switchitemrequired = optional_param('switchitemrequired', false, PARAM_INT);
 
 $current_tab = $do_show;
 
-$url = new moodle_url('/mod/feedback/edit.php', array('id'=>$id, 'do_show'=>$do_show));
+$url = new moodle_url('/mod/feedback/edit.php', array('id'=>$cmid, 'do_show'=>$do_show));
 
-if (! $cm = get_coursemodule_from_id('feedback', $id)) {
-    print_error('invalidcoursemodule');
-}
-
-if (! $course = $DB->get_record('course', array('id'=>$cm->course))) {
-    print_error('coursemisconf');
-}
-
-if (! $feedback = $DB->get_record('feedback', array('id'=>$cm->instance))) {
-    print_error('invalidcoursemodule');
-}
-
-$context = context_module::instance($cm->id);
-
-require_login($course, true, $cm);
-
+list($context, $course, $cm) = $PAGE->login_to_cm('feedback', $cmid);
+$feedback = $PAGE->activityrecord;
 require_capability('mod/feedback:edititems', $context);
 
 //Move up/down items
@@ -98,7 +84,7 @@ if ($switchitemrequired) {
 $create_template_form = new feedback_edit_create_template_form();
 $create_template_form->set_feedbackdata(array('context'=>$context, 'course'=>$course));
 $create_template_form->set_form_elements();
-$create_template_form->set_data(array('id'=>$id, 'do_show'=>'templates'));
+$create_template_form->set_data(array('id'=>$cmid, 'do_show'=>'templates'));
 $create_template_formdata = $create_template_form->get_data();
 if (isset($create_template_formdata->savetemplate) && $create_template_formdata->savetemplate == 1) {
     //Check the capabilities to create templates.
@@ -142,19 +128,19 @@ $lastposition++;
 
 //The add_item-form
 $add_item_form = new feedback_edit_add_question_form('edit_item.php');
-$add_item_form->set_data(array('cmid'=>$id, 'position'=>$lastposition));
+$add_item_form->set_data(array('cmid'=>$cmid, 'position'=>$lastposition));
 
 //The use_template-form
 $use_template_form = new feedback_edit_use_template_form('use_templ.php');
 $use_template_form->set_feedbackdata(array('course' => $course));
 $use_template_form->set_form_elements();
-$use_template_form->set_data(array('id'=>$id));
+$use_template_form->set_data(array('id'=>$cmid));
 
 //Print the page header.
 $strfeedbacks = get_string('modulenameplural', 'feedback');
 $strfeedback  = get_string('modulename', 'feedback');
 
-$PAGE->set_url('/mod/feedback/edit.php', array('id'=>$cm->id, 'do_show'=>$do_show));
+$PAGE->set_url('/mod/feedback/edit.php', array('id'=>$cmid, 'do_show'=>$do_show));
 $PAGE->set_heading($course->fullname);
 $PAGE->set_title($feedback->name);
 
@@ -167,7 +153,7 @@ if (count($feedbackitems) > 1) {
                'position',
             ), 'feedback');
         $PAGE->requires->yui_module('moodle-mod_feedback-dragdrop', 'M.mod_feedback.init_dragdrop',
-                array(array('cmid' => $cm->id)));
+                array(array('cmid' => $cmid)));
     }
 }
 
@@ -212,7 +198,7 @@ if ($do_show == 'templates') {
 
     if (has_capability('mod/feedback:createprivatetemplate', $context) OR
                 has_capability('mod/feedback:createpublictemplate', $context)) {
-        $deleteurl = new moodle_url('/mod/feedback/delete_template.php', array('id' => $id));
+        $deleteurl = new moodle_url('/mod/feedback/delete_template.php', array('id' => $cmid));
         $create_template_form->display();
         echo '<p><a href="'.$deleteurl->out().'">'.
              get_string('delete_templates', 'feedback').
@@ -222,9 +208,9 @@ if ($do_show == 'templates') {
     }
 
     if (has_capability('mod/feedback:edititems', $context)) {
-        $urlparams = array('action'=>'exportfile', 'id'=>$id);
+        $urlparams = array('action'=>'exportfile', 'id'=>$cmid);
         $exporturl = new moodle_url('/mod/feedback/export.php', $urlparams);
-        $importurl = new moodle_url('/mod/feedback/import.php', array('id'=>$id));
+        $importurl = new moodle_url('/mod/feedback/import.php', array('id'=>$cmid));
         echo '<p>
             <a href="'.$exporturl->out().'">'.get_string('export_questions', 'feedback').'</a>/
             <a href="'.$importurl->out().'">'.get_string('import_questions', 'feedback').'</a>
@@ -248,7 +234,7 @@ if ($do_show == 'edit') {
 
         echo $OUTPUT->heading(get_string('preview', 'feedback').$helpbutton, 3);
         if (isset($SESSION->feedback->moving) AND $SESSION->feedback->moving->shouldmoving == 1) {
-            $anker = '<a href="edit.php?id='.$id.'">';
+            $anker = '<a href="edit.php?id='.$cmid.'">';
             $anker .= get_string('cancel_moving', 'feedback');
             $anker .= '</a>';
             echo $OUTPUT->heading($anker);
@@ -351,7 +337,7 @@ if ($do_show == 'edit') {
                 echo '<span class="feedback_item_command_edit">';
                 $editurl = new moodle_url('/mod/feedback/edit_item.php');
                 $editurl->params(array('do_show'=>$do_show,
-                                         'cmid'=>$id,
+                                         'cmid'=>$cmid,
                                          'id'=>$feedbackitem->id,
                                          'typ'=>$feedbackitem->typ));
 
@@ -390,7 +376,7 @@ if ($do_show == 'edit') {
             //Print the delete-button
             echo '<span class="feedback_item_command_toggle">';
             $deleteitemurl = new moodle_url('/mod/feedback/delete_item.php');
-            $deleteitemurl->params(array('id'=>$id,
+            $deleteitemurl->params(array('id'=>$cmid,
                                          'do_show'=>$do_show,
                                          'deleteitem'=>$feedbackitem->id));
 

@@ -1127,6 +1127,7 @@ function scorm_element_cmp($a, $b) {
  *
  * @param object $user Current context user
  * @param object $scorm a moodle scrom object - mdl_scorm
+ * @param stdClass|cm_info $cm course module
  * @return string - Attempt status string
  */
 function scorm_get_attempt_status($user, $scorm, $cm='') {

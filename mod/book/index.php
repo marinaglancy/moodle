@@ -27,12 +27,10 @@ require_once(dirname(__FILE__).'/locallib.php');
 
 $id = required_param('id', PARAM_INT); // Course ID.
 
-$course = $DB->get_record('course', array('id'=>$id), '*', MUST_EXIST);
+list($context, $course) = $PAGE->login($id, PAGELOGIN_ALLOW_FRONTPAGE_GUEST);
+$PAGE->set_pagelayout('incourse');
 
 unset($id);
-
-require_course_login($course, true);
-$PAGE->set_pagelayout('incourse');
 
 // Get all required strings
 $strbooks        = get_string('modulenameplural', 'mod_book');

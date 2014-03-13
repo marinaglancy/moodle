@@ -27,18 +27,12 @@ require_once($CFG->dirroot . '/mod/wiki/locallib.php');
 require_once($CFG->dirroot . '/mod/wiki/pagelib.php');
 
 $search = optional_param('searchstring', null, PARAM_ALPHANUMEXT);
-$courseid = optional_param('courseid', 0, PARAM_INT);
+$courseid = required_param('courseid', PARAM_INT);
 $searchcontent = optional_param('searchwikicontent', 0, PARAM_INT);
-$cmid = optional_param('cmid', 0, PARAM_INT);
+$cmid = required_param('cmid', PARAM_INT);
 
-if (!$course = $DB->get_record('course', array('id' => $courseid))) {
-    print_error('invalidcourseid');
-}
-if (!$cm = get_coursemodule_from_id('wiki', $cmid)) {
-    print_error('invalidcoursemodule');
-}
-
-require_login($course, true, $cm);
+list($context, $course, $cm) = $PAGE->login_to_cm('wiki', $cmid, $courseid);
+$wiki = $PAGE->activityrecord;
 
 // @TODO: Fix call to wiki_get_subwiki_by_group
 if (!$gid = groups_get_activity_group($cm)) {
@@ -46,9 +40,6 @@ if (!$gid = groups_get_activity_group($cm)) {
 }
 if (!$subwiki = wiki_get_subwiki_by_group($cm->instance, $gid)) {
     print_error('incorrectsubwikiid', 'wiki');
-}
-if (!$wiki = wiki_get_wiki($subwiki->wikiid)) {
-    print_error('incorrectwikiid', 'wiki');
 }
 
 if (!wiki_user_can_view($subwiki, $wiki)) {

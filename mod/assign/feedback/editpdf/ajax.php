@@ -38,12 +38,10 @@ $assignmentid = required_param('assignmentid', PARAM_INT);
 $userid = required_param('userid', PARAM_INT);
 $attemptnumber = required_param('attemptnumber', PARAM_INT);
 
-$cm = \get_coursemodule_from_instance('assign', $assignmentid, 0, false, MUST_EXIST);
-$context = \context_module::instance($cm->id);
+list($context, $course, $cminfo) = $PAGE->login_to_activity('assign', $assignmentid, null, PAGELOGIN_NO_AUTOLOGIN);
+$cm = $cminfo->get_course_module_record(true);
 
-$assignment = new \assign($context, null, null);
-
-require_login($assignment->get_course(), false, $cm);
+$assignment = new \assign($context, $cm, $course);
 
 if (!$assignment->can_view_submission($userid)) {
     print_error('nopermission');

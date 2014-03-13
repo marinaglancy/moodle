@@ -33,26 +33,13 @@ $subwikiid = required_param('subwiki', PARAM_INT);
 $pageid    = optional_param('pageid', 0, PARAM_INT);
 $returnurl = optional_param('returnurl', '', PARAM_LOCALURL);
 
+$PAGE->login_expected();
 if (!$subwiki = wiki_get_subwiki($subwikiid)) {
     print_error('incorrectsubwikiid', 'wiki');
 }
 
-// Checking wiki instance of that subwiki
-if (!$wiki = wiki_get_wiki($subwiki->wikiid)) {
-    print_error('incorrectwikiid', 'wiki');
-}
-
-// Checking course module instance
-if (!$cm = get_coursemodule_from_instance("wiki", $subwiki->wikiid)) {
-    print_error('invalidcoursemodule');
-}
-
-// Checking course instance
-$course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
-
-$context = context_module::instance($cm->id);
-
-require_login($course, true, $cm);
+list($context, $course, $cm) = $PAGE->login_to_activity('wiki', $subwiki->wikiid);
+$wiki = $PAGE->activityrecord;
 
 if (!wiki_user_can_view($subwiki, $wiki)) {
     print_error('cannotviewpage', 'wiki');

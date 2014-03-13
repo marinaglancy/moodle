@@ -18,34 +18,20 @@ require_once("../../config.php");
 require_once($CFG->dirroot.'/mod/scorm/locallib.php');
 require_once($CFG->dirroot.'/course/lib.php');
 
-$id = optional_param('id', '', PARAM_INT);       // Course Module ID, or
+$cmid = optional_param('id', '', PARAM_INT);       // Course Module ID, or
 $a = optional_param('a', '', PARAM_INT);         // scorm ID
 $organization = optional_param('organization', '', PARAM_INT); // organization ID
 $action = optional_param('action', '', PARAM_ALPHA);
 
-if (!empty($id)) {
-    if (! $cm = get_coursemodule_from_id('scorm', $id, 0, true)) {
-        print_error('invalidcoursemodule');
-    }
-    if (! $course = $DB->get_record("course", array("id"=>$cm->course))) {
-        print_error('coursemisconf');
-    }
-    if (! $scorm = $DB->get_record("scorm", array("id"=>$cm->instance))) {
-        print_error('invalidcoursemodule');
-    }
+if (!empty($cmid)) {
+    list($contextmodule, $course, $cm) = $PAGE->login_to_cm('scorm', $cmid, null, PAGELOGIN_NO_AUTOLOGIN);
 } else if (!empty($a)) {
-    if (! $scorm = $DB->get_record("scorm", array("id"=>$a))) {
-        print_error('invalidcoursemodule');
-    }
-    if (! $course = $DB->get_record("course", array("id"=>$scorm->course))) {
-        print_error('coursemisconf');
-    }
-    if (! $cm = get_coursemodule_from_instance("scorm", $scorm->id, $course->id, true)) {
-        print_error('invalidcoursemodule');
-    }
+    list($contextmodule, $course, $cm) = $PAGE->login_to_activity('scorm', $a, null, PAGELOGIN_NO_AUTOLOGIN);
 } else {
     print_error('missingparameter');
 }
+$context = context_course::instance($course->id);
+$scorm = $PAGE->activityrecord;
 
 $url = new moodle_url('/mod/scorm/view.php', array('id'=>$cm->id));
 if ($organization !== '') {
@@ -56,11 +42,6 @@ $forcejs = get_config('scorm', 'forcejavascript');
 if (!empty($forcejs)) {
     $PAGE->add_body_class('forcejavascript');
 }
-
-require_login($course, false, $cm);
-
-$context = context_course::instance($course->id);
-$contextmodule = context_module::instance($cm->id);
 
 $launch = false; // Does this automatically trigger a launch based on skipview.
 if (!empty($scorm->popup)) {
@@ -84,19 +65,12 @@ if (!empty($scorm->popup)) {
             $launch = true;
         }
     }
-    // Redirect back to the section with one section per page ?
-
-    $courseformat = course_get_format($course)->get_course();
-    $sectionid = '';
-    if (isset($courseformat->coursedisplay) && $courseformat->coursedisplay == COURSE_DISPLAY_MULTIPAGE) {
-        $sectionid = $cm->sectionnum;
-    }
 
     $PAGE->requires->data_for_js('scormplayerdata', Array('launch' => $launch,
                                                            'currentorg' => $orgidentifier,
                                                            'sco' => $scoid,
                                                            'scorm' => $scorm->id,
-                                                           'courseurl' => course_get_url($course, $sectionid)->out(false),
+                                                           'courseurl' => course_get_url($course, $cm->sectionnum)->out(false),
                                                            'cwidth' => $scorm->width,
                                                            'cheight' => $scorm->height,
                                                            'popupoptions' => $scorm->options), true);

@@ -182,17 +182,21 @@ class workshop {
      * with a full database record (course should not be stored in instances table anyway).
      *
      * @param stdClass $dbrecord Workshop instance data from {workshop} table
-     * @param stdClass $cm       Course module record as returned by {@link get_coursemodule_from_id()}
+     * @param stdClass|cm_info $cm       Course module record as returned by {@link get_coursemodule_from_id()}
      * @param stdClass $course   Course record from {course} table
      * @param stdClass $context  The context of the workshop instance
      */
-    public function __construct(stdclass $dbrecord, stdclass $cm, stdclass $course, stdclass $context=null) {
+    public function __construct(stdclass $dbrecord, $cm, stdclass $course, stdclass $context=null) {
         foreach ($dbrecord as $field => $value) {
             if (property_exists('workshop', $field)) {
                 $this->{$field} = $value;
             }
         }
-        $this->cm           = $cm;
+        if ($cm instanceof cm_info) {
+            $this->cm           = $cm->get_course_module_record(true);
+        } else {
+            $this->cm           = $cm;
+        }
         $this->course       = $course;
         if (is_null($context)) {
             $this->context = context_module::instance($this->cm->id);

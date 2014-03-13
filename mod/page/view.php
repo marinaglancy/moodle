@@ -27,28 +27,16 @@ require('../../config.php');
 require_once($CFG->dirroot.'/mod/page/locallib.php');
 require_once($CFG->libdir.'/completionlib.php');
 
-$id      = optional_param('id', 0, PARAM_INT); // Course Module ID
+$cmid    = optional_param('id', 0, PARAM_INT); // Course Module ID
 $p       = optional_param('p', 0, PARAM_INT);  // Page instance ID
 $inpopup = optional_param('inpopup', 0, PARAM_BOOL);
 
 if ($p) {
-    if (!$page = $DB->get_record('page', array('id'=>$p))) {
-        print_error('invalidaccessparameter');
-    }
-    $cm = get_coursemodule_from_instance('page', $page->id, $page->course, false, MUST_EXIST);
-
+    list($context, $course, $cm) = $PAGE->login_to_activity('page', $p, null, PAGELOGIN_ALLOW_FRONTPAGE_GUEST);
 } else {
-    if (!$cm = get_coursemodule_from_id('page', $id)) {
-        print_error('invalidcoursemodule');
-    }
-    $page = $DB->get_record('page', array('id'=>$cm->instance), '*', MUST_EXIST);
+    list($context, $course, $cm) = $PAGE->login_to_cm('page', $cmid, null, PAGELOGIN_ALLOW_FRONTPAGE_GUEST);
 }
-
-$course = $DB->get_record('course', array('id'=>$cm->course), '*', MUST_EXIST);
-
-require_course_login($course, true, $cm);
-$context = context_module::instance($cm->id);
-require_capability('mod/page:view', $context);
+$page = $PAGE->activityrecord;
 
 // Trigger module viewed event.
 $event = \mod_page\event\course_module_viewed::create(array(

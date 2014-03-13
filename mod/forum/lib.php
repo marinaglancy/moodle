@@ -2608,7 +2608,7 @@ function forum_count_unrated_posts($discussionid, $userid) {
  * @global object
  * @uses CONTEXT_MODULE
  * @uses VISIBLEGROUPS
- * @param object $cm
+ * @param stdClass|cm_info $cm
  * @param string $forumsort
  * @param bool $fullpost
  * @param int $unused
@@ -2796,7 +2796,7 @@ function forum_get_discussions_unread($cm) {
  * @global object
  * @uses CONEXT_MODULE
  * @uses VISIBLEGROUPS
- * @param object $cm
+ * @param stdClass|cm_info $cm
  * @return array
  */
 function forum_get_discussions_count($cm) {
@@ -5135,7 +5135,7 @@ function forum_get_user_posted_time($did, $userid) {
  * @param object $forum
  * @param object $currentgroup
  * @param int $unused
- * @param object $cm
+ * @param stdClass|cm_info $cm
  * @param object $context
  * @return bool
  */
@@ -5213,7 +5213,7 @@ function forum_user_can_post_discussion($forum, $currentgroup=null, $unused=-1, 
  * @param object $forum forum object
  * @param object $discussion
  * @param object $user
- * @param object $cm
+ * @param stdClass|cm_info $cm
  * @param object $course
  * @param object $context
  * @return bool
@@ -5234,18 +5234,20 @@ function forum_user_can_post($forum, $discussion, $user=NULL, $cm=NULL, $course=
         return false;
     }
 
-    if (!$cm) {
-        debugging('missing cm', DEBUG_DEVELOPER);
-        if (!$cm = get_coursemodule_from_instance('forum', $forum->id, $forum->course)) {
-            print_error('invalidcoursemodule');
+    if (!$course) {
+        debugging('missing course', DEBUG_DEVELOPER);
+        if (!$course = get_course($forum->course)) {
+            print_error('invalidcourseid');
         }
     }
 
-    if (!$course) {
-        debugging('missing course', DEBUG_DEVELOPER);
-        if (!$course = $DB->get_record('course', array('id' => $forum->course))) {
-            print_error('invalidcourseid');
+    if (!$cm) {
+        debugging('missing cm', DEBUG_DEVELOPER);
+        $modinfo = get_fast_modinfo($course);
+        if (!isset($modinfo->instances['forum'][$forum->id])) {
+            print_error('invalidcoursemodule');
         }
+        $cm = $modinfo->instances['forum'][$forum->id];
     }
 
     if (!$context) {
@@ -5422,9 +5424,6 @@ function forum_user_can_see_discussion($forum, $discussion, $context, $user=NULL
 function forum_user_can_see_post($forum, $discussion, $post, $user=NULL, $cm=NULL) {
     global $CFG, $USER, $DB;
 
-    // Context used throughout function.
-    $modcontext = context_module::instance($cm->id);
-
     // retrieve objects (yuk)
     if (is_numeric($forum)) {
         debugging('missing full forum', DEBUG_DEVELOPER);
@@ -5456,6 +5455,9 @@ function forum_user_can_see_post($forum, $discussion, $post, $user=NULL, $cm=NUL
             print_error('invalidcoursemodule');
         }
     }
+
+    // Context used throughout function.
+    $modcontext = context_module::instance($cm->id);
 
     if (empty($user) || empty($user->id)) {
         $user = $USER;
@@ -5510,6 +5512,7 @@ function forum_user_can_see_post($forum, $discussion, $post, $user=NULL, $cm=NUL
  * @param void $unused (originally current group)
  * @param int $page Page mode, page to display (optional).
  * @param int $perpage The maximum number of discussions per page(optional)
+ * @param stdClass|cm_info $cm course module
  *
  */
 function forum_print_latest_discussions($course, $forum, $maxdiscussions=-1, $displayformat='plain', $sort='',

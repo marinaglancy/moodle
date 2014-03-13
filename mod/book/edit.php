@@ -31,13 +31,9 @@ $chapterid  = optional_param('id', 0, PARAM_INT); // Chapter ID
 $pagenum    = optional_param('pagenum', 0, PARAM_INT);
 $subchapter = optional_param('subchapter', 0, PARAM_BOOL);
 
-$cm = get_coursemodule_from_id('book', $cmid, 0, false, MUST_EXIST);
-$course = $DB->get_record('course', array('id'=>$cm->course), '*', MUST_EXIST);
-$book = $DB->get_record('book', array('id'=>$cm->instance), '*', MUST_EXIST);
+list($context, $course, $cm) = $PAGE->login_to_cm('book', $cmid, null, PAGELOGIN_NO_AUTOLOGIN);
+$book = $PAGE->activityrecord;
 
-require_login($course, false, $cm);
-
-$context = context_module::instance($cm->id);
 require_capability('mod/book:edit', $context);
 
 $PAGE->set_url('/mod/book/edit.php', array('cmid'=>$cmid, 'id'=>$chapterid, 'pagenum'=>$pagenum, 'subchapter'=>$subchapter));
@@ -51,7 +47,7 @@ if ($chapterid) {
     $chapter->subchapter = $subchapter;
     $chapter->pagenum    = $pagenum + 1;
 }
-$chapter->cmid = $cm->id;
+$chapter->cmid = $cmid;
 
 $options = array('noclean'=>true, 'subdirs'=>true, 'maxfiles'=>-1, 'maxbytes'=>0, 'context'=>$context);
 $chapter = file_prepare_standard_editor($chapter, 'content', $options, $context, 'mod_book', 'chapter', $chapter->id);
@@ -61,9 +57,9 @@ $mform = new book_chapter_edit_form(null, array('chapter'=>$chapter, 'options'=>
 // If data submitted, then process and store.
 if ($mform->is_cancelled()) {
     if (empty($chapter->id)) {
-        redirect("view.php?id=$cm->id");
+        redirect("view.php?id=$cmid");
     } else {
-        redirect("view.php?id=$cm->id&chapterid=$chapter->id");
+        redirect("view.php?id=$cmid&chapterid=$chapter->id");
     }
 
 } else if ($data = $mform->get_data()) {
@@ -75,7 +71,7 @@ if ($mform->is_cancelled()) {
         $DB->update_record('book_chapters', $data);
         $DB->set_field('book', 'revision', $book->revision+1, array('id'=>$book->id));
 
-        add_to_log($course->id, 'course', 'update mod', '../mod/book/view.php?id='.$cm->id, 'book '.$book->id);
+        add_to_log($course->id, 'course', 'update mod', '../mod/book/view.php?id='.$cmid, 'book '.$book->id);
         $params = array(
             'context' => $context,
             'objectid' => $data->id
@@ -110,7 +106,7 @@ if ($mform->is_cancelled()) {
         $DB->update_record('book_chapters', $data);
         $DB->set_field('book', 'revision', $book->revision+1, array('id'=>$book->id));
 
-        add_to_log($course->id, 'course', 'update mod', '../mod/book/view.php?id='.$cm->id, 'book '.$book->id);
+        add_to_log($course->id, 'course', 'update mod', '../mod/book/view.php?id='.$cmid, 'book '.$book->id);
         $params = array(
             'context' => $context,
             'objectid' => $data->id
@@ -121,7 +117,7 @@ if ($mform->is_cancelled()) {
     }
 
     book_preload_chapters($book); // fix structure
-    redirect("view.php?id=$cm->id&chapterid=$data->id");
+    redirect("view.php?id=$cmid&chapterid=$data->id");
 }
 
 // Otherwise fill and print the form.

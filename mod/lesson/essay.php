@@ -28,19 +28,15 @@ require_once($CFG->dirroot.'/mod/lesson/locallib.php');
 require_once($CFG->dirroot.'/mod/lesson/essay_form.php');
 require_once($CFG->libdir.'/eventslib.php');
 
-$id   = required_param('id', PARAM_INT);             // Course Module ID
+$cmid = required_param('id', PARAM_INT);             // Course Module ID
 $mode = optional_param('mode', 'display', PARAM_ALPHA);
 
-$cm = get_coursemodule_from_id('lesson', $id, 0, false, MUST_EXIST);
-$course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
-$dblesson = $DB->get_record('lesson', array('id' => $cm->instance), '*', MUST_EXIST);
-$lesson = new lesson($dblesson);
+list($context, $course, $cm) = $PAGE->login_to_cm('lesson', $cmid, null, PAGELOGIN_NO_AUTOLOGIN);
 
-require_login($course, false, $cm);
-$context = context_module::instance($cm->id);
+$lesson = new lesson($PAGE->activityrecord);
 require_capability('mod/lesson:edit', $context);
 
-$url = new moodle_url('/mod/lesson/essay.php', array('id'=>$id));
+$url = new moodle_url('/mod/lesson/essay.php', array('id'=>$cmid));
 if ($mode !== 'display') {
     $url->param('mode', $mode);
 }
@@ -141,7 +137,7 @@ switch ($mode) {
                 )
             );
             $event = \mod_lesson\event\essay_assessed::create($params);
-            $event->add_record_snapshot('lesson', $dblesson);
+            $event->add_record_snapshot('lesson', $PAGE->activityrecord);
             $event->trigger();
 
             $lesson->add_message(get_string('changessaved'), 'notifysuccess');

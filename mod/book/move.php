@@ -25,19 +25,16 @@
 require(dirname(__FILE__).'/../../config.php');
 require_once(dirname(__FILE__).'/locallib.php');
 
-$id        = required_param('id', PARAM_INT);        // Course Module ID
+$cmid      = required_param('id', PARAM_INT);        // Course Module ID
 $chapterid = required_param('chapterid', PARAM_INT); // Chapter ID
 $up        = optional_param('up', 0, PARAM_BOOL);
 
-$cm = get_coursemodule_from_id('book', $id, 0, false, MUST_EXIST);
-$course = $DB->get_record('course', array('id'=>$cm->course), '*', MUST_EXIST);
-$book = $DB->get_record('book', array('id'=>$cm->instance), '*', MUST_EXIST);
-
-require_login($course, false, $cm);
+list($context, $course, $cm) = $PAGE->login_to_cm('book', $cmid, null, PAGELOGIN_NO_AUTOLOGIN);
 require_sesskey();
 
-$context = context_module::instance($cm->id);
 require_capability('mod/book:edit', $context);
+
+$book = $PAGE->activityrecord;
 
 $chapter = $DB->get_record('book_chapters', array('id'=>$chapterid, 'bookid'=>$book->id), '*', MUST_EXIST);
 
@@ -186,11 +183,11 @@ if (!$nothing) {
 }
 
 // MDL-39963 Decide what to do with those logs.
-add_to_log($course->id, 'course', 'update mod', '../mod/book/view.php?id='.$cm->id, 'book '.$book->id);
-add_to_log($course->id, 'book', 'update', 'view.php?id='.$cm->id, $book->id, $cm->id);
+add_to_log($course->id, 'course', 'update mod', '../mod/book/view.php?id='.$cmid, 'book '.$book->id);
+add_to_log($course->id, 'book', 'update', 'view.php?id='.$cmid, $book->id, $cmid);
 
 book_preload_chapters($book); // fix structure
 $DB->set_field('book', 'revision', $book->revision+1, array('id'=>$book->id));
 
-redirect('view.php?id='.$cm->id.'&chapterid='.$chapter->id);
+redirect('view.php?id='.$cmid.'&chapterid='.$chapter->id);
 

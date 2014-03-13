@@ -22,7 +22,6 @@ require_once('../../lib.php');
 
 // Optional params: row id "rid" - if set then export just one, otherwise export all
 
-$d       = required_param('d', PARAM_INT);   // database id
 $fieldid = required_param('fieldid', PARAM_INT);   // field id
 $rid     = optional_param('rid', 0, PARAM_INT);    //record id
 
@@ -32,62 +31,29 @@ if ($rid !== 0) {
 }
 $PAGE->set_url($url);
 
+$PAGE->login_expected(PAGELOGIN_ALLOW_FRONTPAGE_GUEST);
+if (! $field = $DB->get_record('data_fields', array('id'=>$fieldid))) {
+    print_error('invalidfieldid', 'data');
+}
+if (! $field->type == 'latlong') { // Make sure we're looking at a latlong data type!
+    print_error('invalidfieldtype', 'data');
+}
 if ($rid) {
-    if (! $record = $DB->get_record('data_records', array('id'=>$rid))) {
-        print_error('invalidrecord', 'data');
-    }
-    if (! $data = $DB->get_record('data', array('id'=>$record->dataid))) {
-        print_error('invalidid', 'data');
-    }
-    if (! $course = $DB->get_record('course', array('id'=>$data->course))) {
-        print_error('coursemisconf');
-    }
-    if (! $cm = get_coursemodule_from_instance('data', $data->id, $course->id)) {
-        print_error('invalidcoursemodule');
-    }
-    if (! $field = $DB->get_record('data_fields', array('id'=>$fieldid))) {
-        print_error('invalidfieldid', 'data');
-    }
-    if (! $field->type == 'latlong') { // Make sure we're looking at a latlong data type!
-        print_error('invalidfieldtype', 'data');
-    }
+    $record = $DB->get_record('data_records', array('id'=>$rid), '*', MUST_EXIST);
+    $d = $record->dataid;
     if (! $content = $DB->get_record('data_content', array('fieldid'=>$fieldid, 'recordid'=>$rid))) {
         print_error('nofieldcontent', 'data');
     }
-} else {   // We must have $d
-    if (! $data = $DB->get_record('data', array('id'=>$d))) {
-        print_error('invalidid', 'data');
-    }
-    if (! $course = $DB->get_record('course', array('id'=>$data->course))) {
-        print_error('coursemisconf');
-    }
-    if (! $cm = get_coursemodule_from_instance('data', $data->id, $course->id)) {
-        print_error('invalidcoursemodule');
-    }
-    if (! $field = $DB->get_record('data_fields', array('id'=>$fieldid))) {
-        print_error('invalidfieldid', 'data');
-    }
-    if (! $field->type == 'latlong') { // Make sure we're looking at a latlong data type!
-        print_error('invalidfieldtype', 'data');
-    }
+} else {
+    $d = required_param('d', PARAM_INT);   // Database id.
     $record = NULL;
 }
-
-require_course_login($course, true, $cm);
-
-$context = context_module::instance($cm->id);
-
-/// If it's hidden then it's don't show anything.  :)
-if (empty($cm->visible) and !has_capability('moodle/course:viewhiddenactivities', $context)) {
-    $PAGE->set_title($data->name);
-    echo $OUTPUT->header();
-    notice(get_string("activityiscurrentlyhidden"));
-}
+list($context, $course, $cm) = $PAGE->login_to_activity('data', $d);
 
 /// If we have an empty Database then redirect because this page is useless without data
 if (has_capability('mod/data:managetemplates', $context)) {
-    if (!$DB->record_exists('data_fields', array('dataid'=>$data->id))) {      // Brand new database!
-        redirect($CFG->wwwroot.'/mod/data/field.php?d='.$data->id);  // Redirect to field entry
+    if (!$DB->record_exists('data_fields', array('dataid'=>$d))) {      // Brand new database!
+        redirect($CFG->wwwroot.'/mod/data/field.php?d='.$d);  // Redirect to field entry
     }
 }
 

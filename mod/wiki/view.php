@@ -36,7 +36,7 @@ require_once($CFG->dirroot . '/mod/wiki/lib.php');
 require_once($CFG->dirroot . '/mod/wiki/locallib.php');
 require_once($CFG->dirroot . '/mod/wiki/pagelib.php');
 
-$id = optional_param('id', 0, PARAM_INT); // Course Module ID
+$cmid = optional_param('id', 0, PARAM_INT); // Course Module ID
 
 $pageid = optional_param('pageid', 0, PARAM_INT); // Page ID
 
@@ -59,22 +59,9 @@ $swid = optional_param('swid', 0, PARAM_INT); // Subwiki ID
  * URL params: id -> course module id
  *
  */
-if ($id) {
-    // Cheacking course module instance
-    if (!$cm = get_coursemodule_from_id('wiki', $id)) {
-        print_error('invalidcoursemodule');
-    }
-
-    // Checking course instance
-    $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
-
-    require_login($course, true, $cm);
-
-    // Checking wiki instance
-    if (!$wiki = wiki_get_wiki($cm->instance)) {
-        print_error('incorrectwikiid', 'wiki');
-    }
-    $PAGE->set_cm($cm);
+if ($cmid) {
+    list($context, $course, $cm) = $PAGE->login_to_cm('wiki', $cmid);
+    $wiki = $PAGE->activityrecord;
 
     // Getting the subwiki corresponding to that wiki, group and user.
     //
@@ -115,6 +102,7 @@ if ($id) {
      */
 } elseif ($pageid) {
 
+    $PAGE->login_expected();
     // Checking page instance
     if (!$page = wiki_get_page($pageid)) {
         print_error('incorrectpageid', 'wiki');
@@ -125,22 +113,11 @@ if ($id) {
         print_error('incorrectsubwikiid', 'wiki');
     }
 
-    // Checking wiki instance of that subwiki
-    if (!$wiki = wiki_get_wiki($subwiki->wikiid)) {
-        print_error('incorrectwikiid', 'wiki');
-    }
-
-    // Checking course module instance
-    if (!$cm = get_coursemodule_from_instance("wiki", $subwiki->wikiid)) {
-        print_error('invalidcoursemodule');
-    }
+    list($context, $course, $cm) = $PAGE->login_to_activity('wiki', $subwiki->wikiid);
+    $wiki = $PAGE->activityrecord;
 
     $currentgroup = $subwiki->groupid;
 
-    // Checking course instance
-    $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
-
-    require_login($course, true, $cm);
     /*
      * Case 2:
      *
@@ -158,20 +135,8 @@ if ($id) {
      */
 } elseif ($wid && $title) {
 
-    // Setting wiki instance
-    if (!$wiki = wiki_get_wiki($wid)) {
-        print_error('incorrectwikiid', 'wiki');
-    }
-
-    // Checking course module
-    if (!$cm = get_coursemodule_from_instance("wiki", $wiki->id)) {
-        print_error('invalidcoursemodule');
-    }
-
-    // Checking course instance
-    $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
-
-    require_login($course, true, $cm);
+    list($context, $course, $cm) = $PAGE->login_to_activity('wiki', $wid);
+    $wiki = $PAGE->activityrecord;
 
     $groupmode = groups_get_activity_groupmode($cm);
 
@@ -298,7 +263,7 @@ if($pageid) {
                 )
             );
     $event->add_record_snapshot('wiki_pages', $page);
-} else if($id) {
+} else if($cmid) {
     $event = \mod_wiki\event\course_module_viewed::create(
             array(
                 'context' => $context,

@@ -21,43 +21,19 @@ require_once(dirname(dirname(dirname(__FILE__))) . '/config.php');
 require_once($CFG->dirroot . '/mod/chat/lib.php');
 require_once($CFG->libdir . '/completionlib.php');
 
-$id   = optional_param('id', 0, PARAM_INT);
+$cmid = optional_param('id', 0, PARAM_INT);
 $c    = optional_param('c', 0, PARAM_INT);
 $edit = optional_param('edit', -1, PARAM_BOOL);
 
-if ($id) {
-    if (! $cm = get_coursemodule_from_id('chat', $id)) {
-        print_error('invalidcoursemodule');
-    }
-
-    if (! $course = $DB->get_record('course', array('id'=>$cm->course))) {
-        print_error('coursemisconf');
-    }
-
+if ($cmid) {
+    list($context, $course, $cm) = $PAGE->login_to_cm('chat', $cmid, null, PAGELOGIN_ALLOW_FRONTPAGE_GUEST);
     chat_update_chat_times($cm->instance);
-
-    if (! $chat = $DB->get_record('chat', array('id'=>$cm->instance))) {
-        print_error('invalidid', 'chat');
-    }
-
 } else {
+    list($context, $course, $cm) = $PAGE->login_to_activity('chat', $c, null, PAGELOGIN_ALLOW_FRONTPAGE_GUEST);
     chat_update_chat_times($c);
-
-    if (! $chat = $DB->get_record('chat', array('id'=>$c))) {
-        print_error('coursemisconf');
-    }
-    if (! $course = $DB->get_record('course', array('id'=>$chat->course))) {
-        print_error('coursemisconf');
-    }
-    if (! $cm = get_coursemodule_from_instance('chat', $chat->id, $course->id)) {
-        print_error('invalidcoursemodule');
-    }
 }
 
-require_course_login($course, true, $cm);
-
-$context = context_module::instance($cm->id);
-$PAGE->set_context($context);
+$chat = $PAGE->activityrecord;
 
 // show some info for guests
 if (isguestuser()) {
@@ -93,7 +69,7 @@ $PAGE->set_heading($course->fullname);
 echo $OUTPUT->header();
 
 /// Check to see if groups are being used here
-$groupmode = groups_get_activity_groupmode($cm);
+$groupmode = $cm->effectivegroupmode;
 $currentgroup = groups_get_activity_group($cm, true);
 
 // url parameters

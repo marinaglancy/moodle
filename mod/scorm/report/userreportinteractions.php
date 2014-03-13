@@ -27,50 +27,48 @@ require_once($CFG->dirroot.'/mod/scorm/locallib.php');
 require_once($CFG->dirroot.'/mod/scorm/report/reportlib.php');
 require_once($CFG->libdir . '/tablelib.php');
 
-$id = required_param('id', PARAM_INT); // Course Module ID.
+$cmid = required_param('id', PARAM_INT); // Course Module ID.
 $userid = required_param('user', PARAM_INT); // User ID.
 $attempt = optional_param('attempt', 1, PARAM_INT); // attempt number.
 $download = optional_param('download', '', PARAM_ALPHA);
 
 // Building the url to use for links.+ data details buildup.
-$url = new moodle_url('/mod/scorm/report/userreportinteractions.php', array('id' => $id,
+$url = new moodle_url('/mod/scorm/report/userreportinteractions.php', array('id' => $cmid,
     'user' => $userid,
     'attempt' => $attempt));
 
-$cm = get_coursemodule_from_id('scorm', $id, 0, false, MUST_EXIST);
-$course = get_course($cm->course);
-$scorm = $DB->get_record('scorm', array('id' => $cm->instance), '*', MUST_EXIST);
+list($contextmodule, $course, $cm) = $PAGE->login_to_cm('scorm', $cmid, null, PAGELOGIN_NO_AUTOLOGIN);
+require_capability('mod/scorm:viewreport', $contextmodule);
+
+$scormid = $cm->instance;
+
 $user = $DB->get_record('user', array('id' => $userid), user_picture::fields(), MUST_EXIST);
 // Get list of attempts this user has made.
-$attemptids = scorm_get_all_attempts($scorm->id, $userid);
+$attemptids = scorm_get_all_attempts($scormid, $userid);
 
 $PAGE->set_url($url);
 // END of url setting + data buildup.
 
 // Checking login +logging +getting context.
-require_login($course, false, $cm);
-$contextmodule = context_module::instance($cm->id);
-require_capability('mod/scorm:viewreport', $contextmodule);
 
 // Trigger a user interactions viewed event.
 $event = \mod_scorm\event\interactions_viewed::create(array(
     'context' => $contextmodule,
     'relateduserid' => $userid,
-    'other' => array('attemptid' => $attempt, 'instanceid' => $scorm->id)
+    'other' => array('attemptid' => $attempt, 'instanceid' => $scormid)
 ));
 $event->add_record_snapshot('course_modules', $cm);
-$event->add_record_snapshot('scorm', $scorm);
 $event->trigger();
 
-$trackdata = $DB->get_records('scorm_scoes_track', array('userid' => $user->id, 'scormid' => $scorm->id,
+$trackdata = $DB->get_records('scorm_scoes_track', array('userid' => $user->id, 'scormid' => $scormid,
     'attempt' => $attempt));
 $usertrack = scorm_format_interactions($trackdata);
 
-$questioncount = get_scorm_question_count($scorm->id);
+$questioncount = get_scorm_question_count($scormid);
 
 $courseshortname = format_string($course->shortname, true,
     array('context' => context_course::instance($course->id)));
-$exportfilename = $courseshortname . '-' . format_string($scorm->name, true) . '-' . get_string('interactions', 'scorm');
+$exportfilename = $courseshortname . '-' . $cm->get_formatted_name() . '-' . get_string('interactions', 'scorm');
 
 
 // Set up the table.
@@ -81,14 +79,14 @@ if (!$table->is_downloading($download, $exportfilename)) {
     $strattempt = get_string('attempt', 'scorm');
     $strreport = get_string('report', 'scorm');
 
-    $PAGE->set_title("$course->shortname: ".format_string($scorm->name));
+    $PAGE->set_title("$course->shortname: ".$cm->get_formatted_name());
     $PAGE->set_heading($course->fullname);
     $PAGE->navbar->add($strreport, new moodle_url('/mod/scorm/report.php', array('id' => $cm->id)));
 
     $PAGE->navbar->add(fullname($user). " - $strattempt $attempt");
 
     echo $OUTPUT->header();
-    echo $OUTPUT->heading(format_string($scorm->name));
+    echo $OUTPUT->heading($cm->get_formatted_name());
     // End of Print the page header.
     $currenttab = 'interactions';
     require($CFG->dirroot . '/mod/scorm/report/userreporttabs.php');

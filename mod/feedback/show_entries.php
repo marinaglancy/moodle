@@ -29,7 +29,7 @@ require_once($CFG->libdir.'/tablelib.php');
 ////////////////////////////////////////////////////////
 //get the params
 ////////////////////////////////////////////////////////
-$id = required_param('id', PARAM_INT);
+$cmid = required_param('id', PARAM_INT);
 $userid = optional_param('userid', false, PARAM_INT);
 $do_show = required_param('do_show', PARAM_ALPHA);
 $perpage = optional_param('perpage', FEEDBACK_DEFAULT_PAGE_COUNT, PARAM_INT);  // how many per page
@@ -37,30 +37,14 @@ $showall = optional_param('showall', false, PARAM_INT);  // should we show all u
 // $SESSION->feedback->current_tab = $do_show;
 $current_tab = $do_show;
 
-////////////////////////////////////////////////////////
-//get the objects
-////////////////////////////////////////////////////////
+// Make sure user is logged in and has proper permissions.
 
-if (! $cm = get_coursemodule_from_id('feedback', $id)) {
-    print_error('invalidcoursemodule');
-}
-
-if (! $course = $DB->get_record("course", array("id"=>$cm->course))) {
-    print_error('coursemisconf');
-}
-
-if (! $feedback = $DB->get_record("feedback", array("id"=>$cm->instance))) {
-    print_error('invalidcoursemodule');
-}
+list($context, $course, $cm) = $PAGE->login_to_cm('feedback', $cmid);
+$feedback = $PAGE->activityrecord;
 
 $url = new moodle_url('/mod/feedback/show_entries.php', array('id'=>$cm->id, 'do_show'=>$do_show));
 
 $PAGE->set_url($url);
-
-$context = context_module::instance($cm->id);
-
-require_login($course, true, $cm);
-
 require_capability('mod/feedback:viewreports', $context);
 
 ////////////////////////////////////////////////////////
@@ -82,9 +66,9 @@ $strfeedbacks = get_string("modulenameplural", "feedback");
 $strfeedback  = get_string("modulename", "feedback");
 
 $PAGE->set_heading($course->fullname);
-$PAGE->set_title($feedback->name);
+$PAGE->set_title($cm->name);
 echo $OUTPUT->header();
-echo $OUTPUT->heading(format_string($feedback->name));
+echo $OUTPUT->heading($cm->get_formatted_name());
 
 require('tabs.php');
 
@@ -100,18 +84,14 @@ if ($do_show == 'showentries') {
     //print the link to analysis
     if (has_capability('mod/feedback:viewreports', $context)) {
         //get the effective groupmode of this course and module
-        if (isset($cm->groupmode) && empty($course->groupmodeforce)) {
-            $groupmode =  $cm->groupmode;
-        } else {
-            $groupmode = $course->groupmode;
-        }
+        $groupmode = $cm->effectivegroupmode;
 
         $groupselect = groups_print_activity_menu($cm, $url->out(), true);
         $mygroupid = groups_get_activity_group($cm);
 
         // preparing the table for output
         $baseurl = new moodle_url('/mod/feedback/show_entries.php');
-        $baseurl->params(array('id'=>$id, 'do_show'=>$do_show, 'showall'=>$showall));
+        $baseurl->params(array('id'=>$cmid, 'do_show'=>$do_show, 'showall'=>$showall));
 
         $tablecolumns = array('userpic', 'fullname', 'completed_timemodified');
         $tableheaders = array(get_string('userpic'), get_string('fullnameuser'), get_string('date'));
@@ -180,7 +160,7 @@ if ($do_show == 'showentries') {
 
         $completed_fb_count = feedback_get_completeds_group_count($feedback, $mygroupid);
         if ($feedback->course == SITEID) {
-            $analysisurl = new moodle_url('/mod/feedback/analysis_course.php', array('id'=>$id, 'courseid'=>$courseid));
+            $analysisurl = new moodle_url('/mod/feedback/analysis_course.php', array('id'=>$cmid, 'courseid'=>$courseid));
             echo $OUTPUT->box_start('mdl-align');
             echo '<a href="'.$analysisurl->out().'">';
             echo $str_course.' '.$str_analyse.' ('.$str_complete.': '.intval($completed_fb_count).')';
@@ -188,7 +168,7 @@ if ($do_show == 'showentries') {
             echo $OUTPUT->help_icon('viewcompleted', 'feedback');
             echo $OUTPUT->box_end();
         } else {
-            $analysisurl = new moodle_url('/mod/feedback/analysis.php', array('id'=>$id, 'courseid'=>$courseid));
+            $analysisurl = new moodle_url('/mod/feedback/analysis.php', array('id'=>$cmid, 'courseid'=>$courseid));
             echo $OUTPUT->box_start('mdl-align');
             echo '<a href="'.$analysisurl->out().'">';
             echo $str_analyse.' ('.$str_complete.': '.intval($completed_fb_count).')';
@@ -285,7 +265,7 @@ if ($do_show == 'showentries') {
                         $url_params = array('sesskey'=>sesskey(),
                                         'userid'=>0,
                                         'do_show'=>'showoneentry',
-                                        'id'=>$id);
+                                        'id'=>$cmid);
                         $aurl = new moodle_url('show_entries_anonym.php', $url_params);
                         echo $OUTPUT->single_button($aurl, get_string('show_entries', 'feedback'));
                     ?>

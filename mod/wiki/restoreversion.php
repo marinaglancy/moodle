@@ -40,6 +40,8 @@ $pageid = required_param('pageid', PARAM_INT);
 $versionid = required_param('versionid', PARAM_INT);
 $confirm = optional_param('confirm', 0, PARAM_BOOL);
 
+$PAGE->login_expected();
+
 if (!$page = wiki_get_page($pageid)) {
     print_error('incorrectpageid', 'wiki');
 }
@@ -48,17 +50,8 @@ if (!$subwiki = wiki_get_subwiki($page->subwikiid)) {
     print_error('incorrectsubwikiid', 'wiki');
 }
 
-if (!$wiki = wiki_get_wiki($subwiki->wikiid)) {
-    print_error('incorrectwikiid', 'wiki');
-}
-
-if (!$cm = get_coursemodule_from_instance('wiki', $wiki->id)) {
-    print_error('invalidcoursemodule');
-}
-
-$course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
-
-require_login($course, true, $cm);
+list($context, $course, $cm) = $PAGE->login_to_activity('wiki', $subwiki->wikiid);
+$wiki = $PAGE->activityrecord;
 
 if (!wiki_user_can_view($subwiki)) {
     print_error('cannotviewpage', 'wiki');

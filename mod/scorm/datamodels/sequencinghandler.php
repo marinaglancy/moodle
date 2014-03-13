@@ -17,21 +17,17 @@
 require_once('../../../config.php');
 require_once($CFG->dirroot.'/mod/scorm/locallib.php');
 
-$id = optional_param('id', '', PARAM_INT);  // Course Module ID, or
+$cmid = optional_param('id', '', PARAM_INT);  // Course Module ID, or
 $a = optional_param('a', '', PARAM_INT);  // scorm ID.
 $scoid = required_param('scoid', PARAM_INT);  // Sco ID.
 $attempt = required_param('attempt', PARAM_INT);  // Attempt number.
 $function  = required_param('function', PARAM_RAW);  // Function to call.
 $request = optional_param('request', '', PARAM_RAW);  // Scorm ID.
 
-if (!empty($id)) {
-    $cm = get_coursemodule_from_id('scorm', $id, 0, false, MUST_EXIST);
-    $course = $DB->get_record("course", array("id" => $cm->course), '*', MUST_EXIST);
-    $scorm = $DB->get_record("scorm", array("id" => $cm->instance), '*', MUST_EXIST);
+if (!empty($cmid)) {
+    list($context, $course, $cm) = $PAGE->login_to_cm('scorm', $cmid, null, PAGELOGIN_NO_AUTOLOGIN);
 } else if (!empty($a)) {
-    $scorm = $DB->get_record("scorm", array("id" => $a), '*', MUST_EXIST);
-    $course = $DB->get_record("course", array("id" => $scorm->course), '*', MUST_EXIST);
-    $cm = get_coursemodule_from_instance("scorm", $scorm->id, $course->id, false, MUST_EXIST);
+    list($context, $course, $cm) = $PAGE->login_to_activity('scorm', $a, null, PAGELOGIN_NO_AUTOLOGIN);
 } else {
     print_error('missingparameter');
 }
@@ -39,12 +35,10 @@ if (!empty($id)) {
 $PAGE->set_url('/mod/scorm/datamodels/sequencinghandler.php',
     array('scoid'=>$scoid, 'attempt'=>$attempt, 'id'=>$cm->id, 'function' => $function, 'request' => $request));
 
-require_login($course, false, $cm);
-
 if (!empty($scoid) && !empty($function)) {
     require_once($CFG->dirroot.'/mod/scorm/datamodels/scorm_13lib.php');
 
-    if (has_capability('mod/scorm:savetrack', context_module::instance($cm->id))) {
+    if (has_capability('mod/scorm:savetrack', $context)) {
         $result = null;
         switch ($function) {
             case 'scorm_seq_flow' :
