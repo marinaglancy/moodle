@@ -48,50 +48,26 @@
     $PAGE->set_url('/mod/forum/view.php', $params);
 
     if ($id) {
-        if (! $cm = get_coursemodule_from_id('forum', $id)) {
-            print_error('invalidcoursemodule');
-        }
-        if (! $course = $DB->get_record("course", array("id" => $cm->course))) {
-            print_error('coursemisconf');
-        }
-        if (! $forum = $DB->get_record("forum", array("id" => $cm->instance))) {
-            print_error('invalidforumid', 'forum');
-        }
-        if ($forum->type == 'single') {
-            $PAGE->set_pagetype('mod-forum-discuss');
-        }
-        // move require_course_login here to use forced language for course
-        // fix for MDL-6926
-        require_course_login($course, true, $cm);
-        $strforums = get_string("modulenameplural", "forum");
-        $strforum = get_string("modulename", "forum");
+        list($context, $course, $cminfo) = $PAGE->login_to_cm('forum', $id, null, PAGELOGIN_ALLOW_FRONTPAGE_GUEST);
     } else if ($f) {
-
-        if (! $forum = $DB->get_record("forum", array("id" => $f))) {
-            print_error('invalidforumid', 'forum');
-        }
-        if (! $course = $DB->get_record("course", array("id" => $forum->course))) {
-            print_error('coursemisconf');
-        }
-
-        if (!$cm = get_coursemodule_from_instance("forum", $forum->id, $course->id)) {
-            print_error('missingparameter');
-        }
-        // move require_course_login here to use forced language for course
-        // fix for MDL-6926
-        require_course_login($course, true, $cm);
-        $strforums = get_string("modulenameplural", "forum");
-        $strforum = get_string("modulename", "forum");
+        list($context, $course, $cminfo) = $PAGE->login_to_activity('forum', $f, null, PAGELOGIN_ALLOW_FRONTPAGE_GUEST);
     } else {
         print_error('missingparameter');
     }
+    require_capability('mod/forum:viewdiscussion', $context, NULL, true, 'noviewdiscussionspermission', 'forum');
+    $forum = $PAGE->activityrecord;
+    if ($forum->type == 'single') {
+        $PAGE->set_pagetype('mod-forum-discuss');
+    }
+    $cm = $cminfo->get_course_module_record(true);
+    $strforums = get_string("modulenameplural", "forum");
+    $strforum = get_string("modulename", "forum");
 
     if (!$PAGE->button) {
         $PAGE->set_button(forum_search_form($course, $search));
     }
 
     $context = context_module::instance($cm->id);
-    $PAGE->set_context($context);
 
     if (!empty($CFG->enablerssfeeds) && !empty($CFG->forum_enablerssfeeds) && $forum->rsstype && $forum->rssarticles) {
         require_once("$CFG->libdir/rsslib.php");
@@ -102,7 +78,7 @@
 
     // Mark viewed if required
     $completion = new completion_info($course);
-    $completion->set_module_viewed($cm);
+    $completion->set_module_viewed($cminfo);
 
 /// Print header.
 
@@ -112,22 +88,13 @@
 
     echo $OUTPUT->header();
 
-/// Some capability checks.
-    if (empty($cm->visible) and !has_capability('moodle/course:viewhiddenactivities', $context)) {
-        notice(get_string("activityiscurrentlyhidden"));
-    }
-
-    if (!has_capability('mod/forum:viewdiscussion', $context)) {
-        notice(get_string('noviewdiscussionspermission', 'forum'));
-    }
-
     echo $OUTPUT->heading(format_string($forum->name), 2);
     if (!empty($forum->intro) && $forum->type != 'single' && $forum->type != 'teacher') {
         echo $OUTPUT->box(format_module_intro('forum', $forum, $cm->id), 'generalbox', 'intro');
     }
 
 /// find out current groups mode
-    groups_print_activity_menu($cm, $CFG->wwwroot . '/mod/forum/view.php?id=' . $cm->id);
+    groups_print_activity_menu($cminfo, $CFG->wwwroot . '/mod/forum/view.php?id=' . $cm->id);
 
     $params = array(
         'context' => $context,
@@ -184,7 +151,7 @@
                 set_user_preference("forum_displaymode", $mode);
             }
 
-            $canreply    = forum_user_can_post($forum, $discussion, $USER, $cm, $course, $context);
+            $canreply    = forum_user_can_post($forum, $discussion, $USER, $cminfo, $course, $context);
             $canrate     = has_capability('mod/forum:rate', $context);
             $displaymode = get_user_preferences("forum_displaymode", $CFG->forum_displaymode);
 
@@ -194,16 +161,16 @@
 
         case 'eachuser':
             echo '<p class="mdl-align">';
-            if (forum_user_can_post_discussion($forum, null, -1, $cm)) {
+            if (forum_user_can_post_discussion($forum, null, -1, $cminfo)) {
                 print_string("allowsdiscussions", "forum");
             } else {
                 echo '&nbsp;';
             }
             echo '</p>';
             if (!empty($showall)) {
-                forum_print_latest_discussions($course, $forum, 0, 'header', '', -1, -1, -1, 0, $cm);
+                forum_print_latest_discussions($course, $forum, 0, 'header', '', -1, -1, -1, 0, $cminfo);
             } else {
-                forum_print_latest_discussions($course, $forum, -1, 'header', '', -1, -1, $page, $CFG->forum_manydiscussions, $cm);
+                forum_print_latest_discussions($course, $forum, -1, 'header', '', -1, -1, $page, $CFG->forum_manydiscussions, $cminfo);
             }
             break;
 
@@ -211,25 +178,25 @@
             if (!empty($showall)) {
                 forum_print_latest_discussions($course, $forum, 0, 'header', '', -1, -1, -1, 0, $cm);
             } else {
-                forum_print_latest_discussions($course, $forum, -1, 'header', '', -1, -1, $page, $CFG->forum_manydiscussions, $cm);
+                forum_print_latest_discussions($course, $forum, -1, 'header', '', -1, -1, $page, $CFG->forum_manydiscussions, $cminfo);
             }
             break;
 
         case 'blog':
             echo '<br />';
             if (!empty($showall)) {
-                forum_print_latest_discussions($course, $forum, 0, 'plain', '', -1, -1, -1, 0, $cm);
+                forum_print_latest_discussions($course, $forum, 0, 'plain', '', -1, -1, -1, 0, $cminfo);
             } else {
-                forum_print_latest_discussions($course, $forum, -1, 'plain', '', -1, -1, $page, $CFG->forum_manydiscussions, $cm);
+                forum_print_latest_discussions($course, $forum, -1, 'plain', '', -1, -1, $page, $CFG->forum_manydiscussions, $cminfo);
             }
             break;
 
         default:
             echo '<br />';
             if (!empty($showall)) {
-                forum_print_latest_discussions($course, $forum, 0, 'header', '', -1, -1, -1, 0, $cm);
+                forum_print_latest_discussions($course, $forum, 0, 'header', '', -1, -1, -1, 0, $cminfo);
             } else {
-                forum_print_latest_discussions($course, $forum, -1, 'header', '', -1, -1, $page, $CFG->forum_manydiscussions, $cm);
+                forum_print_latest_discussions($course, $forum, -1, 'header', '', -1, -1, $page, $CFG->forum_manydiscussions, $cminfo);
             }
 
 

@@ -63,6 +63,7 @@ if ($timetorestrict) {
     $dateto = optional_param('dateto', 0, PARAM_INT);      // Ending date
 }
 
+list($context, $course) = $PAGE->login($id, PAGELOGIN_ALLOW_FRONTPAGE_GUEST);
 $PAGE->set_pagelayout('standard');
 $PAGE->set_url($FULLME); //TODO: this is very sloppy --skodak
 
@@ -106,14 +107,8 @@ if ($search) {
     $search = forum_clean_search_terms($search);
 }
 
-if (!$course = $DB->get_record('course', array('id'=>$id))) {
-    print_error('invalidcourseid');
-}
-
-require_course_login($course);
-
 $params = array(
-    'context' => $PAGE->context,
+    'context' => $context,
     'other' => array('searchterm' => $search)
 );
 

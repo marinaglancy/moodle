@@ -33,19 +33,14 @@ $backtoindex = optional_param('backtoindex', 0, PARAM_INT);
 // We must have a valid session key.
 require_sesskey();
 
-$forum = $DB->get_record('forum', array('id' => $id));
-$course  = $DB->get_record('course', array('id' => $forum->course), '*', MUST_EXIST);
-$cm      = get_coursemodule_from_instance('forum', $forum->id, $course->id, false, MUST_EXIST);
-$context = context_module::instance($cm->id);
-
-require_login($course, false, $cm);
+list($context, $course, $cm) = $PAGE->login_to_activity('forum', $id, null, PAGELOGIN_NO_AUTOLOGIN);
+$forum = $PAGE->activityrecord;
 
 $url = new moodle_url('/mod/forum/maildigest.php', array(
     'id' => $id,
     'maildigest' => $maildigest,
 ));
 $PAGE->set_url($url);
-$PAGE->set_context($context);
 
 $digestoptions = forum_get_user_digest_options();
 

@@ -28,7 +28,7 @@ require_once('lib.php');
 require_once($CFG->libdir.'/completionlib.php');
 
 $reply   = optional_param('reply', 0, PARAM_INT);
-$forum   = optional_param('forum', 0, PARAM_INT);
+$forumid = optional_param('forum', 0, PARAM_INT);
 $edit    = optional_param('edit', 0, PARAM_INT);
 $delete  = optional_param('delete', 0, PARAM_INT);
 $prune   = optional_param('prune', 0, PARAM_INT);
@@ -38,7 +38,7 @@ $groupid = optional_param('groupid', null, PARAM_INT);
 
 $PAGE->set_url('/mod/forum/post.php', array(
         'reply' => $reply,
-        'forum' => $forum,
+        'forum' => $forumid,
         'edit'  => $edit,
         'delete'=> $delete,
         'prune' => $prune,
@@ -47,7 +47,9 @@ $PAGE->set_url('/mod/forum/post.php', array(
         'groupid'=>$groupid,
         ));
 //these page_params will be passed as hidden variables later in the form.
-$page_params = array('reply'=>$reply, 'forum'=>$forum, 'edit'=>$edit);
+$page_params = array('reply'=>$reply, 'forum'=>$forumid, 'edit'=>$edit);
+
+$PAGE->login_expected(PAGELOGIN_NO_AUTOLOGIN);
 
 $sitecontext = context_system::instance();
 
@@ -55,36 +57,31 @@ if (!isloggedin() or isguestuser()) {
 
     if (!isloggedin() and !get_referer()) {
         // No referer+not logged in - probably coming in via email  See MDL-9052
-        require_login();
+        list($context, $course) = $PAGE->login();
     }
 
-    if (!empty($forum)) {      // User is starting a new discussion in a forum
-        if (! $forum = $DB->get_record('forum', array('id' => $forum))) {
-            print_error('invalidforumid', 'forum');
-        }
-    } else if (!empty($reply)) {      // User is writing a new reply
-        if (! $parent = forum_get_post_full($reply)) {
-            print_error('invalidparentpostid', 'forum');
-        }
-        if (! $discussion = $DB->get_record('forum_discussions', array('id' => $parent->discussion))) {
-            print_error('notpartofdiscussion', 'forum');
-        }
-        if (! $forum = $DB->get_record('forum', array('id' => $discussion->forum))) {
-            print_error('invalidforumid');
-        }
-    }
-    if (! $course = $DB->get_record('course', array('id' => $forum->course))) {
-        print_error('invalidcourseid');
-    }
-
-    if (!$cm = get_coursemodule_from_instance('forum', $forum->id, $course->id)) { // For the logs
-        print_error('invalidcoursemodule');
+    // Otherwise try to login to the course.
+    if (!empty($forumid)) {
+        // User is starting a new discussion in a forum.
+        $course = $DB->get_record_sql('SELECT c.* FROM {course} c '
+                . 'JOIN {forum} f ON f.course = c.id '
+                . 'WHERE f.id = ?', array($forumid), MUST_EXIST);
+    } else if (!empty($reply)) {
+        // User is writing a new reply.
+        $course = $DB->get_record_sql('SELECT c.* FROM {course} c '
+                . 'JOIN {forum_discussions} d ON d.course = c.id '
+                . 'JOIN {forum_posts} p ON p.discussion = d.id '
+                . 'WHERE p.id = ?', array($reply), MUST_EXIST);
     } else {
-        $modcontext = context_module::instance($cm->id);
+        $course = $SITE;
+    }
+    try {
+        list($context, $course) = $PAGE->login($course, PAGELOGIN_NO_AUTOLOGIN | PAGELOGIN_PREVENT_REDIRECT);
+    } catch (Exception $ex) {
+        // Guest user is not allowed to see course name, change to site name.
+        list($context, $course) = $PAGE->login($SITE, PAGELOGIN_NO_AUTOLOGIN);
     }
 
-    $PAGE->set_cm($cm, $course, $forum);
-    $PAGE->set_context($modcontext);
     $PAGE->set_title($course->shortname);
     $PAGE->set_heading($course->fullname);
 
@@ -94,44 +91,17 @@ if (!isloggedin() or isguestuser()) {
     exit;
 }
 
-require_login(0, false);   // Script is useless unless they're logged in
-
-if (!empty($forum)) {      // User is starting a new discussion in a forum
-    if (! $forum = $DB->get_record("forum", array("id" => $forum))) {
-        print_error('invalidforumid', 'forum');
-    }
-    if (! $course = $DB->get_record("course", array("id" => $forum->course))) {
-        print_error('invalidcourseid');
-    }
-    if (! $cm = get_coursemodule_from_instance("forum", $forum->id, $course->id)) {
-        print_error("invalidcoursemodule");
-    }
+if (!empty($forumid)) {      // User is starting a new discussion in a forum
+    list($modcontext, $course, $cminfo) = $PAGE->login_to_activity('forum', $forumid);
+    $cm = $cminfo->get_course_module_record(true);
+    $forum = $PAGE->activityrecord;
 
     $coursecontext = context_course::instance($course->id);
 
-    if (! forum_user_can_post_discussion($forum, $groupid, -1, $cm)) {
-        if (!isguestuser()) {
-            if (!is_enrolled($coursecontext)) {
-                if (enrol_selfenrol_available($course->id)) {
-                    $SESSION->wantsurl = qualified_me();
-                    $SESSION->enrolcancel = $_SERVER['HTTP_REFERER'];
-                    redirect($CFG->wwwroot.'/enrol/index.php?id='.$course->id, get_string('youneedtoenrol'));
-                }
-            }
-        }
+    if (! forum_user_can_post_discussion($forum, $groupid, -1, $cminfo)) {
         print_error('nopostforum', 'forum');
     }
-
-    if (!$cm->visible and !has_capability('moodle/course:viewhiddenactivities', $coursecontext)) {
-        print_error("activityiscurrentlyhidden");
-    }
-
-    if (isset($_SERVER["HTTP_REFERER"])) {
-        $SESSION->fromurl = $_SERVER["HTTP_REFERER"];
-    } else {
-        $SESSION->fromurl = '';
-    }
-
+    $SESSION->fromurl = get_referer(false);
 
     // Load up the $post variable.
 
@@ -149,7 +119,7 @@ if (!empty($forum)) {      // User is starting a new discussion in a forum
     if (isset($groupid)) {
         $post->groupid = $groupid;
     } else {
-        $post->groupid = groups_get_activity_group($cm);
+        $post->groupid = groups_get_activity_group($cminfo);
     }
 
     // Unsetting this will allow the correct return URL to be calculated later.
@@ -163,51 +133,15 @@ if (!empty($forum)) {      // User is starting a new discussion in a forum
     if (! $discussion = $DB->get_record("forum_discussions", array("id" => $parent->discussion))) {
         print_error('notpartofdiscussion', 'forum');
     }
-    if (! $forum = $DB->get_record("forum", array("id" => $discussion->forum))) {
-        print_error('invalidforumid', 'forum');
-    }
-    if (! $course = $DB->get_record("course", array("id" => $discussion->course))) {
-        print_error('invalidcourseid');
-    }
-    if (! $cm = get_coursemodule_from_instance("forum", $forum->id, $course->id)) {
-        print_error('invalidcoursemodule');
-    }
 
-    // Ensure lang, theme, etc. is set up properly. MDL-6926
-    $PAGE->set_cm($cm, $course, $forum);
+    list($modcontext, $course, $cminfo) = $PAGE->login_to_activity('forum', $discussion->forum);
+    $cm = $cminfo->get_course_module_record(true);
+    $forum = $PAGE->activityrecord;
 
     $coursecontext = context_course::instance($course->id);
-    $modcontext    = context_module::instance($cm->id);
 
-    if (! forum_user_can_post($forum, $discussion, $USER, $cm, $course, $modcontext)) {
-        if (!isguestuser()) {
-            if (!is_enrolled($coursecontext)) {  // User is a guest here!
-                $SESSION->wantsurl = qualified_me();
-                $SESSION->enrolcancel = $_SERVER['HTTP_REFERER'];
-                redirect($CFG->wwwroot.'/enrol/index.php?id='.$course->id, get_string('youneedtoenrol'));
-            }
-        }
+    if (! forum_user_can_post($forum, $discussion, $USER, $cminfo, $course, $modcontext)) {
         print_error('nopostforum', 'forum');
-    }
-
-    // Make sure user can post here
-    if (isset($cm->groupmode) && empty($course->groupmodeforce)) {
-        $groupmode =  $cm->groupmode;
-    } else {
-        $groupmode = $course->groupmode;
-    }
-    if ($groupmode == SEPARATEGROUPS and !has_capability('moodle/site:accessallgroups', $modcontext)) {
-        if ($discussion->groupid == -1) {
-            print_error('nopostforum', 'forum');
-        } else {
-            if (!groups_is_member($discussion->groupid)) {
-                print_error('nopostforum', 'forum');
-            }
-        }
-    }
-
-    if (!$cm->visible and !has_capability('moodle/course:viewhiddenactivities', $coursecontext)) {
-        print_error("activityiscurrentlyhidden");
     }
 
     // Load up the $post variable.
@@ -245,19 +179,10 @@ if (!empty($forum)) {      // User is starting a new discussion in a forum
     if (! $discussion = $DB->get_record("forum_discussions", array("id" => $post->discussion))) {
         print_error('notpartofdiscussion', 'forum');
     }
-    if (! $forum = $DB->get_record("forum", array("id" => $discussion->forum))) {
-        print_error('invalidforumid', 'forum');
-    }
-    if (! $course = $DB->get_record("course", array("id" => $discussion->course))) {
-        print_error('invalidcourseid');
-    }
-    if (!$cm = get_coursemodule_from_instance("forum", $forum->id, $course->id)) {
-        print_error('invalidcoursemodule');
-    } else {
-        $modcontext = context_module::instance($cm->id);
-    }
 
-    $PAGE->set_cm($cm, $course, $forum);
+    list($modcontext, $course, $cminfo) = $PAGE->login_to_activity('forum', $discussion->forum);
+    $cm = $cminfo->get_course_module_record(true);
+    $forum = $PAGE->activityrecord;
 
     if (!($forum->type == 'news' && !$post->parent && $discussion->timestart > time())) {
         if (((time() - $post->created) > $CFG->maxeditingtime) and
@@ -290,18 +215,10 @@ if (!empty($forum)) {      // User is starting a new discussion in a forum
     if (! $discussion = $DB->get_record("forum_discussions", array("id" => $post->discussion))) {
         print_error('notpartofdiscussion', 'forum');
     }
-    if (! $forum = $DB->get_record("forum", array("id" => $discussion->forum))) {
-        print_error('invalidforumid', 'forum');
-    }
-    if (!$cm = get_coursemodule_from_instance("forum", $forum->id, $forum->course)) {
-        print_error('invalidcoursemodule');
-    }
-    if (!$course = $DB->get_record('course', array('id' => $forum->course))) {
-        print_error('invalidcourseid');
-    }
 
-    require_login($course, false, $cm);
-    $modcontext = context_module::instance($cm->id);
+    list($modcontext, $course, $cminfo) = $PAGE->login_to_activity('forum', $discussion->forum);
+    $forum = $PAGE->activityrecord;
+    $cm = $cminfo->get_course_module_record(true);
 
     if ( !(($post->userid == $USER->id && has_capability('mod/forum:deleteownpost', $modcontext))
                 || has_capability('mod/forum:deleteanypost', $modcontext)) ) {
@@ -433,19 +350,16 @@ if (!empty($forum)) {      // User is starting a new discussion in a forum
     if (!$discussion = $DB->get_record("forum_discussions", array("id" => $post->discussion))) {
         print_error('notpartofdiscussion', 'forum');
     }
-    if (!$forum = $DB->get_record("forum", array("id" => $discussion->forum))) {
-        print_error('invalidforumid', 'forum');
-    }
+
+    list($modcontext, $course, $cminfo) = $PAGE->login_to_activity('forum', $discussion->forum);
+    $forum = $PAGE->activityrecord;
+    $cm = $cminfo->get_course_module_record(true);
+
     if ($forum->type == 'single') {
         print_error('cannotsplit', 'forum');
     }
     if (!$post->parent) {
         print_error('alreadyfirstpost', 'forum');
-    }
-    if (!$cm = get_coursemodule_from_instance("forum", $forum->id, $forum->course)) { // For the logs
-        print_error('invalidcoursemodule');
-    } else {
-        $modcontext = context_module::instance($cm->id);
     }
     if (!has_capability('mod/forum:splitdiscussions', $modcontext)) {
         print_error('cannotsplit', 'forum');
@@ -518,10 +432,6 @@ if (!empty($forum)) {      // User is starting a new discussion in a forum
 
     } else { // User just asked to prune something
 
-        $course = $DB->get_record('course', array('id' => $forum->course));
-
-        $PAGE->set_cm($cm);
-        $PAGE->set_context($modcontext);
         $PAGE->navbar->add(format_string($post->subject, true), new moodle_url('/mod/forum/discuss.php', array('d'=>$discussion->id)));
         $PAGE->navbar->add(get_string("prune", "forum"));
         $PAGE->set_title(format_string($discussion->name).": ".format_string($post->subject));
@@ -550,17 +460,6 @@ if (!isset($coursecontext)) {
 
 
 // from now on user must be logged on properly
-
-if (!$cm = get_coursemodule_from_instance('forum', $forum->id, $course->id)) { // For the logs
-    print_error('invalidcoursemodule');
-}
-$modcontext = context_module::instance($cm->id);
-require_login($course, false, $cm);
-
-if (isguestuser()) {
-    // just in case
-    print_error('noguest');
-}
 
 if (!isset($forum->maxattachments)) {  // TODO - delete this once we add a field to the forum table
     $forum->maxattachments = 3;
@@ -815,9 +714,9 @@ if ($fromform = $mform_post->get_data()) {
 
             // Update completion state
             $completion=new completion_info($course);
-            if($completion->is_enabled($cm) &&
+            if($completion->is_enabled($cminfo) &&
                 ($forum->completionreplies || $forum->completionposts)) {
-                $completion->update_state($cm,COMPLETION_COMPLETE);
+                $completion->update_state($cminfo,COMPLETION_COMPLETE);
             }
 
             redirect(forum_go_back_to("$discussionurl#p$fromform->id"), $message.$subscribemessage, $timemessage);
@@ -831,7 +730,7 @@ if ($fromform = $mform_post->get_data()) {
         // Before we add this we must check that the user will not exceed the blocking threshold.
         forum_check_blocking_threshold($thresholdwarning);
 
-        if (!forum_user_can_post_discussion($forum, $fromform->groupid, -1, $cm, $modcontext)) {
+        if (!forum_user_can_post_discussion($forum, $fromform->groupid, -1, $cminfo, $modcontext)) {
             print_error('cannotcreatediscussion', 'forum');
         }
         // If the user has access all groups capability let them choose the group.
@@ -887,9 +786,9 @@ if ($fromform = $mform_post->get_data()) {
 
             // Update completion status
             $completion=new completion_info($course);
-            if($completion->is_enabled($cm) &&
+            if($completion->is_enabled($cminfo) &&
                 ($forum->completiondiscussions || $forum->completionposts)) {
-                $completion->update_state($cm,COMPLETION_COMPLETE);
+                $completion->update_state($cminfo,COMPLETION_COMPLETE);
             }
 
             redirect(forum_go_back_to("view.php?f=$fromform->forum"), $message.$subscribemessage, $timemessage);
@@ -964,7 +863,7 @@ echo $OUTPUT->heading(format_string($forum->name), 2);
 if (!empty($parent) && !forum_user_can_see_post($forum, $discussion, $post, null, $cm)) {
     print_error('cannotreply', 'forum');
 }
-if (empty($parent) && empty($edit) && !forum_user_can_post_discussion($forum, $groupid, -1, $cm, $modcontext)) {
+if (empty($parent) && empty($edit) && !forum_user_can_post_discussion($forum, $groupid, -1, $cminfo, $modcontext)) {
     print_error('cannotcreatediscussion', 'forum');
 }
 

@@ -40,26 +40,14 @@ if ($returnpage !== 'index.php') {
 }
 $PAGE->set_url($url);
 
-if (! $forum = $DB->get_record("forum", array("id" => $f))) {
-    print_error('invalidforumid', 'forum');
-}
-
-if (! $course = $DB->get_record("course", array("id" => $forum->course))) {
-    print_error('invalidcourseid');
-}
-
-if (!$cm = get_coursemodule_from_instance("forum", $forum->id, $course->id)) {
-    print_error('invalidcoursemodule');
-}
+list($context, $course, $cm) = $PAGE->login_to_activity('forum', $f, null, PAGELOGIN_NO_AUTOLOGIN);
 
 $user = $USER;
-
-require_login($course, false, $cm);
 
 if ($returnpage == 'index.php') {
     $returnto = forum_go_back_to($returnpage.'?id='.$course->id);
 } else {
-    $returnto = forum_go_back_to($returnpage.'?f='.$forum->id);
+    $returnto = forum_go_back_to($returnpage.'?f='.$f);
 }
 
 if (isguestuser()) {   // Guests can't change forum
@@ -73,11 +61,11 @@ if (isguestuser()) {   // Guests can't change forum
 
 $info = new stdClass();
 $info->name  = fullname($user);
-$info->forum = format_string($forum->name);
+$info->forum = $cm->get_formatted_name();
 
 if ($mark == 'read') {
     if (!empty($d)) {
-        if (! $discussion = $DB->get_record('forum_discussions', array('id'=> $d, 'forum'=> $forum->id))) {
+        if (! $discussion = $DB->get_record('forum_discussions', array('id'=> $d, 'forum'=> $f))) {
             print_error('invaliddiscussionid', 'forum');
         }
 
@@ -90,7 +78,7 @@ if ($mark == 'read') {
             // may return 0
             $currentgroup=false;
         }
-        forum_tp_mark_forum_read($user, $forum->id, $currentgroup);
+        forum_tp_mark_forum_read($user, $f, $currentgroup);
     }
 
 /// FUTURE - Add ability to mark them as unread.
