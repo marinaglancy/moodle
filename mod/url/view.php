@@ -27,24 +27,16 @@ require('../../config.php');
 require_once("$CFG->dirroot/mod/url/locallib.php");
 require_once($CFG->libdir . '/completionlib.php');
 
-$id       = optional_param('id', 0, PARAM_INT);        // Course module ID
+$cmid     = optional_param('id', 0, PARAM_INT);        // Course module ID
 $u        = optional_param('u', 0, PARAM_INT);         // URL instance id
 $redirect = optional_param('redirect', 0, PARAM_BOOL);
 
 if ($u) {  // Two ways to specify the module
-    $url = $DB->get_record('url', array('id'=>$u), '*', MUST_EXIST);
-    $cm = get_coursemodule_from_instance('url', $url->id, $url->course, false, MUST_EXIST);
-
+    list($context, $course, $cm) = $PAGE->login_to_activity('url', $u, null, PAGELOGIN_ALLOW_FRONTPAGE_GUEST);
 } else {
-    $cm = get_coursemodule_from_id('url', $id, 0, false, MUST_EXIST);
-    $url = $DB->get_record('url', array('id'=>$cm->instance), '*', MUST_EXIST);
+    list($context, $course, $cm) = $PAGE->login_to_cm('url', $cmid, null, PAGELOGIN_ALLOW_FRONTPAGE_GUEST);
 }
-
-$course = $DB->get_record('course', array('id'=>$cm->course), '*', MUST_EXIST);
-
-require_course_login($course, true, $cm);
-$context = context_module::instance($cm->id);
-require_capability('mod/url:view', $context);
+$url = $PAGE->activityrecord;
 
 $params = array(
     'context' => $context,

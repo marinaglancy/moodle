@@ -35,17 +35,13 @@ $unsigned = optional_param('unsigned', '0', PARAM_INT);
 
 $launchcontainer = optional_param('launch_container', LTI_LAUNCH_CONTAINER_WINDOW, PARAM_INT);
 
-$course = $DB->get_record('course', array('id' => $courseid), '*', MUST_EXIST);
-$lti = null;
+$cm = null;
 $context = null;
 if (!empty($instanceid)) {
-    $lti = $DB->get_record('lti', array('id' => $instanceid), '*', MUST_EXIST);
-    $cm = get_coursemodule_from_instance('lti', $lti->id, $lti->course, false, MUST_EXIST);
-    $context = context_module::instance($cm->id);
+    list($context, $course, $cm) = $PAGE->login_to_activity('lti', $instanceid, $courseid);
+} else {
+    list($coursecontext, $course) = $PAGE->login($courseid);
 }
-
-
-require_login($course);
 
 if (!empty($errormsg)) {
     $url = new moodle_url('/mod/lti/return.php', array('course' => $courseid));
@@ -63,8 +59,8 @@ if (!empty($errormsg)) {
     }
 
     echo $OUTPUT->header();
-    if (!empty($lti) and !empty($context)) {
-        echo $OUTPUT->heading(format_string($lti->name, true, array('context' => $context)));
+    if ($cm) {
+        echo $OUTPUT->heading($cm->get_formatted_name());
     }
 
     echo get_string('lti_launch_error', 'lti');
@@ -82,8 +78,8 @@ if (!empty($errormsg)) {
 
         echo get_string('lti_launch_error_unsigned_help', 'lti', $links);
 
-        if (!empty($lti)) {
-            $adminrequesturl = new moodle_url('/mod/lti/request_tool.php', array('instanceid' => $lti->id));
+        if (!empty($cm)) {
+            $adminrequesturl = new moodle_url('/mod/lti/request_tool.php', array('instanceid' => $cm->instance));
             $links->admin_request_url = $adminrequesturl->out(false);
             echo get_string('lti_launch_error_tool_request', 'lti', $links);
         }

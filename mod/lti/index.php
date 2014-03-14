@@ -50,13 +50,11 @@ require_once($CFG->dirroot.'/mod/lti/lib.php');
 
 $id = required_param('id', PARAM_INT);   // course id
 
-$course = $DB->get_record('course', array('id'=>$id), '*', MUST_EXIST);
-
-require_login($course);
+list($context, $course) = $PAGE->login($id);
 $PAGE->set_pagelayout('incourse');
 
 $params = array(
-    'context' => context_course::instance($course->id)
+    'context' => $context
 );
 $event = \mod_lti\event\course_module_instance_list_viewed::create($params);
 $event->add_record_snapshot('course', $course);

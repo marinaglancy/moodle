@@ -53,19 +53,14 @@ $id = optional_param('id', 0, PARAM_INT);
 $l  = optional_param('l', 0, PARAM_INT);
 
 if ($l) {
-    $lti = $DB->get_record('lti', array('id' => $l), '*', MUST_EXIST);
-    $cm = get_coursemodule_from_instance('lti', $lti->id, $lti->course, false, MUST_EXIST);
+    list($context, $course, $cm) = $PAGE->login_to_activity('lti', $l, null, PAGELOGIN_NO_AUTOLOGIN);
 } else {
-    $cm = get_coursemodule_from_id('lti', $id, 0, false, MUST_EXIST);
-    $lti = $DB->get_record('lti', array('id' => $cm->instance), '*', MUST_EXIST);
+    list($context, $course, $cm) = $PAGE->login_to_cm('lti', $id, null, PAGELOGIN_NO_AUTOLOGIN);
 }
 
-$course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
-
-require_login($course, false, $cm);
-require_capability('mod/lti:view', context_module::instance($cm->id));
+require_capability('mod/lti:view', $context);
 
 debugging('This file has been deprecated.  Links to this file should automatically '.
     'fallback to /mod/lti/view.php once this file has been deleted.', DEBUG_DEVELOPER);
 
-redirect(new moodle_url('/mod/lti/view.php', array('l' => $lti->id)));
+redirect(new moodle_url('/mod/lti/view.php', array('l' => $cm->instance)));

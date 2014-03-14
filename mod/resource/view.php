@@ -27,30 +27,25 @@ require('../../config.php');
 require_once($CFG->dirroot.'/mod/resource/locallib.php');
 require_once($CFG->libdir.'/completionlib.php');
 
-$id       = optional_param('id', 0, PARAM_INT); // Course Module ID
+$cmid     = optional_param('id', 0, PARAM_INT); // Course Module ID
 $r        = optional_param('r', 0, PARAM_INT);  // Resource instance ID
 $redirect = optional_param('redirect', 0, PARAM_BOOL);
 
+$PAGE->login_expected(PAGELOGIN_ALLOW_FRONTPAGE_GUEST);
 if ($r) {
     if (!$resource = $DB->get_record('resource', array('id'=>$r))) {
         resource_redirect_if_migrated($r, 0);
         print_error('invalidaccessparameter');
     }
-    $cm = get_coursemodule_from_instance('resource', $resource->id, $resource->course, false, MUST_EXIST);
-
+    list($context, $course, $cm) = $PAGE->login_to_activity('resource', $resource);
 } else {
-    if (!$cm = get_coursemodule_from_id('resource', $id)) {
-        resource_redirect_if_migrated(0, $id);
+    if (!$cmrecord = $DB->get_record('course_modules', array('id' => $cmid))) {
+        resource_redirect_if_migrated(0, $cmid);
         print_error('invalidcoursemodule');
     }
-    $resource = $DB->get_record('resource', array('id'=>$cm->instance), '*', MUST_EXIST);
+    list($context, $course, $cm) = $PAGE->login_to_cm('resource', $cmrecord);
+    $resource = $PAGE->activityrecord;
 }
-
-$course = $DB->get_record('course', array('id'=>$cm->course), '*', MUST_EXIST);
-
-require_course_login($course, true, $cm);
-$context = context_module::instance($cm->id);
-require_capability('mod/resource:view', $context);
 
 $params = array(
     'context' => $context,

@@ -29,13 +29,8 @@ require_once($CFG->dirroot.'/mod/lti/locallib.php');
 
 $instanceid = required_param('instanceid', PARAM_INT);
 
-$lti = $DB->get_record('lti', array('id' => $instanceid));
-$course = $DB->get_record('course', array('id' => $lti->course));
-$cm = get_coursemodule_from_instance('lti', $lti->id, $lti->course, false, MUST_EXIST);
-$context = context_module::instance($cm->id);
-
-require_login($course);
-
+list($context, $course, $cm) = $PAGE->login_to_activity('lti', $instanceid, null, PAGELOGIN_NO_AUTOLOGIN);
+$lti = $PAGE->activityrecord;
 require_capability('mod/lti:requesttooladd', context_course::instance($lti->course));
 
 $baseurl = lti_get_domain_from_url($lti->toolurl);
@@ -46,8 +41,6 @@ $PAGE->set_url($url);
 $pagetitle = strip_tags($course->shortname);
 $PAGE->set_title($pagetitle);
 $PAGE->set_heading($course->fullname);
-
-$PAGE->set_pagelayout('incourse');
 
 echo $OUTPUT->header();
 echo $OUTPUT->heading(format_string($lti->name, true, array('context' => $context)));

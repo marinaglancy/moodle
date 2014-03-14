@@ -76,7 +76,7 @@ function url_fix_submitted_url($url) {
  * This function does not include any XSS protection.
  *
  * @param string $url
- * @param object $cm
+ * @param stdClass|cm_info $cm
  * @param object $course
  * @param object $config
  * @return string url with & encoded as &amp;
@@ -145,7 +145,7 @@ function url_filter_callback($matches) {
 /**
  * Print url header.
  * @param object $url
- * @param object $cm
+ * @param stdClass|cm_info $cm
  * @param object $course
  * @return void
  */
@@ -161,7 +161,7 @@ function url_print_header($url, $cm, $course) {
 /**
  * Print url heading.
  * @param object $url
- * @param object $cm
+ * @param stdClass|cm_info $cm
  * @param object $course
  * @param bool $notused This variable is no longer used.
  * @return void
@@ -174,7 +174,7 @@ function url_print_heading($url, $cm, $course, $notused = false) {
 /**
  * Print url introduction.
  * @param object $url
- * @param object $cm
+ * @param stdClass|cm_info $cm
  * @param object $course
  * @param bool $ignoresettings print even if not specified in modedit
  * @return void
@@ -195,7 +195,7 @@ function url_print_intro($url, $cm, $course, $ignoresettings=false) {
 /**
  * Display url frames.
  * @param object $url
- * @param object $cm
+ * @param stdClass|cm_info $cm
  * @param object $course
  * @return does not return
  */
@@ -248,7 +248,7 @@ EOF;
 /**
  * Print url info and link.
  * @param object $url
- * @param object $cm
+ * @param stdClass|cm_info $cm
  * @param object $course
  * @return does not return
  */
@@ -288,7 +288,7 @@ function url_print_workaround($url, $cm, $course) {
 /**
  * Display embedded url file.
  * @param object $url
- * @param object $cm
+ * @param stdClass|cm_info $cm
  * @param object $course
  * @return does not return
  */
@@ -446,7 +446,7 @@ function url_get_variable_options($config) {
 /**
  * Get the parameter values that may be appended to URL
  * @param object $url module instance
- * @param object $cm
+ * @param stdClass|cm_info $cm
  * @param object $course
  * @param object $config module config options
  * @return array of parameter values
