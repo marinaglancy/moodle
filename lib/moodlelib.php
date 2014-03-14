@@ -2803,6 +2803,7 @@ function get_login_url() {
  * @package    core_access
  * @category   access
  *
+ * @global moodle_page $PAGE
  * @param mixed $courseorid id of the course or course object
  * @param bool $autologinguest default true
  * @param object $cm course module object
@@ -2815,46 +2816,57 @@ function get_login_url() {
  * @throws require_login_exception
  */
 function require_login($courseorid = null, $autologinguest = true, $cm = null, $setwantsurltome = true, $preventredirect = false) {
-    global $CFG, $SESSION, $USER, $PAGE, $SITE, $DB, $OUTPUT;
+    global $PAGE;
 
-    // Must not redirect when byteserving already started.
-    if (!empty($_SERVER['HTTP_RANGE'])) {
-        $preventredirect = true;
+    $logintype = 0;
+    if (!$autologinguest) {
+        $logintype = $logintype | PAGELOGIN_NO_AUTOLOGIN;
+    }
+    if (!$setwantsurltome) {
+        $logintype = $logintype | PAGELOGIN_DO_NOT_SET_WANTSURL;
+    }
+    if ($preventredirect) {
+        $logintype = $logintype | PAGELOGIN_PREVENT_REDIRECT;
     }
 
-    // Setup global $COURSE, themes, language and locale.
-    if (!empty($courseorid)) {
-        if (is_object($courseorid)) {
-            $course = $courseorid;
-        } else if ($courseorid == SITEID) {
-            $course = clone($SITE);
-        } else {
-            $course = $DB->get_record('course', array('id' => $courseorid), '*', MUST_EXIST);
+    if ($cm) {
+        $modname = null;
+        if (!empty($cm->modname)) {
+            $modname = $cm->modname;
         }
-        if ($cm) {
-            if ($cm->course != $course->id) {
-                throw new coding_exception('course and cm parameters in require_login() call do not match!!');
-            }
-            // Make sure we have a $cm from get_fast_modinfo as this contains activity access details.
-            if (!($cm instanceof cm_info)) {
-                // Note: nearly all pages call get_fast_modinfo anyway and it does not make any
-                // db queries so this is not really a performance concern, however it is obviously
-                // better if you use get_fast_modinfo to get the cm before calling this.
-                $modinfo = get_fast_modinfo($course);
-                $cm = $modinfo->get_cm($cm->id);
-            }
-            $PAGE->set_cm($cm, $course); // Set's up global $COURSE.
-            $PAGE->set_pagelayout('incourse');
-        } else {
-            $PAGE->set_course($course); // Set's up global $COURSE.
-        }
+        $PAGE->login_to_cm($modname, $cm, $courseorid, $logintype);
     } else {
-        // Do not touch global $COURSE via $PAGE->set_course(),
-        // the reasons is we need to be able to call require_login() at any time!!
+        $PAGE->login($courseorid, $logintype);
+    }
+}
+
+/**
+ * Validates user login.
+ *
+ * @global moodle_page $PAGE
+ * @global moodle_database $DB
+ * @param int $logintype
+ * @param stdClass $course
+ * @param cm_info $cm
+ * @throws coding_exception
+ * @throws require_login_exception
+ */
+function validate_login($logintype, $course = null, $cm = null) {
+    global $CFG, $SESSION, $USER, $DB, $SITE;
+
+    $autologinguest = !($logintype & PAGELOGIN_NO_AUTOLOGIN);
+    $setwantsurltome = !($logintype & PAGELOGIN_DO_NOT_SET_WANTSURL);
+    $preventredirect = $logintype & PAGELOGIN_PREVENT_REDIRECT;
+    $allowfrontpageguest = $logintype & PAGELOGIN_ALLOW_FRONTPAGE_GUEST;
+
+    if (empty($course)) {
         $course = $SITE;
-        if ($cm) {
-            throw new coding_exception('cm parameter in require_login() requires valid course parameter!');
-        }
+    }
+
+    if ($allowfrontpageguest && $course->id == SITEID && empty($CFG->forcelogin) && (!$cm || $cm->uservisible)) {
+        // Some site pages may not require login (for example viewing site news forum or other activities on the front page).
+        user_accesstime_log($course->id);
+        return;
     }
 
     // If this is an AJAX request and $setwantsurltome is true then we need to override it and set it to false.
@@ -3004,13 +3016,7 @@ function require_login($courseorid = null, $autologinguest = true, $cm = null, $
             if (!$course->visible and !has_capability('moodle/course:viewhiddencourses', $coursecontext)) {
                 // Originally there was also test of parent category visibility, BUT is was very slow in complex queries
                 // involving "my courses" now it is also possible to simply hide all courses user is not enrolled in :-).
-                if ($preventredirect) {
-                    throw new require_login_exception('Course is hidden');
-                }
-                // We need to override the navigation URL as the course won't have been added to the navigation and thus
-                // the navigation will mess up when trying to find it.
-                navigation_node::override_active_url(new moodle_url('/'));
-                notice(get_string('coursehidden'), $CFG->wwwroot .'/');
+                throw new require_login_exception('Course is hidden');
             }
         }
     }
@@ -3023,12 +3029,8 @@ function require_login($courseorid = null, $autologinguest = true, $cm = null, $
             // Make sure the REAL person can access this course first.
             $realuser = \core\session\manager::get_realuser();
             if (!is_enrolled($coursecontext, $realuser->id, '', true) and
-                !is_viewing($coursecontext, $realuser->id) and !is_siteadmin($realuser->id)) {
-                if ($preventredirect) {
-                    throw new require_login_exception('Invalid course login-as access');
-                }
-                echo $OUTPUT->header();
-                notice(get_string('studentnotallowed', '', fullname($USER, true)), $CFG->wwwroot .'/');
+                    !is_viewing($coursecontext, $realuser->id) and !is_siteadmin($realuser->id)) {
+                throw new require_login_exception('Invalid course login-as access');
             }
         }
 
@@ -3118,7 +3120,7 @@ function require_login($courseorid = null, $autologinguest = true, $cm = null, $
         }
 
         if (!$access) {
-            if ($preventredirect) {
+            if ($preventredirect || $cm) {
                 throw new require_login_exception('Not enrolled');
             }
             if ($setwantsurltome) {
@@ -3130,15 +3132,7 @@ function require_login($courseorid = null, $autologinguest = true, $cm = null, $
 
     // Check visibility of activity to current user; includes visible flag, groupmembersonly, conditional availability, etc.
     if ($cm && !$cm->uservisible) {
-        if ($preventredirect) {
-            throw new require_login_exception('Activity is hidden');
-        }
-        if ($course->id != SITEID) {
-            $url = new moodle_url('/course/view.php', array('id' => $course->id));
-        } else {
-            $url = new moodle_url('/');
-        }
-        redirect($url, get_string('activityiscurrentlyhidden'));
+        throw new require_login_exception('Activity is hidden');
     }
 
     // Finally access granted, update lastaccess times.
@@ -3210,66 +3204,27 @@ function require_logout() {
  * @throws coding_exception
  */
 function require_course_login($courseorid, $autologinguest = true, $cm = null, $setwantsurltome = true, $preventredirect = false) {
-    global $CFG, $PAGE, $SITE;
-    $issite = ((is_object($courseorid) and $courseorid->id == SITEID)
-          or (!is_object($courseorid) and $courseorid == SITEID));
-    if ($issite && !empty($cm) && !($cm instanceof cm_info)) {
-        // Note: nearly all pages call get_fast_modinfo anyway and it does not make any
-        // db queries so this is not really a performance concern, however it is obviously
-        // better if you use get_fast_modinfo to get the cm before calling this.
-        if (is_object($courseorid)) {
-            $course = $courseorid;
-        } else {
-            $course = clone($SITE);
-        }
-        $modinfo = get_fast_modinfo($course);
-        $cm = $modinfo->get_cm($cm->id);
+    global $PAGE;
+
+    $logintype = PAGELOGIN_ALLOW_FRONTPAGE_GUEST;
+    if (!$autologinguest) {
+        $logintype = $logintype | PAGELOGIN_NO_AUTOLOGIN;
     }
-    if (!empty($CFG->forcelogin)) {
-        // Login required for both SITE and courses.
-        require_login($courseorid, $autologinguest, $cm, $setwantsurltome, $preventredirect);
+    if (!$setwantsurltome) {
+        $logintype = $logintype | PAGELOGIN_DO_NOT_SET_WANTSURL;
+    }
+    if ($preventredirect) {
+        $logintype = $logintype | PAGELOGIN_PREVENT_REDIRECT;
+    }
 
-    } else if ($issite && !empty($cm) and !$cm->uservisible) {
-        // Always login for hidden activities.
-        require_login($courseorid, $autologinguest, $cm, $setwantsurltome, $preventredirect);
-
-    } else if ($issite) {
-        // Login for SITE not required.
-        if ($cm and empty($cm->visible)) {
-            // Hidden activities are not accessible without login.
-            require_login($courseorid, $autologinguest, $cm, $setwantsurltome, $preventredirect);
-        } else if ($cm and !empty($CFG->enablegroupmembersonly) and $cm->groupmembersonly) {
-            // Not-logged-in users do not have any group membership.
-            require_login($courseorid, $autologinguest, $cm, $setwantsurltome, $preventredirect);
-        } else {
-            // We still need to instatiate PAGE vars properly so that things that rely on it like navigation function correctly.
-            if (!empty($courseorid)) {
-                if (is_object($courseorid)) {
-                    $course = $courseorid;
-                } else {
-                    $course = clone($SITE);
-                }
-                if ($cm) {
-                    if ($cm->course != $course->id) {
-                        throw new coding_exception('course and cm parameters in require_course_login() call do not match!!');
-                    }
-                    $PAGE->set_cm($cm, $course);
-                    $PAGE->set_pagelayout('incourse');
-                } else {
-                    $PAGE->set_course($course);
-                }
-            } else {
-                // If $PAGE->course, and hence $PAGE->context, have not already been set up properly, set them up now.
-                $PAGE->set_course($PAGE->course);
-            }
-            // TODO: verify conditional activities here.
-            user_accesstime_log(SITEID);
-            return;
+    if ($cm) {
+        $modname = null;
+        if (!empty($cm->modname)) {
+            $modname = $cm->modname;
         }
-
+        $PAGE->login_to_cm($modname, $cm, $courseorid, $logintype);
     } else {
-        // Course login always required.
-        require_login($courseorid, $autologinguest, $cm, $setwantsurltome, $preventredirect);
+        $PAGE->login($courseorid, $logintype);
     }
 }
 
