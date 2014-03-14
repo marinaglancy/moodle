@@ -27,11 +27,11 @@ require_once("lib.php");
 require_once('import_form.php');
 
 // get parameters
-$id = required_param('id', PARAM_INT);
+$cmid = required_param('id', PARAM_INT);
 $choosefile = optional_param('choosefile', false, PARAM_PATH);
 $action = optional_param('action', false, PARAM_ALPHA);
 
-$url = new moodle_url('/mod/feedback/import.php', array('id'=>$id));
+$url = new moodle_url('/mod/feedback/import.php', array('id'=>$cmid));
 if ($choosefile !== false) {
     $url->param('choosefile', $choosefile);
 }
@@ -40,26 +40,12 @@ if ($action !== false) {
 }
 $PAGE->set_url($url);
 
-if (! $cm = get_coursemodule_from_id('feedback', $id)) {
-    print_error('invalidcoursemodule');
-}
-
-if (! $course = $DB->get_record("course", array("id"=>$cm->course))) {
-    print_error('coursemisconf');
-}
-
-if (! $feedback = $DB->get_record("feedback", array("id"=>$cm->instance))) {
-    print_error('invalidcoursemodule');
-}
-
-$context = context_module::instance($cm->id);
-
-require_login($course, true, $cm);
-
+list($context, $course, $cm) = $PAGE->login_to_cm('feedback', $cmid);
+$feedbackid = $cm->instance;
 require_capability('mod/feedback:edititems', $context);
 
 $mform = new feedback_import_form();
-$newformdata = array('id'=>$id,
+$newformdata = array('id'=>$cmid,
                     'deleteolditems'=>'1',
                     'action'=>'choosefile',
                     'confirmadd'=>'1',
@@ -68,7 +54,7 @@ $mform->set_data($newformdata);
 $formdata = $mform->get_data();
 
 if ($mform->is_cancelled()) {
-    redirect('edit.php?id='.$id.'&do_show=templates');
+    redirect('edit.php?id='.$cmid.'&do_show=templates');
 }
 
 // process if we are happy file is ok
@@ -76,12 +62,12 @@ if ($choosefile) {
     $xmlcontent = $mform->get_file_content('choosefile');
 
     if (!$xmldata = feedback_load_xml_data($xmlcontent)) {
-        print_error('cannotloadxml', 'feedback', 'edit.php?id='.$id);
+        print_error('cannotloadxml', 'feedback', 'edit.php?id='.$cmid);
     }
 
-    $importerror = feedback_import_loaded_data($xmldata, $feedback->id);
+    $importerror = feedback_import_loaded_data($xmldata, $feedbackid);
     if ($importerror->stat == true) {
-        $url = 'edit.php?id='.$id.'&do_show=templates';
+        $url = 'edit.php?id='.$cmid.'&do_show=templates';
         redirect($url, get_string('import_successfully', 'feedback'), 3);
         exit;
     }
@@ -93,9 +79,9 @@ $strfeedbacks = get_string("modulenameplural", "feedback");
 $strfeedback  = get_string("modulename", "feedback");
 
 $PAGE->set_heading($course->fullname);
-$PAGE->set_title($feedback->name);
+$PAGE->set_title($cm->name);
 echo $OUTPUT->header();
-echo $OUTPUT->heading(format_string($feedback->name));
+echo $OUTPUT->heading($cm->get_formatted_name());
 /// print the tabs
 require('tabs.php');
 

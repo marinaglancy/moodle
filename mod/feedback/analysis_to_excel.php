@@ -28,34 +28,19 @@ require_once("$CFG->libdir/excellib.class.php");
 
 feedback_load_feedback_items();
 
-$id = required_param('id', PARAM_INT);  //the POST dominated the GET
+$cmid = required_param('id', PARAM_INT);  //the POST dominated the GET
 $coursefilter = optional_param('coursefilter', '0', PARAM_INT);
 
-$url = new moodle_url('/mod/feedback/analysis_to_excel.php', array('id'=>$id));
+$url = new moodle_url('/mod/feedback/analysis_to_excel.php', array('id'=>$cmid));
 if ($coursefilter !== '0') {
     $url->param('coursefilter', $coursefilter);
 }
 $PAGE->set_url($url);
 
-$formdata = data_submitted();
-
-if (! $cm = get_coursemodule_from_id('feedback', $id)) {
-    print_error('invalidcoursemodule');
-}
-
-if (! $course = $DB->get_record("course", array("id"=>$cm->course))) {
-    print_error('coursemisconf');
-}
-
-if (! $feedback = $DB->get_record("feedback", array("id"=>$cm->instance))) {
-    print_error('invalidcoursemodule');
-}
-
-$context = context_module::instance($cm->id);
-
-require_login($course, true, $cm);
-
+list($context, $course, $cm) = $PAGE->login_to_cm('feedback', $cmid);
 require_capability('mod/feedback:viewreports', $context);
+
+$feedback = $PAGE->activityrecord;
 
 //buffering any output
 //this prevents some output before the excel-header will be send
@@ -82,7 +67,7 @@ $params = array('feedback' => $feedback->id, 'hasvalue' => 1);
 if (!$items = $DB->get_records('feedback_item', $params, 'position')) {
     print_error('no_items_available_yet',
                 'feedback',
-                $CFG->wwwroot.'/mod/feedback/view.php?id='.$id);
+                $CFG->wwwroot.'/mod/feedback/view.php?id='.$cmid);
     exit;
 }
 
@@ -303,7 +288,7 @@ function feedback_excelprint_detailed_items(&$worksheet, $xls_formats,
     }
     $worksheet->write_number($row_offset, $col_offset, $courseid, $xls_formats->default);
     $col_offset++;
-    if (isset($courseid) AND $course = $DB->get_record('course', array('id' => $courseid))) {
+    if (isset($courseid) AND ($course = get_course($courseid))) {
         $coursecontext = context_course::instance($courseid);
         $shortname = format_string($course->shortname, true, array('context' => $coursecontext));
         $worksheet->write_string($row_offset, $col_offset, $shortname, $xls_formats->default);

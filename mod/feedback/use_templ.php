@@ -40,22 +40,8 @@ if ($deleteolditems !== 0) {
 }
 $PAGE->set_url($url);
 
-if (! $cm = get_coursemodule_from_id('feedback', $id)) {
-    print_error('invalidcoursemodule');
-}
-
-if (! $course = $DB->get_record("course", array("id"=>$cm->course))) {
-    print_error('coursemisconf');
-}
-
-if (! $feedback = $DB->get_record("feedback", array("id"=>$cm->instance))) {
-    print_error('invalidcoursemodule');
-}
-
-$context = context_module::instance($cm->id);
-
-require_login($course, true, $cm);
-
+list($context, $course, $cm) = $PAGE->login_to_cm('feedback', $cmid);
+$feedback = $PAGE->activityrecord;
 require_capability('mod/feedback:edititems', $context);
 
 $mform = new mod_feedback_use_templ_form();

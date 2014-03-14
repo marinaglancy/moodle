@@ -29,7 +29,7 @@ require_once($CFG->libdir.'/tablelib.php');
 ////////////////////////////////////////////////////////
 //get the params
 ////////////////////////////////////////////////////////
-$id = required_param('id', PARAM_INT);
+$cmid = required_param('id', PARAM_INT);
 $subject = optional_param('subject', '', PARAM_CLEANHTML);
 $message = optional_param('message', '', PARAM_CLEANHTML);
 $format = optional_param('format', FORMAT_MOODLE, PARAM_INT);
@@ -43,17 +43,9 @@ $current_tab = 'nonrespondents';
 ////////////////////////////////////////////////////////
 //get the objects
 ////////////////////////////////////////////////////////
-if (! $cm = get_coursemodule_from_id('feedback', $id)) {
-    print_error('invalidcoursemodule');
-}
 
-if (! $course = $DB->get_record("course", array("id"=>$cm->course))) {
-    print_error('coursemisconf');
-}
-
-if (! $feedback = $DB->get_record("feedback", array("id"=>$cm->instance))) {
-    print_error('invalidcoursemodule');
-}
+list($context, $course, $cm) = $PAGE->login_to_cm('feedback', $cmid);
+$feedback = $PAGE->activityrecord;
 
 //this page only can be shown on nonanonymous feedbacks in courses
 //we should never reach this page
@@ -65,12 +57,8 @@ $url = new moodle_url('/mod/feedback/show_nonrespondents.php', array('id'=>$cm->
 
 $PAGE->set_url($url);
 
-$context = context_module::instance($cm->id);
-
 //we need the coursecontext to allow sending of mass mails
 $coursecontext = context_course::instance($course->id);
-
-require_login($course, true, $cm);
 
 if (($formdata = data_submitted()) AND !confirm_sesskey()) {
     print_error('invalidsesskey');
@@ -146,18 +134,14 @@ require('tabs.php');
 /// Print the users with no responses
 ////////////////////////////////////////////////////////
 //get the effective groupmode of this course and module
-if (isset($cm->groupmode) && empty($course->groupmodeforce)) {
-    $groupmode =  $cm->groupmode;
-} else {
-    $groupmode = $course->groupmode;
-}
+$groupmode =  $cm->effectivegroupmode;
 
 $groupselect = groups_print_activity_menu($cm, $url->out(), true);
 $mygroupid = groups_get_activity_group($cm);
 
 // preparing the table for output
 $baseurl = new moodle_url('/mod/feedback/show_nonrespondents.php');
-$baseurl->params(array('id'=>$id, 'showall'=>$showall));
+$baseurl->params(array('id'=>$cmid, 'showall'=>$showall));
 
 $tablecolumns = array('userpic', 'fullname', 'status');
 $tableheaders = array(get_string('userpic'), get_string('fullnameuser'), get_string('status'));
@@ -286,7 +270,7 @@ if (!$students) {
         echo '</div>';
         echo '<input type="hidden" name="sesskey" value="'.sesskey().'" />';
         echo '<input type="hidden" name="action" value="sendmessage" />';
-        echo '<input type="hidden" name="id" value="'.$id.'" />';
+        echo '<input type="hidden" name="id" value="'.$cmid.'" />';
         echo '</fieldset>';
         echo '</form>';
         //include the needed js

@@ -27,14 +27,14 @@ require_once("lib.php");
 
 $current_tab = 'analysis';
 
-$id = required_param('id', PARAM_INT);  //the POST dominated the GET
+$cmid = required_param('id', PARAM_INT);  //the POST dominated the GET
 $coursefilter = optional_param('coursefilter', '0', PARAM_INT);
 $courseitemfilter = optional_param('courseitemfilter', '0', PARAM_INT);
 $courseitemfiltertyp = optional_param('courseitemfiltertyp', '0', PARAM_ALPHANUM);
 $searchcourse = optional_param('searchcourse', '', PARAM_RAW);
 $courseid = optional_param('courseid', false, PARAM_INT);
 
-$url = new moodle_url('/mod/feedback/analysis_course.php', array('id'=>$id));
+$url = new moodle_url('/mod/feedback/analysis_course.php', array('id'=>$cmid));
 if ($courseid !== false) {
     $url->param('courseid', $courseid);
 }
@@ -56,21 +56,8 @@ if (($searchcourse OR $courseitemfilter OR $coursefilter) AND !confirm_sesskey()
     print_error('invalidsesskey');
 }
 
-if (! $cm = get_coursemodule_from_id('feedback', $id)) {
-    print_error('invalidcoursemodule');
-}
-
-if (! $course = $DB->get_record("course", array("id"=>$cm->course))) {
-    print_error('coursemisconf');
-}
-
-if (! $feedback = $DB->get_record("feedback", array("id"=>$cm->instance))) {
-    print_error('invalidcoursemodule');
-}
-
-$context = context_module::instance($cm->id);
-
-require_login($course, true, $cm);
+list($context, $course, $cm) = $PAGE->login_to_cm('feedback', $cmid);
+$feedback = $PAGE->activityrecord;
 
 if (!($feedback->publish_stats OR has_capability('mod/feedback:viewreports', $context))) {
     print_error('error');
@@ -95,7 +82,7 @@ if (has_capability('mod/feedback:viewreports', $context)) {
     echo $OUTPUT->container_start('mdl-align');
     $aurl = new moodle_url('analysis_to_excel.php',
                            array('sesskey' => sesskey(),
-                                 'id' => $id,
+                                 'id' => $cmid,
                                  'coursefilter' => $coursefilter));
 
     echo $OUTPUT->single_button($aurl, get_string('export_to_excel', 'feedback'));
@@ -117,7 +104,7 @@ $items = $DB->get_records('feedback_item', $params, 'position');
 //show the count
 if (is_array($items)) {
     echo '<b>'.get_string('questions', 'feedback').': ' .count($items). ' </b><hr />';
-    echo '<a href="analysis_course.php?id=' . $id . '&courseid='.$courseid.'">';
+    echo '<a href="analysis_course.php?id=' . $cmid . '&courseid='.$courseid.'">';
     echo get_string('show_all', 'feedback');
     echo '</a>';
 } else {
@@ -167,7 +154,7 @@ if ($courseitemfilter > 0) {
     echo '<input id="searchcourse" type="text" name="searchcourse" value="'.s($searchcourse).'"/> ';
     echo '<input type="submit" value="'.get_string('search').'"/>';
     echo '<input type="hidden" name="sesskey" value="'.sesskey().'" />';
-    echo '<input type="hidden" name="id" value="'.$id.'" />';
+    echo '<input type="hidden" name="id" value="'.$cmid.'" />';
     echo '<input type="hidden" name="courseitemfilter" value="'.$courseitemfilter.'" />';
     echo '<input type="hidden" name="courseitemfiltertyp" value="'.$courseitemfiltertyp.'" />';
     echo '<input type="hidden" name="courseid" value="'.$courseid.'" />';

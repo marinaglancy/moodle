@@ -29,12 +29,12 @@ require_once($CFG->libdir.'/tablelib.php');
 
 $current_tab = 'templates';
 
-$id = required_param('id', PARAM_INT);
+$cmid = required_param('id', PARAM_INT);
 $canceldelete = optional_param('canceldelete', false, PARAM_INT);
 $shoulddelete = optional_param('shoulddelete', false, PARAM_INT);
 $deletetempl = optional_param('deletetempl', false, PARAM_INT);
 
-$url = new moodle_url('/mod/feedback/delete_template.php', array('id'=>$id));
+$url = new moodle_url('/mod/feedback/delete_template.php', array('id'=>$cmid));
 if ($canceldelete !== false) {
     $url->param('canceldelete', $canceldelete);
 }
@@ -51,37 +51,22 @@ if (($formdata = data_submitted()) AND !confirm_sesskey()) {
 }
 
 if ($canceldelete == 1) {
-    $editurl = new moodle_url('/mod/feedback/edit.php', array('id'=>$id, 'do_show'=>'templates'));
+    $editurl = new moodle_url('/mod/feedback/edit.php', array('id'=>$cmid, 'do_show'=>'templates'));
     redirect($editurl->out(false));
 }
 
-if (! $cm = get_coursemodule_from_id('feedback', $id)) {
-    print_error('invalidcoursemodule');
-}
-
-if (! $course = $DB->get_record("course", array("id"=>$cm->course))) {
-    print_error('coursemisconf');
-}
-
-if (! $feedback = $DB->get_record("feedback", array("id"=>$cm->instance))) {
-    print_error('invalidcoursemodule');
-}
-
-$context = context_module::instance($cm->id);
-
-require_login($course, true, $cm);
-
+list($context, $course, $cm) = $PAGE->login_to_cm('feedback', $cmid);
 require_capability('mod/feedback:deletetemplate', $context);
 
 $mform = new mod_feedback_delete_template_form();
-$newformdata = array('id'=>$id,
+$newformdata = array('id'=>$cmid,
                     'deletetempl'=>$deletetempl,
                     'confirmdelete'=>'1');
 
 $mform->set_data($newformdata);
 $formdata = $mform->get_data();
 
-$deleteurl = new moodle_url('/mod/feedback/delete_template.php', array('id'=>$id));
+$deleteurl = new moodle_url('/mod/feedback/delete_template.php', array('id'=>$cmid));
 
 if ($mform->is_cancelled()) {
     redirect($deleteurl->out(false));
@@ -108,9 +93,9 @@ $strfeedback  = get_string("modulename", "feedback");
 $strdeletefeedback = get_string('delete_template', 'feedback');
 
 $PAGE->set_heading($course->fullname);
-$PAGE->set_title($feedback->name);
+$PAGE->set_title($cm->name);
 echo $OUTPUT->header();
-echo $OUTPUT->heading(format_string($feedback->name));
+echo $OUTPUT->heading($cm->get_formatted_name());
 /// print the tabs
 require('tabs.php');
 
@@ -152,7 +137,7 @@ if ($shoulddelete == 1) {
             $data = array();
             $data[] = $template->name;
             $url = new moodle_url($deleteurl, array(
-                                            'id'=>$id,
+                                            'id'=>$cmid,
                                             'deletetempl'=>$template->id,
                                             'shoulddelete'=>1,
                                             ));
@@ -192,7 +177,7 @@ if ($shoulddelete == 1) {
                 $data = array();
                 $data[] = $template->name;
                 $url = new moodle_url($deleteurl, array(
-                                                'id'=>$id,
+                                                'id'=>$cmid,
                                                 'deletetempl'=>$template->id,
                                                 'shoulddelete'=>1,
                                                 ));
@@ -207,7 +192,7 @@ if ($shoulddelete == 1) {
 
     echo $OUTPUT->box_start('boxaligncenter boxwidthnormal');
     $url = new moodle_url($deleteurl, array(
-                                    'id'=>$id,
+                                    'id'=>$cmid,
                                     'canceldelete'=>1,
                                     ));
 

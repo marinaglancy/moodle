@@ -26,7 +26,7 @@ require_once("../../config.php");
 require_once("lib.php");
 require_once($CFG->libdir.'/tablelib.php');
 
-$id = required_param('id', PARAM_INT);
+$cmid = required_param('id', PARAM_INT);
 $showcompleted = optional_param('showcompleted', false, PARAM_INT);
 $do_show = optional_param('do_show', false, PARAM_ALPHA);
 $perpage = optional_param('perpage', FEEDBACK_DEFAULT_PAGE_COUNT, PARAM_INT);  // how many per page
@@ -34,28 +34,14 @@ $showall = optional_param('showall', false, PARAM_INT);  // should we show all u
 
 $current_tab = $do_show;
 
-$url = new moodle_url('/mod/feedback/show_entries_anonym.php', array('id'=>$id));
+$url = new moodle_url('/mod/feedback/show_entries_anonym.php', array('id'=>$cmid));
 // if ($userid !== '') {
     // $url->param('userid', $userid);
 // }
 $PAGE->set_url($url);
 
-if (! $cm = get_coursemodule_from_id('feedback', $id)) {
-    print_error('invalidcoursemodule');
-}
-
-if (! $course = $DB->get_record("course", array("id"=>$cm->course))) {
-    print_error('coursemisconf');
-}
-
-if (! $feedback = $DB->get_record("feedback", array("id"=>$cm->instance))) {
-    print_error('invalidcoursemodule');
-}
-
-$context = context_module::instance($cm->id);
-
-require_login($course, true, $cm);
-
+list($context, $course, $cm) = $PAGE->login_to_cm('feedback', $cmid);
+$feedback = $PAGE->activityrecord;
 require_capability('mod/feedback:viewreports', $context);
 
 /// Print the page header
@@ -100,7 +86,7 @@ if (!$showcompleted) {
 
     // preparing the table for output
     $baseurl = new moodle_url('/mod/feedback/show_entries_anonym.php');
-    $baseurl->params(array('id'=>$id, 'do_show'=>$do_show, 'showall'=>$showall));
+    $baseurl->params(array('id'=>$cmid, 'do_show'=>$do_show, 'showall'=>$showall));
 
     $tablecolumns = array('response', 'showresponse');
     $tableheaders = array('', '');
@@ -192,7 +178,7 @@ if (!$showcompleted) {
 //print the items
 if ($showcompleted) {
     $continueurl = new moodle_url('/mod/feedback/show_entries_anonym.php',
-                                array('id'=>$id, 'do_show'=>''));
+                                array('id'=>$cmid, 'do_show'=>''));
 
     echo $OUTPUT->continue_button($continueurl);
 
