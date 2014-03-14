@@ -32,7 +32,7 @@ require_once($CFG->dirroot.'/mod/book/locallib.php');
  *
  * @param array $chapters
  * @param stdClass $book
- * @param stdClass $cm
+ * @param stdClass|cm_info $cm
  * @return array
  */
 function booktool_print_get_toc($chapters, $book, $cm) {
