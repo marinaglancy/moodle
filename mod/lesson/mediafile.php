@@ -29,19 +29,14 @@
 require_once('../../config.php');
 require_once($CFG->dirroot.'/mod/lesson/locallib.php');
 
-$id = required_param('id', PARAM_INT);    // Course Module ID
+$cmid = required_param('id', PARAM_INT);    // Course Module ID
 $printclose = optional_param('printclose', 0, PARAM_INT);
 
-$cm = get_coursemodule_from_id('lesson', $id, 0, false, MUST_EXIST);
-$course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
-$lesson = new lesson($DB->get_record('lesson', array('id' => $cm->instance), '*', MUST_EXIST));
-
-require_login($course, false, $cm);
-
-$context = context_module::instance($cm->id);
+list($context, $course, $cm) = $PAGE->login_to_cm('lesson', $cmid, null, PAGELOGIN_NO_AUTOLOGIN);
+$lesson = new lesson($PAGE->activityrecord);
 $canmanage = has_capability('mod/lesson:manage', $context);
 
-$url = new moodle_url('/mod/lesson/mediafile.php', array('id'=>$id));
+$url = new moodle_url('/mod/lesson/mediafile.php', array('id'=>$cmid));
 if ($printclose !== '') {
     $url->param('printclose', $printclose);
 }

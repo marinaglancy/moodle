@@ -410,10 +410,9 @@ function lesson_displayleftif($lesson) {
 
 /**
  *
- * @param $cm
- * @param $lesson
- * @param $page
- * @return unknown_type
+ * @param stdClass|cm_info $cm
+ * @param lesson $lesson
+ * @param stdClass $timer
  */
 function lesson_add_fake_blocks($page, $cm, $lesson, $timer = null) {
     $bc = lesson_menu_block_contents($cm->id, $lesson);
@@ -562,7 +561,7 @@ function lesson_menu_block_contents($cmid, $lesson) {
 /**
  * Adds header buttons to the page for the lesson
  *
- * @param object $cm
+ * @param stdClass|cm_info $cm
  * @param object $context
  * @param bool $extraeditbuttons
  * @param int $lessonpageid
