@@ -33,15 +33,12 @@ require_once(dirname(__FILE__).'/allocation/lib.php');
 $cmid       = required_param('cmid', PARAM_INT);                    // course module
 $method     = optional_param('method', 'manual', PARAM_ALPHA);      // method to use
 
-$cm         = get_coursemodule_from_id('workshop', $cmid, 0, false, MUST_EXIST);
-$course     = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
-$workshop   = $DB->get_record('workshop', array('id' => $cm->instance), '*', MUST_EXIST);
-$workshop   = new workshop($workshop, $cm, $course);
+list($context, $course, $cm) = $PAGE->login_to_cm('workshop', $cmid, null, PAGELOGIN_NO_AUTOLOGIN);
+$workshoprecord = $PAGE->activityrecord;
+$workshop = new workshop($workshoprecord, $cm, $course);
 
 $PAGE->set_url($workshop->allocation_url($method));
 
-require_login($course, false, $cm);
-$context = $PAGE->context;
 require_capability('mod/workshop:allocate', $context);
 
 $PAGE->set_title($workshop->name);

@@ -27,15 +27,12 @@ require_once(dirname(dirname(dirname(__FILE__))).'/config.php');
 require_once(dirname(__FILE__).'/locallib.php');
 
 $cmid     = required_param('cmid', PARAM_INT);
-$cm       = get_coursemodule_from_id('workshop', $cmid, 0, false, MUST_EXIST);
-$course   = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
-$workshop = $DB->get_record('workshop', array('id' => $cm->instance), '*', MUST_EXIST);
-
-require_login($course, false, $cm);
+list($context, $course, $cm) = $PAGE->login_to_cm('workshop', $cmid, null, PAGELOGIN_NO_AUTOLOGIN);
+$workshoprecord = $PAGE->activityrecord;
 if (isguestuser()) {
     print_error('guestsarenotallowed');
 }
-$workshop = new workshop($workshop, $cm, $course);
+$workshop = new workshop($workshoprecord, $cm, $course);
 
 require_capability('mod/workshop:editdimensions', $workshop->context);
 $PAGE->set_url($workshop->previewform_url());

@@ -32,16 +32,13 @@ $id     = optional_param('id', 0, PARAM_INT);           // submission id
 $edit   = optional_param('edit', false, PARAM_BOOL);    // open for editing?
 $assess = optional_param('assess', false, PARAM_BOOL);  // instant assessment required
 
-$cm     = get_coursemodule_from_id('workshop', $cmid, 0, false, MUST_EXIST);
-$course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
-
-require_login($course, false, $cm);
+list($context, $course, $cminfo) = $PAGE->login_to_cm('workshop', $cmid, null, PAGELOGIN_NO_AUTOLOGIN);
 if (isguestuser()) {
     print_error('guestsarenotallowed');
 }
 
-$workshoprecord = $DB->get_record('workshop', array('id' => $cm->instance), '*', MUST_EXIST);
-$workshop = new workshop($workshoprecord, $cm, $course);
+$workshoprecord = $PAGE->activityrecord;
+$workshop = new workshop($workshoprecord, $cminfo, $course);
 
 $PAGE->set_url($workshop->submission_url(), array('cmid' => $cmid, 'id' => $id));
 
@@ -306,7 +303,7 @@ if (trim($workshop->instructauthors)) {
 if ($edit) {
     if (!empty($CFG->enableplagiarism)) {
         require_once($CFG->libdir.'/plagiarismlib.php');
-        echo plagiarism_print_disclosure($cm->id);
+        echo plagiarism_print_disclosure($cminfo->id);
     }
     $mform->display();
     echo $output->footer();

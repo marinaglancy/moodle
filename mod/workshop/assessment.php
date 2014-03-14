@@ -38,17 +38,17 @@ require_once(dirname(dirname(dirname(__FILE__))).'/config.php');
 require_once(dirname(__FILE__).'/locallib.php');
 
 $asid       = required_param('asid', PARAM_INT);  // assessment id
+
+$PAGE->login_expected(PAGELOGIN_NO_AUTOLOGIN);
 $assessment = $DB->get_record('workshop_assessments', array('id' => $asid), '*', MUST_EXIST);
 $submission = $DB->get_record('workshop_submissions', array('id' => $assessment->submissionid, 'example' => 0), '*', MUST_EXIST);
-$workshop   = $DB->get_record('workshop', array('id' => $submission->workshopid), '*', MUST_EXIST);
-$course     = $DB->get_record('course', array('id' => $workshop->course), '*', MUST_EXIST);
-$cm         = get_coursemodule_from_instance('workshop', $workshop->id, $course->id, false, MUST_EXIST);
+list($context, $course, $cm) = $PAGE->login_to_activity('workshop', $submission->workshopid);
 
-require_login($course, false, $cm);
+$workshoprecord = $PAGE->activityrecord;
+$workshop = new workshop($workshoprecord, $cm, $course);
 if (isguestuser()) {
     print_error('guestsarenotallowed');
 }
-$workshop = new workshop($workshop, $cm, $course);
 
 $PAGE->set_url($workshop->assess_url($assessment->id));
 $PAGE->set_title($workshop->name);

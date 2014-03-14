@@ -33,16 +33,13 @@ $delete     = optional_param('delete', false, PARAM_BOOL);  // example removal r
 $confirm    = optional_param('confirm', false, PARAM_BOOL); // example removal request confirmed
 $assess     = optional_param('assess', false, PARAM_BOOL);  // assessment required
 
-$cm         = get_coursemodule_from_id('workshop', $cmid, 0, false, MUST_EXIST);
-$course     = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
-
-require_login($course, false, $cm);
+list($context, $course, $cm) = $PAGE->login_to_cm('workshop', $cmid, null, PAGELOGIN_NO_AUTOLOGIN);
 if (isguestuser()) {
     print_error('guestsarenotallowed');
 }
 
-$workshop = $DB->get_record('workshop', array('id' => $cm->instance), '*', MUST_EXIST);
-$workshop = new workshop($workshop, $cm, $course);
+$workshoprecord = $PAGE->activityrecord;
+$workshop = new workshop($workshoprecord, $cm, $course);
 
 $PAGE->set_url($workshop->exsubmission_url($id), array('edit' => $edit));
 $PAGE->set_title($workshop->name);

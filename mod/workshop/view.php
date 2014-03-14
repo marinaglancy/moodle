@@ -30,7 +30,7 @@ require_once(dirname(dirname(dirname(__FILE__))).'/config.php');
 require_once(dirname(__FILE__).'/locallib.php');
 require_once($CFG->libdir.'/completionlib.php');
 
-$id         = optional_param('id', 0, PARAM_INT); // course_module ID, or
+$cmid       = optional_param('id', 0, PARAM_INT); // course_module ID, or
 $w          = optional_param('w', 0, PARAM_INT);  // workshop instance ID
 $editmode   = optional_param('editmode', null, PARAM_BOOL);
 $page       = optional_param('page', 0, PARAM_INT);
@@ -39,24 +39,20 @@ $sortby     = optional_param('sortby', 'lastname', PARAM_ALPHA);
 $sorthow    = optional_param('sorthow', 'ASC', PARAM_ALPHA);
 $eval       = optional_param('eval', null, PARAM_PLUGIN);
 
-if ($id) {
-    $cm             = get_coursemodule_from_id('workshop', $id, 0, false, MUST_EXIST);
-    $course         = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
-    $workshoprecord = $DB->get_record('workshop', array('id' => $cm->instance), '*', MUST_EXIST);
+if ($cmid) {
+    list($context, $course, $cminfo) = $PAGE->login_to_cm('workshop', $cmid);
 } else {
-    $workshoprecord = $DB->get_record('workshop', array('id' => $w), '*', MUST_EXIST);
-    $course         = $DB->get_record('course', array('id' => $workshoprecord->course), '*', MUST_EXIST);
-    $cm             = get_coursemodule_from_instance('workshop', $workshoprecord->id, $course->id, false, MUST_EXIST);
+    list($context, $course, $cminfo) = $PAGE->login_to_activity('workshop', $w);
 }
-
-require_login($course, true, $cm);
+$workshoprecord = $PAGE->activityrecord;
+$cm = $cminfo->get_course_module_record(true);
 require_capability('mod/workshop:view', $PAGE->context);
 
 $workshop = new workshop($workshoprecord, $cm, $course);
 
 // Mark viewed
 $completion = new completion_info($course);
-$completion->set_module_viewed($cm);
+$completion->set_module_viewed($cminfo);
 
 $eventdata = array();
 $eventdata['objectid']         = $workshop->id;
