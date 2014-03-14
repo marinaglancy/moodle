@@ -31,6 +31,7 @@ $mode    = optional_param('mode', "todaylogs", PARAM_ALPHA);
 
 $url = new moodle_url('/course/user.php', array('id'=>$id,'user'=>$user, 'mode'=>$mode));
 
+$PAGE->login_expected();
 $course = $DB->get_record('course', array('id'=>$id), '*', MUST_EXIST);
 $user = $DB->get_record("user", array("id"=>$user, 'deleted'=>0), '*', MUST_EXIST);
 
@@ -57,13 +58,13 @@ $personalcontext = context_user::instance($user->id);
 
 $PAGE->set_url('/course/user.php', array('id'=>$id, 'user'=>$user->id, 'mode'=>$mode));
 
-require_login();
+$PAGE->login();
 $PAGE->set_pagelayout('report');
 if (has_capability('moodle/user:viewuseractivitiesreport', $personalcontext) and !is_enrolled($coursecontext)) {
     // do not require parents to be enrolled in courses ;-)
     $PAGE->set_course($course);
 } else {
-    require_login($course);
+    $PAGE->login($course);
 }
 
 if ($user->deleted) {

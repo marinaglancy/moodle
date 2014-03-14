@@ -32,15 +32,11 @@ require_once('reset_form.php');
 
 $id = required_param('id', PARAM_INT);
 
-if (!$course = $DB->get_record('course', array('id'=>$id))) {
-    print_error("invalidcourseid");
-}
+list($context, $course) = $PAGE->login($id);
+require_capability('moodle/course:reset', $context);
 
 $PAGE->set_url('/course/reset.php', array('id'=>$id));
 $PAGE->set_pagelayout('admin');
-
-require_login($course);
-require_capability('moodle/course:reset', context_course::instance($course->id));
 
 $strreset       = get_string('reset');
 $strresetcourse = get_string('resetcourse');

@@ -36,23 +36,15 @@ if ($scaleid !== 0) {
 }
 $PAGE->set_url($url);
 
-$context = null;
-if ($course = $DB->get_record('course', array('id'=>$id))) {
-    require_login($course);
-    $context = context_course::instance($course->id);
-} else {
-    //$id will be 0 for site level scales
-    require_login();
-    $context = context_system::instance();
-}
-
-$PAGE->set_context($context);
+// $id may be 0 for system level.
+list($context, $course) = $PAGE->login($id);
 require_capability('moodle/course:viewscales', $context);
 
 $strscales = get_string("scales");
 $strcustomscales = get_string("scalescustom");
 $strstandardscales = get_string("scalesstandard");
 
+$PAGE->set_pagelayout('popup');
 $PAGE->set_title($strscales);
 if (!empty($course)) {
     $PAGE->set_heading($course->fullname);

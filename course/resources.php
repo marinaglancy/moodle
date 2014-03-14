@@ -28,9 +28,8 @@ require_once("$CFG->libdir/resourcelib.php");
 
 $id = required_param('id', PARAM_INT); // course id
 
-$course = $DB->get_record('course', array('id'=>$id), '*', MUST_EXIST);
+list($context, $course) = $PAGE->login($id, PAGELOGIN_ALLOW_FRONTPAGE_GUEST);
 $PAGE->set_pagelayout('course');
-require_course_login($course, true);
 
 // get list of all resource-like modules
 $allmodules = $DB->get_records('modules', array('visible'=>1));

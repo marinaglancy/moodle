@@ -32,6 +32,9 @@
         print_error('unspecifycourseid', 'error');
     }
 
+    // Mask error messages before user access is verified.
+    $PAGE->login_expected();
+
     $course = $DB->get_record('course', $params, '*', MUST_EXIST);
 
     $urlparams = array('id' => $course->id);
@@ -57,7 +60,7 @@
         role_switch($switchrole, $context);
     }
 
-    require_login($course);
+    $PAGE->login($course);
 
     // Switchrole - sanity check in cost-order...
     $reset_user_allowed_editing = false;
@@ -69,7 +72,7 @@
         if (is_array($aroles) && isset($aroles[$switchrole])) {
             role_switch($switchrole, $context);
             // Double check that this role is allowed here
-            require_login($course);
+            $PAGE->login($course);
         }
         // reset course page state - this prevents some weird problems ;-)
         $USER->activitycopy = false;

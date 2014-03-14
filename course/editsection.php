@@ -33,12 +33,11 @@ $sectionreturn = optional_param('sr', 0, PARAM_INT);
 
 $PAGE->set_url('/course/editsection.php', array('id'=>$id, 'sr'=> $sectionreturn));
 
+$PAGE->login_expected();
 $section = $DB->get_record('course_sections', array('id' => $id), '*', MUST_EXIST);
-$course = $DB->get_record('course', array('id' => $section->course), '*', MUST_EXIST);
+list($context, $course) = $PAGE->login($section->course);
 $sectionnum = $section->section;
 
-require_login($course);
-$context = context_course::instance($course->id);
 require_capability('moodle/course:update', $context);
 
 // Get section_info object with all availability options.

@@ -34,10 +34,7 @@ $id = required_param('id', PARAM_INT);
 $hubname = optional_param('hubname', 0, PARAM_TEXT);
 $huburl = optional_param('huburl', 0, PARAM_URL);
 
-$course = $DB->get_record('course', array('id'=>$id), '*', MUST_EXIST);
-
-require_login($course);
-$context = context_course::instance($course->id);
+list($context, $course) = $PAGE->login($id);
 $shortname = format_string($course->shortname, true, array('context' => $context));
 
 $PAGE->set_url('/course/publish/index.php', array('id' => $course->id));

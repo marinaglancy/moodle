@@ -30,16 +30,16 @@ require_once($CFG->dirroot.'/course/lib.php');
 
 $courseid = required_param('courseid', PARAM_INT);
 $increase = optional_param('increase', true, PARAM_BOOL);
-$course = $DB->get_record('course', array('id' => $courseid), '*', MUST_EXIST);
-$courseformatoptions = course_get_format($course)->get_format_options();
+
+list($context, $course) = $PAGE->login($courseid);
 
 $PAGE->set_url('/course/changenumsections.php', array('courseid' => $courseid));
 
 // Authorisation checks.
-require_login($course);
-require_capability('moodle/course:update', context_course::instance($course->id));
+require_capability('moodle/course:update', $context);
 require_sesskey();
 
+$courseformatoptions = course_get_format($course)->get_format_options();
 if (isset($courseformatoptions['numsections'])) {
     if ($increase) {
         // Add an additional section.

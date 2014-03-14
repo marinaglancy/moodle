@@ -36,13 +36,10 @@ $cmid           = required_param('cmid', PARAM_INT);
 $courseid       = required_param('course', PARAM_INT);
 $sectionreturn  = optional_param('sr', null, PARAM_INT);
 
-$course     = $DB->get_record('course', array('id' => $courseid), '*', MUST_EXIST);
-$cm         = get_coursemodule_from_id('', $cmid, $course->id, true, MUST_EXIST);
-$cmcontext  = context_module::instance($cm->id);
+list($cmcontext, $course, $cm) = $PAGE->login_to_cm(null, $cmid, $courseid);
 $context    = context_course::instance($courseid);
-$section    = $DB->get_record('course_sections', array('id' => $cm->section, 'course' => $cm->course));
+$section    = get_fast_modinfo($course)->get_section_info($cm->sectionnum);
 
-require_login($course);
 require_sesskey();
 require_capability('moodle/course:manageactivities', $context);
 // Require both target import caps to be able to duplicate, see course_get_cm_edit_actions()

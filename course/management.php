@@ -48,6 +48,8 @@ if ($issearching) {
     $viewmode = 'courses';
 }
 
+$PAGE->login_expected(PAGELOGIN_NO_AUTOLOGIN);
+
 $url = new moodle_url('/course/management.php');
 $systemcontext = $context = context_system::instance();
 if ($courseid) {
@@ -101,23 +103,22 @@ if ($modulelist !== '') {
 $strmanagement = new lang_string('coursecatmanagement');
 $pageheading = format_string($SITE->fullname, true, array('context' => $systemcontext));
 
+$PAGE->login();
+
+if (!coursecat::has_capability_on_any(array('moodle/category:manage', 'moodle/course:create'))) {
+    // The user isn't able to manage any categories. Lets redirect them to the relevant course/index.php page.
+    $url = new moodle_url('/course/index.php');
+    if ($category && ($category->visible || has_capability('moodle/category:viewhiddencategories', $context))) {
+        $url->param('categoryid', $category->id);
+    }
+    redirect($url);
+}
+
 $PAGE->set_context($context);
 $PAGE->set_url($url);
 $PAGE->set_pagelayout('admin');
 $PAGE->set_title($strmanagement);
 $PAGE->set_heading($pageheading);
-
-// This is a system level page that operates on other contexts.
-require_login();
-
-if (!coursecat::has_capability_on_any(array('moodle/category:manage', 'moodle/course:create'))) {
-    // The user isn't able to manage any categories. Lets redirect them to the relevant course/index.php page.
-    $url = new moodle_url('/course/index.php');
-    if ($categoryid) {
-        $url->param('categoryid', $categoryid);
-    }
-    redirect($url);
-}
 
 // If the user poses any of these capabilities then they will be able to see the admin
 // tree and the management link within it.

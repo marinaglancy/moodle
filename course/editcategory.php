@@ -30,7 +30,7 @@ require_once('../config.php');
 require_once($CFG->dirroot.'/course/lib.php');
 require_once($CFG->libdir.'/coursecatlib.php');
 
-require_login();
+$PAGE->login_expected(PAGELOGIN_NO_AUTOLOGIN);
 
 $id = optional_param('id', 0, PARAM_INT);
 
@@ -50,7 +50,6 @@ if ($id) {
     $parent = required_param('parent', PARAM_INT);
     $url->param('parent', $parent);
     if ($parent) {
-        $DB->record_exists('course_categories', array('id' => $parent), '*', MUST_EXIST);
         $context = context_coursecat::instance($parent);
     } else {
         $context = context_system::instance();
@@ -66,6 +65,7 @@ if ($id) {
     $fullname = $SITE->fullname;
 }
 
+$PAGE->login();
 require_capability('moodle/category:manage', $context);
 
 $PAGE->set_context($context);

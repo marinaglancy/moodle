@@ -40,8 +40,7 @@ require_once($CFG->libdir . '/filelib.php');
 //check user access capability to this page
 $id = required_param('id', PARAM_INT);
 
-$course = $DB->get_record('course', array('id' => $id), '*', MUST_EXIST);
-require_login($course);
+list($context, $course) = $PAGE->login($id);
 
 //page settings
 $PAGE->set_url('/course/publish/metadata.php', array('id' => $course->id));
@@ -53,7 +52,6 @@ $PAGE->set_heading($course->fullname);
 if (!extension_loaded('xmlrpc')) {
     $errornotification = $OUTPUT->doc_link('admin/environment/php_extension/xmlrpc', '');
     $errornotification .= get_string('xmlrpcdisabledpublish', 'hub');
-    $context = context_course::instance($course->id);
     $shortname = format_string($course->shortname, true, array('context' => $context));
     echo $OUTPUT->header();
     echo $OUTPUT->heading(get_string('publishcourse', 'hub', $shortname), 3, 'main');
