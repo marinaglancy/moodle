@@ -27,21 +27,10 @@
     }
     $PAGE->set_url($url);
 
-    if (! $cm = get_coursemodule_from_id('chat', $id)) {
-        print_error('invalidcoursemodule');
-    }
-    if (! $chat = $DB->get_record('chat', array('id'=>$cm->instance))) {
-        print_error('invalidcoursemodule');
-    }
-    if (! $course = $DB->get_record('course', array('id'=>$chat->course))) {
-        print_error('coursemisconf');
-    }
+    list($context, $course, $cm) = $PAGE->login_to_activity('chat', $id, null, PAGELOGIN_NO_AUTOLOGIN);
+    $chat = $PAGE->activityrecord;
 
-    $context = context_module::instance($cm->id);
-    $PAGE->set_context($context);
     $PAGE->set_heading($course->fullname);
-
-    require_login($course, false, $cm);
 
     if (empty($chat->studentlogs) && !has_capability('mod/chat:readlog', $context)) {
         notice(get_string('nopermissiontoseethechatlog', 'chat'));
@@ -73,12 +62,11 @@
 
     if ($start and $end and !$confirmdelete) {   // Show a full transcript
         $PAGE->navbar->add($strchatreport);
-        $PAGE->set_title(format_string($chat->name).": $strchatreport");
+        $PAGE->set_title($cm->get_formatted_name().": $strchatreport");
         echo $OUTPUT->header();
-        echo $OUTPUT->heading(format_string($chat->name), 2);
+        echo $OUTPUT->heading($cm->get_formatted_name(), 2);
 
     /// Check to see if groups are being used here
-        $groupmode = groups_get_activity_groupmode($cm);
         $currentgroup = groups_get_activity_group($cm, true);
         groups_print_activity_menu($cm, $CFG->wwwroot . "/mod/chat/report.php?id=$cm->id");
 
@@ -147,7 +135,7 @@
     echo $OUTPUT->heading(format_string($chat->name).': '.get_string('sessions', 'chat'), 2);
 
 /// Check to see if groups are being used here
-    if ($groupmode = groups_get_activity_groupmode($cm)) {   // Groups are being used
+    if ($cm->effectivegroupmode) {   // Groups are being used
         $currentgroup = groups_get_activity_group($cm, true);
         groups_print_activity_menu($cm, $CFG->wwwroot . "/mod/chat/report.php?id=$cm->id");
     } else {

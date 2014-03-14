@@ -31,30 +31,14 @@ if (!confirm_sesskey()) {
     throw new moodle_exception('invalidsesskey', 'error');
 }
 
+$PAGE->login_expected(PAGELOGIN_NO_AUTOLOGIN);
 if (!$chatuser = $DB->get_record('chat_users', array('sid'=>$chat_sid))) {
     throw new moodle_exception('notlogged', 'chat');
 }
-if (!$chat = $DB->get_record('chat', array('id'=>$chatuser->chatid))) {
-    throw new moodle_exception('invaliduserid', 'error');
-}
-if (!$course = $DB->get_record('course', array('id'=>$chat->course))) {
-    throw new moodle_exception('invalidcourseid', 'error');
-}
-if (!$cm = get_coursemodule_from_instance('chat', $chat->id, $course->id)) {
-    throw new moodle_exception('invalidcoursemodule', 'error');
-}
+list($context, $course, $cm) = $PAGE->login_to_activity('chat', $chatuser->chatid);
 
-if (!isloggedin()) {
-    throw new moodle_exception('notlogged', 'chat');
-}
-
-// setup $PAGE so that format_text will work properly
-$PAGE->set_cm($cm, $course, $chat);
 $PAGE->set_url('/mod/chat/chat_ajax.php', array('chat_sid'=>$chat_sid));
 
-require_login($course, false, $cm);
-
-$context = context_module::instance($cm->id);
 require_capability('mod/chat:chat', $context);
 
 ob_start();

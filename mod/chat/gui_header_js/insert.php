@@ -8,24 +8,11 @@ $chat_message = required_param('chat_message', PARAM_RAW);
 
 $PAGE->set_url('/mod/chat/gui_header_js/insert.php', array('chat_sid'=>$chat_sid,'chat_message'=>$chat_message));
 
+$PAGE->login_expected(PAGELOGIN_NO_AUTOLOGIN);
 if (!$chatuser = $DB->get_record('chat_users', array('sid'=>$chat_sid))) {
     print_error('notlogged', 'chat');
 }
-
-if (!$chat = $DB->get_record('chat', array('id'=>$chatuser->chatid))) {
-    print_error('nochat', 'chat');
-}
-
-if (!$course = $DB->get_record('course', array('id'=>$chat->course))) {
-    print_error('invalidcourseid');
-}
-
-if (!$cm = get_coursemodule_from_instance('chat', $chat->id, $course->id)) {
-    print_error('invalidcoursemodule');
-}
-
-require_login($course, false, $cm);
-
+list($context, $course, $cm) = $PAGE->login_to_activity('chat', $chatuser->chatid);
 if (isguestuser()) {
     print_error('noguests');
 }
