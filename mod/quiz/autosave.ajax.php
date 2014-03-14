@@ -37,6 +37,7 @@ $attemptid = required_param('attempt',  PARAM_INT);
 $thispage  = optional_param('thispage', 0, PARAM_INT);
 
 $transaction = $DB->start_delegated_transaction();
+$PAGE->login_expected(PAGELOGIN_NO_AUTOLOGIN);
 $attemptobj = quiz_attempt::create($attemptid);
 
 // Check login.

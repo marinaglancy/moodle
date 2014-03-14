@@ -31,20 +31,10 @@ require_once($CFG->dirroot.'/mod/quiz/override_form.php');
 $overrideid = required_param('id', PARAM_INT);
 $confirm = optional_param('confirm', false, PARAM_BOOL);
 
-if (! $override = $DB->get_record('quiz_overrides', array('id' => $overrideid))) {
-    print_error('invalidoverrideid', 'quiz');
-}
-if (! $quiz = $DB->get_record('quiz', array('id' => $override->quiz))) {
-    print_error('invalidcoursemodule');
-}
-if (! $cm = get_coursemodule_from_instance("quiz", $quiz->id, $quiz->course)) {
-    print_error('invalidcoursemodule');
-}
-$course = $DB->get_record('course', array('id'=>$cm->course), '*', MUST_EXIST);
-
-$context = context_module::instance($cm->id);
-
-require_login($course, false, $cm);
+$PAGE->login_expected(PAGELOGIN_NO_AUTOLOGIN);
+$override = $DB->get_record('quiz_overrides', array('id' => $overrideid), '*', MUST_EXIST);
+list($context, $course, $cm) = $PAGE->login_to_activity('quiz', $override->quiz);
+$quiz = $PAGE->activityrecord;
 
 // Check the user has the required capabilities to modify an override.
 require_capability('mod/quiz:manageoverrides', $context);

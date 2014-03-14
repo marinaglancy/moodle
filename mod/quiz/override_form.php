@@ -58,7 +58,7 @@ class quiz_override_form extends moodleform {
     /**
      * Constructor.
      * @param moodle_url $submiturl the form action URL.
-     * @param object course module object.
+     * @param stdClass|cm_info course module object.
      * @param object the quiz settings object.
      * @param context the quiz context.
      * @param bool editing group override (true) or user override (false).

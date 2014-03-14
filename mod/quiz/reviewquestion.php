@@ -31,6 +31,7 @@ $attemptid = required_param('attempt', PARAM_INT);
 $slot = required_param('slot', PARAM_INT);
 $seq = optional_param('step', null, PARAM_INT);
 
+$PAGE->login_expected(PAGELOGIN_NO_AUTOLOGIN);
 $baseurl = new moodle_url('/mod/quiz/reviewquestion.php',
         array('attempt' => $attemptid, 'slot' => $slot));
 $currenturl = new moodle_url($baseurl);

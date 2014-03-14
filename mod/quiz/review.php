@@ -34,6 +34,7 @@ $attemptid = required_param('attempt', PARAM_INT);
 $page      = optional_param('page', 0, PARAM_INT);
 $showall   = optional_param('showall', 0, PARAM_BOOL);
 
+$PAGE->login_expected(PAGELOGIN_NO_AUTOLOGIN);
 $url = new moodle_url('/mod/quiz/review.php', array('attempt'=>$attemptid));
 if ($page !== 0) {
     $url->param('page', $page);

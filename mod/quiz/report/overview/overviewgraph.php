@@ -31,12 +31,8 @@ require_once($CFG->dirroot . '/mod/quiz/report/reportlib.php');
 $quizid = required_param('id', PARAM_INT);
 $groupid = optional_param('groupid', 0, PARAM_INT);
 
-$quiz = $DB->get_record('quiz', array('id' => $quizid));
-$course = $DB->get_record('course', array('id' => $quiz->course));
-$cm = get_coursemodule_from_instance('quiz', $quizid);
-
-require_login($course, false, $cm);
-$modcontext = context_module::instance($cm->id);
+list($modcontext, $course, $cm) = $PAGE->login_to_activity('quiz', $quizid, null, PAGELOGIN_NO_AUTOLOGIN);
+$quiz = $PAGE->activityrecord;
 require_capability('mod/quiz:viewreports', $modcontext);
 
 if ($groupid && $groupmode = groups_get_activity_groupmode($cm)) {

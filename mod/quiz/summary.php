@@ -28,6 +28,7 @@ require_once($CFG->dirroot . '/mod/quiz/locallib.php');
 
 $attemptid = required_param('attempt', PARAM_INT); // The attempt to summarise.
 
+$PAGE->login_expected(PAGELOGIN_NO_AUTOLOGIN);
 $PAGE->set_url('/mod/quiz/summary.php', array('attempt' => $attemptid));
 
 $attemptobj = quiz_attempt::create($attemptid);

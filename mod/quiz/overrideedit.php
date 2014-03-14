@@ -35,29 +35,15 @@ $action = optional_param('action', null, PARAM_ALPHA);
 $reset = optional_param('reset', false, PARAM_BOOL);
 
 $override = null;
+$PAGE->login_expected(PAGELOGIN_NO_AUTOLOGIN);
 if ($overrideid) {
-
-    if (! $override = $DB->get_record('quiz_overrides', array('id' => $overrideid))) {
-        print_error('invalidoverrideid', 'quiz');
-    }
-    if (! $quiz = $DB->get_record('quiz', array('id' => $override->quiz))) {
-        print_error('invalidcoursemodule');
-    }
-    if (! $cm = get_coursemodule_from_instance("quiz", $quiz->id, $quiz->course)) {
-        print_error('invalidcoursemodule');
-    }
+    $override = $DB->get_record('quiz_overrides', array('id' => $overrideid), '*', MUST_EXIST);
+    list($context, $course, $cm) = $PAGE->login_to_activity('quiz', $override->quiz);
 } else if ($cmid) {
-
-    if (! $cm = get_coursemodule_from_id('quiz', $cmid)) {
-        print_error('invalidcoursemodule');
-    }
-    if (! $quiz = $DB->get_record('quiz', array('id' => $cm->instance))) {
-        print_error('invalidcoursemodule');
-    }
+    list($context, $course, $cm) = $PAGE->login_to_cm('quiz', $cmid);
 } else {
     print_error('invalidcoursemodule');
 }
-$course = $DB->get_record('course', array('id'=>$cm->course), '*', MUST_EXIST);
 
 $url = new moodle_url('/mod/quiz/overrideedit.php');
 if ($action) {
@@ -70,10 +56,6 @@ if ($overrideid) {
 }
 
 $PAGE->set_url($url);
-
-require_login($course, false, $cm);
-
-$context = context_module::instance($cm->id);
 
 // Add or edit an override.
 require_capability('mod/quiz:manageoverrides', $context);
