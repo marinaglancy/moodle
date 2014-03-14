@@ -26,7 +26,7 @@
 require_once('../../config.php');
 require_once('lib.php');
 
-$id             = optional_param('id', 0, PARAM_INT);            // course module id
+$cmid           = optional_param('id', 0, PARAM_INT);            // course module id
 $d              = optional_param('d', 0, PARAM_INT);             // database id
 $fid            = optional_param('fid', 0 , PARAM_INT);          // update field id
 $newtype        = optional_param('newtype','',PARAM_ALPHA);      // type of the new field
@@ -59,37 +59,19 @@ if ($cancel !== 0) {
     $url->param('cancel', $cancel);
 }
 
-if ($id) {
-    $url->param('id', $id);
+if ($cmid) {
+    $url->param('id', $cmid);
     $PAGE->set_url($url);
-    if (! $cm = get_coursemodule_from_id('data', $id)) {
-        print_error('invalidcoursemodule');
-    }
-    if (! $course = $DB->get_record('course', array('id'=>$cm->course))) {
-        print_error('coursemisconf');
-    }
-    if (! $data = $DB->get_record('data', array('id'=>$cm->instance))) {
-        print_error('invalidcoursemodule');
-    }
-
+    list($context, $course, $cm) = $PAGE->login_to_cm('data', $cmid, null, PAGELOGIN_NO_AUTOLOGIN);
 } else {
     $url->param('d', $d);
     $PAGE->set_url($url);
-    if (! $data = $DB->get_record('data', array('id'=>$d))) {
-        print_error('invalidid', 'data');
-    }
-    if (! $course = $DB->get_record('course', array('id'=>$data->course))) {
-        print_error('invalidcoursemodule');
-    }
-    if (! $cm = get_coursemodule_from_instance('data', $data->id, $course->id)) {
-        print_error('invalidcoursemodule');
-    }
+    list($context, $course, $cm) = $PAGE->login_to_activity('data', $d, null, PAGELOGIN_NO_AUTOLOGIN);
 }
 
-require_login($course, true, $cm);
-
-$context = context_module::instance($cm->id);
 require_capability('mod/data:managetemplates', $context);
+
+$data = $PAGE->activityrecord;
 
 /************************************
  *        Data Processing           *

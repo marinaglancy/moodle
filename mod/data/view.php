@@ -28,8 +28,7 @@
     require_once($CFG->libdir . '/completionlib.php');
 
 /// One of these is necessary!
-    $id = optional_param('id', 0, PARAM_INT);  // course module id
-    $d = optional_param('d', 0, PARAM_INT);   // database id
+    $cmid = optional_param('id', 0, PARAM_INT);  // course module id
     $rid = optional_param('rid', 0, PARAM_INT);    //record id
     $mode = optional_param('mode', '', PARAM_ALPHA);    // Force the browse mode  ('single')
     $filter = optional_param('filter', 0, PARAM_BOOL);
@@ -44,51 +43,23 @@
     $multidelete = optional_param_array('delcheck', null, PARAM_INT);
     $serialdelete = optional_param('serialdelete', null, PARAM_RAW);
 
-    if ($id) {
-        if (! $cm = get_coursemodule_from_id('data', $id)) {
-            print_error('invalidcoursemodule');
-        }
-        if (! $course = $DB->get_record('course', array('id'=>$cm->course))) {
-            print_error('coursemisconf');
-        }
-        if (! $data = $DB->get_record('data', array('id'=>$cm->instance))) {
-            print_error('invalidcoursemodule');
-        }
-        $record = NULL;
-
+    $PAGE->login_expected(PAGELOGIN_ALLOW_FRONTPAGE_GUEST);
+    $record = NULL;
+    if ($cmid) {
+        list($context, $course, $cm) = $PAGE->login_to_cm('data', $cmid);
     } else if ($rid) {
-        if (! $record = $DB->get_record('data_records', array('id'=>$rid))) {
-            print_error('invalidrecord', 'data');
-        }
-        if (! $data = $DB->get_record('data', array('id'=>$record->dataid))) {
-            print_error('invalidid', 'data');
-        }
-        if (! $course = $DB->get_record('course', array('id'=>$data->course))) {
-            print_error('coursemisconf');
-        }
-        if (! $cm = get_coursemodule_from_instance('data', $data->id, $course->id)) {
-            print_error('invalidcoursemodule');
-        }
-    } else {   // We must have $d
-        if (! $data = $DB->get_record('data', array('id'=>$d))) {
-            print_error('invalidid', 'data');
-        }
-        if (! $course = $DB->get_record('course', array('id'=>$data->course))) {
-            print_error('coursemisconf');
-        }
-        if (! $cm = get_coursemodule_from_instance('data', $data->id, $course->id)) {
-            print_error('invalidcoursemodule');
-        }
-        $record = NULL;
+        $record = $DB->get_record('data_records', array('id'=>$rid), '*', MUST_EXIST);
+        list($context, $course, $cm) = $PAGE->login_to_activity('data', $record->dataid);
+    } else {
+        $d = required_param('d', PARAM_INT);
+        list($context, $course, $cm) = $PAGE->login_to_activity('data', $d);
     }
 
-    require_course_login($course, true, $cm);
+    $data = $PAGE->activityrecord;
+    require_capability('mod/data:viewentry', $context);
 
     require_once($CFG->dirroot . '/comment/lib.php');
     comment::init();
-
-    $context = context_module::instance($cm->id);
-    require_capability('mod/data:viewentry', $context);
 
 /// If we have an empty Database then redirect because this page is useless without data
     if (has_capability('mod/data:managetemplates', $context)) {

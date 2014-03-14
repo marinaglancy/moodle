@@ -28,7 +28,7 @@ require_once('lib.php');
 require_once("$CFG->libdir/rsslib.php");
 require_once("$CFG->libdir/form/filemanager.php");
 
-$id    = optional_param('id', 0, PARAM_INT);    // course module id
+$cmid  = optional_param('id', 0, PARAM_INT);    // course module id
 $d     = optional_param('d', 0, PARAM_INT);    // database id
 $rid   = optional_param('rid', 0, PARAM_INT);    //record id
 $cancel   = optional_param('cancel', '', PARAM_RAW);    // cancel an add
@@ -42,50 +42,21 @@ if ($cancel !== '') {
     $url->param('cancel', $cancel);
 }
 
-if ($id) {
-    $url->param('id', $id);
+if ($cmid) {
+    $url->param('id', $cmid);
     $PAGE->set_url($url);
-    if (! $cm = get_coursemodule_from_id('data', $id)) {
-        print_error('invalidcoursemodule');
-    }
-    if (! $course = $DB->get_record('course', array('id'=>$cm->course))) {
-        print_error('coursemisconf');
-    }
-    if (! $data = $DB->get_record('data', array('id'=>$cm->instance))) {
-        print_error('invalidcoursemodule');
-    }
-
+    list($context, $course, $cm) = $PAGE->login_to_cm('data', $cmid, null, PAGELOGIN_NO_AUTOLOGIN);
 } else {
     $url->param('d', $d);
     $PAGE->set_url($url);
-    if (! $data = $DB->get_record('data', array('id'=>$d))) {
-        print_error('invalidid', 'data');
-    }
-    if (! $course = $DB->get_record('course', array('id'=>$data->course))) {
-        print_error('coursemisconf');
-    }
-    if (! $cm = get_coursemodule_from_instance('data', $data->id, $course->id)) {
-        print_error('invalidcoursemodule');
-    }
+    list($context, $course, $cm) = $PAGE->login_to_activity('data', $d, null, PAGELOGIN_NO_AUTOLOGIN);
 }
-
-require_login($course, false, $cm);
 
 if (isguestuser()) {
-    redirect('view.php?d='.$data->id);
+    redirect('view.php?d='.$cm->instance);
 }
 
-$context = context_module::instance($cm->id);
-
-/// If it's hidden then it doesn't show anything.  :)
-if (empty($cm->visible) and !has_capability('moodle/course:viewhiddenactivities', $context)) {
-    $strdatabases = get_string("modulenameplural", "data");
-
-    $PAGE->set_title($data->name);
-    $PAGE->set_heading($course->fullname);
-    echo $OUTPUT->header();
-    notice(get_string("activityiscurrentlyhidden"));
-}
+$data = $PAGE->activityrecord;
 
 /// Can't use this if there are no fields
 if (has_capability('mod/data:managetemplates', $context)) {
@@ -101,7 +72,7 @@ if ($rid) {
 
 // Get Group information for permission testing and record creation
 $currentgroup = groups_get_activity_group($cm);
-$groupmode = groups_get_activity_groupmode($cm);
+$groupmode = $cm->effectivegroupmode;
 
 if (!has_capability('mod/data:manageentries', $context)) {
     if ($rid) {

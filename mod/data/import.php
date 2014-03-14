@@ -28,7 +28,7 @@ require_once('lib.php');
 require_once($CFG->libdir.'/csvlib.class.php');
 require_once('import_form.php');
 
-$id              = optional_param('id', 0, PARAM_INT);  // course module id
+$cmid            = optional_param('id', 0, PARAM_INT);  // course module id
 $d               = optional_param('d', 0, PARAM_INT);   // database id
 $rid             = optional_param('rid', 0, PARAM_INT); // record id
 $fielddelimiter  = optional_param('fielddelimiter', ',', PARAM_CLEANHTML); // characters used as field delimiters for csv file import
@@ -45,25 +45,20 @@ if ($fieldenclosure !== '') {
     $url->param('fieldenclosure', $fieldenclosure);
 }
 
-if ($id) {
-    $url->param('id', $id);
+if ($cmid) {
+    $url->param('id', $cmid);
     $PAGE->set_url($url);
-    $cm     = get_coursemodule_from_id('data', $id, 0, false, MUST_EXIST);
-    $course = $DB->get_record('course', array('id'=>$cm->course), '*', MUST_EXIST);
-    $data   = $DB->get_record('data', array('id'=>$cm->instance), '*', MUST_EXIST);
+    list($context, $course, $cm) = $PAGE->login_to_cm('data', $cmid, null, PAGELOGIN_NO_AUTOLOGIN);
 
 } else {
     $url->param('d', $d);
     $PAGE->set_url($url);
-    $data   = $DB->get_record('data', array('id'=>$d), '*', MUST_EXIST);
-    $course = $DB->get_record('course', array('id'=>$data->course), '*', MUST_EXIST);
-    $cm     = get_coursemodule_from_instance('data', $data->id, $course->id, false, MUST_EXIST);
+    list($context, $course, $cm) = $PAGE->login_to_activity('data', $d, null, PAGELOGIN_NO_AUTOLOGIN);
 }
-
-require_login($course, false, $cm);
-
-$context = context_module::instance($cm->id);
 require_capability('mod/data:manageentries', $context);
+
+$data = $PAGE->activityrecord;
+
 $form = new mod_data_import_form(new moodle_url('/mod/data/import.php'));
 
 /// Print the page header
@@ -76,7 +71,7 @@ echo $OUTPUT->heading_with_help(get_string('uploadrecords', 'mod_data'), 'upload
 
 /// Groups needed for Add entry tab
 $currentgroup = groups_get_activity_group($cm);
-$groupmode = groups_get_activity_groupmode($cm);
+$groupmode = $cm->effectivegroupmode;
 
 if (!$formdata = $form->get_data()) {
     /// Upload records section. Only for teachers and the admin.
