@@ -261,8 +261,9 @@ class assign_plugin_manager {
      * @return None
      */
     private function check_permissions() {
+        global $PAGE;
         // Check permissions.
-        require_login();
+        $PAGE->login(0, PAGELOGIN_NO_AUTOLOGIN);
         $systemcontext = context_system::instance();
         require_capability('moodle/site:config', $systemcontext);
     }

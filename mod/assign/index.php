@@ -27,8 +27,7 @@ require_once($CFG->dirroot.'/mod/assign/locallib.php');
 // For this type of page this is the course id.
 $id = required_param('id', PARAM_INT);
 
-$course = $DB->get_record('course', array('id' => $id), '*', MUST_EXIST);
-require_login($course);
+list($context, $course) = $PAGE->login($id);
 $PAGE->set_url('/mod/assign/index.php', array('id' => $id));
 $PAGE->set_pagelayout('incourse');
 
@@ -41,8 +40,6 @@ $PAGE->set_title($strplural);
 $PAGE->set_heading($course->fullname);
 echo $OUTPUT->header();
 echo $OUTPUT->heading(format_string($strplural));
-
-$context = context_course::instance($course->id);
 
 require_capability('mod/assign:view', $context);
 

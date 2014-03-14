@@ -29,7 +29,7 @@ global $PAGE, $OUTPUT;
 $PAGE->set_url(new moodle_url('/mod/assign/feedback/editpdf/testgs.php'));
 $PAGE->set_context(context_system::instance());
 
-require_login();
+$PAGE->login(0, PAGELOGIN_NO_AUTOLOGIN);
 require_capability('moodle/site:config', context_system::instance());
 
 $strheading = get_string('testgs', 'assignfeedback_editpdf');
