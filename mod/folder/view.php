@@ -28,22 +28,16 @@ require_once("$CFG->dirroot/mod/folder/locallib.php");
 require_once("$CFG->dirroot/repository/lib.php");
 require_once($CFG->libdir . '/completionlib.php');
 
-$id = optional_param('id', 0, PARAM_INT);  // Course module ID
+$cmid = optional_param('id', 0, PARAM_INT);  // Course module ID
 $f  = optional_param('f', 0, PARAM_INT);   // Folder instance id
 
 if ($f) {  // Two ways to specify the module
-    $folder = $DB->get_record('folder', array('id'=>$f), '*', MUST_EXIST);
-    $cm = get_coursemodule_from_instance('folder', $folder->id, $folder->course, true, MUST_EXIST);
-
+    list($context, $course, $cm) = $PAGE->login_to_activity('folder', $f, null, PAGELOGIN_ALLOW_FRONTPAGE_GUEST);
 } else {
-    $cm = get_coursemodule_from_id('folder', $id, 0, true, MUST_EXIST);
-    $folder = $DB->get_record('folder', array('id'=>$cm->instance), '*', MUST_EXIST);
+    list($context, $course, $cm) = $PAGE->login_to_cm('folder', $cmid, null, PAGELOGIN_ALLOW_FRONTPAGE_GUEST);
 }
 
-$course = $DB->get_record('course', array('id'=>$cm->course), '*', MUST_EXIST);
-
-require_course_login($course, true, $cm);
-$context = context_module::instance($cm->id);
+$folder = $PAGE->activityrecord;
 require_capability('mod/folder:view', $context);
 if ($folder->display == FOLDER_DISPLAY_INLINE) {
     redirect(course_get_url($folder->course, $cm->sectionnum));
@@ -67,8 +61,6 @@ $PAGE->set_url('/mod/folder/view.php', array('id' => $cm->id));
 
 $PAGE->set_title($course->shortname.': '.$folder->name);
 $PAGE->set_heading($course->fullname);
-$PAGE->set_activity_record($folder);
-
 
 $output = $PAGE->get_renderer('mod_folder');
 
