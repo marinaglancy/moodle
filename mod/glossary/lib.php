@@ -1519,7 +1519,7 @@ function glossary_search_entries($searchterms, $glossary, $extended) {
  * @global object
  * @global object
  * @param object $entry
- * @param object $cm
+ * @param stdClass|cm_info $cm
  * @param string $type html, txt, empty
  * @param string $align left or right
  * @return string image string or nothing depending on $type param
@@ -1771,7 +1771,7 @@ function glossary_print_tabbed_table_end() {
 }
 
 /**
- * @param object $cm
+ * @param stdClass|cm_info $cm
  * @param object $glossary
  * @param string $mode
  * @param string $hook
@@ -1791,7 +1791,7 @@ function glossary_print_approval_menu($cm, $glossary,$mode, $hook, $sortkey = ''
     glossary_print_sorting_links($cm, $mode, 'CREATION', 'asc');
 }
 /**
- * @param object $cm
+ * @param stdClass|cm_info $cm
  * @param object $glossary
  * @param string $hook
  * @param string $sortkey
@@ -1802,7 +1802,7 @@ function glossary_print_import_menu($cm, $glossary, $mode, $hook, $sortkey='', $
 }
 
 /**
- * @param object $cm
+ * @param stdClass|cm_info $cm
  * @param object $glossary
  * @param string $hook
  * @param string $sortkey
@@ -1812,7 +1812,7 @@ function glossary_print_export_menu($cm, $glossary, $mode, $hook, $sortkey='', $
     echo '<div class="glossaryexplain">' . get_string("explainexport","glossary") . '</div>';
 }
 /**
- * @param object $cm
+ * @param stdClass|cm_info $cm
  * @param object $glossary
  * @param string $hook
  * @param string $sortkey
@@ -1835,7 +1835,7 @@ function glossary_print_alphabet_menu($cm, $glossary, $mode, $hook, $sortkey='',
 }
 
 /**
- * @param object $cm
+ * @param stdClass|cm_info $cm
  * @param object $glossary
  * @param string $hook
  * @param string $sortkey
@@ -1854,7 +1854,7 @@ function glossary_print_author_menu($cm, $glossary,$mode, $hook, $sortkey = '', 
 /**
  * @global object
  * @global object
- * @param object $cm
+ * @param stdClass|cm_info $cm
  * @param object $glossary
  * @param string $hook
  * @param object $category
@@ -1934,7 +1934,7 @@ function glossary_print_categories_menu($cm, $glossary, $hook, $category) {
 
 /**
  * @global object
- * @param object $cm
+ * @param stdClass|cm_info $cm
  * @param object $glossary
  * @param string $mode
  * @param string $hook
@@ -1954,7 +1954,7 @@ global $CFG;
 
 /**
  * @global object
- * @param object $cm
+ * @param stdClass|cm_info $cm
  * @param object $glossary
  * @param string $mode
  * @param string $hook
@@ -1974,6 +1974,7 @@ global $CFG;
 
 /**
  * @global object
+ * @param stdClass|cm_info $cm
  * @param object $glossary
  * @param string $mode
  * @param string $hook
@@ -1997,7 +1998,7 @@ global $CFG;
 
 /**
  * @global object
- * @param object $cm
+ * @param stdClass|cm_info $cm
  * @param string $mode
  * @param string $sortkey
  * @param string $sortorder

@@ -6,7 +6,7 @@ require_once("lib.php");
 require_once($CFG->libdir . '/completionlib.php');
 require_once("$CFG->libdir/rsslib.php");
 
-$id = optional_param('id', 0, PARAM_INT);           // Course Module ID
+$cmid = optional_param('id', 0, PARAM_INT);           // Course Module ID
 $g  = optional_param('g', 0, PARAM_INT);            // Glossary ID
 
 $tab  = optional_param('tab', GLOSSARY_NO_VIEW, PARAM_ALPHA);    // browsing entries by categories?
@@ -21,34 +21,15 @@ $offset     = optional_param('offset', 0,PARAM_INT);             // entries to b
 $page       = optional_param('page', 0,PARAM_INT);               // Page to show (for paging purposes)
 $show       = optional_param('show', '', PARAM_ALPHA);           // [ concept | alias ] => mode=term hook=$show
 
-if (!empty($id)) {
-    if (! $cm = get_coursemodule_from_id('glossary', $id)) {
-        print_error('invalidcoursemodule');
-    }
-    if (! $course = $DB->get_record("course", array("id"=>$cm->course))) {
-        print_error('coursemisconf');
-    }
-    if (! $glossary = $DB->get_record("glossary", array("id"=>$cm->instance))) {
-        print_error('invalidid', 'glossary');
-    }
-
+if (!empty($cmid)) {
+    list($context, $course, $cm) = $PAGE->login_to_cm('glossary', $cmid, null, PAGELOGIN_ALLOW_FRONTPAGE_GUEST);
 } else if (!empty($g)) {
-    if (! $glossary = $DB->get_record("glossary", array("id"=>$g))) {
-        print_error('invalidid', 'glossary');
-    }
-    if (! $course = $DB->get_record("course", array("id"=>$glossary->course))) {
-        print_error('invalidcourseid');
-    }
-    if (!$cm = get_coursemodule_from_instance("glossary", $glossary->id, $course->id)) {
-        print_error('invalidcoursemodule');
-    }
-    $id = $cm->id;
+    list($context, $course, $cm) = $PAGE->login_to_activity('glossary', $g, null, PAGELOGIN_ALLOW_FRONTPAGE_GUEST);
+    $cmid = $cm->id;
 } else {
     print_error('invalidid', 'glossary');
 }
 
-require_course_login($course->id, true, $cm);
-$context = context_module::instance($cm->id);
 require_capability('mod/glossary:view', $context);
 
 // Prepare format_string/text options
@@ -57,6 +38,8 @@ $fmtoptions = array(
 
 require_once($CFG->dirroot . '/comment/lib.php');
 comment::init();
+
+$glossary = $PAGE->activityrecord;
 
 /// redirecting if adding a new entry
 if ($tab == GLOSSARY_ADDENTRY_VIEW ) {
@@ -115,14 +98,6 @@ if ( $show ) {
     $mode = 'term';
     $hook = $show;
     $show = '';
-}
-/// Processing standard security processes
-if ($course->id != SITEID) {
-    require_login($course);
-}
-if (!$cm->visible and !has_capability('moodle/course:viewhiddenactivities', $context)) {
-    echo $OUTPUT->header();
-    notice(get_string("activityiscurrentlyhidden"));
 }
 
 /// stablishing flag variables
@@ -401,7 +376,7 @@ if ($allentries) {
     }
 
     //Build paging bar
-    $paging = glossary_get_paging_bar($count, $page, $entriesbypage, "view.php?id=$id&amp;mode=$mode&amp;hook=".urlencode($hook)."&amp;sortkey=$sortkey&amp;sortorder=$sortorder&amp;fullsearch=$fullsearch&amp;",9999,10,'&nbsp;&nbsp;', $specialtext, -1);
+    $paging = glossary_get_paging_bar($count, $page, $entriesbypage, "view.php?id=$cmid&amp;mode=$mode&amp;hook=".urlencode($hook)."&amp;sortkey=$sortkey&amp;sortorder=$sortorder&amp;fullsearch=$fullsearch&amp;",9999,10,'&nbsp;&nbsp;', $specialtext, -1);
 
     echo '<div class="paging">';
     echo $paging;
@@ -426,6 +401,7 @@ if ($allentries) {
         $allentries = $rm->get_ratings($ratingoptions);
     }
 
+    $cm = $PAGE->cm->get_course_module_record(true);
     foreach ($allentries as $entry) {
 
         // Setting the pivot for the current entry

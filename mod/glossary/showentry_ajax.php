@@ -17,24 +17,17 @@ $url->param('eid', $eid);
 $url->param('displayformat', $displayformat);
 $PAGE->set_url($url);
 
-if ($CFG->forcelogin) {
-    require_login();
-}
-
+$PAGE->login_expected(PAGELOGIN_ALLOW_FRONTPAGE_GUEST);
 if ($eid) {
     $entry = $DB->get_record('glossary_entries', array('id'=>$eid), '*', MUST_EXIST);
-    $glossary = $DB->get_record('glossary', array('id'=>$entry->glossaryid), '*', MUST_EXIST);
-    $cm = get_coursemodule_from_instance('glossary', $glossary->id, 0, false, MUST_EXIST);
-    $course = $DB->get_record('course', array('id'=>$cm->course), '*', MUST_EXIST);
-    require_course_login($course, true, $cm);
-    $entry->glossaryname = $glossary->name;
+    list($pagecontext, $course, $cm) = $PAGE->login_to_activity('glossary', $entry->glossaryid);
+    $entry->glossaryname = $cm->name;
     $entry->cmid = $cm->id;
     $entry->courseid = $cm->course;
     $entries = array($entry);
 
 } else if ($concept) {
-    $course = $DB->get_record('course', array('id'=>$courseid), '*', MUST_EXIST);
-    require_course_login($course);
+    list($pagecontext, $course) = $PAGE->login($courseid);
     $entries = glossary_get_entries_search($concept, $courseid);
 
 } else {
@@ -53,15 +46,15 @@ if ($entries) {
             continue;
         }
         // make sure the entry is approved (or approvable by current user)
+        $cm = $modinfo->cms[$entry->cmid];
+        $context = context_module::instance($entry->cmid);
         if (!$entry->approved and ($USER->id != $entry->userid)) {
-            $context = context_module::instance($entry->cmid);
             if (!has_capability('mod/glossary:approve', $context)) {
                 unset($entries[$key]);
                 continue;
             }
         }
 
-        $context = context_module::instance($entry->cmid);
         $definition = file_rewrite_pluginfile_urls($entry->definition, 'pluginfile.php', $context->id, 'mod_glossary', 'entry', $entry->id);
 
         $options = new stdClass();

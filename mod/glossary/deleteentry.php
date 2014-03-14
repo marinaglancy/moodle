@@ -3,13 +3,13 @@
 require_once("../../config.php");
 require_once("lib.php");
 
-$id       = required_param('id', PARAM_INT);          // course module ID
+$cmid     = required_param('id', PARAM_INT);          // course module ID
 $confirm  = optional_param('confirm', 0, PARAM_INT);  // commit the operation?
-$entry    = optional_param('entry', 0, PARAM_INT);    // entry id
+$entry    = required_param('entry', PARAM_INT);       // entry id
 $prevmode = required_param('prevmode', PARAM_ALPHA);
 $hook     = optional_param('hook', '', PARAM_CLEAN);
 
-$url = new moodle_url('/mod/glossary/deleteentry.php', array('id'=>$id,'prevmode'=>$prevmode));
+$url = new moodle_url('/mod/glossary/deleteentry.php', array('id'=>$cmid,'prevmode'=>$prevmode));
 if ($confirm !== 0) {
     $url->param('confirm', $confirm);
 }
@@ -26,27 +26,14 @@ $strglossaries = get_string("modulenameplural", "glossary");
 $stredit       = get_string("edit");
 $entrydeleted  = get_string("entrydeleted","glossary");
 
+list($context, $course, $cm) = $PAGE->login_to_cm('glossary', $cmid, null, PAGELOGIN_NO_AUTOLOGIN);
+$glossary = $PAGE->activityrecord;
 
-if (! $cm = get_coursemodule_from_id('glossary', $id)) {
-    print_error("invalidcoursemodule");
-}
-
-if (! $course = $DB->get_record("course", array("id"=>$cm->course))) {
-    print_error('coursemisconf');
-}
-
-if (! $entry = $DB->get_record("glossary_entries", array("id"=>$entry))) {
+if (! $entry = $DB->get_record("glossary_entries", array('id' => $entry, 'glossaryid' => $glossary->id))) {
     print_error('invalidentry');
 }
 
-require_login($course, false, $cm);
-$context = context_module::instance($cm->id);
 $manageentries = has_capability('mod/glossary:manageentries', $context);
-
-if (! $glossary = $DB->get_record("glossary", array("id"=>$cm->instance))) {
-    print_error('invalidid', 'glossary');
-}
-
 
 $strareyousuredelete = get_string("areyousuredelete","glossary");
 

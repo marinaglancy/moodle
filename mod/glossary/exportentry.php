@@ -3,12 +3,12 @@
 require_once('../../config.php');
 require_once('lib.php');
 
-$id       = required_param('id', PARAM_INT);          // Entry ID
+$eid      = required_param('id', PARAM_INT);          // Entry ID
 $confirm  = optional_param('confirm', 0, PARAM_BOOL); // export confirmation
 $prevmode = required_param('prevmode', PARAM_ALPHA);
 $hook     = optional_param('hook', '', PARAM_CLEAN);
 
-$url = new moodle_url('/mod/glossary/exportentry.php', array('id'=>$id,'prevmode'=>$prevmode));
+$url = new moodle_url('/mod/glossary/exportentry.php', array('id'=>$eid,'prevmode'=>$prevmode));
 if ($confirm !== 0) {
     $url->param('confirm', $confirm);
 }
@@ -17,32 +17,17 @@ if ($hook !== 'ALL') {
 }
 $PAGE->set_url($url);
 
-if (!$entry = $DB->get_record('glossary_entries', array('id'=>$id))) {
-    print_error('invalidentry');
-}
+$PAGE->login_expected(PAGELOGIN_NO_AUTOLOGIN);
+$entry = $DB->get_record('glossary_entries', array('id'=>$eid), '*', MUST_EXIST);
 
 if ($entry->sourceglossaryid) {
-    //already exported
-    if (!$cm = get_coursemodule_from_id('glossary', $entry->sourceglossaryid)) {
-        print_error('invalidcoursemodule');
-    }
-    redirect('view.php?id='.$cm->id.'&amp;mode=entry&amp;hook='.$entry->id);
+    // Already exported.
+    $gid = $entry->sourceglossaryid;
+} else {
+    $gid = $entry->glossaryid;
 }
 
-if (!$cm = get_coursemodule_from_instance('glossary', $entry->glossaryid)) {
-    print_error('invalidcoursemodule');
-}
-
-if (!$glossary = $DB->get_record('glossary', array('id'=>$cm->instance))) {
-    print_error('invalidid', 'glossary');
-}
-
-if (!$course = $DB->get_record('course', array('id'=>$cm->course))) {
-    print_error('coursemisconf');
-}
-
-require_course_login($course->id, true, $cm);
-$context = context_module::instance($cm->id);
+list($context, $course, $cm) = $PAGE->login_to_activity('glossary', $gid);
 require_capability('mod/glossary:export', $context);
 
 $returnurl = "view.php?id=$cm->id&amp;mode=$prevmode&amp;hook=".urlencode($hook);
@@ -56,7 +41,6 @@ if (!$maincm = get_coursemodule_from_instance('glossary', $mainglossary->id)) {
     print_error('invalidcoursemodule');
 }
 
-$context     = context_module::instance($cm->id);
 $maincontext = context_module::instance($maincm->id);
 
 if (!$course = $DB->get_record('course', array('id'=>$cm->course))) {
@@ -73,7 +57,7 @@ if (!$mainglossary->allowduplicatedentries) {
             'glossaryid = :glossaryid AND LOWER(concept) = :concept', array(
                 'glossaryid' => $mainglossary->id,
                 'concept'    => core_text::strtolower($entry->concept)))) {
-        $PAGE->set_title($glossary->name);
+        $PAGE->set_title($cm->name);
         $PAGE->set_heading($course->fullname);
         echo $OUTPUT->header();
         echo $OUTPUT->notification(get_string('errconceptalreadyexists', 'glossary'));
@@ -85,7 +69,7 @@ if (!$mainglossary->allowduplicatedentries) {
 }
 
 if (!data_submitted() or !$confirm or !confirm_sesskey()) {
-    $PAGE->set_title($glossary->name);
+    $PAGE->set_title($cm->name);
     $PAGE->set_heading($course->fullname);
     echo $OUTPUT->header();
     echo '<div class="boxaligncenter">';
@@ -102,7 +86,7 @@ if (!data_submitted() or !$confirm or !confirm_sesskey()) {
 
 } else {
     $entry->glossaryid       = $mainglossary->id;
-    $entry->sourceglossaryid = $glossary->id;
+    $entry->sourceglossaryid = $cm->instance;
 
     $DB->update_record('glossary_entries', $entry);
 
