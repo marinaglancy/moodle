@@ -26,25 +26,15 @@
     require_once("../../config.php");
     require_once("lib.php");
 
-    $id = required_param('id', PARAM_INT);    // Course Module ID
+    $cmid = required_param('id', PARAM_INT);    // Course Module ID
 
-    if (! $cm = get_coursemodule_from_id('survey', $id)) {
-        print_error('invalidcoursemodule');
-    }
-
-    if (! $course = $DB->get_record("course", array("id"=>$cm->course))) {
-        print_error('coursemisconf');
-    }
-
-    $PAGE->set_url('/mod/survey/view.php', array('id'=>$id));
-    require_login($course, false, $cm);
-    $context = context_module::instance($cm->id);
-
+    list($context, $course, $cm) = $PAGE->login_to_cm('survey', $cmid, null, PAGELOGIN_NO_AUTOLOGIN);
     require_capability('mod/survey:participate', $context);
 
-    if (! $survey = $DB->get_record("survey", array("id"=>$cm->instance))) {
-        print_error('invalidsurveyid', 'survey');
-    }
+    $PAGE->set_url('/mod/survey/view.php', array('id'=>$cmid));
+
+    $survey = $PAGE->activityrecord;
+
     $trimmedintro = trim($survey->intro);
     if (empty($trimmedintro)) {
         $tempo = $DB->get_field("survey", "intro", array("id"=>$survey->template));
@@ -151,7 +141,7 @@ $completion->set_module_viewed($cm);
 
     echo "<form method=\"post\" action=\"save.php\" id=\"surveyform\">";
     echo '<div>';
-    echo "<input type=\"hidden\" name=\"id\" value=\"$id\" />";
+    echo "<input type=\"hidden\" name=\"id\" value=\"$cmid\" />";
     echo "<input type=\"hidden\" name=\"sesskey\" value=\"".sesskey()."\" />";
 
     echo $OUTPUT->box(format_module_intro('survey', $survey, $cm->id), 'generalbox boxaligncenter bowidthnormal', 'intro');

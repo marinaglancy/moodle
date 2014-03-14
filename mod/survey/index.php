@@ -7,15 +7,11 @@
 
     $PAGE->set_url('/mod/survey/index.php', array('id'=>$id));
 
-    if (!$course = $DB->get_record('course', array('id'=>$id))) {
-        print_error('invalidcourseid');
-    }
-
-    require_course_login($course);
+    list($context, $course) = $PAGE->login($id, PAGELOGIN_ALLOW_FRONTPAGE_GUEST);
     $PAGE->set_pagelayout('incourse');
 
     $params = array(
-        'context' => context_course::instance($course->id),
+        'context' => $context,
         'courseid' => $course->id
     );
     $event = \mod_survey\event\course_module_instance_list_viewed::create($params);

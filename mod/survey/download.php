@@ -28,28 +28,16 @@ require_once ("../../config.php");
 
 // Check that all the parameters have been provided.
 
-$id    = required_param('id', PARAM_INT);    // Course Module ID
+$cmid  = required_param('id', PARAM_INT);    // Course Module ID
 $type  = optional_param('type', 'xls', PARAM_ALPHA);
 $group = optional_param('group', 0, PARAM_INT);
 
-if (! $cm = get_coursemodule_from_id('survey', $id)) {
-    print_error('invalidcoursemodule');
-}
-
-if (! $course = $DB->get_record("course", array("id"=>$cm->course))) {
-    print_error('coursemisconf');
-}
-
-$context = context_module::instance($cm->id);
-
-$PAGE->set_url('/mod/survey/download.php', array('id'=>$id, 'type'=>$type, 'group'=>$group));
-
-require_login($course, false, $cm);
+list($context, $course, $cm) = $PAGE->login_to_cm('survey', $cmid, null, PAGELOGIN_NO_AUTOLOGIN);
 require_capability('mod/survey:download', $context) ;
 
-if (! $survey = $DB->get_record("survey", array("id"=>$cm->instance))) {
-    print_error('invalidsurveyid', 'survey');
-}
+$PAGE->set_url('/mod/survey/download.php', array('id'=>$cmid, 'type'=>$type, 'group'=>$group));
+
+$survey = $PAGE->activityrecord;
 
 $params = array(
     'objectid' => $survey->id,

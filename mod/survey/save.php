@@ -34,30 +34,19 @@
         print_error('cannotcallscript');
     }
 
-    $id = required_param('id', PARAM_INT);    // Course Module ID
+    $cmid = required_param('id', PARAM_INT);    // Course Module ID
 
-    if (! $cm = get_coursemodule_from_id('survey', $id)) {
-        print_error('invalidcoursemodule');
-    }
-
-    if (! $course = $DB->get_record("course", array("id"=>$cm->course))) {
-        print_error('coursemisconf');
-    }
-
-    $PAGE->set_url('/mod/survey/save.php', array('id'=>$id));
-    require_login($course, false, $cm);
-
-    $context = context_module::instance($cm->id);
+    list($context, $course, $cm) = $PAGE->login_to_cm('survey', $cmid, null, PAGELOGIN_NO_AUTOLOGIN);
     require_capability('mod/survey:participate', $context);
 
-    if (! $survey = $DB->get_record("survey", array("id"=>$cm->instance))) {
-        print_error('invalidsurveyid', 'survey');
-    }
+    $PAGE->set_url('/mod/survey/save.php', array('id'=>$cmid));
+
+    $surveyid = $cm->instance;
 
     $params = array(
         'context' => $context,
         'courseid' => $course->id,
-        'other' => array('surveyid' => $survey->id)
+        'other' => array('surveyid' => $surveyid)
     );
     $event = \mod_survey\event\response_submitted::create($params);
     $event->trigger();
@@ -67,9 +56,9 @@
     $PAGE->set_title($strsurveysaved);
     $PAGE->set_heading($course->fullname);
     echo $OUTPUT->header();
-    echo $OUTPUT->heading($survey->name);
+    echo $OUTPUT->heading($cm->name);
 
-    if (survey_already_done($survey->id, $USER->id)) {
+    if (survey_already_done($surveyid, $USER->id)) {
         notice(get_string("alreadysubmitted", "survey"), $_SERVER["HTTP_REFERER"]);
         exit;
     }
@@ -104,7 +93,7 @@
             $newdata = new stdClass();
             $newdata->time = $timenow;
             $newdata->userid = $USER->id;
-            $newdata->survey = $survey->id;
+            $newdata->survey = $surveyid;
             $newdata->question = $key;
             if (!empty($val[0])) {
                 $newdata->answer1 = $val[0];
