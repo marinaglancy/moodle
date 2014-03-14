@@ -42,29 +42,20 @@ if ($action == 'create') {
     }
 }
 
+$PAGE->login_expected();
 if (!empty($swid)) {
     $subwiki = wiki_get_subwiki($swid);
-
-    if (!$wiki = wiki_get_wiki($subwiki->wikiid)) {
-        print_error('invalidwikiid', 'wiki');
-    }
-
+    $wid = $subwiki->wikiid;
 } else {
     $subwiki = wiki_get_subwiki_by_group($wid, $group, $uid);
-
-    if (!$wiki = wiki_get_wiki($wid)) {
-        print_error('invalidwikiid', 'wiki');
-    }
-
 }
-
-if (!$cm = get_coursemodule_from_instance('wiki', $wiki->id)) {
-    print_error('invalidcoursemoduleid', 'wiki');
+if (!$wiki = wiki_get_wiki($wid)) {
+    print_error('invalidwikiid', 'wiki');
 }
+list($modulecontext, $course, $cm) = $PAGE->login_to_activity('wiki', $wiki);
 
 $groups = new stdClass();
 if (groups_get_activity_groupmode($cm)) {
-    $modulecontext = context_module::instance($cm->id);
     $canaccessgroups = has_capability('moodle/site:accessallgroups', $modulecontext);
     if ($canaccessgroups) {
         $groups->availablegroups = groups_get_all_groups($cm->course);
@@ -81,10 +72,6 @@ if (groups_get_activity_groupmode($cm)) {
         $groups->currentgroup = groups_get_activity_group($cm);
     }
 }
-
-$course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
-
-require_login($course, true, $cm);
 
 $wikipage = new page_wiki_create($wiki, $subwiki, $cm);
 

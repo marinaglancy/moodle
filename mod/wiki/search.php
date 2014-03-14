@@ -29,18 +29,11 @@ require_once($CFG->dirroot . '/mod/wiki/pagelib.php');
 $search = optional_param('searchstring', null, PARAM_ALPHANUMEXT);
 $courseid = optional_param('courseid', 0, PARAM_INT);
 $searchcontent = optional_param('searchwikicontent', 0, PARAM_INT);
-$cmid = optional_param('cmid', 0, PARAM_INT);
+$cmid = required_param('cmid', PARAM_INT);
 $subwikiid = optional_param('subwikiid', 0, PARAM_INT);
 $userid = optional_param('uid', 0, PARAM_INT);
 
-if (!$course = $DB->get_record('course', array('id' => $courseid))) {
-    print_error('invalidcourseid');
-}
-if (!$cm = get_coursemodule_from_id('wiki', $cmid)) {
-    print_error('invalidcoursemodule');
-}
-
-require_login($course, true, $cm);
+list($context, $course, $cm) = $PAGE->login_to_cm('wiki', $cmid, $courseid);
 
 // Checking wiki instance
 if (!$wiki = wiki_get_wiki($cm->instance)) {

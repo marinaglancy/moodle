@@ -44,6 +44,7 @@ if (!confirm_sesskey()) {
 $pageid = required_param('pageid', PARAM_INT);
 $section = optional_param('section', "", PARAM_TEXT);
 
+$PAGE->login_expected();
 if (!$page = wiki_get_page($pageid)) {
     print_error('incorrectpageid', 'wiki');
 }
@@ -52,21 +53,12 @@ if (!$subwiki = wiki_get_subwiki($page->subwikiid)) {
     print_error('incorrectsubwikiid', 'wiki');
 }
 
-if (!$wiki = wiki_get_wiki($subwiki->wikiid)) {
-    print_error('incorrectwikiid', 'wiki');
-}
-
-if (!$cm = get_coursemodule_from_instance('wiki', $wiki->id)) {
-    print_error('invalidcoursemodule');
-}
-
-$course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
+list($context, $course, $cm) = $PAGE->login_to_activity('wiki', $subwiki->wikiid);
+$wiki = $PAGE->activityrecord;
 
 if (!empty($section) && !$sectioncontent = wiki_get_section_page($page, $section)) {
     print_error('invalidsection', 'wiki');
 }
-
-require_login($course, false, $cm);
 
 if (!wiki_user_can_edit($subwiki)) {
     print_error('cannoteditpage', 'wiki');

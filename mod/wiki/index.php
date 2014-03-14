@@ -37,13 +37,8 @@ require_once('lib.php');
 $id = required_param('id', PARAM_INT); // course
 $PAGE->set_url('/mod/wiki/index.php', array('id' => $id));
 
-if (!$course = $DB->get_record('course', array('id' => $id))) {
-    print_error('invalidcourseid');
-}
-
-require_login($course, true);
+list($context, $course) = $PAGE->login($id);
 $PAGE->set_pagelayout('incourse');
-$context = context_course::instance($course->id);
 
 $event = \mod_wiki\event\course_module_instance_list_viewed::create(array('context' => $context));
 $event->add_record_snapshot('course', $course);

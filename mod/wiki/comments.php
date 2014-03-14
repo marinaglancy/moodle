@@ -39,6 +39,7 @@ require_once($CFG->dirroot . '/mod/wiki/pagelib.php');
 
 $pageid = required_param('pageid', PARAM_TEXT);
 
+$PAGE->login_expected();
 if (!$page = wiki_get_page($pageid)) {
     print_error('incorrectpageid', 'wiki');
 }
@@ -50,14 +51,7 @@ if (!$subwiki = wiki_get_subwiki($page->subwikiid)) {
 if (!$wiki = wiki_get_wiki($subwiki->wikiid)) {
     print_error('incorrectwikiid', 'wiki');
 }
-
-if (!$cm = get_coursemodule_from_instance('wiki', $wiki->id)) {
-    print_error('invalidcoursemodule');
-}
-
-$course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
-
-require_login($course, true, $cm);
+list($context, $course, $cm) = $PAGE->login_to_activity('wiki', $wiki);
 
 if (!wiki_user_can_view($subwiki, $wiki)) {
     print_error('cannotviewpage', 'wiki');
@@ -66,7 +60,7 @@ if (!wiki_user_can_view($subwiki, $wiki)) {
 // Trigger comment viewed event.
 $event = \mod_wiki\event\comments_viewed::create(
         array(
-            'context' => context_module::instance($cm->id),
+            'context' => $context,
             'objectid' => $pageid
             ));
 $event->add_record_snapshot('wiki_pages', $page);

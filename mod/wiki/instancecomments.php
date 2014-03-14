@@ -44,6 +44,7 @@ $commentid = optional_param('commentid', 0, PARAM_INT);
 $newcontent = optional_param('newcontent', '', PARAM_CLEANHTML);
 $confirm = optional_param('confirm', 0, PARAM_BOOL);
 
+$PAGE->login_expected();
 if (!$page = wiki_get_page($pageid)) {
     print_error('incorrectpageid', 'wiki');
 }
@@ -51,14 +52,9 @@ if (!$page = wiki_get_page($pageid)) {
 if (!$subwiki = wiki_get_subwiki($page->subwikiid)) {
     print_error('incorrectsubwikiid', 'wiki');
 }
-if (!$cm = get_coursemodule_from_instance("wiki", $subwiki->wikiid)) {
-    print_error('invalidcoursemodule');
-}
-$course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
-if (!$wiki = wiki_get_wiki($subwiki->wikiid)) {
-    print_error('incorrectwikiid', 'wiki');
-}
-require_login($course, true, $cm);
+
+list($context, $course, $cm) = $PAGE->login_to_activity('wiki', $subwiki->wikiid);
+$wiki = $PAGE->activityrecord;
 
 if ($action == 'add' || $action == 'edit') {
     //just check sesskey

@@ -51,7 +51,12 @@ define('LOCK_TIMEOUT', 30);
  * @param int $wikiid the instance id of wiki
  */
 function wiki_get_wiki($wikiid) {
-    global $DB;
+    global $DB, $PAGE;
+
+    // Avoid extra DB query if this wiki is already set as the current course module.
+    if (!empty($PAGE->cm) && $PAGE->cm->instance == $wikiid && $PAGE->cm->modname === 'wiki') {
+        return clone($PAGE->activityrecord);
+    }
 
     return $DB->get_record('wiki', array('id' => $wikiid));
 }
