@@ -66,4 +66,27 @@ class behat_mod_quiz extends behat_base {
             new Given("I press \"$savechanges\"")
         );
     }
+
+    /**
+     * Attempts or re-attempts the one-page quiz.
+     *
+     * @When /^I attempt the quiz "(?P<quiz_name_string>(?:[^"]|\\")*)" with:$/
+     * @param type $quizname
+     * @param type $table
+     * @return type
+     */
+    public function i_attempt_the_quiz_with($quizname, $table) {
+        $quizname = $this->escape($quizname);
+        $next = $this->escape(get_string('next'));
+        $submitallandfinish = $this->escape(get_string('submitallandfinish', 'quiz'));
+        $yes = $this->escape(get_string('yes'));
+        return array(
+            new Given("I follow \"$quizname\""),
+            new Given("I click on \".quizstartbuttondiv input[type=submit]\" \"css_element\""),
+            new Given("I set the following fields to these values:", $table),
+            new Given("I press \"$next\""),
+            new Given("I press \"$submitallandfinish\""),
+            new Given("I press \"$yes\"")
+        );
+    }
 }
