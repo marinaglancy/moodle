@@ -929,8 +929,12 @@ class core_plugin_manager {
         $standard_plugins = array(
 
             'atto' => array(
-                'bold', 'html', 'indent', 'link', 'orderedlist', 'strike', 'title', 'unlink',
-                'clear', 'image', 'italic', 'media', 'outdent', 'table', 'underline', 'unorderedlist'
+                'accessibilitychecker', 'accessibilityhelper', 'align',
+                'backcolor', 'bold', 'charmap', 'clear', 'collapse', 'emoticon',
+                'equation', 'fontcolor', 'html', 'image', 'indent', 'italic',
+                'link', 'managefiles', 'media', 'noautolink', 'orderedlist',
+                'rtl', 'strike', 'subscript', 'superscript', 'table', 'title',
+                'underline', 'undo', 'unlink', 'unorderedlist'
             ),
 
             'assignment' => array(
@@ -995,7 +999,7 @@ class core_plugin_manager {
             ),
 
             'editor' => array(
-                'textarea', 'tinymce'
+                'atto', 'textarea', 'tinymce'
             ),
 
             'enrol' => array(
