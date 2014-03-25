@@ -33,3 +33,11 @@ h4 small { font-size: round(@baseFontSize * 0.85); } // ~12px
     width: (@columnWidth * @columns) + (@gutterWidth * (@columns - 1));
     *width: (@columnWidth * @columns) + (@gutterWidth * (@columns - 1)) - (.5 / @gridRowWidth * 100 * 1%);
 }
+
+// Subscript and superscript - required to prevent bugs in contenteditable divs.
+sup {
+    vertical-align: super;
+}
+sub {
+    vertical-align: sub;
+}
