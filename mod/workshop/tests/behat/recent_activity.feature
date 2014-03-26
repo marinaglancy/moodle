@@ -125,8 +125,7 @@ Feature: New workshop submissions in Recent activity block and report
       | Title              | Submission15  |
       | Submission content | Some content  |
     And I follow "Course1"
-    And I save a screenshot as "ss01_student1_b"
-    Then I should see in recent activity block:
+    And I should see in recent activity block:
       | h3    | Workshop submissions: |
       | .head | Sam1                  |
       | .info | Submission11          |
@@ -139,8 +138,7 @@ Feature: New workshop submissions in Recent activity block and report
       | .head | Sam1                  |
       | .info | Submission15          |
     And I open course recent activity report
-    And I save a screenshot as "ss01_student1_r"
-    Then I should see in course recent activity report:
+    And I should see in course recent activity report:
       | h3 | EverybodyAccess          |               |      |
       |    | Submission11             | Submission by | Sam1 |
       | h3 | VisibleGroups            |               |      |
@@ -175,8 +173,7 @@ Feature: New workshop submissions in Recent activity block and report
       | Title              | Submission25  |
       | Submission content | Some content  |
     And I follow "Course1"
-    And I save a screenshot as "ss02_student2_b"
-    Then I should see in recent activity block:
+    And I should see in recent activity block:
       | h3    | Workshop submissions: |
       | .head | Sam2                  |
       | .info | Submission21          |
@@ -189,8 +186,7 @@ Feature: New workshop submissions in Recent activity block and report
       | .head | Sam2                  |
       | .info | Submission25          |
     And I open course recent activity report
-    And I save a screenshot as "ss02_student2_r"
-    Then I should see in course recent activity report:
+    And I should see in course recent activity report:
       | h3 | EverybodyAccess          |               |      |
       |    | Submission21             | Submission by | Sam2 |
       | h3 | VisibleGroups            |               |      |
@@ -205,8 +201,7 @@ Feature: New workshop submissions in Recent activity block and report
 # teacher1
     And I log in as "teacher1"
     And I follow "Course1"
-    And I save a screenshot as "ss03_teacher1_b"
-    Then I should see in recent activity block:
+    And I should see in recent activity block:
       | h3    | Workshop submissions: |
       | .head | Sam1                  |
       | .info | Submission11          |
@@ -229,8 +224,7 @@ Feature: New workshop submissions in Recent activity block and report
       | .head | Sam2                  |
       | .info | Submission25          |
     And I open course recent activity report
-    And I save a screenshot as "ss03_teacher1_r"
-    Then I should see in course recent activity report:
+    And I should see in course recent activity report:
       | h3 | EverybodyAccess          |               |      |
       |    | Submission11             | Submission by | Sam1 |
       |    | Submission21             | Submission by | Sam2 |
@@ -261,7 +255,6 @@ Feature: New workshop submissions in Recent activity block and report
       | peercomment__idx_0      |           |
       | Feedback for the author | Good work |
     And I follow "Course1"
-    And I save a screenshot as "ss04_student2_b"
     Then I should see in recent activity block:
       | h3    | Workshop submissions: |
       | .head | Sam2                  |
@@ -278,8 +271,7 @@ Feature: New workshop submissions in Recent activity block and report
       | .head | Sam2                  |
       | .info | Submission11          |
     And I open course recent activity report
-    And I save a screenshot as "ss04_student2_r"
-    Then I should see in course recent activity report:
+    And I should see in course recent activity report:
       | h3 | EverybodyAccess          |               |      |
       |    | Submission21             | Submission by | Sam2 |
       |    | Submission11             | Assessment by | Sam2 |
@@ -295,11 +287,9 @@ Feature: New workshop submissions in Recent activity block and report
 # student4
     And I log in as "student4"
     And I follow "Course1"
-    And I save a screenshot as "ss05_student4_b"
-    Then I should see nothing in recent activity block
+    And I should see nothing in recent activity block
     And I open course recent activity report
-    And I save a screenshot as "ss05_student4_r"
-    Then I should see in course recent activity report:
+    And I should see in course recent activity report:
       | h3 | EverybodyAccess          |               |      |
       | h3 | VisibleGroups            |               |      |
       | h3 | SeparateGroupsNoGrouping |               |      |
@@ -309,14 +299,12 @@ Feature: New workshop submissions in Recent activity block and report
 # teacher1
     And I log in as "teacher1"
     And I follow "Course1"
-    And I save a screenshot as "ss06_teacher1_b"
-    Then I should see in recent activity block:
+    And I should see in recent activity block:
       | h3    | Workshop assessments: |
       | .head | Sam2                  |
       | .info | Submission11          |
     And I open course recent activity report
-    And I save a screenshot as "ss06_teacher1_r"
-    Then I should see in course recent activity report:
+    And I should see in course recent activity report:
       | h3 | EverybodyAccess          |               |      |
       |    | Submission11             | Submission by | Sam1 |
       |    | Submission21             | Submission by | Sam2 |
@@ -337,8 +325,7 @@ Feature: New workshop submissions in Recent activity block and report
 # teacher2
     And I log in as "teacher2"
     And I follow "Course1"
-    And I save a screenshot as "ss07_teacher2_b"
-    Then I should see in recent activity block:
+    And I should see in recent activity block:
       | h3    | Workshop submissions: |
       | .head | Sam1                  |
       | .info | Submission11          |
@@ -356,8 +343,7 @@ Feature: New workshop submissions in Recent activity block and report
       | .head | Sam2                  |
       | .info | Submission11          |
     And I open course recent activity report
-    And I save a screenshot as "ss07_teacher2_r"
-    Then I should see in course recent activity report:
+    And I should see in course recent activity report:
       | h3 | EverybodyAccess          |               |      |
       |    | Submission11             | Submission by | Sam1 |
       |    | Submission21             | Submission by | Sam2 |
@@ -374,8 +360,7 @@ Feature: New workshop submissions in Recent activity block and report
 # teacher3
     And I log in as "teacher3"
     And I follow "Course1"
-    And I save a screenshot as "ss08_teacher3_b"
-    Then I should see in recent activity block:
+    And I should see in recent activity block:
       | h3    | Workshop submissions: |
       | .head | Sam1                  |
       | .info | Submission11          |
@@ -391,8 +376,7 @@ Feature: New workshop submissions in Recent activity block and report
       | .head | Sam2                  |
       | .info | Submission11          |
     And I open course recent activity report
-    And I save a screenshot as "ss08_teacher3_r"
-    Then I should see in course recent activity report:
+    And I should see in course recent activity report:
       | h3 | EverybodyAccess          |               |      |
       |    | Submission11             | Submission by | Sam1 |
       |    | Submission21             | Submission by | Sam2 |
