@@ -1,4 +1,4 @@
-@mod @mod_glossary @block_recent_activity @testg
+@mod @mod_glossary @block_recent_activity
 Feature: New glossary entries are shown in recent activity block and report
   In order to view recently added glossary entries
   As a teacher
