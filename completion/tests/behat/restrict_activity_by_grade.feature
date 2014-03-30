@@ -27,6 +27,7 @@ Feature: Restrict activity availability through grade conditions
     And I add a "Assignment" to section "1" and I fill the form with:
       | Assignment name | Grade assignment |
       | Description | Grade this assignment to revoke restriction on restricted assignment |
+      | grade[gradeconfig_type] | Point |
       | assignsubmission_onlinetext_enabled | 1 |
       | assignsubmission_file_enabled | 0 |
     # Adding the page like this because id_availableform_enabled needs to be clicked to trigger the action.

@@ -25,6 +25,7 @@ Feature: In an assignment, teachers can edit feedback for a students previous su
     And I add a "Assignment" to section "1" and I fill the form with:
       | Assignment name | Test assignment name |
       | Description | Submit your online text |
+      | grade[gradeconfig_type] | Point |
       | assignsubmission_onlinetext_enabled | 1 |
       | assignfeedback_comments_enabled | 1 |
       | Attempts reopened | Manually |

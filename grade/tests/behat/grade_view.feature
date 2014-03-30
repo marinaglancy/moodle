@@ -23,6 +23,7 @@ Feature: We can enter in grades and view reports from the gradebook
     And I add a "Assignment" to section "1" and I fill the form with:
       | Assignment name | Test assignment name |
       | Description | Submit your online text |
+      | grade[gradeconfig_type] | Point |
       | assignsubmission_onlinetext_enabled | 1 |
     And I log out
     And I log in as "student1"

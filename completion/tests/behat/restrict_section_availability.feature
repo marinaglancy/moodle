@@ -59,6 +59,7 @@ Feature: Restrict sections availability through completion or grade conditions
     And I add a "Assignment" to section "1" and I fill the form with:
       | Assignment name | Grade assignment |
       | Description | Grade this assignment to revoke restriction on restricted assignment |
+      | grade[gradeconfig_type] | Point |
       | assignsubmission_onlinetext_enabled | 1 |
       | assignsubmission_file_enabled | 0 |
     And I add a "Page" to section "2" and I fill the form with:

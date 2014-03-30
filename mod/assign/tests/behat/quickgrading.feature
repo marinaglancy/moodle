@@ -47,6 +47,7 @@ Feature: In an assignment, teachers grade multiple students on one page
     And I add a "Assignment" to section "1" and I fill the form with:
       | Assignment name | Test assignment name |
       | Description | Submit your online text |
+      | grade[gradeconfig_type] | Point |
       | assignsubmission_onlinetext_enabled | 1 |
       | assignsubmission_file_enabled | 0 |
       | M8d skillZ! | 1 |
