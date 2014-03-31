@@ -1,0 +1,303 @@
+<?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ * Grading scale/point config form element
+ *
+ * @package   core_form
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+global $CFG;
+require_once("HTML/QuickForm/element.php");
+require_once($CFG->dirroot.'/lib/form/group.php');
+require_once($CFG->dirroot.'/lib/grade/grade_scale.php');
+
+/**
+ * Gradeconfig element
+ *
+ * Form element for grade configuration. Shows three elements - a select to choose point or scale grades,
+ * a select box for the grading scales, and a maximum grade textbox.
+ *
+ * @package   core_form
+ * @category  form
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class MoodleQuickForm_gradeconfig extends MoodleQuickForm_group {
+
+    /**
+     * Constructor
+     *
+     * @param string $elementname Element's name
+     * @param mixed $elementlabel Label(s) for an element
+     * @param array $options Options to control the element's display. Not used.
+     * @param mixed $attributes Either a typical HTML attribute string or an associative array
+     */
+    public function MoodleQuickForm_gradeconfig($elementname = null, $elementlabel = null, $options = array(), $attributes = null) {
+        $this->HTML_QuickForm_element($elementname, $elementlabel, $attributes);
+        $this->_persistantFreeze = true;
+        $this->_appendName = true;
+        $this->_type = 'gradeconfig';
+    }
+
+    /**
+     * Create elements for this group.
+     */
+    public function _createElements() {
+        global $COURSE, $CFG;
+        $attributes = $this->getAttributes();
+        if (is_null($attributes)) {
+            $attributes = array();
+        }
+
+        $this->_elements = array();
+
+        // Create main elements
+        // We have to create the scale and point elements first, as we need their IDs.
+
+        // Grade scale select box.
+        $scales = get_scales_menu($COURSE->id);
+        $langscale = get_string('gradeconfigtypescale', 'grades');
+        $scaleselect = @MoodleQuickForm::createElement('select', 'gradeconfig_scale', $langscale, $scales, $attributes);
+        $scaleselect->setHiddenLabel = false;
+        $scaleselect->_generateId();
+        $scaleselectid = $scaleselect->getAttribute('id');
+
+        // Maximum grade textbox.
+        $langmaxgrade = get_string('gradeconfigmaxgrade', 'grades');
+        $maxgrade = @MoodleQuickForm::createElement('text', 'gradeconfig_point', $langmaxgrade, array());
+        $maxgrade->setHiddenLabel = false;
+        $gradepointmax = $CFG->gradepointmax;
+        if (!is_numeric($gradepointmax)) {
+            $gradepointmax = 100;
+        }
+        $maxgrade->setValue($gradepointmax);
+        $maxgrade->_generateId();
+        $maxgradeid = $maxgrade->getAttribute('id');
+
+        // Grade type select box.
+        $gradetype = array(
+            'none' => get_string('gradeconfigtypenone', 'grades'),
+            'scale' => get_string('gradeconfigtypescale', 'grades'),
+            'point' => get_string('gradeconfigtypepoint', 'grades'),
+        );
+        $langtype = get_string('gradeconfigtype', 'grades');
+        $typeselect = @MoodleQuickForm::createElement('select', 'gradeconfig_type', $langtype, $gradetype, $attributes, true);
+        $typeselect->setHiddenLabel = false;
+        $typeselect->_generateId();
+
+        // Add elements.
+
+        // Grade type select box.
+        $label = html_writer::tag('label', $typeselect->getLabel(), array('for' => $typeselect->getAttribute('id')));
+        $this->_elements[] = @MoodleQuickForm::createElement('static', 'gradetypelabel', '', '&nbsp;'.$label);
+        $this->_elements[] = $typeselect;
+        $this->_elements[] = @MoodleQuickForm::createElement('static', 'gradetypespacer', '', '<br />');
+
+        // Grade scale select box.
+        $label = html_writer::tag('label', $scaleselect->getLabel(), array('for' => $scaleselectid));
+        $this->_elements[] = @MoodleQuickForm::createElement('static', 'scalelabel', '', $label);
+        $this->_elements[] = $scaleselect;
+        $this->_elements[] = @MoodleQuickForm::createElement('static', 'scalespacer', '', '<br />');
+
+        // Maximum grade textbox.
+        $label = html_writer::tag('label', $maxgrade->getLabel(), array('for' => $maxgradeid));
+        $this->_elements[] = @MoodleQuickForm::createElement('static', 'pointlabel', '', $label);
+        $this->_elements[] = $maxgrade;
+        $this->_elements[] = @MoodleQuickForm::createElement('static', 'pointspacer', '', '<br />');
+    }
+
+    /**
+     * Returns HTML for the form element.
+     *
+     * @return string
+     */
+    public function toHtml() {
+        include_once('HTML/QuickForm/Renderer/Default.php');
+        $renderer = new HTML_QuickForm_Renderer_Default();
+        $renderer->setElementTemplate('{element}');
+        parent::accept($renderer);
+        return $renderer->toHtml();
+    }
+
+    /**
+     * Accepts a renderer
+     *
+     * @param HTML_QuickForm_Renderer $renderer An HTML_QuickForm_Renderer object
+     * @param bool $required Whether a group is required
+     * @param string $error An error message associated with a group
+     */
+    public function accept(&$renderer, $required = false, $error = null) {
+        $renderer->renderElement($this, $required, $error);
+    }
+
+    /**
+     * Calculate the output value for the element as a whole.
+     *
+     * @param array $submitvalues The incoming values from the form.
+     * @param bool $notused Not used.
+     * @return array Return value for the element, formatted like field name => value.
+     */
+    public function exportValue(&$submitvalues, $notused = false) {
+        global $COURSE;
+
+        // Get the values from all the child elements.
+        $vals = array();
+        foreach ($this->_elements as $element) {
+            $thisexport = $element->exportValue($submitvalues[$this->getName()], true);
+            if (!is_null($thisexport)) {
+                $vals += $thisexport;
+            }
+        }
+
+        $type = (isset($vals['gradeconfig_type'])) ? $vals['gradeconfig_type'] : 'none';
+        $point = (isset($vals['gradeconfig_point'])) ? $vals['gradeconfig_point'] : null;
+        $scale = (isset($vals['gradeconfig_scale'])) ? $vals['gradeconfig_scale'] : null;
+        $return = $this->process_value($type, $scale, $point);
+        return array($this->getName() => $return);
+    }
+
+    /**
+     * Process the value for the group based on the selected grade type, and the input for the scale and point elements.
+     *
+     * @param  string $type The value of the grade type select box. Can be 'none', 'scale', or 'point'
+     * @param  string|int $scale The value of the scale select box.
+     * @param  string|int $point The value of the point grade textbox.
+     * @return int The resulting value
+     */
+    protected function process_value($type='none', $scale=null, $point=null) {
+        global $COURSE;
+        $val = '';
+        switch ($type) {
+            case 'point':
+                if ($this->validate_point($point) === true) {
+                    $val = (int)$point;
+                }
+                break;
+
+            case 'scale':
+                if ($this->validate_scale($scale)) {
+                    $val = (int)(-$scale);
+                }
+                break;
+        }
+        return $val;
+    }
+
+    /**
+     * Determines whether a given value is a valid scale selection.
+     *
+     * @param string|int $val The value to test.
+     * @return bool Valid or invalid
+     */
+    protected function validate_scale($val) {
+        global $COURSE;
+        $scales = get_scales_menu($COURSE->id);
+        return (!empty($val) && isset($scales[(int)$val])) ? true : false;
+    }
+
+    /**
+     * Determines whether a given value is a valid point selection.
+     *
+     * @param string|int $val The value to test.
+     * @return bool Valid or invalid
+     */
+    protected function validate_point($val) {
+        if (empty($val)) {
+            return false;
+        }
+        $maxgrade = (int)get_config('core', 'gradepointmax');
+        $isintlike = ((string)(int)$val === $val) ? true : false;
+        return ($isintlike === true && $val > 0 && $val <= $maxgrade) ? true : false;
+    }
+
+    /**
+     * Called by HTML_QuickForm whenever form event is made on this element.
+     *
+     * @param string $event Name of event
+     * @param mixed $arg event arguments
+     * @param object $caller calling object
+     * @return mixed
+     */
+    public function onQuickFormEvent($event, $arg, &$caller) {
+        global $COURSE;
+
+        switch ($event) {
+            case 'updateValue':
+                $value = $this->_findValue($caller->_constantValues);
+                if (null === $value) {
+                    if ($caller->isSubmitted()) {
+                        $value = $this->_findValue($caller->_submitValues);
+                    } else {
+                        $value = $this->_findValue($caller->_defaultValues);
+                    }
+                }
+
+                // Set element state for existing data.
+                if (!empty($value) && !empty($this->_elements)) {
+                    if ($value < 0) {
+                        $this->_elements[1]->setValue('scale');
+                        $this->_elements[4]->setValue(($value * -1));
+                    } else if ($value > 0) {
+                        $this->_elements[1]->setValue('point');
+                        $this->_elements[7]->setValue($value);
+                    } else {
+                        $this->_elements[1]->setValue('none');
+                        $this->_elements[7]->setValue('');
+                    }
+                }
+
+                // Value Validation.
+                $name = $this->getName();
+                if ($name && $caller->elementExists($name)) {
+                    $checkmaxgrade = function($val) {
+                        if (isset($val['gradeconfig_type']) && $val['gradeconfig_type'] === 'point') {
+                            if (!isset($val['gradeconfig_point'])) {
+                                return false;
+                            }
+                            return $this->validate_point($val['gradeconfig_point']);
+                        }
+                        return true;
+                    };
+
+                    $checkvalidscale = function($val) {
+                        if (isset($val['gradeconfig_type']) && $val['gradeconfig_type'] === 'scale') {
+                            if (!isset($val['gradeconfig_scale'])) {
+                                return false;
+                            }
+                            return $this->validate_scale($val['gradeconfig_scale']);
+                        }
+                        return true;
+                    };
+
+                    $maxgradeexceeded = get_string('gradeconfigerrorbadpoint', 'grades', get_config('core', 'gradepointmax'));
+                    $invalidscale = get_string('gradeconfigerrorbadscale', 'grades');
+                    $caller->addRule($name, $maxgradeexceeded, 'callback', $checkmaxgrade);
+                    $caller->addRule($name, $invalidscale, 'callback', $checkvalidscale);
+                }
+                break;
+
+            case 'createElement':
+                // Set disable dependencies.
+                $caller->disabledIf('grade[gradeconfig_scale]', 'grade[gradeconfig_type]', 'neq', 'scale');
+                $caller->disabledIf('grade[gradeconfig_point]', 'grade[gradeconfig_type]', 'neq', 'point');
+                break;
+
+        }
+
+        return parent::onQuickFormEvent($event, $arg, $caller);
+    }
+}
