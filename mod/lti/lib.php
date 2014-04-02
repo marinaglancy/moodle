@@ -176,6 +176,7 @@ function lti_get_types() {
 
     $subtypes = array();
     foreach (get_plugin_list('ltisource') as $name => $dir) {
+        // TODO MDL-44078 FULLPLUGINNAME_get_types (ltisource) - replace with hook.
         if ($moretypes = component_callback("ltisource_$name", 'get_types')) {
             $subtypes = array_merge($subtypes, $moretypes);
         }

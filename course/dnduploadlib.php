@@ -120,6 +120,7 @@ class dndupload_handler {
                         get_string('nameforpage', 'moodle'), get_string('whatforpage', 'moodle'), 30);
 
         // Loop through all modules to find handlers.
+        // TODO MDL-44078 (FULL)PLUGINNAME_dndupload_register (loop:mod) - replace with hook.
         $mods = get_plugin_list_with_function('mod', 'dndupload_register');
         foreach ($mods as $component => $funcname) {
             list($modtype, $modname) = core_component::normalize_component($component);
@@ -496,6 +497,7 @@ class dndupload_ajax_processor {
 
         // Ask the module to set itself up.
         $moduledata = $this->prepare_module_data($draftitemid);
+        // TODO MDL-44078 FULLPLUGINNAME_dndupload_handle (mod) - replace with hook.
         $instanceid = plugin_callback('mod', $this->module->name, 'dndupload', 'handle', array($moduledata), 'invalidfunction');
         if ($instanceid === 'invalidfunction') {
             throw new coding_exception("{$this->module->name} does not support drag and drop upload (missing {$this->module->name}_dndupload_handle function");
@@ -523,6 +525,7 @@ class dndupload_ajax_processor {
 
         // Ask the module to set itself up.
         $moduledata = $this->prepare_module_data(null, $content);
+        // TODO MDL-44078 FULLPLUGINNAME_dndupload_handle (mod) - replace with hook.
         $instanceid = plugin_callback('mod', $this->module->name, 'dndupload', 'handle', array($moduledata), 'invalidfunction');
         if ($instanceid === 'invalidfunction') {
             throw new coding_exception("{$this->module->name} does not support drag and drop upload (missing {$this->module->name}_dndupload_handle function");

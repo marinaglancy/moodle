@@ -1068,6 +1068,7 @@ function get_array_of_activities($courseid) {
                    }
 
                    $modname = $mod[$seq]->mod;
+                   // TODO MDL-44078 PLUGINNAME_get_coursemodule_info (mod) - replace with hook or plugininfo.
                    $functionname = $modname."_get_coursemodule_info";
 
                    if (!file_exists("$CFG->dirroot/mod/$modname/lib.php")) {
@@ -1288,6 +1289,7 @@ function get_module_metadata($course, $modnames, $sectionreturn = null) {
         include_once($libfile);
 
         // NOTE: this is legacy stuff, module subtypes are very strongly discouraged!!
+        // TODO MDL-44078 PLUGINNAME_get_types (mod) - replace with hook or plugininfo.
         $gettypesfunc =  $modname.'_get_types';
         $types = MOD_SUBTYPE_NO_CHILDREN;
         if (function_exists($gettypesfunc)) {
@@ -1608,6 +1610,7 @@ function set_coursemodule_visible($id, $visible) {
     if (plugin_supports('mod', $modulename, FEATURE_CONTROLS_GRADE_VISIBILITY) &&
             component_callback_exists('mod_' . $modulename, 'grade_item_update')) {
         $instance = $DB->get_record($modulename, array('id' => $cm->instance), '*', MUST_EXIST);
+        // TODO MDL-44078 FULLPLUGINNAME_grade_item_update (mod) - replace with hook.
         component_callback('mod_' . $modulename, 'grade_item_update', array($instance));
     } else {
         $grade_items = grade_item::fetch_all(array('itemtype'=>'mod', 'itemmodule'=>$modulename, 'iteminstance'=>$cm->instance, 'courseid'=>$cm->course));
@@ -1660,6 +1663,7 @@ function course_delete_module($cmid) {
             "Cannot delete this module as the file mod/$modulename/lib.php is missing.");
     }
 
+    // TODO MDL-44078 PLUGINNAME_delete_instance (mod) - replace with hook or plugininfo.
     $deleteinstancefunction = $modulename . '_delete_instance';
 
     // Ensure the delete_instance function exists for this module.

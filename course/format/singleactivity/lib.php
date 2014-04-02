@@ -346,6 +346,7 @@ class format_singleactivity extends format_base {
             return null;
         }
         include_once($libfile);
+        // TODO MDL-44078 PLUGINNAME_get_types (mod) - replace with hook or plugininfo.
         return function_exists($modname. '_get_types');
     }
 

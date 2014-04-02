@@ -1743,6 +1743,7 @@ function generate_page_type_patterns($pagetype, $parentcontext = null, $currentc
             $libfile = $core[$possiblecomponent].'/lib.php';
             if (file_exists($libfile)) {
                 require_once($libfile);
+                // TODO MDL-44078 FULLPLUGINNAME_page_type_list - replace with hook.
                 $function = $possiblecomponent.'_page_type_list';
                 if (function_exists($function)) {
                     if ($patterns = $function($pagetype, $parentcontext, $currentcontext)) {
@@ -1763,6 +1764,7 @@ function generate_page_type_patterns($pagetype, $parentcontext = null, $currentc
                     $libfile = $directory.'/lib.php';
                     if (file_exists($libfile)) {
                         require_once($libfile);
+                        // TODO MDL-44078 (FULL)PLUGINNAME_page_type_list - replace with hook.
                         $function = $possiblecomponent.'_'.$pluginname.'_page_type_list';
                         if (!function_exists($function)) {
                             $function = $pluginname.'_page_type_list';
@@ -1782,6 +1784,7 @@ function generate_page_type_patterns($pagetype, $parentcontext = null, $currentc
             $libfile = $directory.'/lib.php';
             if (file_exists($libfile)) {
                 require_once($libfile);
+                // TODO MDL-44078 FULLPLUGINNAME_page_type_list - replace with hook.
                 $function = $possiblecomponent.'_page_type_list';
                 if (function_exists($function)) {
                     if ($patterns = $function($pagetype, $parentcontext, $currentcontext)) {

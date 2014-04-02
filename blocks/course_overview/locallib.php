@@ -30,6 +30,7 @@
  */
 function block_course_overview_get_overviews($courses) {
     $htmlarray = array();
+    // TODO MDL-44078 (FULL)PLUGINNAME_print_overview (lopp:mod) - replace with hook.
     if ($modules = get_plugin_list_with_function('mod', 'print_overview')) {
         // Split courses list into batches with no more than MAX_MODINFO_CACHE_SIZE courses in one batch.
         // Otherwise we exceed the cache limit in get_fast_modinfo() and rebuild it too often.

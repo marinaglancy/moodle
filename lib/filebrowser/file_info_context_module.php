@@ -65,6 +65,7 @@ class file_info_context_module extends file_info {
         include_once("$CFG->dirroot/mod/$modname/lib.php");
 
         //find out all supported areas
+        // TODO MDL-44078 (FULL)PLUGINNAME_get_file_areas (mod) - replace with hook or plugininfo.
         $functionname     = 'mod_'.$modname.'_get_file_areas';
         $functionname_old = $modname.'_get_file_areas';
 
@@ -121,6 +122,7 @@ class file_info_context_module extends file_info {
             return $this->get_area_backup($itemid, $filepath, $filename);
         }
 
+        // TODO MDL-44078 (FULL)PLUGINNAME_get_file_info (mod) - replace with hook or plugininfo.
         $functionname     = 'mod_'.$this->modname.'_get_file_info';
         $functionname_old = $this->modname.'_get_file_info';
 

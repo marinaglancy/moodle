@@ -3840,6 +3840,7 @@ class curl_cache {
  * @todo MDL-31088 file serving improments
  */
 function file_pluginfile($relativepath, $forcedownload, $preview = null) {
+    // TODO MDL-44078 the whole functionality file_pluginfile() can be implemented with component and plugin hooks.
     global $DB, $CFG, $USER;
     // relative path must start with '/'
     if (!$relativepath) {
@@ -4494,6 +4495,7 @@ function file_pluginfile($relativepath, $forcedownload, $preview = null) {
     // ========================================================================================================================
     } else if ($component === 'question') {
         require_once($CFG->libdir . '/questionlib.php');
+        // TODO MDL-44078 COMPONENT_pluginfile (question) - replace with hook.
         question_pluginfile($course, $context, 'question', $filearea, $args, $forcedownload);
         send_file_not_found();
 
@@ -4566,6 +4568,7 @@ function file_pluginfile($relativepath, $forcedownload, $preview = null) {
             send_stored_file($file, null, 0, false, array('preview' => $preview));
         }
 
+        // TODO MDL-44078 (FULL)PLUGINNAME_pluginfile (mod) - replace with hook or plugininfo.
         $filefunction = $component.'_pluginfile';
         $filefunctionold = $modname.'_pluginfile';
         if (function_exists($filefunction)) {
@@ -4603,6 +4606,7 @@ function file_pluginfile($relativepath, $forcedownload, $preview = null) {
             $birecord = null;
         }
 
+        // TODO MDL-44078 FULLPLUGINNAME_pluginfile (block) - replace with hook or plugininfo.
         $filefunction = $component.'_pluginfile';
         if (function_exists($filefunction)) {
             // if the function exists, it must send the file and terminate. Whatever it returns leads to "not found"
@@ -4624,6 +4628,7 @@ function file_pluginfile($relativepath, $forcedownload, $preview = null) {
         }
         include_once("$dir/lib.php");
 
+        // TODO MDL-44078 FULLPLUGINNAME_pluginfile (*) - replace with hook or plugininfo.
         $filefunction = $component.'_pluginfile';
         if (function_exists($filefunction)) {
             // if the function exists, it must send the file and terminate. Whatever it returns leads to "not found"

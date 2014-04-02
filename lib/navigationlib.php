@@ -1274,6 +1274,8 @@ class global_navigation extends navigation_node {
 
         // Give the local plugins a chance to include some navigation if they want.
         foreach (core_component::get_plugin_list_with_file('local', 'lib.php', true) as $plugin => $file) {
+            // TODO MDL-44078 FULLPLUGINNAME_extends_navigation (local) - replace with hook.
+            // TODO MDL-44078 PLUGINNAME_extends_navigation (local) - deprecated, was supposed to be dropped in 2.4.
             $function = "local_{$plugin}_extends_navigation";
             $oldfunction = "{$plugin}_extends_navigation";
             if (function_exists($function)) {
@@ -2054,6 +2056,7 @@ class global_navigation extends navigation_node {
         $activity->nodetype = navigation_node::NODETYPE_LEAF;
         $activity->make_active();
         $file = $CFG->dirroot.'/mod/'.$cm->modname.'/lib.php';
+        // TODO MDL-44078 PLUGINNAME_extends_navigation (mod) - replace with hook.
         $function = $cm->modname.'_extend_navigation';
 
         if (file_exists($file)) {
@@ -2065,6 +2068,7 @@ class global_navigation extends navigation_node {
         }
 
         // Allow the active advanced grading method plugin to append module navigation
+        // TODO MDL-44078 PLUGINNAME_supports (mod) - same solution as in plugin_supports().
         $featuresfunc = $cm->modname.'_supports';
         if (function_exists($featuresfunc) && $featuresfunc(FEATURE_ADVANCED_GRADING)) {
             require_once($CFG->dirroot.'/grade/grading/lib.php');
@@ -2291,6 +2295,7 @@ class global_navigation extends navigation_node {
 
                 $reporttab = $usercoursenode->add(get_string('activityreports'));
 
+                // TODO MDL-44078 FULLPLUGINNAME_extend_navigation_user (loop:report) - replace with hook.
                 $reports = get_plugin_list_with_function('report', 'extend_navigation_user', 'lib.php');
                 foreach ($reports as $reportfunction) {
                     $reportfunction($reporttab, $user, $usercourse);
@@ -2317,6 +2322,7 @@ class global_navigation extends navigation_node {
             $extendingmodules[$modname] = false;
             $file = $CFG->dirroot.'/mod/'.$modname.'/lib.php';
             if (file_exists($file)) {
+                // TODO MDL-44078 PLUGINNAME_extends_navigation (mod) - replace with hook.
                 $function = $modname.'_extend_navigation';
                 require_once($file);
                 $extendingmodules[$modname] = (function_exists($function));
@@ -3680,6 +3686,7 @@ class settings_navigation extends navigation_node {
                 $libfile = $CFG->dirroot.'/course/report/'.$report.'/lib.php';
                 if (file_exists($libfile)) {
                     require_once($libfile);
+                    // TODO MDL-44078 PLUGINNAME_report_extends_navigation (coursereport) - replace with hook.
                     $reportfunction = $report.'_report_extend_navigation';
                     if (function_exists($report.'_report_extend_navigation')) {
                         $reportfunction($reportnav, $course, $coursecontext);
@@ -3687,6 +3694,7 @@ class settings_navigation extends navigation_node {
                 }
             }
 
+            // TODO MDL-44078 FULLPLUGINNAME_extend_navigation_course (loop:report) - replace with hook.
             $reports = get_plugin_list_with_function('report', 'extend_navigation_course', 'lib.php');
             foreach ($reports as $reportfunction) {
                 $reportfunction($reportnav, $course, $coursecontext);
@@ -3868,11 +3876,13 @@ class settings_navigation extends navigation_node {
             $modulenode->add(get_string('filters', 'admin'), $url, self::TYPE_SETTING, null, 'filtermanage');
         }
         // Add reports
+        // TODO MDL-44078 FULLPLUGINNAME_extend_navigation_module (loop:report) - replace with hook.
         $reports = get_plugin_list_with_function('report', 'extend_navigation_module', 'lib.php');
         foreach ($reports as $reportfunction) {
             $reportfunction($modulenode, $this->page->cm);
         }
         // Add a backup link
+        // TODO MDL-44078 PLUGINNAME_supports (mod) - same solution as in plugin_supports().
         $featuresfunc = $this->page->activityname.'_supports';
         if (function_exists($featuresfunc) && $featuresfunc(FEATURE_BACKUP_MOODLE2) && has_capability('moodle/backup:backupactivity', $this->page->cm->context)) {
             $url = new moodle_url('/backup/backup.php', array('id'=>$this->page->cm->course, 'cm'=>$this->page->cm->id));
@@ -3880,6 +3890,7 @@ class settings_navigation extends navigation_node {
         }
 
         // Restore this activity
+        // TODO MDL-44078 PLUGINNAME_supports (mod) - same solution as in plugin_supports().
         $featuresfunc = $this->page->activityname.'_supports';
         if (function_exists($featuresfunc) && $featuresfunc(FEATURE_BACKUP_MOODLE2) && has_capability('moodle/restore:restoreactivity', $this->page->cm->context)) {
             $url = new moodle_url('/backup/restorefile.php', array('contextid'=>$this->page->cm->context->id));
@@ -3887,6 +3898,7 @@ class settings_navigation extends navigation_node {
         }
 
         // Allow the active advanced grading method plugin to append its settings
+        // TODO MDL-44078 PLUGINNAME_supports (mod) - same solution as in plugin_supports().
         $featuresfunc = $this->page->activityname.'_supports';
         if (function_exists($featuresfunc) && $featuresfunc(FEATURE_ADVANCED_GRADING) && has_capability('moodle/grade:managegradingforms', $this->page->cm->context)) {
             require_once($CFG->dirroot.'/grade/grading/lib.php');
@@ -3894,6 +3906,7 @@ class settings_navigation extends navigation_node {
             $gradingman->extend_settings_navigation($this, $modulenode);
         }
 
+        // TODO MDL-44078 PLUGINNAME_extend_settings_navigation (mod) - replace with hook.
         $function = $this->page->activityname.'_extend_settings_navigation';
         if (!function_exists($function)) {
             return $modulenode;
@@ -4198,6 +4211,7 @@ class settings_navigation extends navigation_node {
 
         // Add reports node.
         $reporttab = $usersetting->add(get_string('activityreports'));
+        // TODO MDL-44078 FULLPLUGINNAME_extend_navigation_user (loop:report) - replace with hook.
         $reports = get_plugin_list_with_function('report', 'extend_navigation_user', 'lib.php');
         foreach ($reports as $reportfunction) {
             $reportfunction($reporttab, $user, $course);
@@ -4410,6 +4424,7 @@ class settings_navigation extends navigation_node {
                 $libfile = $CFG->dirroot.'/course/report/'.$report.'/lib.php';
                 if (file_exists($libfile)) {
                     require_once($libfile);
+                    // TODO MDL-44078 PLUGINNAME_report_extend_navigation (coursereport) - replace with hook.
                     $reportfunction = $report.'_report_extend_navigation';
                     if (function_exists($report.'_report_extend_navigation')) {
                         $reportfunction($frontpagenav, $course, $coursecontext);
@@ -4417,6 +4432,7 @@ class settings_navigation extends navigation_node {
                 }
             }
 
+            // TODO MDL-44078 FULLPLUGINNAME_extend_navigation_course (loop:report) - replace with hook.
             $reports = get_plugin_list_with_function('report', 'extend_navigation_course', 'lib.php');
             foreach ($reports as $reportfunction) {
                 $reportfunction($frontpagenav, $course, $coursecontext);
@@ -4453,6 +4469,7 @@ class settings_navigation extends navigation_node {
      */
     protected function load_local_plugin_settings() {
         // Get all local plugins with an extend_settings_navigation function in their lib.php file
+        // TODO MDL-44078 FULLPLUGINNAME_extends_settings_navigation (loop:local) - replace with hook.
         foreach (get_plugin_list_with_function('local', 'extends_settings_navigation') as $function) {
             // Call each function providing this (the settings navigation) and the current context.
             $function($this, $this->context);

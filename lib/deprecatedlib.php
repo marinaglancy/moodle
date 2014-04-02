@@ -2145,6 +2145,7 @@ function print_overview($courses, array $remote_courses=array()) {
         foreach ($modules as $mod) {
             if (file_exists(dirname(dirname(__FILE__)).'/mod/'.$mod->name.'/lib.php')) {
                 include_once(dirname(dirname(__FILE__)).'/mod/'.$mod->name.'/lib.php');
+                // TODO MDL-44078 PLUGINNAME_print_overview (mod) - replace with hook.
                 $fname = $mod->name.'_print_overview';
                 if (function_exists($fname)) {
                     $fname($courses,$htmlarray);
@@ -2332,6 +2333,7 @@ function print_recent_activity($course) {
     foreach ($usedmodules as $modname) {      // Each module gets it's own logs and prints them
         if (file_exists($CFG->dirroot.'/mod/'.$modname.'/lib.php')) {
             include_once($CFG->dirroot.'/mod/'.$modname.'/lib.php');
+            // TODO MDL-44078 PLUGINNAME_print_recent_activity (mod) - replace with hook.
             $print_recent_activity = $modname.'_print_recent_activity';
             if (function_exists($print_recent_activity)) {
                 // NOTE: original $isteacher (second parameter below) was replaced with $viewfullnames!

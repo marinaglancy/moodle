@@ -194,6 +194,8 @@ if (!empty($instanceid) && !empty($roleid)) {
 
     include_once($CFG->dirroot.'/mod/'.$cm->modname.'/lib.php');
 
+    // TODO MDL-44078 PLUGINNAME_get_view_actions (mod) - only used in legacy log.
+    // TODO MDL-44078 PLUGINNAME_get_post_actions (mod) - only used in legacy log.
     $viewfun = $cm->modname.'_get_view_actions';
     $postfun = $cm->modname.'_get_post_actions';
 

@@ -294,6 +294,7 @@ class grading_manager {
             return array();
 
         } else if ($plugintype === 'mod') {
+            // TODO MDL-44078 FULLPLUGINNAME_grading_areas_list (mod) - replace with hook.
             return plugin_callback('mod', $pluginname, 'grading', 'areas_list', null, array());
 
         } else {

@@ -1764,6 +1764,7 @@ class cm_info implements IteratorAggregate {
         $this->update_user_visible();
 
         // Let module make dynamic changes at this point
+        // TODO MDL-44078 (FULL)PLUGINNAME_cm_info_dynamic (mod) - replace with hook or plugininfo.
         $this->call_mod_function('cm_info_dynamic');
         $this->state = self::STATE_DYNAMIC;
     }
@@ -1926,6 +1927,7 @@ class cm_info implements IteratorAggregate {
      * @return void
      */
     private function call_mod_function($type) {
+        // TODO MDL-44078 another synonym to component_callback and plugin_callback.
         global $CFG;
         $libfile = $CFG->dirroot . '/mod/' . $this->modname . '/lib.php';
         if (file_exists($libfile)) {
@@ -1964,6 +1966,7 @@ class cm_info implements IteratorAggregate {
         $this->state = self::STATE_BUILDING_VIEW;
 
         // Let module make changes at this point
+        // TODO MDL-44078 (FULL)PLUGINNAME_cm_info_view (mod) - replace with hook or plugininfo.
         $this->call_mod_function('cm_info_view');
         $this->state = self::STATE_VIEW;
     }

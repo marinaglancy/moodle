@@ -295,6 +295,8 @@ class grade_scale extends grade_object {
                 //Check cm->name/lib.php exists
                 if (file_exists($CFG->dirroot.'/mod/'.$mod->name.'/lib.php')) {
                     include_once($CFG->dirroot.'/mod/'.$mod->name.'/lib.php');
+                    // TODO MDL-44078 PLUGINNAME_scale_used_anywhere (mod) - replace with hook.
+                    // TODO MDL-44078 PLUGINNAME_scale_used (mod) - deprecated.
                     $function_name = $mod->name.'_scale_used_anywhere';
                     $old_function_name = $mod->name.'_scale_used';
                     if (function_exists($function_name)) {

@@ -5028,6 +5028,8 @@ function remove_course_contents($courseid, $showfeedback = true, array $options 
         }
         if ($module = $DB->get_record('modules', array('name' => $modname))) {
             include_once("$moddir/lib.php");                 // Shows php warning only if plugin defective.
+            // TODO MDL-44078 PLUGINNAME_delete_instance (mod) - replace with hook or plugininfo.
+            // TODO MDL-44078 PLUGINNAME_delete_course (mod) - replace with hook.
             $moddelete = $modname .'_delete_instance';       // Delete everything connected to an instance.
             $moddeletecourse = $modname .'_delete_course';   // Delete other stray stuff (uncommon).
 
@@ -5101,6 +5103,7 @@ function remove_course_contents($courseid, $showfeedback = true, array $options 
     // Cleanup the rest of plugins.
     $cleanuplugintypes = array('report', 'coursereport', 'format');
     foreach ($cleanuplugintypes as $type) {
+        // TODO MDL-44078 FULLPLUGINNAME_delete_course (loop:report,coursereport,format) - replace with hook.
         $plugins = get_plugin_list_with_function($type, 'delete_course', 'lib.php');
         foreach ($plugins as $plugin => $pluginfunction) {
             $pluginfunction($course->id, $showfeedback);
@@ -5259,6 +5262,7 @@ function shift_course_mod_dates($modname, $fields, $timeshift, $courseid, $modid
         $return = $DB->execute($updatesql, $params) && $return;
     }
 
+    // TODO MDL-44078 FULLPLUGINNAME_refresh_events (mod) - replace with hook.
     $refreshfunction = $modname.'_refresh_events';
     if (function_exists($refreshfunction)) {
         $refreshfunction($courseid);
@@ -5463,6 +5467,7 @@ function reset_course_userdata($data) {
         foreach ($allmods as $mod) {
             $modname = $mod->name;
             $modfile = $CFG->dirroot.'/mod/'. $modname.'/lib.php';
+            // TODO MDL-44078 PLUGINNAME_reset_userdata (mod) - replace with hook.
             $moddeleteuserdata = $modname.'_reset_userdata';   // Function to delete user data.
             if (file_exists($modfile)) {
                 if (!$DB->count_records($modname, array('course' => $data->courseid))) {
@@ -7527,6 +7532,7 @@ function plugin_supports($type, $name, $feature, $default = null) {
         }
     }
 
+        // TODO MDL-44078 (FULL)PLUGINNAME_supports (*) - replace with hook or plugininfo.
     if ($function and function_exists($function)) {
         $supports = $function($feature);
         if (is_null($supports)) {
@@ -8190,6 +8196,7 @@ function course_scale_used($courseid, $scaleid) {
                 // Check cm->name/lib.php exists.
                 if (file_exists($CFG->dirroot.'/mod/'.$cm->modname.'/lib.php')) {
                     include_once($CFG->dirroot.'/mod/'.$cm->modname.'/lib.php');
+                    // TODO MDL-44078 PLUGININFO_scale_used (mod) - still used here and throws deprecated message in another place.
                     $functionname = $cm->modname.'_scale_used';
                     if (function_exists($functionname)) {
                         if ($functionname($cm->instance, $scaleid)) {
