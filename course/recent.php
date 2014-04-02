@@ -157,6 +157,7 @@ foreach ($sections as $sectionnum => $section) {
 
         if (file_exists($libfile)) {
             require_once($libfile);
+            // TODO MDL-44078 PLUGINNAME_get_recent_mod_activity (mod) - replace with hook.
             $get_recent_mod_activity = $cm->modname."_get_recent_mod_activity";
 
             if (function_exists($get_recent_mod_activity)) {
@@ -248,6 +249,7 @@ if (!empty($activities)) {
                 $inbox = true;
             }
 
+            // TODO MDL-44078 PLUGINNAME_print_recent_mod_activity (mod) - replace with hook.
             $print_recent_mod_activity = $activity->type.'_print_recent_mod_activity';
 
             if (function_exists($print_recent_mod_activity)) {

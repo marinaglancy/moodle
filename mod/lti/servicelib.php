@@ -286,6 +286,7 @@ function lti_verify_sourcedid($ltiinstance, $parsed) {
  * @throws coding_exception
  */
 function lti_extend_lti_services($data) {
+    // TODO MDL-44078 FULLPLUGINNAME_XXX (loop:ltisource) - replace with hook.
     $plugins = get_plugin_list_with_function('ltisource', $data->messagetype);
     if (!empty($plugins)) {
         // There can only be one.

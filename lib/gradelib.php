@@ -1372,6 +1372,8 @@ function grade_update_mod_grades($modinstance, $userid=0) {
     }
     include_once($fullmod.'/lib.php');
 
+    // TODO MDL-44078 PLUGINNAME_grade_item_update (mod) - replace with hook.
+    // TODO MDL-44078 PLUGINNAME_update_grades (mod) - replace with hook.
     $updateitemfunc   = $modinstance->modname.'_grade_item_update';
     $updategradesfunc = $modinstance->modname.'_update_grades';
 

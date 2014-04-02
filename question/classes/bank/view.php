@@ -111,6 +111,7 @@ class view {
      * \core_question\bank\search\condition objects.
      */
     protected function init_search_conditions() {
+        // TODO MDL-44078 FULLPLUGINNAME_get_question_bank_search_conditions (loop:local) - replace with hook.
         $searchplugins = get_plugin_list_with_function('local', 'get_question_bank_search_conditions');
         foreach ($searchplugins as $component => $function) {
             foreach ($function($this) as $searchobject) {

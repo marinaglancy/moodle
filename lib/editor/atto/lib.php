@@ -127,7 +127,9 @@ class atto_texteditor extends texteditor {
                 $jsplugin['params'] = array();
                 $modules[] = 'moodle-atto_' . $plugin . '-button';
 
+                // TODO MDL-44078 FULLPLUGINNAME_strings_for_js (atto) - replace with hook.
                 component_callback('atto_' . $plugin, 'strings_for_js');
+                // TODO MDL-44078 FULLPLUGINNAME_params_for_js (atto) - replace with hook.
                 $extra = component_callback('atto_' . $plugin, 'params_for_js', array($elementid, $options, $fpoptions));
 
                 if ($extra) {

@@ -6853,6 +6853,7 @@ class context_module extends context {
         $extracaps = array();
         if (file_exists($modfile)) {
             include_once($modfile);
+            // TODO MDL-44078 PLUGINNAME_get_extra_capabilities (mod) - replace with hook or plugininfo.
             $modfunction = $module->name.'_get_extra_capabilities';
             if (function_exists($modfunction)) {
                 $extracaps = $modfunction();

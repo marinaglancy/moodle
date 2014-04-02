@@ -102,6 +102,7 @@ if (!empty($cm) && $context->contextlevel == CONTEXT_MODULE) {
     // Tell the module that its grades have changed.
     $modinstance = $DB->get_record($cm->modname, array('id' => $cm->instance), '*', MUST_EXIST);
     $modinstance->cmidnumber = $cm->id; // MDL-12961.
+    // TODO MDL-44078 PLUGINNAME_update_grades (mod) - replace with hook.
     $functionname = $cm->modname.'_update_grades';
     require_once($CFG->dirroot."/mod/{$cm->modname}/lib.php");
     if (function_exists($functionname)) {

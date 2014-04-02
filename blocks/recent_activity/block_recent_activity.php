@@ -209,6 +209,7 @@ class block_recent_activity extends block_base {
         foreach ($usedmodules as $modname => $modfullname) {
             // Each module gets it's own logs and prints them
             ob_start();
+            // TODO MDL-44078 FULLPLUGINNAME_print_recent_activity (mod) - replace with hook.
             $hascontent = component_callback('mod_'. $modname, 'print_recent_activity',
                     array($this->page->course, $viewfullnames, $this->get_timestart()), false);
             if ($hascontent) {

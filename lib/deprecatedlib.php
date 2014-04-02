@@ -4430,6 +4430,7 @@ function course_scale_used($courseid, $scaleid) {
                 // Check cm->name/lib.php exists.
                 if (file_exists($CFG->dirroot.'/mod/'.$cm->modname.'/lib.php')) {
                     include_once($CFG->dirroot.'/mod/'.$cm->modname.'/lib.php');
+                    // TODO MDL-44078 PLUGININFO_scale_used (mod) - deprecated
                     $functionname = $cm->modname.'_scale_used';
                     if (function_exists($functionname)) {
                         if ($functionname($cm->instance, $scaleid)) {

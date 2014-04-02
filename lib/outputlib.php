@@ -625,6 +625,7 @@ class theme_config {
      * @param moodle_page $page
      */
     public function init_page(moodle_page $page) {
+        // TODO MDL-44078 FULLPLUGINNAME_page_init (theme) - replace with hook or plugininfo.
         $themeinitfunction = 'theme_'.$this->name.'_page_init';
         if (function_exists($themeinitfunction)) {
             $themeinitfunction($page);
@@ -1278,6 +1279,7 @@ class theme_config {
 
         // Calling the functions.
         foreach ($candidates as $function) {
+            // TODO MDL-44078 $THEME->lessvariablescallback (theme) - replace with hook.
             if (function_exists($function)) {
                 $vars = $function($this);
                 if (!is_array($vars)) {
@@ -1315,6 +1317,7 @@ class theme_config {
 
         // Calling the functions.
         foreach ($candidates as $function) {
+            // TODO MDL-44078 $THEME->extralesscallback (theme) - replace with hook.
             if (function_exists($function)) {
                 $content .= "\n/** Extra LESS from $function **/\n" . $function($this) . "\n";
             }
@@ -1598,6 +1601,7 @@ class theme_config {
         // Now resolve all theme settings or do any other postprocessing.
         // This needs to be done before calling core parser, since the parser strips [[settings]] tags.
         $csspostprocess = $this->csspostprocess;
+        // TODO MDL-44078 $THEME->csspostprocess (theme) - replace with hook.
         if (function_exists($csspostprocess)) {
             $css = $csspostprocess($css, $this);
         }

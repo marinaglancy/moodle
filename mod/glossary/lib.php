@@ -917,6 +917,7 @@ function glossary_get_available_formats() {
         if (file_exists($CFG->dirroot.'/mod/glossary/formats/'.$format.'/'.$format.'_format.php')) {
             include_once($CFG->dirroot.'/mod/glossary/formats/'.$format.'/'.$format.'_format.php');
             //If the function exists
+            // TODO MDL-44078 glossary_show_entry_FORMATNAME (for glossary formats) - convert formats to subplugins and replace with class or hook (if we care).
             if (function_exists('glossary_show_entry_'.$format)) {
                 //Acummulate it as a valid format
                 $pluginformats[] = $format;
@@ -1063,6 +1064,8 @@ function glossary_print_entry($course, $cm, $glossary, $entry, $mode='',$hook=''
     }
     if ($entry->approved or ($USER->id == $entry->userid) or ($mode == 'approval' and !$entry->approved) ) {
         $formatfile = $CFG->dirroot.'/mod/glossary/formats/'.$displayformat.'/'.$displayformat.'_format.php';
+        // TODO MDL-44078 glossary_print_entry_FORMATNAME (for glossary formats) - convert formats to subplugins and replace with class or hook (if we care).
+        // TODO MDL-44078 glossary_show_entry_FORMATNAME (for glossary formats) - convert formats to subplugins and replace with class or hook (if we care).
         if ($printview) {
             $functionname = 'glossary_print_entry_'.$displayformat;
         } else {
@@ -2207,6 +2210,7 @@ function glossary_print_dynaentry($courseid, $entries, $displayformat = -1) {
             }
 
             $formatfile = $CFG->dirroot.'/mod/glossary/formats/'.$displayformat.'/'.$displayformat.'_format.php';
+            // TODO MDL-44078 glossary_show_entry_FORMATNAME (for glossary formats) - convert formats to subplugins and replace with class or hook (if we care).
             $functionname = 'glossary_show_entry_'.$displayformat;
 
             if (file_exists($formatfile)) {

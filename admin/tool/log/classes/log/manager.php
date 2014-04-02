@@ -126,6 +126,7 @@ class manager implements \core\log\manager {
             return array();
         }
 
+        // TODO MDL-44078 FULLPLUGINNAME_supports_logstore (loop:report) - replace with hook.
         $reports = get_plugin_list_with_function('report', 'supports_logstore', 'lib.php');
         $enabled = $this->stores;
 
@@ -139,6 +140,7 @@ class manager implements \core\log\manager {
 
         $return = array();
         foreach ($reports as $report => $fulldir) {
+            // TODO MDL-44078 FULLPLUGINNAME_supports_logstore (report) - replace with hook.
             if (component_callback($report, 'supports_logstore', array($instance), false)) {
                 $return[$report] = get_string('pluginname', $report);
             }

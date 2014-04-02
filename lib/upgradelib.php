@@ -495,6 +495,7 @@ function upgrade_plugins($type, $startcallback, $endcallback, $verbose) {
         if (file_exists($fullplug.'/db/install.php')) {
             if (get_config($plugin->fullname, 'installrunning')) {
                 require_once($fullplug.'/db/install.php');
+                // TODO MDL-44078 xmldb_FULLPLUGINNAME_install_recovery - replace with hook ?
                 $recover_install_function = 'xmldb_'.$plugin->fullname.'_install_recovery';
                 if (function_exists($recover_install_function)) {
                     $startcallback($component, true, $verbose);
@@ -675,6 +676,7 @@ function upgrade_plugins_modules($startcallback, $endcallback, $verbose) {
         if (file_exists($fullmod.'/db/install.php')) {
             if (get_config($module->name, 'installrunning')) {
                 require_once($fullmod.'/db/install.php');
+                // TODO MDL-44078 xmldb_FULLPLUGINNAME_install_recovery - replace with hook ?
                 $recover_install_function = 'xmldb_'.$module->name.'_install_recovery';
                 if (function_exists($recover_install_function)) {
                     $startcallback($component, true, $verbose);
@@ -869,6 +871,7 @@ function upgrade_plugins_blocks($startcallback, $endcallback, $verbose) {
         if (file_exists($fullblock.'/db/install.php')) {
             if (get_config('block_'.$blockname, 'installrunning')) {
                 require_once($fullblock.'/db/install.php');
+                // TODO MDL-44078 xmldb_FULLPLUGINNAME_install_recovery - replace with hook ?
                 $recover_install_function = 'xmldb_block_'.$blockname.'_install_recovery';
                 if (function_exists($recover_install_function)) {
                     $startcallback($component, true, $verbose);

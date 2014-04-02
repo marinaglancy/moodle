@@ -152,6 +152,7 @@ $pathname = null;
 
 if (file_exists($componentdir)) {
     require_once("$componentdir/rsslib.php");
+    // TODO MDL-44078 PLUGINNAME_rss_get_feed in rsslib.php - replace with hook ?
     $functionname = $plugin.'_rss_get_feed';
 
     if (function_exists($functionname)) {

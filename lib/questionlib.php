@@ -130,6 +130,7 @@ function questions_in_use($questionids) {
         if (is_readable($lib)) {
             include_once($lib);
 
+            // TODO MDL-44078 FULLPLUGINNAME_questions_in_use (mod) - replace with hook.
             $fn = $module . '_questions_in_use';
             if (function_exists($fn)) {
                 if ($fn($questionids)) {
@@ -138,6 +139,7 @@ function questions_in_use($questionids) {
             } else {
 
                 // Fallback for legacy modules.
+                // TODO MDL-44078 FULLPLUGINNAME_question_list_instances (mod) - legacy fallback.
                 $fn = $module . '_question_list_instances';
                 if (function_exists($fn)) {
                     foreach ($questionids as $questionid) {
@@ -1806,6 +1808,7 @@ function question_pluginfile($course, $context, $component, $filearea, $args, $f
         $questionid = (int) array_shift($args);
         $previewcontext = context_helper::instance_by_id($previewcontextid);
 
+        // TODO MDL-44078 FULLPLUGINNAME_question_preview_pluginfile - replace with hook.
         $result = component_callback($previewcomponent, 'question_preview_pluginfile', array(
                 $previewcontext, $questionid,
                 $context, $component, $filearea, $args,
@@ -1842,6 +1845,7 @@ function question_pluginfile($course, $context, $component, $filearea, $args, $f
         }
         include_once("$dir/lib.php");
 
+        // TODO MDL-44078 (FULL)PLUGINNAME_question_pluginfile (*) - replace with hook.
         $filefunction = $module . '_question_pluginfile';
         if (function_exists($filefunction)) {
             $filefunction($course, $context, $component, $filearea, $qubaid, $slot,
@@ -1957,6 +1961,7 @@ function question_module_uses_questions($modname) {
     }
 
     $component = 'mod_'.$modname;
+    // TODO MDL-44078 FULLPLUGINNAME_question_pluginfile - replace with hook.
     if (component_callback_exists($component, 'question_pluginfile')) {
         debugging("{$component} uses questions but doesn't declare FEATURE_USES_QUESTIONS", DEBUG_DEVELOPER);
         return true;

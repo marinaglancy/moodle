@@ -29,11 +29,14 @@ $THEME->doctype = 'html5';
 $THEME->sheets = array('custom');
 $THEME->lessfile = 'moodle';
 $THEME->parents_exclude_sheets = array('bootstrapbase' => array('moodle'), 'clean' => array('custom'));
+// TODO MDL-44078 $THEME->lessvariablescallback (theme) - replace with hook.
 $THEME->lessvariablescallback = 'theme_more_less_variables';
+// TODO MDL-44078 $THEME->extralesscallback (theme) - replace with hook.
 $THEME->extralesscallback = 'theme_more_extra_less';
 $THEME->yuicssmodules = array();
 $THEME->enable_dock = true;
 $THEME->editor_sheets = array();
 
 $THEME->rendererfactory = 'theme_overridden_renderer_factory';
+// TODO MDL-44078 $THEME->csspostprocess (theme) - replace with hook.
 $THEME->csspostprocess = 'theme_more_process_css';

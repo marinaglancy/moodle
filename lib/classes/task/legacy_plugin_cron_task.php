@@ -84,6 +84,7 @@ class legacy_plugin_cron_task extends scheduled_task {
                 $libfile = "$CFG->dirroot/mod/$mod->name/lib.php";
                 if (file_exists($libfile)) {
                     include_once($libfile);
+                    // TODO MDL-44078 PLUGINNAME_cron (mod) - to be deprecated.
                     $cronfunction = $mod->name."_cron";
                     if (function_exists($cronfunction)) {
                         mtrace("Processing module function $cronfunction ...\n", '');

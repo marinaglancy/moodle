@@ -444,6 +444,7 @@ function get_array_of_activities($courseid) {
                    $mod[$seq]->deletioninprogress = $rawmods[$seq]->deletioninprogress;
 
                    $modname = $mod[$seq]->mod;
+                   // TODO MDL-44078 PLUGINNAME_get_coursemodule_info (mod) - replace with hook or plugininfo.
                    $functionname = $modname."_get_coursemodule_info";
 
                    if (!file_exists("$CFG->dirroot/mod/$modname/lib.php")) {
@@ -710,6 +711,7 @@ function get_module_metadata($course, $modnames, $sectionreturn = null) {
         }
         $types = component_callback($modname, 'get_types', array(), MOD_SUBTYPE_NO_CHILDREN);
         if ($types !== MOD_SUBTYPE_NO_CHILDREN) {
+            // TODO MDL-44078 PLUGINNAME_get_types (mod) - replace with hook or plugininfo.
             // Legacy support for deprecated callback get_types(). To be removed in Moodle 3.5. TODO MDL-53697.
             if (is_array($types) && count($types) > 0) {
                 $grouptitle = $modnamestr;
@@ -1049,6 +1051,7 @@ function set_coursemodule_visible($id, $visible, $visibleoncoursepage = 1) {
             plugin_supports('mod', $modulename, FEATURE_CONTROLS_GRADE_VISIBILITY) &&
             component_callback_exists('mod_' . $modulename, 'grade_item_update')) {
         $instance = $DB->get_record($modulename, array('id' => $cm->instance), '*', MUST_EXIST);
+        // TODO MDL-44078 FULLPLUGINNAME_grade_item_update (mod) - replace with hook.
         component_callback('mod_' . $modulename, 'grade_item_update', array($instance));
     } else if ($cm->visible != $visible) {
         $grade_items = grade_item::fetch_all(array('itemtype'=>'mod', 'itemmodule'=>$modulename, 'iteminstance'=>$cm->instance, 'courseid'=>$cm->course));
@@ -1168,6 +1171,7 @@ function course_delete_module($cmid, $async = false) {
             "Cannot delete this module as the file mod/$modulename/lib.php is missing.");
     }
 
+    // TODO MDL-44078 PLUGINNAME_delete_instance (mod) - replace with hook or plugininfo.
     $deleteinstancefunction = $modulename . '_delete_instance';
 
     // Ensure the delete_instance function exists for this module.

@@ -123,6 +123,9 @@ class course_settings_form extends moodleform {
              // Include all the settings commands for this plugin if there are any
                 if (file_exists($plugindir.'/lib.php')) {
                     require_once($plugindir.'/lib.php');
+                    // TODO MDL-44078 grade_report_PLUGINNAME_settings_definition (gradereport) - replace with hook.
+                    // TODO MDL-44078 grade_export_PLUGINNAME_settings_definition (gradeexport) - replace with hook.
+                    // TODO MDL-44078 grade_import_PLUGINNAME_settings_definition (gradeimport) - replace with hook.
                     $functionname = 'grade_'.$type.'_'.$plugin.'_settings_definition';
                     if (function_exists($functionname)) {
                         $mform->addElement('header', 'grade_'.$type.$plugin, get_string('pluginname', 'grade'.$type.'_'.$plugin, NULL));

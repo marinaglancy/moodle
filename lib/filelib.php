@@ -3872,6 +3872,7 @@ class curl_cache {
  * @todo MDL-31088 file serving improments
  */
 function file_pluginfile($relativepath, $forcedownload, $preview = null, $offline = false) {
+    // TODO MDL-44078 the whole functionality file_pluginfile() can be implemented with component and plugin hooks.
     global $DB, $CFG, $USER;
     // relative path must start with '/'
     if (!$relativepath) {
@@ -4571,7 +4572,12 @@ function file_pluginfile($relativepath, $forcedownload, $preview = null, $offlin
     // ========================================================================================================================
     } else if ($component === 'question') {
         require_once($CFG->libdir . '/questionlib.php');
+<<<<<<< HEAD
         question_pluginfile($course, $context, 'question', $filearea, $args, $forcedownload, $sendfileoptions);
+=======
+        // TODO MDL-44078 COMPONENT_pluginfile (question) - replace with hook.
+        question_pluginfile($course, $context, 'question', $filearea, $args, $forcedownload);
+>>>>>>> cde739a... MDL-44078 all callbacks in standard Moodle
         send_file_not_found();
 
     // ========================================================================================================================
@@ -4643,6 +4649,7 @@ function file_pluginfile($relativepath, $forcedownload, $preview = null, $offlin
             send_stored_file($file, null, 0, false, $sendfileoptions);
         }
 
+        // TODO MDL-44078 (FULL)PLUGINNAME_pluginfile (mod) - replace with hook or plugininfo.
         $filefunction = $component.'_pluginfile';
         $filefunctionold = $modname.'_pluginfile';
         if (function_exists($filefunction)) {
@@ -4688,6 +4695,7 @@ function file_pluginfile($relativepath, $forcedownload, $preview = null, $offlin
             $birecord = null;
         }
 
+        // TODO MDL-44078 FULLPLUGINNAME_pluginfile (block) - replace with hook or plugininfo.
         $filefunction = $component.'_pluginfile';
         if (function_exists($filefunction)) {
             // if the function exists, it must send the file and terminate. Whatever it returns leads to "not found"
@@ -4709,6 +4717,7 @@ function file_pluginfile($relativepath, $forcedownload, $preview = null, $offlin
         }
         include_once("$dir/lib.php");
 
+        // TODO MDL-44078 FULLPLUGINNAME_pluginfile (*) - replace with hook or plugininfo.
         $filefunction = $component.'_pluginfile';
         if (function_exists($filefunction)) {
             // if the function exists, it must send the file and terminate. Whatever it returns leads to "not found"

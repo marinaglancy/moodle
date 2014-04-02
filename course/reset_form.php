@@ -93,7 +93,9 @@ class course_reset_form extends moodleform {
             foreach ($allmods as $mod) {
                 $modname = $mod->name;
                 $modfile = $CFG->dirroot."/mod/$modname/lib.php";
+                // TODO MDL-44078 PLUGINNAME_reset_course_form_definition (mod) - replace with hook.
                 $mod_reset_course_form_definition = $modname.'_reset_course_form_definition';
+                // TODO MDL-44078 PLUGINNAME_reset_userdata (mod) - replace with hook.
                 $mod_reset__userdata = $modname.'_reset_userdata';
                 if (file_exists($modfile)) {
                     if (!$DB->count_records($modname, array('course'=>$COURSE->id))) {
@@ -147,6 +149,7 @@ class course_reset_form extends moodleform {
             foreach ($allmods as $mod) {
                 $modname = $mod->name;
                 $modfile = $CFG->dirroot."/mod/$modname/lib.php";
+                // TODO MDL-44078 PLUGINNAME_reset_course_form_defaults (mod) - replace with hook.
                 $mod_reset_course_form_defaults = $modname.'_reset_course_form_defaults';
                 if (file_exists($modfile)) {
                     @include_once($modfile);

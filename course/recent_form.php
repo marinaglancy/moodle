@@ -122,6 +122,7 @@ class recent_form extends moodleform {
                 continue;
             }
             include_once($libfile);
+            // TODO MDL-44078 PLUGINNAME_get_recent_mod_activity (mod) - replace with hook.
             $libfunction = $modname."_get_recent_mod_activity";
             if (!function_exists($libfunction)) {
                 unset($modsused[$modname]);

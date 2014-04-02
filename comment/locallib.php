@@ -172,6 +172,7 @@ class comment_manager {
         foreach ($comments as $c) {
             $this->setup_plugin($c);
             if (!empty($this->plugintype)) {
+                // TODO MDL-44078 FULLPLUGINNAME_comment_url - replace with hook.
                 $context_url = plugin_callback($this->plugintype, $this->pluginname, 'comment', 'url', array($c));
             }
             $checkbox = html_writer::checkbox('comments', $c->id, false);

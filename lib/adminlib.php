@@ -174,6 +174,7 @@ function uninstall_plugin($type, $name) {
     $uninstalllib = $plugindirectory . '/db/uninstall.php';
     if (file_exists($uninstalllib)) {
         require_once($uninstalllib);
+        // TODO MDL-44078 xmldb_(FULL)PLUGINNAME_uninstall - does not need hook.
         $uninstallfunction = 'xmldb_' . $pluginname . '_uninstall';    // eg. 'xmldb_workshop_uninstall()'
         if (function_exists($uninstallfunction)) {
             // Do not verify result, let plugin complain if necessary.
@@ -5638,6 +5639,7 @@ class admin_setting_grade_profilereport extends admin_setting_configselect {
         foreach (core_component::get_plugin_list('gradereport') as $plugin => $plugindir) {
             if (file_exists($plugindir.'/lib.php')) {
                 require_once($plugindir.'/lib.php');
+                // TODO MDL-44078 grade_report_PLUGINNAME_profilereport (gradereport) - replace with hook or plugininfo.
                 $functionname = 'grade_report_'.$plugin.'_profilereport';
                 if (function_exists($functionname)) {
                     $this->choices[$plugin] = get_string('pluginname', 'gradereport_'.$plugin);
@@ -8415,6 +8417,7 @@ function db_replace($search, $replace) {
             continue;
         }
 
+        // TODO MDL-44078 FULLPLUGINNAME_global_db_replace (block) - replace with hook, see above, should be supported by all plugintypes.
         $function = 'block_'.$blockname.'_global_db_replace';
         include_once($fullblock.'/lib.php');
         if (!function_exists($function)) {

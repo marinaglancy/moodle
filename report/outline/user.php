@@ -135,6 +135,7 @@ foreach ($sections as $i => $section) {
 
                         switch ($mode) {
                             case "outline":
+                                // TODO MDL-44078 PLUGINNAME_user_outline (mod) - replace with hook.
                                 $user_outline = $mod->modname."_user_outline";
                                 if (function_exists($user_outline)) {
                                     $output = $user_outline($course, $user, $mod, $instance);
@@ -144,6 +145,7 @@ foreach ($sections as $i => $section) {
                                 report_outline_print_row($mod, $instance, $output);
                                 break;
                             case "complete":
+                                // TODO MDL-44078 PLUGINNAME_user_complete (mod) - replace with hook.
                                 $user_complete = $mod->modname."_user_complete";
                                 $image = $OUTPUT->pix_icon('icon', $mod->modfullname, 'mod_'.$mod->modname, array('class'=>'icon'));
                                 echo "<h4>$image $mod->modfullname: ".

@@ -231,6 +231,7 @@ function book_get_view_actions() {
         if (file_exists("$dir/lib.php")) {
             require_once("$dir/lib.php");
         }
+        // TODO MDL-44078 FULLPLUGINNAME_get_view_actions (booktool) - only used in legacy log.
         $function = 'booktool_'.$plugin.'_get_view_actions';
         if (function_exists($function)) {
             if ($actions = $function()) {
@@ -261,6 +262,7 @@ function book_get_post_actions() {
         if (file_exists("$dir/lib.php")) {
             require_once("$dir/lib.php");
         }
+        // TODO MDL-44078 FULLPLUGINNAME_get_post_actions (booktool) - only used in legacy log.
         $function = 'booktool_'.$plugin.'_get_post_actions';
         if (function_exists($function)) {
             if ($actions = $function()) {
@@ -332,6 +334,7 @@ function book_extend_settings_navigation(settings_navigation $settingsnav, navig
         if (file_exists("$dir/lib.php")) {
             require_once("$dir/lib.php");
         }
+        // TODO MDL-44078 FULLPLUGINNAME_extend_settings_navigation (booktool) - replace with hook.
         $function = 'booktool_'.$plugin.'_extend_settings_navigation';
         if (function_exists($function)) {
             $function($settingsnav, $booknode);

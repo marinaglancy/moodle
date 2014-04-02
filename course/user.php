@@ -173,6 +173,7 @@ switch ($mode) {
         require_once $CFG->dirroot.'/grade/lib.php';
         require_once $CFG->dirroot.'/grade/report/'.$CFG->grade_profilereport.'/lib.php';
 
+        // TODO MDL-44078 grade_report_PLUGINNAME_profilereport (gradereport) - replace with hook or plugininfo.
         $functionname = 'grade_report_'.$CFG->grade_profilereport.'_profilereport';
         if (function_exists($functionname)) {
             $functionname($course, $user, $viewasuser);

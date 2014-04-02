@@ -44,6 +44,7 @@ class format_legacy extends format_base {
         global $CFG;
         // Note that lib.php in course format folder is already included by now
         $featurefunction = 'callback_'.$this->format.'_uses_sections';
+        // TODO MDL-44078 callback_PLUGINNAME_uses_sections (format) - to be deprecated.
         if (function_exists($featurefunction)) {
             return $featurefunction();
         }
@@ -61,6 +62,7 @@ class format_legacy extends format_base {
     public function get_section_name($section) {
         // Use course formatter callback if it exists
         $namingfunction = 'callback_'.$this->format.'_get_section_name';
+        // TODO MDL-44078 callback_PLUGINNAME_get_section_name (format) - to be deprecated.
         if (function_exists($namingfunction) && ($course = $this->get_course())) {
             return $namingfunction($course, $this->get_section($section));
         }
@@ -84,6 +86,7 @@ class format_legacy extends format_base {
     public function get_view_url($section, $options = array()) {
         // Use course formatter callback if it exists
         $featurefunction = 'callback_'.$this->format.'_get_section_url';
+        // TODO MDL-44078 callback_PLUGINNAME_get_section_url (format) - to be deprecated.
         if (function_exists($featurefunction) && ($course = $this->get_course())) {
             if (is_object($section)) {
                 $sectionnum = $section->section;
@@ -155,6 +158,7 @@ class format_legacy extends format_base {
         $ajaxsupport = parent::supports_ajax();
 
         // get the information from the course format library
+        // TODO MDL-44078 callback_PLUGINNAME_ajax_support (format) - to be deprecated.
         $featurefunction = 'callback_'.$this->format.'_ajax_support';
         if (function_exists($featurefunction)) {
             $formatsupport = $featurefunction();
@@ -193,10 +197,12 @@ class format_legacy extends format_base {
         }
 
         // check if there are callbacks to extend course navigation
+        // TODO MDL-44078 callback_PLUGINNAME_display_content (format) - to be deprecated.
         $displayfunc = 'callback_'.$this->format.'_display_content';
         if (function_exists($displayfunc) && !$displayfunc()) {
             return;
         }
+        // TODO MDL-44078 callback_PLUGINNAME_load_content (format) - to be deprecated.
         $featurefunction = 'callback_'.$this->format.'_load_content';
         if (function_exists($featurefunction) && ($course = $this->get_course())) {
             $featurefunction($navigation, $course, $node);
@@ -215,6 +221,7 @@ class format_legacy extends format_base {
      * @return array This will be passed in ajax respose
      */
     function ajax_section_move() {
+        // TODO MDL-44078 callback_PLUGINNAME_ajax_section_move (format) - to be deprecated.
         $featurefunction = 'callback_'.$this->format.'_ajax_section_move';
         if (function_exists($featurefunction) && ($course = $this->get_course())) {
             return $featurefunction($course);

@@ -275,6 +275,7 @@ function cron_execute_plugin_type($plugintype, $description = null) {
     global $DB;
 
     // Get list from plugin => function for all plugins
+    // TODO MDL-44078 FULLPLUGINNAME_cron - to be deprecated.
     $plugins = get_plugin_list_with_function($plugintype, 'cron');
 
     // Modify list for backward compatibility (different files/names)
@@ -358,6 +359,7 @@ function cron_bc_hack_plugin_functions($plugintype, $plugins) {
                 continue;
             }
             include_once("$dir/cron.php");
+            // TODO MDL-44078 FULLPLUGINNAME_cron (report) - to be deprecated.
             $cronfunction = $component . '_cron';
             if (function_exists($cronfunction)) {
                 $plugins[$component] = $cronfunction;
@@ -380,6 +382,7 @@ function cron_bc_hack_plugin_functions($plugintype, $plugins) {
                 continue;
             }
             include_once("$dir/lib.php");
+            // TODO MDL-44078 grade_XXX_PLUGINNAME_cron (gradeXXX) - to be deprecated.
             $cronfunction = str_replace('grade', 'grade_', $plugintype) . '_' .
                     $pluginname . '_cron';
             if (function_exists($cronfunction)) {

@@ -57,6 +57,7 @@ class mod_lti_mod_form extends moodleform_mod {
         global $PAGE, $OUTPUT, $COURSE;
 
         if ($type = optional_param('type', false, PARAM_ALPHA)) {
+            // TODO MDL-44078 FULLPLUGINNAME_add_instance_hook (ltisource) - replace with hook.
             component_callback("ltisource_$type", 'add_instance_hook');
         }
 

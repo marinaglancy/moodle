@@ -1303,6 +1303,8 @@ function stats_get_action_names($str) {
             continue;
         }
         require_once($file);
+        // TODO MDL-44078 PLUGINNAME_get_view_actions (mod) - used only for legacy log.
+        // TODO MDL-44078 PLUGINNAME_get_post_actions (mod) - used only for legacy log.
         $function = $mod->name.'_get_'.$str.'_actions';
         if (function_exists($function)) {
             $mod_actions = $function();

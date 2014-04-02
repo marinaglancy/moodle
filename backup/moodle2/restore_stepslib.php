@@ -1346,6 +1346,7 @@ class restore_groups_members_structure_step extends restore_structure_step {
                 } else {
                     $dir = core_component::get_component_directory($data->component);
                     if ($dir and is_dir($dir)) {
+                        // TODO MDL-44078 FULLPLUGINNAME_restore_group_member - replace with hook.
                         if (component_callback($data->component, 'restore_group_member', array($this, $data), true)) {
                             return;
                         }
@@ -2072,6 +2073,7 @@ class restore_ras_and_caps_structure_step extends restore_structure_step {
             $data->contextid = $contextid;
             $dir = core_component::get_component_directory($data->component);
             if ($dir and is_dir($dir)) {
+                // TODO MDL-44078 FULLPLUGINNAME_restore_role_assignment - replace with hook.
                 if (component_callback($data->component, 'restore_role_assignment', array($this, $data), true)) {
                     return;
                 }

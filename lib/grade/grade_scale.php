@@ -304,6 +304,7 @@ class grade_scale extends grade_object {
         }
 
         // Ask all plugins if the scale is used anywhere.
+        // TODO MDL-44078 PLUGINNAME_scale_used_anywhere (mod) - replace with hook.
         $pluginsfunction = get_plugins_with_function('scale_used_anywhere');
         foreach ($pluginsfunction as $plugintype => $plugins) {
             foreach ($plugins as $pluginfunction) {
