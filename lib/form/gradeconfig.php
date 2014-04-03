@@ -80,11 +80,6 @@ class MoodleQuickForm_gradeconfig extends MoodleQuickForm_group {
         $langmaxgrade = get_string('gradeconfigmaxgrade', 'grades');
         $maxgrade = @MoodleQuickForm::createElement('text', 'gradeconfig_point', $langmaxgrade, array());
         $maxgrade->setHiddenLabel = false;
-        $gradepointmax = $CFG->gradepointmax;
-        if (!is_numeric($gradepointmax)) {
-            $gradepointmax = 100;
-        }
-        $maxgrade->setValue($gradepointmax);
         $maxgrade->_generateId();
         $maxgradeid = $maxgrade->getAttribute('id');
 
