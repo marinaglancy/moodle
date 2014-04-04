@@ -56,17 +56,26 @@ Feature: New feedbacks are shown in recent activity report
       | grouping | group |
       | GG1      | G1    |
       | GG1      | G2    |
-    And the following "activities" exist:
-      | activity   | name                     | intro                     | course | idnumber   | groupmode |
-      | feedback   | Common                   | Test feedback description | c1     | feedback1  | 0         |
-      | feedback   | VisibleGroups            | Test feedback description | c1     | feedback2  | 2         |
-      | feedback   | SeparateGroupsNoGrouping | Test feedback description | c1     | feedback3  | 1         |
-    And the following "activities" exist:
-      | activity | name                    | intro                     | course | idnumber  | groupmode | grouping |
-      | feedback | SeparateGroupsGrouping1 | Test feedback description | c1     | feedback4 | 1         | GG1      |
-# Teacher1 adds questions to feedbacks
+# Teacher1 creates feedbacks and adds questions to feedbacks
     When I log in as "teacher1"
     And I follow "Course1"
+    And I turn editing mode on
+    And I add a "Feedback" to section "1" and I fill the form with:
+      | name | Common |
+      | Description | Description |
+    And I add a "Feedback" to section "1" and I fill the form with:
+      | name | VisibleGroups |
+      | Description | Description |
+      | Group mode | Visible groups |
+    And I add a "Feedback" to section "1" and I fill the form with:
+      | name | SeparateGroupsNoGrouping |
+      | Description | Description |
+      | Group mode | Separate groups |
+    And I add a "Feedback" to section "1" and I fill the form with:
+      | name | SeparateGroupsGrouping1 |
+      | Description | Description |
+      | Group mode | Separate groups |
+      | Grouping | Grouping 1 |
     And I follow "Common"
     And I follow "Edit questions"
     And I set the following fields to these values:

@@ -1,4 +1,4 @@
-@mod @mod_glossary @block_recent_activity @testg
+@mod @mod_glossary @block_recent_activity
 Feature: New glossary entries are shown in recent activity block and report
   In order to view recently added glossary entries
   As a teacher
@@ -53,13 +53,25 @@ Feature: New glossary entries are shown in recent activity block and report
       | grouping | group |
       | GG1      | G1    |
       | GG1      | G2    |
-    And the following "activities" exist:
-      | activity   | name           | intro                     | course | idnumber   | defaultapproval |
-      | glossary   | AutoApproval | Test glossary description | c1     | glossary1  | 1               |
-      | glossary   | ManualApproval | Test glossary description | c1     | glossary1  | 0               |
-    And the following "activities" exist:
-      | activity | name              | intro                     | course | idnumber  | groupmembersonly | grouping |
-      | glossary | GlossaryGrouping1 | Test glossary description | c1     | glossary4 | 1                | GG1      |
+# teacher1 creates glossaries
+    When I log in as "teacher1"
+    And I follow "Course1"
+    And I turn editing mode on
+    And I add a "Glossary" to section "1" and I fill the form with:
+      | name | AutoApproval |
+      | Description | Description |
+      | defaultapproval | 1 |
+    And I add a "Glossary" to section "1" and I fill the form with:
+      | name | ManualApproval |
+      | Description | Description |
+      | defaultapproval | 0 |
+    And I add a "Glossary" to section "1" and I fill the form with:
+      | name | GlossaryGrouping1 |
+      | Description | Description |
+      | groupmembersonly | 1 |
+      | groupingid | Grouping 1 |
+    And I wait "60" seconds
+    And I log out
 # Reset the recent activity block contents for students and teachers
     And I log in as "student1"
     And I follow "Course1"

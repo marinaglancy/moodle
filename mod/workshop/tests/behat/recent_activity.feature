@@ -52,19 +52,51 @@ Feature: New workshop submissions in Recent activity block and report
       | teacher1 | G1    |
       | teacher2 | G1    |
       | teacher3 | G4    |
-    And the following "activities" exist:
-      | activity | name                     | intro                  | course | idnumber | groupmode |
-      | workshop    | EverybodyAccess          | Test workshop description | c1     | workshop1   | 0         |
-      | workshop    | VisibleGroups            | Test workshop description | c1     | workshop2   | 2         |
-      | workshop    | SeparateGroupsNoGrouping | Test workshop description | c1     | workshop3   | 1         |
-    And the following "activities" exist:
-      | activity | name                    | intro                  | course | idnumber | groupmode | grouping |
-      | workshop    | SeparateGroupsGrouping2 | Test workshop description | c1     | workshop3   | 1         | GG2      |
-      | workshop    | SeparateGroupsGrouping3 | Test workshop description | c1     | workshop3   | 1         | GG3      |
     And I log in as "admin"
     And I expand "Users" node
     And I set the following system permissions of "Non-editing teacher" role:
       | moodle/site:accessallgroups | Prevent |
+    And I log out
+# teacher1 creates workshops
+    When I log in as "teacher1"
+    And I follow "Course1"
+    And I turn editing mode on
+    And I add a "Workshop" to section "1" and I fill the form with:
+      | name | EverybodyAccess |
+      | Description | Description |
+      | Instructions for submission | Instructions1 |
+      | Instructions for assessment | Instructions2 |
+      | Conclusion | Conclusion |
+    And I add a "Workshop" to section "1" and I fill the form with:
+      | name | VisibleGroups |
+      | Description | Description |
+      | Instructions for submission | Instructions1 |
+      | Instructions for assessment | Instructions2 |
+      | Conclusion | Conclusion |
+      | Group mode | Visible groups |
+    And I add a "Workshop" to section "1" and I fill the form with:
+      | name | SeparateGroupsNoGrouping |
+      | Description | Description |
+      | Instructions for submission | Instructions1 |
+      | Instructions for assessment | Instructions2 |
+      | Conclusion | Conclusion |
+      | Group mode | Separate groups |
+    And I add a "Workshop" to section "1" and I fill the form with:
+      | name | SeparateGroupsGrouping2 |
+      | Description | Description |
+      | Instructions for submission | Instructions1 |
+      | Instructions for assessment | Instructions2 |
+      | Conclusion | Conclusion |
+      | Group mode | Separate groups |
+      | Grouping | Grouping 2 |
+    And I add a "Workshop" to section "1" and I fill the form with:
+      | name | SeparateGroupsGrouping3 |
+      | Description | Description |
+      | Instructions for submission | Instructions1 |
+      | Instructions for assessment | Instructions2 |
+      | Conclusion | Conclusion |
+      | Group mode | Separate groups |
+      | Grouping | Grouping 3 |
     And I log out
 # Reset the recent activity block contents for students and teachers
     And I log in as "student1"
