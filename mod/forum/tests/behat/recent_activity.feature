@@ -308,5 +308,5 @@ Feature: New forum posts in Recent activity block and report
     And I follow "Course1"
     And I should not see "SepGrouping2NoGroup" in the "Recent activity" "block"
     And I open course recent activity report
-    And I should not see "SepGrouping2NoGroup" in the ".region-content" "css_element"
+    And I should not see "SepGrouping2NoGroup" in the "//div[@role='main']" "xpath_element"
     And I log out
