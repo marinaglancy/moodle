@@ -1738,6 +1738,10 @@ class moodle_page {
         if ($this->_devicetypeinuse != 'default') {
             $this->add_body_class($this->_devicetypeinuse . 'theme');
         }
+
+        if (defined('BEHAT_SITE_RUNNING') && BEHAT_SITE_RUNNING) {
+            $this->add_body_class('running_behat_tests');
+        }
     }
 
     /**

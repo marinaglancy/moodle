@@ -58,6 +58,10 @@ body {
 @import "moodle/grade";
 @import "moodle/dock";
 
+// This should be the last Moodle import before the expendables.
+// Please see the note in the file before messing with it.
+@import "moodle/behat";
+
 // Anything below this line is considered expendable,
 // so it doesn't matter if it doesn't show up in ie < 9
 // though at current time (2013-03-13) the whole file is
