@@ -1,0 +1,27 @@
+/**
+ * This file contains special overrides for this theme when running acceptance tests.
+ *
+ * DO NOT ADD TO THIS FILE UNLESS YOU ABSOLUTELY NEED TO.
+ *
+ * Changes in this file are required in order to work around very specific webdriver browser limitations.
+ * This should only be done in CSS when there is absolutely no other solution available.
+ * Each override should be clearly documented so that we know exactly what it is doing in the future.
+ */
+body.running_behat_tests {
+    // All overrides need to be within here.
+
+    &.safari {
+        // The styles within this block apply to Safari and Chrome browsers.
+
+        // The floating navbar mucks up Chrome and Safari because when they scroll an element into
+        // view in order to interact with it they don't adjust for any fixed/absolute position elements.
+        // The body has padding for the navbar of 60px so when you are at the top of the page it doesn't
+        // overlap, however as you scroll that padding isn't scrolled.
+        // However because the padding is at the top we can get away with making the navbar absolutely positioned.
+        // This can't be done in code because it affects EVERY interaction with every type of node that can
+        // end up behind the navbar due to scrolling.
+        .navbar-fixed-top {
+            position: absolute;
+        }
+    }
+}
