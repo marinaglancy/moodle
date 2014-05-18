@@ -299,8 +299,18 @@ EOD;
         $record = (array)$record;
 
         if (!isset($record['contextid'])) {
-            $record['contextid'] = context_system::instance()->id;
+            if (isset($record['categoryid'])) {
+                $context = context_coursecat::instance($record['categoryid'], MUST_EXIST);
+                $record['contextid'] = $context->id;
+            } else if (isset($record['category'])) {
+                $context = context_coursecat::instance($record['category'], MUST_EXIST);
+                $record['contextid'] = $context->id;
+            } else {
+                $record['contextid'] = context_system::instance()->id;
+            }
         }
+        unset($record['category']);
+        unset($record['categoryid']);
 
         if (!isset($record['name'])) {
             $record['name'] = 'Cohort '.$i;
@@ -325,6 +335,31 @@ EOD;
         $id = cohort_add_cohort((object)$record);
 
         return $DB->get_record('cohort', array('id'=>$id), '*', MUST_EXIST);
+    }
+
+    /**
+     * Create a test cohort member
+     *
+     * @param array|stdClass $record
+     * @throws coding_exception
+     * @return boolean
+     */
+    public function create_cohort_member($record) {
+        global $CFG;
+
+        require_once($CFG->dirroot . '/cohort/lib.php');
+
+        $record = (array)$record;
+
+        if (empty($record['userid'])) {
+            throw new coding_exception('user must be present in testing_data_generator::create_cohort_member() $record');
+        }
+
+        if (!isset($record['cohortid'])) {
+            throw new coding_exception('cohort must be present in testing_data_generator::create_cohort_member() $record');
+        }
+
+        return cohort_add_member($record['cohortid'], $record['userid']);
     }
 
     /**

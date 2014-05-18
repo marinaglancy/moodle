@@ -253,6 +253,53 @@ class core_cohort_cohortlib_testcase extends advanced_testcase {
         $this->assertTrue($DB->record_exists('cohort_members', array('cohortid'=>$cohort->id, 'userid'=>$user->id)));
     }
 
+    public function test_cohort_generator() {
+        global $DB;
+
+        $this->resetAfterTest();
+        $category1 = $this->getDataGenerator()->create_category();
+        $category2 = $this->getDataGenerator()->create_category();
+        $category3 = $this->getDataGenerator()->create_category();
+
+        $countinitial = $DB->count_records('cohort');
+
+        // Create cohort with no arguments (system cohort will be created).
+        $cohortsystem = $this->getDataGenerator()->create_cohort();
+        $this->assertEquals($countinitial+1, $DB->count_records('cohort'));
+        $dbrecord = $DB->get_record('cohort', array('id' => $cohortsystem->id), '*', MUST_EXIST);
+        $this->assertEquals(context_system::instance()->id, $dbrecord->contextid);
+
+        // Create cohort specifying the contextid.
+        $cohortcategory1 = $this->getDataGenerator()->create_cohort(array('contextid'=>context_coursecat::instance($category1->id)->id));
+        $this->assertEquals($countinitial+2, $DB->count_records('cohort'));
+        $dbrecord = $DB->get_record('cohort', array('id' => $cohortcategory1->id), '*', MUST_EXIST);
+        $this->assertEquals(context_coursecat::instance($category1->id)->id, $dbrecord->contextid);
+
+        // Create cohort specifying the categoryid.
+        $cohortcategory2 = $this->getDataGenerator()->create_cohort(array('categoryid'=>$category2->id));
+        $this->assertEquals($countinitial+3, $DB->count_records('cohort'));
+        $dbrecord = $DB->get_record('cohort', array('id' => $cohortcategory2->id), '*', MUST_EXIST);
+        $this->assertEquals(context_coursecat::instance($category2->id)->id, $dbrecord->contextid);
+
+        // Create cohort specifying the category (identical to specifying categoryid).
+        $cohortcategory3 = $this->getDataGenerator()->create_cohort(array('category'=>$category3->id));
+        $this->assertEquals($countinitial+4, $DB->count_records('cohort'));
+        $dbrecord = $DB->get_record('cohort', array('id' => $cohortcategory3->id), '*', MUST_EXIST);
+        $this->assertEquals(context_coursecat::instance($category3->id)->id, $dbrecord->contextid);
+
+        // Add members.
+        $user1 = $this->getDataGenerator()->create_user();
+        $user2 = $this->getDataGenerator()->create_user();
+
+        $this->assertFalse($DB->record_exists('cohort_members', array('cohortid'=>$cohortsystem->id, 'userid'=>$user1->id)));
+        $this->getDataGenerator()->create_cohort_member(array('userid' => $user1->id, 'cohortid' => $cohortsystem->id));
+        $this->assertTrue($DB->record_exists('cohort_members', array('cohortid'=>$cohortsystem->id, 'userid'=>$user1->id)));
+
+        $this->assertFalse($DB->record_exists('cohort_members', array('cohortid'=>$cohortcategory1->id, 'userid'=>$user2->id)));
+        $this->getDataGenerator()->create_cohort_member(array('userid' => $user2->id, 'cohortid' => $cohortcategory1->id));
+        $this->assertTrue($DB->record_exists('cohort_members', array('cohortid'=>$cohortcategory1->id, 'userid'=>$user2->id)));
+    }
+
     public function test_cohort_add_member_event() {
         global $USER;
         $this->resetAfterTest();

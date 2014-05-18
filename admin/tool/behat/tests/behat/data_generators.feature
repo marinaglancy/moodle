@@ -252,3 +252,37 @@ Feature: Set up contextual data for tests
     And the "members" select box should contain "Student 1"
     And I set the field "groups" to "Group 2 (1)"
     And the "members" select box should contain "Student 2"
+
+  @javascript
+  Scenario: Add a bunch of cohorts
+    Given the following "categories" exist:
+      | name | category | idnumber |
+      | Cat 1 | 0 | CAT1 |
+    And the following "users" exist:
+      | username | firstname | lastname | email |
+      | student1 | Student | 1 | student1@asd.com |
+      | student2 | Student | 2 | student2@asd.com |
+    And the following "cohorts" exist:
+      | name    | idnumber |
+      | Cohort1 | C1       |
+      | Cohort2 | C2       |
+    And the following "cohorts" exist:
+      | name    | idnumber | category |
+      | Cohort3 | C3       | CAT1     |
+      | Cohort4 | C4       | CAT1     |
+    And the following "cohort members" exist:
+      | user     | cohort |
+      | student1 | C1     |
+      | student2 | C2     |
+      | student1 | C2     |
+      | student1 | C3     |
+    When I log in as "admin"
+    And I navigate to "Cohorts" node in "Site administration > Users > Accounts"
+    Then I should see "Cohort1"
+    And I should see "Cohort2"
+    And I wait "20" seconds
+    And I go to the courses management page
+    And I click on "cohorts" action for "Cat 1" in management category listing
+    And I should see "Cohort3"
+    And I should see "Cohort4"
+    And I wait "20" seconds
