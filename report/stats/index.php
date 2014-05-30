@@ -66,7 +66,6 @@ $PAGE->set_url(new moodle_url('/report/stats/index.php', array('course' => $cour
                                                                'time'   => $time,
                                                                'mode'   => $mode,
                                                                'userid' => $userid)));
-navigation_node::override_active_url(new moodle_url('/report/stats/index.php', array('course' => $course->id)));
 
 // Trigger a content view event.
 $event = \report_stats\event\report_viewed::create(array('context' => $context, 'relateduserid' => $userid,
@@ -78,6 +77,7 @@ if ($course->id == SITEID) {
     admin_externalpage_setup('reportstats', '', null, '', array('pagelayout'=>'report'));
     echo $OUTPUT->header();
 } else {
+    navigation_node::override_active_url(new moodle_url('/report/stats/index.php', array('course' => $course->id)));
     $strreports = get_string("reports");
     $strstats = get_string('stats');
 
