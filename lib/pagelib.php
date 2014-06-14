@@ -1444,7 +1444,7 @@ class moodle_page {
         $this->_loginpending = false;
         if ($courseorid) {
             $this->set_course($course);
-            return array($this->context, $this->course);
+            return array(context_course::instance($course->id), $this->course);
         } else {
             // Do not touch global $COURSE via $PAGE->set_course(),
             // the reasons is we need to be able to call login() at any time!
@@ -1470,7 +1470,7 @@ class moodle_page {
      * @param int|stdClass|cm_info $cmorid course module id or record
      * @param int|stdClass $courseorid course id or record (if known)
      * @param int $logintype any combination of PAGELOGIN_ constants
-     * @return array of three elements: context_module (module context), stdClass (coruse record),
+     * @return array of three elements: context_module (module context), stdClass (course record),
      *     cm_info (course module). Activity record may be retrieved additionally using
      *     $PAGE->activityrecord, it will perform additional DB query
      */
@@ -1506,7 +1506,7 @@ class moodle_page {
         $this->_loginpending = false;
         $this->set_cm($cm, $course);
         $this->set_pagelayout('incourse');
-        return array($this->context, $this->course, $this->cm);
+        return array(context_module::instance($cm->id), $this->course, $this->cm);
     }
 
     /**
@@ -1520,7 +1520,7 @@ class moodle_page {
      * @param int|stdClass $instanceorid instance id or record
      * @param int|stdClass $courseorid course id or record (if known)
      * @param int $logintype any combination of PAGELOGIN_ constants
-     * @return array of three elements: context_module (module context), stdClass (coruse record),
+     * @return array of three elements: context_module (module context), stdClass (course record),
      *     cm_info (course module). Activity record may be retrieved additionally using
      *     $PAGE->activityrecord, it will perform additional DB query
      */
@@ -1529,11 +1529,11 @@ class moodle_page {
         $this->login_expected($logintype);
         if (is_object($instanceorid)) {
             $instanceid = $instanceorid->id;
+            if (empty($courseorid) && isset($instanceorid->course)) {
+                $courseorid = $instanceorid->course;
+            }
         } else {
             $instanceid = $instanceorid;
-        }
-        if (empty($courseorid) && isset($instanceorid->course)) {
-            $courseorid = $instanceorid->course;
         }
         if (is_object($courseorid)) {
             $course = $courseorid;
@@ -1548,6 +1548,9 @@ class moodle_page {
                     array($instancename, $instanceid), MUST_EXIST);
         }
         $modinfo = get_fast_modinfo($course);
+        if (!isset($modinfo->instances[$instancename]) || !isset($modinfo->instances[$instancename][$instanceid])) {
+            throw new require_login_exception('Course module can not be retrieved');
+        }
         $cm = $modinfo->instances[$instancename][$instanceid];
         validate_login($this->logintype, $course, $cm);
         $this->_loginpending = false;
@@ -1556,7 +1559,7 @@ class moodle_page {
         if (is_object($instanceorid)) {
             $this->set_activity_record($instanceorid);
         }
-        return array($this->context, $this->course, $this->cm);
+        return array(context_module::instance($cm->id), $this->course, $this->cm);
     }
 
     /**
