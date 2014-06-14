@@ -1562,6 +1562,38 @@ class moodle_page {
         return array(context_module::instance($cm->id), $this->course, $this->cm);
     }
 
+    public function login_to_context($contextorid, $logintype = null) {
+        $this->login_expected($logintype);
+        if (is_int($contextorid)) {
+            $context = context::instance_by_id($contextorid, MUST_EXIST);
+        } else if ($contextorid instanceof context) {
+            $context = $contextorid;
+        } else {
+            throw new coding_exception('Context format is not recognised');
+        }
+
+        $cm = null;
+        $this->set_context($context);
+        if ($context->contextlevel == CONTEXT_COURSE) {
+            list($coursecontext, $course) = $this->login($context->instanceid);
+        } else if ($context->contextlevel == CONTEXT_MODULE) {
+            list($modulecontext, $course, $cm) = $this->login_to_cm(null, $context->instanceid);
+        } else if ($context->contextlevel == CONTEXT_BLOCK) {
+            $parent = $context->get_parent_context();
+            if ($parent->contextlevel == CONTEXT_COURSE) {
+                list($coursecontext, $course) = $this->login($parent->instanceid);
+            } else if ($parent->contextlevel == CONTEXT_MODULE) {
+                list($modulecontext, $course, $cm) = $this->login_to_cm(null, $parent->instanceid);
+            } else {
+                list($systemcontext, $course) = $this->login();
+            }
+        } else {
+            list($systemcontext, $course) = $this->login();
+        }
+
+        return array($context, $course, $cm);
+    }
+
     /**
      * This function indicates that current page requires the https when $CFG->loginhttps enabled.
      *

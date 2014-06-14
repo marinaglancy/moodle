@@ -29,11 +29,8 @@ require_once(dirname(__FILE__) . '/../../../../../config.php');
 
 $contextid = required_param('contextid', PARAM_INT);
 
-list($context, $course, $cm) = get_context_info_array($contextid);
+list($context, $course, $cm) = $PAGE->login_to_context($contextid, PAGELOGIN_NO_AUTOLOGIN);
 $PAGE->set_url('/lib/editor/atto/plugins/equation/ajax.php');
-$PAGE->set_context($context);
-
-require_login($course, false, $cm);
 require_sesskey();
 
 $action = required_param('action', PARAM_ALPHA);
