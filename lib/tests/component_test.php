@@ -413,4 +413,146 @@ class core_component_testcase extends advanced_testcase {
         $list = core_component::get_plugin_list_with_file('report', 'idontexist.php', true);
         $this->assertEquals(array(), array_keys($list));
     }
+
+    public function test_resolve_plugin_type() {
+        global $CFG;
+
+        // Get all plugins of type block.
+        $blocks = testable_core_component::testable_resolve_plugin_type('block', false);
+        $this->assertGreaterThan(1, count($blocks));
+        $firstkey = key($blocks);
+        $this->assertEquals(1, preg_match('/^block_./', $firstkey));
+        $this->assertFalse(is_array($blocks[$firstkey]));
+
+        // Get all plugins of type block with double array indexing.
+        $indexedblocks = testable_core_component::testable_resolve_plugin_type('block', true);
+        $this->assertEquals(array('block'), array_keys($indexedblocks));
+        $this->assertTrue(is_array($indexedblocks['block']));
+        $firstkey = key($indexedblocks['block']);
+        $this->assertEquals(0, preg_match('/^block_/', $firstkey));
+        $this->assertFalse(is_array($indexedblocks['block'][$firstkey]));
+
+        // Get one plugin by name.
+        $mods = testable_core_component::testable_resolve_plugin_type('mod_assign', false);
+        $this->assertEquals(array('mod_assign' => $CFG->dirroot.'/mod/assign'), $mods);
+
+        // Get one plugin by name with double array indexing.
+        $indexedmods = testable_core_component::testable_resolve_plugin_type('mod_assign', true);
+        $this->assertEquals(array('mod'), array_keys($indexedmods));
+        $this->assertEquals(array('assign'), array_keys($indexedmods['mod']));
+
+        // Get several plugins by their names.
+        $mods = testable_core_component::testable_resolve_plugin_type(array('mod_assign', 'mod_forum'), false);
+        $this->assertEquals(array('mod_assign', 'mod_forum'), array_keys($mods));
+
+        $indexedmods = testable_core_component::testable_resolve_plugin_type(array('mod_assign', 'mod_forum'), true);
+        $this->assertEquals(array('mod'), array_keys($indexedmods));
+        $this->assertEquals(array('assign', 'forum'), array_keys($indexedmods['mod']));
+
+        // Get all plugins of several types.
+        $plugins = testable_core_component::testable_resolve_plugin_type(array('mod', 'block'), false);
+
+        $indexedplugins = testable_core_component::testable_resolve_plugin_type(array('mod', 'block'), true);
+        $this->assertEquals(array('mod', 'block'), array_keys($indexedplugins));
+
+        // Get all plugins.
+        $plugins = testable_core_component::testable_resolve_plugin_type('*', false);
+        $this->assertArrayHasKey('mod_assign', $plugins);
+        $this->assertArrayHasKey('block_navigation', $plugins);
+
+        $indexedplugins = testable_core_component::testable_resolve_plugin_type('*', true);
+        $this->assertArrayHasKey('mod', $indexedplugins);
+        $this->assertArrayNotHasKey('mod_assign', $indexedplugins);
+        $this->assertArrayHasKey('assign', $indexedplugins['mod']);
+        $this->assertArrayNotHasKey('mod_assign', $indexedplugins['mod']);
+        $this->assertArrayHasKey('auth', $indexedplugins);
+
+        // Assert removing of duplicates in weird arguments.
+        $modclasses = testable_core_component::testable_resolve_plugin_type('mod');
+        $modpluginsweird1 = testable_core_component::testable_resolve_plugin_type(array('mod', 'mod_assign'));
+        $this->assertEquals($modclasses, $modpluginsweird1);
+        $modpluginsweird2 = testable_core_component::testable_resolve_plugin_type(array('mod_forum', 'mod'));
+        $this->assertEquals($modclasses, $modpluginsweird2);
+        $modpluginsweird3 = testable_core_component::testable_resolve_plugin_type(array('mod_assign', 'mod_assign', 'mod_forum'));
+        $this->assertEquals(array('mod_assign', 'mod_forum'), array_keys($modpluginsweird3));
+    }
+
+    public function test_resolve_subsystem_type() {
+        global $CFG;
+        // Get only 'core' subsystem.
+        $subsystems = testable_core_component::testable_resolve_subsystem_type('core');
+        $this->assertEquals(array('core' => $CFG->dirroot.'/lib'), $subsystems);
+
+        // Get several subsystems.
+        $subsystems = testable_core_component::testable_resolve_subsystem_type(array('core_course', 'core_repository'));
+        $this->assertEquals(array('core_course', 'core_repository'), array_keys($subsystems));
+
+        // Get all subsystems.
+        $subsystems = testable_core_component::testable_resolve_subsystem_type('*');
+        $this->assertArrayHasKey('core', $subsystems);
+        $this->assertArrayHasKey('core_course', $subsystems);
+
+        // Make sure that subsystems without directories are not returned.
+        $this->assertArrayHasKey('pix', core_component::get_core_subsystems());
+        $this->assertArrayNotHasKey('core_pix', $subsystems);
+        $this->assertEmpty(testable_core_component::testable_resolve_subsystem_type('core_pix'));
+
+        // Total number of subsystems returned by method resolve_subsystem_type() is equal to the
+        // number of subsystems with non-empty directories plus one extra - 'core'.
+        $nonemptycomponents = array_filter(core_component::get_core_subsystems());
+        $this->assertEquals(count($nonemptycomponents) + 1, count($subsystems));
+    }
+
+    public function test_find_classes() {
+        // Assert that calling for individual plugin returns only this plugin.
+        $assignclasses = core_component::find_classes_in_plugins('mod_assign', 'event');
+        $this->assertEquals(array('mod_assign'), array_keys($assignclasses));
+        $this->assertTrue(is_array($assignclasses['mod_assign']));
+
+        // Test that limiting by abstract-ness decreases the results (we know that mod_assign has several abstract events).
+        $assignclassesnonabstract = core_component::find_classes_in_plugins('mod_assign', 'event', '', true);
+        $this->assertGreaterThan(count($assignclassesnonabstract['mod_assign']), count($assignclasses['mod_assign']));
+        $this->assertEmpty(array_diff($assignclassesnonabstract['mod_assign'], $assignclasses['mod_assign']));
+
+        // Assert that classes in 'mod' always include classes in one module.
+        $modclasses = core_component::find_classes_in_plugins('mod', 'event');
+        $this->assertEquals($assignclasses['mod_assign'], $modclasses['mod_assign']);
+        $this->assertGreaterThan(1, count($modclasses));
+
+        // Test that limiting by parent class decreases the results (in this case the parent is excluded).
+        $coreeventswithparent = core_component::find_classes_in_subsystems('core', 'event', 'core\\event\\base');
+        $coreeventsall = core_component::find_classes_in_subsystems('core', 'event');
+        $this->assertGreaterThan(count($coreeventswithparent['core']), count($coreeventsall['core']));
+        $this->assertEmpty(array_diff($coreeventswithparent['core'], $coreeventsall['core']));
+
+        // Requesting classes located only in two subsystems.
+        $twosubsystemclasses = core_component::find_classes_in_subsystems(array('core_course', 'core_availability'));
+        $subsystemclasses = core_component::find_classes_in_subsystems('core_availability');
+        $this->assertEquals(array('core_availability', 'core_course'), array_keys($twosubsystemclasses));
+        $this->assertEquals($subsystemclasses['core_availability'], $twosubsystemclasses['core_availability']);
+
+        // Requesting classes located in any core subsystem.
+        $allcoreclasses = core_component::find_classes_in_subsystems('*');
+        $coreclasses = core_component::find_classes_in_subsystems('core');
+        $this->assertEquals($coreclasses['core'], $allcoreclasses['core']);
+        $this->assertEquals($subsystemclasses['core_availability'], $allcoreclasses['core_availability']);
+
+        // Assert that looking for all existing events does not trigger any errors/messages.
+        core_component::find_classes_in_subsystems('*', 'event');
+        core_component::find_classes_in_plugins('*', 'event');
+        $this->assertDebuggingNotCalled();
+    }
+}
+
+/**
+ * Used to test protected methods of core_component.
+ */
+class testable_core_component extends core_component {
+    public static function testable_resolve_plugin_type($plugintype, $indexedbytype = false) {
+        return self::resolve_plugin_type($plugintype, $indexedbytype);
+    }
+
+    public static function testable_resolve_subsystem_type($plugintype) {
+        return self::resolve_subsystem_type($plugintype);
+    }
 }
