@@ -166,24 +166,44 @@ class core_user_renderer extends plugin_renderer_base {
 
     public function user_profile_fields_overview($additionalprofilecategories, $additionalprofilefields) {
         $rv = '';
+        if (empty($additionalprofilecategories)) {
+            return $rv;
+        }
         $reqhtml = '<img class="req" title="'.get_string('requiredelement', 'form').'" alt="'.get_string('requiredelement', 'form').'" src="'.$this->output->pix_url('req') .'" />';
+        $lockedhtml = '<img class="locked" title="'.get_string('locked', 'admin').'" src="'.$this->output->pix_url('t/locked') .'" />';
+
+        $choices = array();
+        $choices[PROFILE_VISIBLE_NONE]    = get_string('profilevisiblenone', 'admin');
+        $choices[PROFILE_VISIBLE_PRIVATE] = get_string('profilevisibleprivate', 'admin');
+        $choices[PROFILE_VISIBLE_ALL]     = get_string('profilevisibleall', 'admin');
+
         foreach ($additionalprofilecategories as $category) {
             $table = new html_table();
-            $table->head  = array(get_string('profilefield', 'admin'), get_string('edit'));
-            $table->align = array('left', 'right');
-            $table->width = '95%';
+            $table->head  = array(
+                get_string('profilefield', 'admin'),
+                get_string('profiledefaultdata', 'admin'),
+                get_string('profilevisible', 'admin'),
+                get_string('edit')
+            );
+            $table->align = array('left',
+                '',
+                '',
+                'right');
             $table->attributes['class'] = 'generaltable profilefield';
             $table->data = array();
 
-            $thiscategoryfields = array();
-            foreach ($additionalprofilefields as $fieldid => $field) {
-                if ($field->categoryid == $category->id) {
-                    $thiscategoryfields[$fieldid] = $field;
-                }
-            }
+            $thiscategoryfields = array_filter($additionalprofilefields,
+                create_function('$a', 'return $a->categoryid == '.((int)$category->id).';'));
 
             foreach ($thiscategoryfields as $field) {
-                $table->data[] = array(format_string($field->name), $this->profile_field_icons($field, count($thiscategoryfields)));
+                $table->data[] = array(
+                    format_string($field->name) .
+                        ($field->locked ? $lockedhtml : '') .
+                        ($field->required ? $reqhtml : ''),
+                    $field->defaultdata,
+                    $choices[$field->visible],
+                    $this->profile_field_icons($field, count($thiscategoryfields))
+                );
             }
 
             $rv .= $this->output->heading(format_string($category->name) .' '.
