@@ -164,6 +164,120 @@ class core_user_renderer extends plugin_renderer_base {
         return $content;
     }
 
+    public function user_profile_fields_overview($additionalprofilecategories, $additionalprofilefields) {
+        $rv = '';
+        $reqhtml = '<img class="req" title="'.get_string('requiredelement', 'form').'" alt="'.get_string('requiredelement', 'form').'" src="'.$this->output->pix_url('req') .'" />';
+        foreach ($additionalprofilecategories as $category) {
+            $table = new html_table();
+            $table->head  = array(get_string('profilefield', 'admin'), get_string('edit'));
+            $table->align = array('left', 'right');
+            $table->width = '95%';
+            $table->attributes['class'] = 'generaltable profilefield';
+            $table->data = array();
+
+            foreach ($additionalprofilefields as $field) {
+                if ($field->categoryid == $category->id) {
+                    $table->data[] = array(format_string($field->name), $this->profile_field_icons($field));
+                }
+            }
+
+            $rv .= $this->output->heading(format_string($category->name) .' '.$this->profile_category_icons($category));
+            if (count($table->data)) {
+                $rv .= html_writer::table($table);
+            } else {
+                $strnofields = get_string('profilenofieldsdefined', 'admin');
+                $rv .= $this->output->notification($strnofields);
+            }
+
+        } // End of $categories foreach.
+
+        return $rv;
+    }
+
+    /**
+     * Create a string containing the editing icons for the user profile categories
+     * @param stdClass $category the category object
+     * @return string the icon string
+     */
+    protected function profile_category_icons($category) {
+        global $CFG, $USER, $DB, $OUTPUT;
+
+        $strdelete   = get_string('delete');
+        $strmoveup   = get_string('moveup');
+        $strmovedown = get_string('movedown');
+        $stredit     = get_string('edit');
+
+        $categorycount = $DB->count_records('user_info_category');
+        $fieldcount    = $DB->count_records('user_info_field', array('categoryid' => $category->id));
+
+        // Edit.
+        $editstr = '<a title="'.$stredit.'" href="index.php?id='.$category->id.'&amp;action=editcategory"><img src="'.$OUTPUT->pix_url('t/edit') . '" alt="'.$stredit.'" class="iconsmall" /></a> ';
+
+        // Delete.
+        // Can only delete the last category if there are no fields in it.
+        if (($categorycount > 1) or ($fieldcount == 0)) {
+            $editstr .= '<a title="'.$strdelete.'" href="index.php?id='.$category->id.'&amp;action=deletecategory&amp;sesskey='.sesskey();
+            $editstr .= '"><img src="'.$OUTPUT->pix_url('t/delete') . '" alt="'.$strdelete.'" class="iconsmall" /></a> ';
+        } else {
+            $editstr .= '<img src="'.$OUTPUT->pix_url('spacer') . '" alt="" class="iconsmall" /> ';
+        }
+
+        // Move up.
+        if ($category->sortorder > 1) {
+            $editstr .= '<a title="'.$strmoveup.'" href="index.php?id='.$category->id.'&amp;action=movecategory&amp;dir=up&amp;sesskey='.sesskey().'"><img src="'.$OUTPUT->pix_url('t/up') . '" alt="'.$strmoveup.'" class="iconsmall" /></a> ';
+        } else {
+            $editstr .= '<img src="'.$OUTPUT->pix_url('spacer') . '" alt="" class="iconsmall" /> ';
+        }
+
+        // Move down.
+        if ($category->sortorder < $categorycount) {
+            $editstr .= '<a title="'.$strmovedown.'" href="index.php?id='.$category->id.'&amp;action=movecategory&amp;dir=down&amp;sesskey='.sesskey().'"><img src="'.$OUTPUT->pix_url('t/down') . '" alt="'.$strmovedown.'" class="iconsmall" /></a> ';
+        } else {
+            $editstr .= '<img src="'.$OUTPUT->pix_url('spacer') . '" alt="" class="iconsmall" /> ';
+        }
+
+        return $editstr;
+    }
+
+    /**
+     * Create a string containing the editing icons for the user profile fields
+     * @param stdClass $field the field object
+     * @return string the icon string
+     */
+    protected function profile_field_icons($field) {
+        global $CFG, $USER, $DB, $OUTPUT;
+
+        $strdelete   = get_string('delete');
+        $strmoveup   = get_string('moveup');
+        $strmovedown = get_string('movedown');
+        $stredit     = get_string('edit');
+
+        $fieldcount = $DB->count_records('user_info_field', array('categoryid' => $field->categoryid));
+        $datacount  = $DB->count_records('user_info_data', array('fieldid' => $field->id));
+
+        // Edit.
+        $editstr = '<a title="'.$stredit.'" href="index.php?id='.$field->id.'&amp;action=editfield"><img src="'.$OUTPUT->pix_url('t/edit') . '" alt="'.$stredit.'" class="iconsmall" /></a> ';
+
+        // Delete.
+        $editstr .= '<a title="'.$strdelete.'" href="index.php?id='.$field->id.'&amp;action=deletefield&amp;sesskey='.sesskey();
+        $editstr .= '"><img src="'.$OUTPUT->pix_url('t/delete') . '" alt="'.$strdelete.'" class="iconsmall" /></a> ';
+
+        // Move up.
+        if ($field->sortorder > 1) {
+            $editstr .= '<a title="'.$strmoveup.'" href="index.php?id='.$field->id.'&amp;action=movefield&amp;dir=up&amp;sesskey='.sesskey().'"><img src="'.$OUTPUT->pix_url('t/up') . '" alt="'.$strmoveup.'" class="iconsmall" /></a> ';
+        } else {
+            $editstr .= '<img src="'.$OUTPUT->pix_url('spacer') . '" alt="" class="iconsmall" /> ';
+        }
+
+        // Move down.
+        if ($field->sortorder < $fieldcount) {
+            $editstr .= '<a title="'.$strmovedown.'" href="index.php?id='.$field->id.'&amp;action=movefield&amp;dir=down&amp;sesskey='.sesskey().'"><img src="'.$OUTPUT->pix_url('t/down') . '" alt="'.$strmovedown.'" class="iconsmall" /></a> ';
+        } else {
+            $editstr .= '<img src="'.$OUTPUT->pix_url('spacer') . '" alt="" class="iconsmall" /> ';
+        }
+
+        return $editstr;
+    }
 }
 
 /**
