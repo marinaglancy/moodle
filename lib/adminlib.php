@@ -2341,10 +2341,13 @@ if (is_ie) {
   unmaskchb.onclick = function() {this.blur();};
   unmaskdiv.onclick = function() {this.blur();};
 }
+
+// Very hacky way to prevent autofilling of the password field by browser.
+setTimeout(function(){unmaskPassword("'.$id.'");}, 500);
 //]]>
 </script>';
         return format_admin_setting($this, $this->visiblename,
-        '<div class="form-password"><input type="password" size="'.$this->size.'" id="'.$id.'" name="'.$this->get_full_name().'" value="'.s($data).'" /><div class="unmask" id="'.$id.'unmaskdiv"></div>'.$unmaskjs.'</div>',
+        '<div class="form-password"><input type="text" size="'.$this->size.'" id="'.$id.'" name="'.$this->get_full_name().'" value="'.s($data).'" /><div class="unmask" id="'.$id.'unmaskdiv"></div>'.$unmaskjs.'</div>',
         $this->description, true, '', NULL, $query);
     }
 }
