@@ -2714,7 +2714,12 @@ class grade_tree extends grade_structure {
          
         // store to db
         foreach ($this->cats as $key => $cat) {
-            if ($grademax !== null) {
+            if (!isset($grades[$cat->id]->id)) {
+                if (isset($cat->value) && $grades[$cat->id]->rawgrademax != $cat->value) {
+                    $this->items[$cat->id]->rawgrademax = $cat->value;
+                    $this->items[$cat->id]->update('aggregation');
+                }
+            } else if ($grademax !== null) {
                 if (isset($cat->value) && $grades[$cat->id]->rawgrademax != $cat->value) {
                     $grades[$cat->id]->rawgrademax = $cat->value;
                     $grades[$cat->id]->update('aggregation');
