@@ -2673,8 +2673,8 @@ class grade_tree extends grade_structure {
                         $item = $this->cats[$element['object']->id];
                         // exclude ungraded, hidden, and extra credit items
                         // exclude ungraded, hidden, and extra credit items
-                        if ($item->extracredit !== 1 && 
-                                $item->weight !== -1 &&
+                        if ($item->extracredit != 1 && 
+                                $item->weight != -1 &&
                                 !is_null($element['object']->parent) &&
                                 (!$item->is_hidden() || $this->showtotalsifcontainhidden == GRADE_REPORT_SHOW_REAL_TOTAL_IF_CONTAINS_HIDDEN) &&
                                 ($grades[$item->id]->finalgrade !== null || $this->cats[$element['object']->parent]->grade_category->aggregateonlygraded == 0)) {
@@ -2691,16 +2691,15 @@ class grade_tree extends grade_structure {
                         // exclude ungraded, hidden, and extra credit items
                         if ($grademax !== null) {
                             // exclude ungraded, hidden, and extra credit items
-                            if ($item->extracredit !== 1 && 
-                                    $item->weight !== -1 &&
+                            if ($item->extracredit != 1 && 
+                                    $item->weight != -1 &&
                                     (!$item->is_hidden() || $this->showtotalsifcontainhidden == GRADE_REPORT_SHOW_REAL_TOTAL_IF_CONTAINS_HIDDEN) &&
                                     (isset($grades[$item->id]->finalgrade) || $cat->grade_category->aggregateonlygraded == 0) &&
                                     ($grades[$item->id]->finalgrade !== null || $this->cats[$item->categoryid]->grade_category->aggregateonlygraded == 0)) {
                                 $cat->value += $grades[$item->id]->rawgrademax;
                             }
                         } else {
-                            if ($item->extracredit !== 1 &&
-                                    $item->weight !== -1 &&
+                            if ($item->weight != -1 &&
                                     (!$item->is_hidden() || $this->showtotalsifcontainhidden == GRADE_REPORT_SHOW_REAL_TOTAL_IF_CONTAINS_HIDDEN) &&
                                     isset($grades[$item->id]->finalgrade) &&
                                     ($grades[$item->id]->finalgrade !== null || $cat->grade_category->aggregateonlygraded == 0)) {
