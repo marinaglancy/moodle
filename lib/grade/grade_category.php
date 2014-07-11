@@ -824,7 +824,7 @@ class grade_category extends grade_object {
                 continue;
             }
 
-            if (($showtotalsifcontainhidden == GRADE_REPORT_SHOW_TOTAL_IF_CONTAINS_HIDDEN) && $item->hidden == 1) {
+            if (($showtotalsifcontainhidden == GRADE_REPORT_SHOW_TOTAL_IF_CONTAINS_HIDDEN || $showtotalsifcontainhidden == GRADE_REPORT_HIDE_TOTAL_IF_CONTAINS_HIDDEN) && $item->hidden == 1) {
                 // totals for this course should not contain hidden items and this item is hidden
                 continue;
             }
@@ -871,6 +871,8 @@ class grade_category extends grade_object {
 
             } else if (in_array($itemid, $excluded)) {
                 unset($grade_values[$itemid]);
+            } else if ($this->aggregateonlygraded && $v == null) { // allow for exclude empty grades for Sum
+                unset($grade_values[$itemid]);                
             }
         }
 
