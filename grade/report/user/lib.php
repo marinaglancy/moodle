@@ -528,6 +528,9 @@ class grade_report_user extends grade_report {
                         } else {
                             $data['lettergrade']['content'] = grade_format_gradevalue($gradeval, $grade_grade->grade_item, true, GRADE_DISPLAY_TYPE_LETTER);
                         }
+                    } else if ($grade_grade->extracredit) {
+                        $data['lettergrade']['class'] = $class;
+                        $data['lettergrade']['content'] = '-';
                     } else if (!isset($grade_grade->weight)) {
                         $data['lettergrade']['class'] = $class;
                         $data['lettergrade']['content'] = '-';
