@@ -132,7 +132,7 @@ class grade_report_grader extends grade_report {
             $switch = grade_get_setting($this->courseid, 'aggregationposition', $CFG->grade_aggregationposition);
         }
 
-        $sumofgradesonly = grade_helper::get_sum_of_grades_only($courseid);
+        $this->sumofgradesonly = grade_helper::get_sum_of_grades_only($courseid);
     
         $this->gtree = new grade_tree($this->courseid, true, $switch, $this->collapsed, $nooutcomes);
 
