@@ -24,7 +24,6 @@
 
 require_once($CFG->dirroot . '/grade/report/lib.php');
 require_once($CFG->libdir.'/tablelib.php');
-require_once $CFG->dirroot.'/grade/report/laegrader/locallib.php';
 
 /**
  * Class providing an API for the grader report building and displaying.

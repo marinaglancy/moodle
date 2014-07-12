@@ -81,7 +81,7 @@ $USER->grade_last_report[$course->id] = 'user';
 
 
 //first make sure we have proper final grades - this must be done before constructing of the grade tree
-$sumofgradesonly = grade_helper::get_sum_of_grades_only($courseid);  //TODO: comes from laegrader
+$sumofgradesonly = grade_helper::get_sum_of_grades_only($courseid);  
 if (!$sumofgradesonly) {
     grade_regrade_final_grades($courseid);
 }

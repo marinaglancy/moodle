@@ -2672,7 +2672,6 @@ class grade_tree extends grade_structure {
                     case 'category':
                         $item = $this->cats[$element['object']->id];
                         // exclude ungraded, hidden, and extra credit items
-                        // exclude ungraded, hidden, and extra credit items
                         if ($item->extracredit != 1 && 
                                 isset($grades[$item->id]->weight) &&
                                 $grades[$item->id]->weight != -1 &&
@@ -2691,7 +2690,7 @@ class grade_tree extends grade_structure {
                         $cat = $this->cats[$item->categoryid];
                         // exclude ungraded, hidden, and extra credit items
                         if ($grademax !== null) {
-                            // exclude ungraded, hidden, and extra credit items
+                            // exclude ungraded, hidden, and extra credit items in grademax
                             if ($item->extracredit != 1 && 
                                     isset($grades[$item->id]->weight) &&
                                     $grades[$item->id]->weight != -1 &&
@@ -2701,6 +2700,8 @@ class grade_tree extends grade_structure {
                                 $cat->value += $grades[$item->id]->rawgrademax;
                             }
                         } else {
+                            // exclude ungraded, hidden
+                            // include extra credit in earned points
                             if (isset($grades[$item->id]->weight) &&
                                     $grades[$item->id]->weight != -1 &&
                                     (!$item->is_hidden() || $this->showtotalsifcontainhidden == GRADE_REPORT_SHOW_REAL_TOTAL_IF_CONTAINS_HIDDEN) &&
@@ -2752,7 +2753,7 @@ class grade_tree extends grade_structure {
             return '';
         }
 
-        $streditweight = get_string('editweight', 'gradereport_laegrader');
+        $streditweight = get_string('editweight', 'grades');
 
         $object = $this->modinfo;
         $url = new moodle_url('/grade/edit/tree/index.php',

@@ -106,7 +106,7 @@ if (!is_null($category) && !is_null($aggregationtype) && confirm_sesskey()) {
 }
 
 //first make sure we have proper final grades - we need it for locking changes
-$sumofgradesonly = grade_helper::get_sum_of_grades_only($courseid);  //TODO: comes from laegrader
+$sumofgradesonly = grade_helper::get_sum_of_grades_only($courseid);
 
 // get the grading tree object
 // note: total must be first for moving to work correctly, if you want it last moving code must be rewritten!
