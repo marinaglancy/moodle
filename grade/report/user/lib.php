@@ -193,13 +193,15 @@ class grade_report_user extends grade_report {
         // Grab the grade_tree for this course
         $this->gtree = new grade_tree($this->courseid, false, $this->switch, null, !$CFG->enableoutcomes);
 
+        $this->sumofgradesonly = grade_helper::get_sum_of_grades_only($courseid);  
+
         // Fill items with parent information needed later
         $this->gtree->parents = array();
         $this->gtree->cats = array();
         $this->gtree->fill_cats($this->gtree);
         $this->gtree->parents[$this->gtree->top_element['object']->grade_item->id] = new stdClass(); // initiate the course item
         $this->gtree->fill_parents($this->gtree->top_element, $this->gtree->top_element['object']->grade_item->id, $this->showtotalsifcontainhidden);
-
+        
         // Determine the number of rows and indentation
         $this->maxdepth = 1;
         $this->inject_rowspans($this->gtree->top_element);
@@ -311,8 +313,8 @@ class grade_report_user extends grade_report {
         $this->gtree->emptycats = array();
         $this->gtree->calc_weights_recursive2($this->gtree->top_element, $this->grades, true);
         $this->gtree->calc_weights_recursive2($this->gtree->top_element, $this->grades, false);
-        $this->gtree->accuratepoints($this->grades); // makes certain no grades have been injected that throw off points calcs
-        $this->gtree->accuratepoints($this->grades, true); // calculates range correctly for categories and course
+        $this->gtree->accuratepoints($this->grades, false); // makes certain no grades have been injected that throw off points calcs
+        $this->gtree->accuratepoints($this->grades, false, true); // calculates range correctly for categories and course
         $this->fill_table_recursive($this->gtree->top_element);
         return true;
     }
@@ -348,15 +350,7 @@ class grade_report_user extends grade_report {
         if ($type == 'item' or $type == 'categoryitem' or $type == 'courseitem') {
             $header_row = "row_{$eid}_{$this->user->id}";
             $header_cat = "cat_{$grade_object->categoryid}_{$this->user->id}";
-
-/*            if (! $grade_grade = grade_grade::fetch(array('itemid'=>$grade_object->id,'userid'=>$this->user->id))) {
-                $grade_grade = new grade_grade();
-                $grade_grade->userid = $this->user->id;
-                $grade_grade->itemid = $grade_object->id;
-            }
-
-            $grade_grade->load_grade_item();
-*/
+            
             $grade_grade = $this->grades[$grade_object->id];
 
             /// Hidden Items
@@ -432,7 +426,7 @@ class grade_report_user extends grade_report {
                        	$data['weight']['content'] = number_format($grade_grade->weight,2).'%';
                     }
                     if ($this->gtree->items[$grade_object->id]->weightoverride != 0) {
-                        $data['weight']['content'] .= '<br /> Overridden';
+                        $data['weight']['content'] .= '<br /> ' . get_string('adjusted', 'grades');
                     }
                 }
 
@@ -528,7 +522,7 @@ class grade_report_user extends grade_report {
                         } else {
                             $data['lettergrade']['content'] = grade_format_gradevalue($gradeval, $grade_grade->grade_item, true, GRADE_DISPLAY_TYPE_LETTER);
                         }
-                    } else if ($grade_grade->extracredit) {
+                    } else if ($this->gtree->items[$grade_object->id]->extracredit) {
                         $data['lettergrade']['class'] = $class;
                         $data['lettergrade']['content'] = '-';
                     } else if (!isset($grade_grade->weight)) {

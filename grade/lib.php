@@ -2650,7 +2650,7 @@ class grade_tree extends grade_structure {
      * Called from each report to make sure nothing has been injected from a feeder activity
      * Not called from Setup
      */
-    function accuratepoints (&$grades, $grademax = null) {
+    function accuratepoints (&$grades, $updateitemrecord = false, $grademax = null) {
         global $DB;
         // need to get the levels containing categories and disregard the level containing only items
         $levelsarray = array_keys($this->levels);
@@ -2720,7 +2720,12 @@ class grade_tree extends grade_structure {
         foreach ($this->cats as $key => $cat) {
             if (!isset($grades[$cat->id]->id)) {
                 if (isset($cat->value) && $grades[$cat->id]->rawgrademax != $cat->value) {
-                    $this->items[$cat->id]->rawgrademax = $cat->value;
+                    $this->items[$cat->id]->grademax = $cat->value;
+                    $this->items[$cat->id]->update('aggregation');
+                }
+            } else if ($updateitemrecord !== null) {
+                if (isset($cat->value) && $grades[$cat->id]->rawgrademax != $cat->value) {
+                    $this->items[$cat->id]->grademax = $cat->value;
                     $this->items[$cat->id]->update('aggregation');
                 }
             } else if ($grademax !== null) {
