@@ -447,7 +447,7 @@ class grade_report_user extends grade_report {
                     } else {
                         $data['grade']['class'] = $class;
                         if ($hidegrade = $this->blank_hidden_total($this->courseid, $grade_grade->grade_item, $gradeval) == null) {
-                            $gradeval = $hidegrade;
+                            $gradeval = null;
                         }
                         $data['grade']['content'] = grade_format_gradevalue($gradeval, $grade_grade->grade_item, true);
                     }
