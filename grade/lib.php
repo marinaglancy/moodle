@@ -2299,10 +2299,6 @@ class grade_tree extends grade_structure {
     function fill_parents($element, $idnumber, $showtotalsifcontainhidden = 0) {
         foreach($element['children'] as $sortorder=>$child) {
             // skip items that are only for another group than the one being considered
-/*            if (array_key_exists($child['object']->id, $this->modx)) {
-                continue;
-            }
-*/
             switch ($child['type']) {
                 case 'courseitem':
                 case 'categoryitem':
@@ -2313,7 +2309,7 @@ class grade_tree extends grade_structure {
                 default:
                     $childid = substr($child['eid'],1,8);
             }
-            if (!isset($this->parents[$childid])) {
+            if (!isset($this->parents[$childid]) && $childid != 0) {
                 $this->parents[$childid] = new stdClass();
                 $this->parents[$childid]->cat_item = array();
                 $this->parents[$childid]->cat_max = array();
@@ -2333,7 +2329,8 @@ class grade_tree extends grade_structure {
             // this is needed for cats and items since we don't have grades to attach max values to
     //        if ($accuratetotals && $alltotals) {
             // this line needs to determine whether to include hidden items
-            if ((!$child['object']->is_hidden() || $showtotalsifcontainhidden == GRADE_REPORT_SHOW_REAL_TOTAL_IF_CONTAINS_HIDDEN) // either its not hidden or the hiding setting allows it to be calculated into the total
+            if ($childid != 0 &&
+                    (!$child['object']->is_hidden() || $showtotalsifcontainhidden == GRADE_REPORT_SHOW_REAL_TOTAL_IF_CONTAINS_HIDDEN) // either its not hidden or the hiding setting allows it to be calculated into the total
                     && isset($this->parents[$childid]->parent_id) // the parent of this item needs to be set
                     && $this->items[$childid]->extracredit !== 1) {
 //                    && ((isset($this->items[$childid]->aggregationcoef) && $this->items[$childid]->aggregationcoef != 1) // isn't an extra credit item -- has a weight and the weight isn't 1
@@ -2374,6 +2371,9 @@ class grade_tree extends grade_structure {
                 break;
             case 'categoryitem':
             case 'courseitem':
+            case 'filler':
+            case 'fillerfirst':
+            case 'fillerlast':
                 return;
             default:
                 $elementid = $element['object']->grade_item->id;
@@ -2405,7 +2405,7 @@ class grade_tree extends grade_structure {
 
         	/// Recursively iterate through all child elements
             foreach ($element['children'] as $key => $child) {
-                if ($child['type'] === 'categoryitem' || $child['type'] === 'courseitem') {
+                if ($child['type'] === 'categoryitem' || $child['type'] === 'courseitem' || $child['object'] == 'filler') {
                     continue; // do nothing with these types of elements
                 }
             	if ($child['object'] instanceof grade_category) {
@@ -2448,6 +2448,9 @@ class grade_tree extends grade_structure {
             // determine how much non-normalized weight we already have in the category and how much might be missing (in case we have a target grade condition)
             // also determine the relative contibution so far
             foreach ($element['children'] as $order => $child) {
+                if ($child['type'] === 'categoryitem' || $child['type'] === 'courseitem' || $child['object'] == 'filler') {
+                    continue; // do nothing with these types of elements
+                }
                 if ($child['object'] instanceof grade_category) {
                     $id = $child['object']->grade_item->id;
                 } else {
@@ -2475,6 +2478,9 @@ class grade_tree extends grade_structure {
 
                 if ($child['type'] === 'categoryitem' || $child['type'] === 'courseitem') {
                     continue; // do nothing with these types of elements
+                
+                } else if ($id == 0) {
+                    continue;
                 } else if ($this->items[$id]->is_hidden()) { // either its not hidden or the hiding setting allows it to be calculated into the total
                     continue;
                 } else if ($this->items[$id]->is_hidden() && ($fullweight || $this->showtotalsifcontainhidden !== GRADE_REPORT_SHOW_REAL_TOTAL_IF_CONTAINS_HIDDEN)) { // either its not hidden or the hiding setting allows it to be calculated into the total
@@ -2524,6 +2530,9 @@ class grade_tree extends grade_structure {
             // go back through and apply normalizer to have weights add up to container
             $grade_values = array();
             foreach ($element['children'] as $order => $child) {
+                if ($child['type'] === 'categoryitem' || $child['type'] === 'courseitem' || $child['object'] == 'filler') {
+                    continue; // do nothing with these types of elements
+                }
                 if ($child['object'] instanceof grade_category) {
                     $id = $child['object']->grade_item->id;
                 } else {
@@ -2536,6 +2545,8 @@ class grade_tree extends grade_structure {
                 }
                 if ($child['type'] === 'categoryitem' || $child['type'] === 'courseitem') {
                     continue; // do nothing with these types of elements
+                } else if ($id == 0) {
+                    continue;
                 } else if (array_key_exists($id, $this->emptycats)) { // has to be above checkitems
                     continue;
                 } else if (array_key_exists($id, $checkitems)) {
@@ -2563,6 +2574,9 @@ class grade_tree extends grade_structure {
                 $this->limit_item($elementid, $grades, $unset);
             }
             foreach ($element['children'] as $order => $child) {
+                if ($child['type'] === 'categoryitem' || $child['type'] === 'courseitem' || $child['object'] == 'filler') {
+                    continue; // do nothing with these types of elements
+                }
                 if (isset($child['children'])) {
                     $this->calc_weights_recursive2($child, $grades, $unset, $fullweight);
                 }
