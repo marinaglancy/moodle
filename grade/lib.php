@@ -2737,7 +2737,7 @@ class grade_tree extends grade_structure {
                     $this->items[$cat->id]->grademax = $cat->value;
                     $this->items[$cat->id]->update('aggregation');
                 }
-            } else if ($updateitemrecord !== null) {
+            } else if ($updateitemrecord !== false) {
                 if (isset($cat->value) && $grades[$cat->id]->rawgrademax != $cat->value) {
                     $this->items[$cat->id]->grademax = $cat->value;
                     $this->items[$cat->id]->update('aggregation');
