@@ -132,9 +132,16 @@ class grade_report_grader extends grade_report {
             $switch = grade_get_setting($this->courseid, 'aggregationposition', $CFG->grade_aggregationposition);
         }
 
+        $this->gtree = new grade_tree($this->courseid, true, $switch, $this->collapsed, $nooutcomes);
+
         $this->sumofgradesonly = grade_helper::get_sum_of_grades_only($courseid);
     
-        $this->gtree = new grade_tree($this->courseid, true, $switch, $this->collapsed, $nooutcomes);
+        // Fill items with parent information needed later
+        $this->gtree->parents = array();
+        $this->gtree->cats = array();
+        $this->gtree->fill_cats($this->gtree);
+        $this->gtree->parents[$this->gtree->top_element['object']->grade_item->id] = new stdClass(); // initiate the course item
+        $this->gtree->fill_parents($this->gtree->top_element, $this->gtree->top_element['object']->grade_item->id, $this->showtotalsifcontainhidden);
 
         $this->sortitemid = $sortitemid;
 
@@ -842,6 +849,12 @@ class grade_report_grader extends grade_report {
         $rowclasses = array('even', 'odd');
 
         foreach ($this->users as $userid => $user) {
+
+            $this->gtree->emptycats = array();
+            $this->gtree->calc_weights_recursive2($this->gtree->top_element, $this->grades[$userid], true);
+            $this->gtree->calc_weights_recursive2($this->gtree->top_element, $this->grades[$userid], false);
+            $this->gtree->accuratepoints($this->grades[$userid], false); // makes certain no grades have been injected that throw off points calcs
+            $this->gtree->accuratepoints($this->grades[$userid], false, true); // calculates range correctly for categories and course
 
             if ($this->canviewhidden) {
                 $altered = array();
