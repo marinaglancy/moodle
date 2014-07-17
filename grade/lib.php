@@ -1250,8 +1250,10 @@ class grade_structure {
             $header .= $this->get_element_icon($element, $spacerifnone);
         }
 
-        $header .= $element['object']->get_name();
+        $header .= 'Weight=' . format_float($element['object']->weight,2) . '<br />'; 
 
+        $header .= $element['object']->get_name();
+        
         if ($element['type'] != 'item' and $element['type'] != 'categoryitem' and
             $element['type'] != 'courseitem') {
             return $header;
@@ -2355,7 +2357,7 @@ class grade_tree extends grade_structure {
     /*
      *
      */
-    function calc_weights_recursive2(&$element, &$grades, $unset, $fullweight = null, $update_item_record = false) {
+    function calc_weights_recursive2(&$element, &$grades, $unset, $fullweight = false, $update_item_record = false) {
         global $DB;
 
         switch ($element['type']) {
@@ -2375,7 +2377,11 @@ class grade_tree extends grade_structure {
 //1                    if (!isset($grades[$element['object']->grade_item->id])) {
 //                        $grades[$element['object']->grade_item->id] = new stdClass();
 //                    }
-                    $grades[$element['object']->grade_item->id]->weight = 100;
+                    if ($fullweight) {
+                        $this->items[$element['object']->grade_item->id]->weight = 100;
+                    } else {
+                        $grades[$element['object']->grade_item->id]->weight = 100;
+                    }
                 }
                 break;
         }
@@ -2663,7 +2669,7 @@ class grade_tree extends grade_structure {
      * Called from each report to make sure nothing has been injected from a feeder activity
      * Not called from Setup
      */
-    function accuratepoints (&$grades, $updateitemrecord = false, $grademax = null) {
+    function accuratepoints (&$grades, $updateitemrecord = false, $grademax = false) {
         global $DB;
         // need to get the levels containing categories and disregard the level containing only items
         $levelsarray = array_keys($this->levels);
@@ -2703,14 +2709,14 @@ class grade_tree extends grade_structure {
                         $item = $element['object'];
                         $cat = $this->cats[$item->categoryid];
                         // exclude ungraded, hidden, and extra credit items
-                        if ($grademax !== null) {
+                        if ($grademax !== false) {
                             // exclude ungraded, hidden, and extra credit items in grademax
                             if ($item->extracredit != 1 && 
                                     ((isset($grades[$item->id]->weight) && $grades[$item->id]->weight != -1) || ($grademax && isset($item->weight))) &&
                                     (!$item->is_hidden() || $this->showtotalsifcontainhidden == GRADE_REPORT_SHOW_REAL_TOTAL_IF_CONTAINS_HIDDEN) &&
                                     (isset($grades[$item->id]->finalgrade) || $cat->grade_category->aggregateonlygraded == 0) &&
                                     ($grades[$item->id]->finalgrade !== null || $this->cats[$item->categoryid]->grade_category->aggregateonlygraded == 0)) {
-                                $cat->value += $grades[$item->id]->rawgrademax;
+                                $cat->value += $item->grademax;
                             }
                         } else {
                             // exclude ungraded, hidden
@@ -2744,7 +2750,7 @@ class grade_tree extends grade_structure {
                     $this->items[$cat->id]->grademax = $cat->value;
                     $this->items[$cat->id]->update('aggregation');
                 }
-            } else if ($grademax !== null) {
+            } else if ($grademax !== false) {
                 if (isset($cat->value) && $grades[$cat->id]->rawgrademax != $cat->value) {
                     $grades[$cat->id]->rawgrademax = $cat->value;
                     $grades[$cat->id]->update('aggregation');

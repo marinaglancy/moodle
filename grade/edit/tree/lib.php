@@ -397,7 +397,7 @@ class grade_edit_tree {
         return '<input type="hidden" name="extracredit_'.$item->id .'" value="0" />' .
             '<label class="accesshide" for="extracredit"'.$item->id.'">'.
             get_string('extracreditvalue', 'grades', $item->itemname).'</label>'.
-            '<input type="checkbox" id="extacredit_'.$item->id.'" name="extacredit_'.$item->id.'" value="1" '.$checked.'/>';
+            '<input type="checkbox" id="extracredit_'.$item->id.'" name="extracredit_'.$item->id.'" value="1" '.$checked.'/>';
     }
 
     //Trims trailing zeros
