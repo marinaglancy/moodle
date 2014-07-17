@@ -751,7 +751,7 @@ class grade_report_grader extends grade_report {
         $this->gtree->accuratepoints(current($this->grades), true, true); // calculates range correctly for categories and course
 
         // individual points
-        $this->gtree->accuratepointsrecursive($this->grades, false, false); // makes certain no grades have been injected that throw off points calcs
+//        $this->gtree->accuratepointsrecursive($this->grades, false, false); // makes certain no grades have been injected that throw off points calcs
         
 //        grade_regrade_final_grades($this->courseid);
     
@@ -869,8 +869,11 @@ class grade_report_grader extends grade_report {
         foreach ($this->users as $userid => $user) {
 
             $this->gtree->emptycats = array();
-            $this->gtree->calc_weights_recursive2($this->gtree->top_element, $this->grades[$userid], true, true, false);
+//            $this->gtree->calc_weights_recursive2($this->gtree->top_element, $this->grades[$userid], true, true, false);
             $this->gtree->calc_weights_recursive2($this->gtree->top_element, $this->grades[$userid], false, false, false);
+        
+            // individual points
+            $this->gtree->accuratepoints($this->grades[$userid], false, false); // makes certain no grades have been injected that throw off points calcs
 
             if ($this->canviewhidden) {
                 $altered = array();
