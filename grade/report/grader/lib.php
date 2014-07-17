@@ -737,6 +737,24 @@ class grade_report_grader extends grade_report {
         );
         $jsscales = array();
 
+        //TODO: we should probably epxlain why this is renaming to a column that already exists
+        $sql = 'SELECT id, grademax as finalgrade, grademax as rawgrademax FROM {grade_items} WHERE courseid = ' . $this->courseid;
+        $tempgrades = $DB->get_records_sql($sql);
+
+        $this->gtree->emptycats = array();
+        // looking for the overall weights
+        $this->gtree->calc_weights_recursive2($this->gtree->top_element, $tempgrades, false, true, true);
+        // looking for each students' weights
+//        $this->gtree->calc_weights_recursive2($this->gtree->top_element, $tempgrades, false, false);
+        
+        // grademax
+        $this->gtree->accuratepoints(current($this->grades), true, true); // calculates range correctly for categories and course
+
+        // individual points
+        $this->gtree->accuratepointsrecursive($this->grades, false, false); // makes certain no grades have been injected that throw off points calcs
+        
+//        grade_regrade_final_grades($this->courseid);
+    
         foreach ($this->gtree->get_levels() as $key => $row) {
             $headingrow = new html_table_row();
             $headingrow->attributes['class'] = 'heading_name_row';
@@ -851,10 +869,8 @@ class grade_report_grader extends grade_report {
         foreach ($this->users as $userid => $user) {
 
             $this->gtree->emptycats = array();
-            $this->gtree->calc_weights_recursive2($this->gtree->top_element, $this->grades[$userid], true);
-            $this->gtree->calc_weights_recursive2($this->gtree->top_element, $this->grades[$userid], false);
-            $this->gtree->accuratepoints($this->grades[$userid], false); // makes certain no grades have been injected that throw off points calcs
-            $this->gtree->accuratepoints($this->grades[$userid], false, true); // calculates range correctly for categories and course
+            $this->gtree->calc_weights_recursive2($this->gtree->top_element, $this->grades[$userid], true, true, false);
+            $this->gtree->calc_weights_recursive2($this->gtree->top_element, $this->grades[$userid], false, false, false);
 
             if ($this->canviewhidden) {
                 $altered = array();
