@@ -748,7 +748,7 @@ class grade_report_grader extends grade_report {
 //        $this->gtree->calc_weights_recursive2($this->gtree->top_element, $tempgrades, false, false);
         
         // grademax
-        $this->gtree->accuratepoints(current($this->grades), true, true); // calculates range correctly for categories and course
+        $this->gtree->accuratepoints($tempgrades, true, true); // calculates range correctly for categories and course
 
         // individual points
 //        $this->gtree->accuratepointsrecursive($this->grades, false, false); // makes certain no grades have been injected that throw off points calcs
