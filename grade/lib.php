@@ -1243,15 +1243,17 @@ class grade_structure {
      *
      * @return string header
      */
-    public function get_element_header(&$element, $withlink=false, $icon=true, $spacerifnone=false) {
+    public function get_element_header(&$element, $withlink=false, $icon=true, $spacerifnone=false, $showweight = true) {
         $header = '';
 
         if ($icon) {
             $header .= $this->get_element_icon($element, $spacerifnone);
         }
 
-        $header .= 'Weight=' . format_float($element['object']->weight,2) . '<br />'; 
-
+        if ($showweight) {
+            $header .= 'Weight=' . format_float($element['object']->weight,2) . '<br />'; 
+        }
+        
         $header .= $element['object']->get_name();
         
         if ($element['type'] != 'item' and $element['type'] != 'categoryitem' and
