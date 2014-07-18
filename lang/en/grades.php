@@ -216,7 +216,7 @@ $string['fixedstudents'] = 'Static students column';
 $string['fixedstudents_help'] = 'Allows grades to scroll horizontally without losing sight of the students column, by making it static.';
 $string['forceoff'] = 'Force: Off';
 $string['forceon'] = 'Force: On';
-$string['forcesumofgrades'] = 'Force Sum of grades only';
+$string['forcesumofgrades'] = 'Force Natural Weights';
 $string['forelementtypes'] = 'for the selected {$a}';
 $string['forstudents'] = 'For students';
 $string['full'] = 'Full';
@@ -464,13 +464,13 @@ $string['norolesdefined'] = 'No roles defined in Administration > Grades > Gener
 $string['noscales'] = 'Outcomes must be linked to a course scale or global scale, but there are none. Would you like to add one?';
 $string['noselectedcategories'] = 'no categories were selected.';
 $string['noselecteditems'] = 'no items were selected.';
-$string['nosumofgrades'] = 'Disable Sum of grades only';
+$string['nosumofgrades'] = 'Disable Natural Weights';
 $string['notteachererror'] = 'You must be a teacher to use this feature.';
 $string['nousersloaded'] = 'No users loaded';
 $string['numberofgrades'] = 'Number of grades';
 $string['onascaleof'] = 'on a scale of {$a->grademin} to {$a->grademax}';
 $string['operations'] = 'Operations';
-$string['optionalsumofgrades'] = 'Sum of grades only optional to instructor';
+$string['optionalsumofgrades'] = 'Natural weights only optional to instructor';
 $string['options'] = 'Options';
 $string['others'] = 'Others';
 $string['outcome'] = 'Outcome';
@@ -652,11 +652,10 @@ $string['studentsperpagereduced'] = 'Reduced maximum students per page from {$a-
 $string['subcategory'] = 'Normal category';
 $string['submissions'] = 'Submissions';
 $string['submittedon'] = 'Submitted: {$a}';
-$string['sumofgradesonly'] = 'Sum of grades setting controlling aggregation and weight override behavior';
-$string['sumofgradesonly_help'] = 'When "sumofgradesonly forced" special (quicker) processing will be done and no aggregation drop down will appear on the Categories and items page.<br />
-               When "sumofgradesonly" is left optional then special (quicker) processing will be done and no aggregation drop down will appear on the Categories and items page only if<br />
-               all aggregation methods for the course are Sum of grades. Otherwise normal (legacy) behavior will occur.<br />
-               When "sumofgradesonly" is disabled normal (legacy) behavior will occur';
+$string['sumofgradesonly'] = 'Natural weights setting controlling aggregation and weight override behavior';
+$string['sumofgradesonly_help'] = 'When "Natural Weights forced" special (quicker) processing will be done and no aggregation drop down will appear on the Categories and items page.<br />
+               When "Natural Weights" is left optional then special (quicker) processing will be done and no aggregation drop down will appear on the Categories and items page only if<br />
+               all aggregation methods for the course are Sum of grades. Otherwise normal (legacy) behavior will occur' . '<br />';
 $string['switchtofullview'] = 'Switch to full view';
 $string['switchtosimpleview'] = 'Switch to simple view';
 $string['tabs'] = 'Tabs';

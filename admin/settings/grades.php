@@ -82,8 +82,8 @@ if (has_capability('moodle/grade:manage', $systemcontext)
         $strnoforce = new lang_string('noforce', 'grades');
 
        // No aggregations
-        $options = array(NO_SUM_OF_GRADES                =>new lang_string('nosumofgrades', 'grades'),
-                         OPTIONAL_SUM_OF_GRADES          =>new lang_string('optionalsumofgrades', 'grades'),
+//        $options = array(NO_SUM_OF_GRADES                =>new lang_string('nosumofgrades', 'grades'),
+        $options = array(OPTIONAL_SUM_OF_GRADES          =>new lang_string('optionalsumofgrades', 'grades'),
                          FORCE_SUM_OF_GRADES             =>new lang_string('forcesumofgrades', 'grades'));
         $defaults['value'] = 0;
         $defaults['forced'] = true;
