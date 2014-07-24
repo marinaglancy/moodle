@@ -74,6 +74,22 @@ function behat_error($errorcode, $text = '') {
     testing_error($errorcode, $text);
 }
 
+function behat_shutdown_function() {
+    if ($error = error_get_last()) {
+        /*
+         * Array
+(
+    [type] => 1
+    [message] => Call to undefined function asdfasdf()
+    [file] => /home/marina/repositories/moodle27/moodle/index.php
+    [line] => 164
+)
+         */
+        testing_error($error['type'], $error['message']);
+        return false;
+    }
+}
+
 /**
  * PHP errors handler to use when running behat tests.
  *
