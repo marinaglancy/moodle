@@ -62,14 +62,12 @@ class grade_edit_tree {
             $gtree->cats = array();
             $gtree->fill_cats();
 
-            $gtree->parents = array();
-            $gtree->parents[$gtree->top_element['object']->grade_item->id] = new stdClass();
-            $gtree->fill_parents($gtree->top_element, $gtree->top_element['object']->grade_item->id, $gtree->showtotalsifcontainhidden, array());
 
             //TODO: we should probably epxlain why this is renaming to a column that already exists
             $gtree->grades = $DB->get_records_sql('SELECT id, grademax as finalgrade, grademax as rawgrademax FROM {grade_items} WHERE courseid = ?', array($COURSE->id));
 
-            $gtree->calc_weights_recursive2($gtree->top_element, $gtree->grades, false, true);
+//            $gtree->calc_weights_recursive2($gtree->top_element, $gtree->grades, true, true, true);
+            $gtree->calc_values($gtree->grades, false, true);
         }
 
         $this->gtree = $gtree;
@@ -778,7 +776,7 @@ class grade_edit_tree_column_weight extends grade_edit_tree_column {
         $item = $category->get_grade_item();
         $categorycell = clone($this->categorycell);
         $categorycell->attributes['class']  .= ' ' . $levelclass;
-        $gtree_item = $params['gtree']->grades[$item->id];
+        $gtree_item = $params['gtree']->items[$item->id];
 
         if ($item->itemtype !== 'course') {
             if (!isset($gtree_item->weight)) {
@@ -811,7 +809,7 @@ class grade_edit_tree_column_weight extends grade_edit_tree_column {
         $itemcell->text = '&nbsp;';
 
         if (!in_array($params['element']['object']->itemtype, array('courseitem', 'categoryitem', 'category'))) {
-            $gtree_item = $params['gtree']->grades[$item->id];
+            $gtree_item = $params['gtree']->items[$item->id];
 
             if (!isset($gtree_item->weight)) {
                 $itemcell->text = '-';
