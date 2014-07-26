@@ -49,7 +49,7 @@ class grade_grade extends grade_object {
      */
     public $required_fields = array('id', 'itemid', 'userid', 'rawgrade', 'rawgrademax', 'rawgrademin',
                                  'rawscaleid', 'usermodified', 'finalgrade', 'hidden', 'locked',
-                                 'locktime', 'exported', 'overridden', 'excluded', 'timecreated', 'timemodified');
+                                 'locktime', 'exported', 'overridden', 'excluded', 'timecreated', 'timemodified', 'weight');
 
     /**
      * Array of optional fields with default values (these should match db defaults)
