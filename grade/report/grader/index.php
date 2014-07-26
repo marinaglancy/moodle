@@ -120,7 +120,7 @@ $sumofgradesonly = grade_helper::get_sum_of_grades_only($courseid);
 if (!$sumofgradesonly) {
     grade_regrade_final_grades($courseid);
 }
-    grade_regrade_final_grades($courseid);
+//    grade_regrade_final_grades($courseid);
 
 // Perform actions
 if (!empty($target) && !empty($action) && confirm_sesskey()) {
