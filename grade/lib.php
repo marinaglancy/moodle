@@ -2416,12 +2416,15 @@ class grade_tree extends grade_structure {
 
     function determine_cat_limits() {
         foreach ($this->cats as $catid => $cat) {
+            if ($cat->itemtype == 'course') {
+                continue;
+            }
             foreach ($this->items as $id => $item) {
                 if ($item->categoryid == $catid) {
-                    $catitems[$id] = $grades[$id];
+                    $catitems[$id] = $this->grades[$id];
                 }
-                $this->limit_item($catid, $catitems, true);
             }
+            $this->limit_item($catid, $catitems, true);
         }
     }
     
@@ -3033,6 +3036,7 @@ class grade_tree extends grade_structure {
     }
     
     function limit_item($itemid, $grades, $unsetgrades = true) {
+        $this->cat = $this->cats[$itemid]->grade_category;
         $extraused = $this->cat->is_extracredit_used();
         if (!empty($this->cat->droplow)) {
             asort($grades[$itemid]->contrib, SORT_NUMERIC);
