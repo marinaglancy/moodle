@@ -2402,7 +2402,7 @@ class grade_tree extends grade_structure {
         // now we need to limit if drop low or keep high conditions exist\
         // we cannot do this until contribs are determined, this is where the original Moodle gradebook went wrong
         if (!$fullweight) {
-            $this->determine_cat_limits();
+            $this->determine_cat_limits($grades);
         }
         
         // // and then, of course we need to recalculate weights and contribs because any dropped or kept conditions changes all the weights and contribs
@@ -2416,7 +2416,7 @@ class grade_tree extends grade_structure {
         $this->calccontrib($fullweight, $grades);
     }
 
-    function determine_cat_limits() {
+    function determine_cat_limits(&$grades) {
         foreach ($this->cats as $catid => $cat) {
 //            if ($cat->itemtype == 'course') {
 //                continue;
@@ -2426,7 +2426,8 @@ class grade_tree extends grade_structure {
 //                    $catitems[$id] = $this->grades[$id];
 //                }
 //            }
-            $this->limit_item($catid, array($cat->id => $this->grades[$cat->id]), true);
+            $this->cat = $cat->grade_category;
+            $this->limit_item($cat->id, $grades, true);
         }
     }
     
@@ -3038,8 +3039,6 @@ class grade_tree extends grade_structure {
     }
     
     function limit_item($itemid, $grades, $unsetgrades = true) {
-        $this->cat = $this->cats[$itemid]->grade_category;
-        $itemid = $this->cats[$itemid]->id;
         $extraused = $this->cat->is_extracredit_used();
         if (!empty($this->cat->droplow)) {
             asort($grades[$itemid]->contrib, SORT_NUMERIC);
