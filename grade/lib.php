@@ -2358,6 +2358,10 @@ class grade_tree extends grade_structure {
         }
     }
 
+    /*
+     * $unset means we'll call limit_grades and either unset or not unset the lowest
+     * $fullweight means we're being called by Setup, we'd never need to consider dropped or kept because we don't know any of that at this point
+     */
     function calc_values(&$grades, $unset, $fullweight = false) {
         $this->fill_cats();
         
@@ -2376,9 +2380,7 @@ class grade_tree extends grade_structure {
         $this->accuratepoints($fullweight, $grades);
         
         // reset
-        foreach ($this->cats as $catid => $cat) {
-            $cat->value = 0;
-        }
+        $this->reset_cats();
 
         // recalculate grademax for grade_grade
         if (!$fullweight) {
@@ -2386,22 +2388,49 @@ class grade_tree extends grade_structure {
         }
         
         // reset
-        foreach ($this->cats as $catid => $cat) {
-            $cat->value = 0;
-        }
+        $this->reset_cats();
 
         // determine relative weights in each container
         $this->accurateweights($fullweight, $grades);
         
         // reset
-        foreach ($this->cats as $catid => $cat) {
-            $cat->value = 0;
-        }
-
+        $this->reset_cats();
+        
+        // determine contribution
+        $this->calccontrib($fullweight, $grades);
+        
+        // now we need to limit if drop low or keep high conditions exist\
+        // we cannot do this until contribs are determined, this is where the original Moodle gradebook went wrong
+        $this->determine_cat_limits();
+        
+        // // and then, of course we need to recalculate weights and contribs because any dropped or kept conditions changes all the weights and contribs
+        // determine relative weights in each container
+        $this->accurateweights($fullweight, $grades);
+        
+        // reset
+        $this->reset_cats();
+        
         // determine contribution
         $this->calccontrib($fullweight, $grades);
     }
 
+    function determine_cat_limits() {
+        foreach ($this->cats as $catid => $cat) {
+            foreach ($this->items as $id => $item) {
+                if ($item->categoryid == $catid) {
+                    $catitems[$id] = $grades[$id];
+                }
+                $this->limit_item($catid, $catitems, true);
+            }
+        }
+    }
+    
+    function reset_cats() {
+        foreach ($this->cats as $catid => $cat) {
+            $cat->value = 0;
+        }        
+    }
+    
     function get_adjusted_weights() {
         global $DB;
         // determine any overridden weights
@@ -3016,9 +3045,6 @@ class grade_tree extends grade_structure {
                         // no drop low for extra credits
                     } else {
                         if ($unsetgrades) {
-                            unset($grades[$itemid]->pctg[$childid]);
-//                            unset($grades[$itemid]->cat_item[$childid]);
-//                            unset($grades[$itemid]->cat_max[$childid]);
                             unset($grades[$itemid]->contrib[$childid]);
                         	$grades[$childid]->weight = -1; // need to set the weight here because calc_weights doesn't consider drop or keep conditions
                         	$dropped++;
@@ -3041,9 +3067,6 @@ class grade_tree extends grade_structure {
                     $kept++;
                 } else {
                     if ($unsetgrades) {
-                        unset($grades[$itemid]->pctg[$childid]);
-//                        unset($grades[$itemid]->cat_item[$childid]);
-//                        unset($grades[$itemid]->cat_max[$childid]);
                         unset($grades[$itemid]->contrib[$childid]);
                     	$grades[$childid]->weight = -1; // need to set the weight here because calc_weights doesn't consider drop or keep conditions
                     }
