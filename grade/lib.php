@@ -2481,20 +2481,36 @@ class grade_tree extends grade_structure {
                         if (isset($item->parent)) {
                             $parentid = $this->cats[$item->parent]->id;
                             if ($fullweight) {
-                                $item->weight = $this->items[$itemid]->grademax 
+                                $tempweight = $this->items[$itemid]->grademax 
                                         / ($this->items[$parentid]->grademax - $minusmax)
                                         * $minusweight;
+                                if ($tempweight != $this->items[$itemid]->weight) {
+                                        $this->items[$itemid]->weight = $tempweight;
+                                        $this->items[$itemid]->update();
+                                }
                             } else if ($grades[$parentid]->rawgrademax != 0){
-                                $grades[$itemid]->weight = $grades[$itemid]->rawgrademax 
+                                $tempweight = $grades[$itemid]->rawgrademax 
                                         / ($grades[$parentid]->rawgrademax - $minusmax)
                                         * $minusweight;
+                                if ($grades[$itemid]->weight != $tempweight) {
+                                    $grades[$itemid]->weight = $tempweight;
+                                    $grades[$itemid]->update();
+                                }
                             } else {
-                                $grades[$itemid]->weight = 0;
+                                $tempweight = 0;
+                                if ($grades[$itemid]->weight != $tempweight) {
+                                    $grades[$itemid]->weight = $tempweight;
+                                    $grades[$itemid]->update();
+                                }
                             }
                         } else {
                             // course item
                             if ($fullweight) {
-                                $item->weight = 100;
+                                $tempweight = 100;
+                                if ($tempweight != $this->items[$itemid]->weight) {
+                                        $this->items[$itemid]->weight = $tempweight;
+                                        $this->items[$itemid]->update();
+                                }
                             } else {
                                 $grades[$itemid]->weight = 100;
                             }
