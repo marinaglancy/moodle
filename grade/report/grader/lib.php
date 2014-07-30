@@ -1277,6 +1277,8 @@ class grade_report_grader extends grade_report {
         global $OUTPUT;
 
         if ($this->get_pref('showranges')) {
+            $this->gtree->calc_values($this->grades, false, true);
+
             $rangesdisplaytype   = $this->get_pref('rangesdisplaytype');
             $rangesdecimalpoints = $this->get_pref('rangesdecimalpoints');
             $rangerow = new html_table_row();
