@@ -832,7 +832,7 @@ class grade_report_grader extends grade_report {
         $scaleslist = array();
         $tabindices = array();
 
-        foreach ($this->gtree->get_items() as $itemid => $item) {
+        foreach ($this->gtree->items as $itemid => $item) {
             $scale = null;
             if (!empty($item->scaleid)) {
                 $scaleslist[] = $item->scaleid;
@@ -1740,7 +1740,7 @@ class grade_report_grader extends grade_report {
         if (isset($grade->contrib)) {
             // sum of contrib is exact percentage but when it goes through formatting its going to divide by grade_item grademax (wrong) 
             // so we need to multiply it timee that value to make the number right
-            $value2 = is_array($grade->contrib) ? $value2 = array_sum($grade->contrib) * $grade_item->grademax : $grade->contrib;
+            $value2 = is_array($grade->contrib) ? array_sum($grade->contrib) * $grade_item->grademax : $grade->contrib;
         }
 
         switch ($displaytype) {
