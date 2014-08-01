@@ -506,36 +506,39 @@ class core_component_testcase extends advanced_testcase {
     public function test_find_classes() {
         // Assert that calling for individual plugin returns only this plugin.
         $assignclasses = core_component::find_classes_in_plugins('mod_assign', 'event');
-        $this->assertEquals(array('mod_assign'), array_keys($assignclasses));
-        $this->assertTrue(is_array($assignclasses['mod_assign']));
+        $this->assertEquals(array('mod_assign'), array_unique(array_values($assignclasses)));
 
         // Test that limiting by abstract-ness decreases the results (we know that mod_assign has several abstract events).
         $assignclassesnonabstract = core_component::find_classes_in_plugins('mod_assign', 'event', '', true);
-        $this->assertGreaterThan(count($assignclassesnonabstract['mod_assign']), count($assignclasses['mod_assign']));
-        $this->assertEmpty(array_diff($assignclassesnonabstract['mod_assign'], $assignclasses['mod_assign']));
+        $this->assertGreaterThan(count($assignclassesnonabstract), count($assignclasses));
+        $this->assertEmpty(array_diff_key($assignclassesnonabstract, $assignclasses));
 
         // Assert that classes in 'mod' always include classes in one module.
         $modclasses = core_component::find_classes_in_plugins('mod', 'event');
-        $this->assertEquals($assignclasses['mod_assign'], $modclasses['mod_assign']);
-        $this->assertGreaterThan(1, count($modclasses));
+        $filteredmodclasses = array_filter($modclasses, create_function('$a', 'return $a === "mod_assign";'));
+        $this->assertEquals($assignclasses, $filteredmodclasses);
+        $this->assertGreaterThan(1, count(array_unique(array_values($modclasses))));
 
         // Test that limiting by parent class decreases the results (in this case the parent is excluded).
         $coreeventswithparent = core_component::find_classes_in_subsystems('core', 'event', 'core\\event\\base');
         $coreeventsall = core_component::find_classes_in_subsystems('core', 'event');
-        $this->assertGreaterThan(count($coreeventswithparent['core']), count($coreeventsall['core']));
-        $this->assertEmpty(array_diff($coreeventswithparent['core'], $coreeventsall['core']));
+        $this->assertGreaterThan(count($coreeventswithparent), count($coreeventsall));
+        $this->assertEmpty(array_diff_key($coreeventswithparent, $coreeventsall));
 
         // Requesting classes located only in two subsystems.
         $twosubsystemclasses = core_component::find_classes_in_subsystems(array('core_course', 'core_availability'));
         $subsystemclasses = core_component::find_classes_in_subsystems('core_availability');
-        $this->assertEquals(array('core_availability', 'core_course'), array_keys($twosubsystemclasses));
-        $this->assertEquals($subsystemclasses['core_availability'], $twosubsystemclasses['core_availability']);
+        $this->assertEquals(array('core_availability', 'core_course'), array_values(array_unique(array_values($twosubsystemclasses))));
+        $filteredtwosubsystemclasses = array_filter($twosubsystemclasses, create_function('$a', 'return $a === "core_availability";'));
+        $this->assertEquals($subsystemclasses, $filteredtwosubsystemclasses);
 
         // Requesting classes located in any core subsystem.
         $allcoreclasses = core_component::find_classes_in_subsystems('*');
         $coreclasses = core_component::find_classes_in_subsystems('core');
-        $this->assertEquals($coreclasses['core'], $allcoreclasses['core']);
-        $this->assertEquals($subsystemclasses['core_availability'], $allcoreclasses['core_availability']);
+        $filteredallcoreclasses1 = array_filter($allcoreclasses, create_function('$a', 'return $a === "core";'));
+        $this->assertEquals($coreclasses, $filteredallcoreclasses1);
+        $filteredallcoreclasses2 = array_filter($allcoreclasses, create_function('$a', 'return $a === "core_availability";'));
+        $this->assertEquals($subsystemclasses, $filteredallcoreclasses2);
 
         // Assert that looking for all existing events does not trigger any errors/messages.
         core_component::find_classes_in_subsystems('*', 'event');

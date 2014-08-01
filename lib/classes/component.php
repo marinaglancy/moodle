@@ -903,16 +903,21 @@ $cache = '.var_export($cache, true).';
      * This function does not recurse into subfolders
      *
      * @param array $resolvedcomponentslist array componenttype=>componentdir where we need to search
-     * @param string $relativepath relative path inside /classes/ directory
+     * @param string $subnamespace sub namespace (or relative path inside /classes/ directory), if not specified
+     *          both namespaced and non-namespaced classes that are located in /classes/ folder can be returned
      * @param string $parentclass optional name of the parent class
      * @param bool $nonabstractonly if true will return only non-abstract classes
-     * @return string[][] list of class names componenttype=>classfilepath=>classname
+     * @return string[] list of found classes and corresponding components classname=>componentname
      */
-    protected static function find_classes_in_components($resolvedcomponentslist, $relativepath = '',
+    protected static function find_classes_in_components($resolvedcomponentslist, $subnamespace = '',
                                                          $parentclass = null, $nonabstractonly = false) {
         self::init();
+
+        // Find the relative path inside the plugins directory to search for classes.
+        $subnamespace = preg_replace('/\\\\/', DIRECTORY_SEPARATOR, $subnamespace);
         $relativepath = rtrim(DIRECTORY_SEPARATOR . 'classes'. DIRECTORY_SEPARATOR .
-                ltrim($relativepath, DIRECTORY_SEPARATOR), DIRECTORY_SEPARATOR);
+                ltrim($subnamespace, DIRECTORY_SEPARATOR), DIRECTORY_SEPARATOR);
+
         foreach ($resolvedcomponentslist as $component => $dir) {
             if ($dir) {
                 $dirs[$dir . $relativepath] = $component;
@@ -924,10 +929,7 @@ $cache = '.var_export($cache, true).';
             $classdir = dirname($classfile);
             if (isset($dirs[$classdir]) && self::check_class($classname, $classfile, $parentclass, $nonabstractonly)) {
                 $fullcomponentname = $dirs[$classdir];
-                if (!isset($classes[$fullcomponentname])) {
-                    $classes[$fullcomponentname] = array();
-                }
-                $classes[$fullcomponentname][$classfile] = $classname;
+                $classes[$classname] = $fullcomponentname;
             }
         }
         return $classes;
@@ -949,12 +951,13 @@ $cache = '.var_export($cache, true).';
      *          plugin name, i.e. 'mod_assign', 'block_course_overview', etc.;
      *          '*' for any of above;
      *          can also be an array or individual identifiers (list of plugin names or list of plugin types)
-     * @param string $relativepath relative path inside /classes/ directory
+     * @param string $subnamespace sub namespace (or relative path inside /classes/ directory), if not specified
+     *          both namespaced and non-namespaced classes that are located in /classes/ folder can be returned
      * @param string $parentclass optional name of the parent class
      * @param bool $nonabstractonly if true will return only non-abstract classes
-     * @return string[][] list of class names pluginname=>classfilepath=>classname
+     * @return string[] list of found classes and corresponding plugins classname=>pluginname
      */
-    public static function find_classes_in_plugins($plugintype, $relativepath = '', $parentclass = null, $nonabstractonly = false) {
+    public static function find_classes_in_plugins($plugintype, $subnamespace = '', $parentclass = null, $nonabstractonly = false) {
         $resolvedcomponentslist = self::resolve_plugin_type($plugintype, true);
         $flatlist = array();
         foreach ($resolvedcomponentslist as $type => $subplugins) {
@@ -963,7 +966,7 @@ $cache = '.var_export($cache, true).';
             }
         }
 
-        return self::find_classes_in_components($flatlist, $relativepath, $parentclass, $nonabstractonly);
+        return self::find_classes_in_components($flatlist, $subnamespace, $parentclass, $nonabstractonly);
     }
 
     /**
@@ -981,15 +984,31 @@ $cache = '.var_export($cache, true).';
      *          subsystem name, i.e. 'core_course', 'core_availability', etc.;
      *          '*' for any of above;
      *          can also be an array or individual subsystem names
-     * @param string $relativepath relative path inside /classes/ directory
+     * @param string $subnamespace sub namespace (or relative path inside /classes/ directory), if not specified
+     *          both namespaced and non-namespaced classes that are located in /classes/ folder can be returned
      * @param string $parentclass optional name of the parent class
      * @param bool $nonabstractonly if true will return only non-abstract classes
-     * @return string[][] list of class names componenttype=>classfilepath=>classname
+     * @return string[] list of found classes and corresponding subsystems classname=>subsystemname
      */
-    public static function find_classes_in_subsystems($componenttype, $relativepath = '',
+    public static function find_classes_in_subsystems($componenttype, $subnamespace = '',
                                                       $parentclass = null, $nonabstractonly = false) {
         $resolvedcomponentslist = self::resolve_subsystem_type($componenttype);
-        return self::find_classes_in_components($resolvedcomponentslist, $relativepath, $parentclass, $nonabstractonly);
+        return self::find_classes_in_components($resolvedcomponentslist, $subnamespace, $parentclass, $nonabstractonly);
+    }
+
+    /**
+     * Returns the physical path on server to the file containing class in autoloaded location
+     *
+     * @param string $classname
+     * @return string|null
+     */
+    public static function get_class_filepath($classname) {
+        self::init();
+        $classname = ltrim($classname, '\\');
+        if (isset(self::$classmap[$classname])) {
+            return self::$classmap[$classname];
+        }
+        return null;
     }
 
     /**

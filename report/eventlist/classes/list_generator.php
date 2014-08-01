@@ -43,24 +43,22 @@ class report_eventlist_list_generator {
         $eventinformation = array();
         $classes = array_merge(core_component::find_classes_in_subsystems('core', 'event'),
             core_component::find_classes_in_plugins('*', 'event'));
-        unset($classes['logstore_legacy']);
-        foreach ($classes as $component => $componentclasses) {
-            foreach ($componentclasses as $fullpath => $classname) {
-                if ($classname === 'core\\event\\unknown_logged') {
-                    // Remove exceptional events that will cause problems being displayed.
-                    continue;
-                }
-                $file = pathinfo($fullpath, PATHINFO_FILENAME);
-                // Check to see if this is actually a valid event.
-                if (method_exists($classname, 'get_static_info')) {
-                    if ($detail) {
-                        $ref = new ReflectionClass($classname);
-                        if (!$ref->isAbstract() && $file != 'manager') {
-                            $eventinformation = self::format_data($eventinformation, '\\'.$classname);
-                        }
-                    } else {
-                        $eventinformation['\\'.$classname] = $file;
+        foreach ($classes as $classname => $component) {
+            $fullpath = core_component::get_class_filepath($classname);
+            if ($classname === 'core\\event\\unknown_logged' || $component === 'logstore_legacy') {
+                // Remove exceptional events that will cause problems being displayed.
+                continue;
+            }
+            $file = pathinfo($fullpath, PATHINFO_FILENAME);
+            // Check to see if this is actually a valid event.
+            if (method_exists($classname, 'get_static_info')) {
+                if ($detail) {
+                    $ref = new ReflectionClass($classname);
+                    if (!$ref->isAbstract() && $file != 'manager') {
+                        $eventinformation = self::format_data($eventinformation, '\\'.$classname);
                     }
+                } else {
+                    $eventinformation['\\'.$classname] = $file;
                 }
             }
         }
