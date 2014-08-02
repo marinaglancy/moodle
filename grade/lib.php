@@ -2331,7 +2331,7 @@ class grade_tree extends grade_structure {
         $this->cat_rollup($fullweight, $grades);
         
         // reset
-        $this->reset_cats();
+//        $this->reset_cats();
 
         // recalculate grademax for grade_grade
 //        if (!$fullweight) {
@@ -2423,6 +2423,7 @@ class grade_tree extends grade_structure {
             foreach ($this->levels[$curlevel] as $element) {
                 // don't consider any items with particular conditions
                 if ($element['type'] === 'category') {
+                    
                     $item = $this->cats[$element['object']->id]->grade_category;
                     if (!isset($element['object']->grade_item)) {
                         $element['object']->load_grade_item();
@@ -2438,23 +2439,29 @@ class grade_tree extends grade_structure {
 
                             $parentid = $this->cats[$item->parent]->id;
                             if ($fullweight) {
-                                if ($this->check_adjusted_weights($itemid, $parentid, $fullweight)) {
+                                if (!$this->is_extra_credit($itemid)) {
+                                    if ($this->check_adjusted_weights($itemid)) {
+    //                                    $catparent = $this->cats[$item->id]->grade_category->parent;
+    //                                    $this->cats[$catparent]->adjusted_weight[$itemid] = $this->checkitems[$itemid]->weight;
+                                        $tempweight = $this->checkitems[$itemid]->weight;
+                                        $this->cats[$parentid]->adjusted_weight[$itemid] = $tempweight;
+                                    } else {
+                                        $tempweight = $this->items[$itemid]->grademax 
+                                            / ($this->items[$parentid]->grademax - $minusmax)
+                                            * $minusweight;
+                                    }
+                                    if ($tempweight != $this->items[$itemid]->weight) {
+                                        $this->items[$itemid]->weight = $tempweight;
+                                        $this->update_field($itemid,'weight', $this->items[$itemid]->weight, 'grade_items');
+//                                        $this->items[$itemid]->update();
+                                    }
+                                }
+                            } else if ($grades[$parentid]->rawgrademax != 0){
+                                if ($this->check_adjusted_weights($itemid)) {
 //                                    $catparent = $this->cats[$item->id]->grade_category->parent;
 //                                    $this->cats[$catparent]->adjusted_weight[$itemid] = $this->checkitems[$itemid]->weight;
                                     $tempweight = $this->checkitems[$itemid]->weight;
-                                } else {
-                                    $tempweight = $this->items[$itemid]->grademax 
-                                        / ($this->items[$parentid]->grademax - $minusmax)
-                                        * $minusweight;
-                                }
-                                if ($tempweight != $this->items[$itemid]->weight) {
-                                    $this->items[$itemid]->weight = $tempweight;
-                                    $this->items[$itemid]->update();
-                                }
-                            } else if ($grades[$parentid]->rawgrademax != 0){
-                                if ($this->check_adjusted_weights($itemid, $parentid, $fullweight)) {
-//                                    $catparent = $this->cats[$item->id]->grade_category->parent;
-//                                    $this->cats[$catparent]->adjusted_weight[$itemid] = $this->checkitems[$itemid]->weight;
+                                    $this->cats[$parentid]->adjusted_weight[$itemid] = $tempweight;
                                 } else {
                                     $tempweight = $grades[$itemid]->rawgrademax 
                                         / ($grades[$parentid]->rawgrademax - $minusmax)
@@ -2462,13 +2469,13 @@ class grade_tree extends grade_structure {
                                 }
                                 if ($grades[$itemid]->weight != $tempweight) {
                                     $grades[$itemid]->weight = $tempweight;
-                                    $grades[$itemid]->update();
+                                    $this->update_field($grades[$itemid]->id,'weight', $grades[$itemid]->weight, 'grade_grades');
                                 }
                             } else {
                                 $tempweight = 0;
                                 if ($grades[$itemid]->weight != $tempweight) {
                                     $grades[$itemid]->weight = $tempweight;
-                                    $grades[$itemid]->update();
+                                    $this->update_field($grades[$itemid]->id,'weight', $grades[$itemid]->weight, 'grade_grades');
                                 }
                             }
                         } else {
@@ -2494,9 +2501,15 @@ class grade_tree extends grade_structure {
                         $minusmax = array_sum($this->cats[$item->categoryid]->adjusted_grademax);
                         $minusweight = 100 - array_sum($this->cats[$item->categoryid]->adjusted_weight);
                         if ($fullweight) {
-                            if ($this->check_adjusted_weights($itemid, $parentid, $fullweight)) {
-                                $tempweight = $this->checkitems[$itemid]->weight;
-                                $this->cats[$item->categoryid]->adjusted_weight[$itemid] = $tempweight;
+                            if (!$this->is_extra_credit($itemid)) {
+                                if ($this->check_adjusted_weights($itemid)) {
+                                    $tempweight = $this->checkitems[$itemid]->weight;
+                                    $this->cats[$item->categoryid]->adjusted_weight[$itemid] = $tempweight;
+                                } else {
+                                    $tempweight = $item->grademax
+                                            / ($this->items[$parentid]->grademax)
+                                            * $minusweight;
+                                }
                             } else {
                                 $tempweight = $item->grademax
                                         / ($this->items[$parentid]->grademax)
@@ -2504,26 +2517,31 @@ class grade_tree extends grade_structure {
                             }
                             if ($tempweight != $item->weight) {
                                 $item->weight = $tempweight;
-                                $item->update();
+                                $this->update_field($itemid,'weight', $this->items[$itemid]->weight, 'grade_items');
                             }
                         } else {
-                            if ($this->check_adjusted_weights($itemid, $parentid, $fullweight)) {
-                                $tempweight = $this->checkitems[$itemid]->weight;
-                                $this->cats[$item->categoryid]->adjusted_weight[$itemid] = $tempweight;
-                            } else if (isset($item->categoryid) && $grades[$itemid]->finalgrade === null && 
-                                    $this->cats[$item->categoryid]->grade_category->aggregateonlygraded !== 0) {
-                                $tempweight = 0;
-                            } else if ($grades[$parentid]->rawgrademax !== 0){
+                            if (!$this->is_extra_credit($itemid)) {
+                                if ($this->check_adjusted_weights($itemid)) {
+                                    $tempweight = $this->checkitems[$itemid]->weight;
+                                    $this->cats[$item->categoryid]->adjusted_weight[$itemid] = $tempweight;
+                                } else if (isset($item->categoryid) && $grades[$itemid]->finalgrade === null && 
+                                        $this->cats[$item->categoryid]->grade_category->aggregateonlygraded !== 0) {
+                                    $tempweight = 0;
+                                } else if ($grades[$parentid]->rawgrademax !== 0){
+                                    $tempweight = $grades[$itemid]->rawgrademax 
+                                            / ($grades[$parentid]->rawgrademax - $minusmax) 
+                                            * $minusweight;                                
+                                } else {
+                                    $tempweight = 0;
+                                }
+                            } else {
                                 $tempweight = $grades[$itemid]->rawgrademax 
                                         / ($grades[$parentid]->rawgrademax - $minusmax) 
                                         * $minusweight;                                
-                            } else {
-                                $tempweight = 0;
                             }
-                            $showweight = $grades[$itemid]->weight;
                             if ($grades[$itemid]->weight != $tempweight) {
                                 $grades[$itemid]->weight = $tempweight;
-                                $grades[$itemid]->update();
+                                $this->update_field($grades[$itemid]->id,'weight', $grades[$itemid]->weight, 'grade_grades');
                             }
                         }
                     }
@@ -2533,6 +2551,15 @@ class grade_tree extends grade_structure {
         }
     }
 
+    function update_field($itemid, $field, $value, $table) {
+        global $DB;
+        $wheresql = "id=?";
+        $params   = array($itemid);
+        $DB->set_field_select($table, $field, $value, $wheresql, $params);
+//        $DB->set_field_select('grade_items', 'needsupdate', 1, $wheresql, $params);
+                
+    }
+    
     function calccontrib($fullweight, &$grades) {
         $levelsarray = array_keys($this->levels);
 
@@ -2598,9 +2625,9 @@ class grade_tree extends grade_structure {
         // now go through all the items and categories to aggregate their values into their parents
         $curlevel = $levelsarray[max($levelsarray)];
         
-        while ($curlevel > 0) {
+        while ($curlevel > -1) {
             foreach ($this->levels[$curlevel] as $element) {
-                // don't consider any items with particular conditions
+                
                 if ($element['type'] === 'category') {
                     $item = $this->cats[$element['object']->id];
                     $itemid = $item->id;
@@ -2610,22 +2637,36 @@ class grade_tree extends grade_structure {
 //                        if ($updategradegrademax) {
                         if ($grademax) {
                             if (!$this->is_extra_credit($itemid)) {
-                                if ($this->check_adjusted_weights($itemid, $parentid, $grademax)) {
+                                if ($this->check_adjusted_weights($itemid)) {
                                     $this->cats[$parentid]->adjusted_grademax[$itemid] = $item->grademax;
                                 }
                                 // need to store the accumulated values from the contained items into the category grademax
                                 // before we process drop low or keep high because they've already gone through all the tests 
     //                            $this->items[$itemid]->grademax = $this->cats[$element['object']->id]->value;
+                                $this->items[$itemid]->grademax = $this->cats[$element['object']->id]->grademax;
+                                if (isset($grades[$itemid]->rawgrademax)) {
+                                    $grades[$itemid]->rawgrademax = $this->cats[$element['object']->id]->grademax;
+                                }
                                 $this->cats[$parentid]->grademax += $this->cats[$element['object']->id]->grademax; // can't use $itemid here
                             }
                         } else {
-                            if ($this->check_adjusted_weights($itemid, $parentid, $grademax)) {
-                                $this->cats[$parentid]->adjusted_grademax[$itemid] = $grades[itemid]->rawgrademax;
+                            if ($this->check_adjusted_weights($itemid)) {
+                                $this->cats[$parentid]->adjusted_grademax[$itemid] = $grades[$itemid]->rawgrademax;
                             }
-                            $this->items[$itemid]->grademax = $this->cats[$element['object']->id]->grademax;
-                            $grades[$itemid]->rawgrademax = $this->cats[$element['object']->id]->grademax;
-                            $this->cats[$parentid]->grademax += $this->cats[$element['object']->id]->grademax; // can't use $itemid here
+//                            $this->items[$itemid]->grademax = $this->cats[$element['object']->id]->grademax;
+//                            $grades[$itemid]->rawgrademax = $this->cats[$element['object']->id]->grademax;
+                            $grades[$itemid]->finalgrade = $this->cats[$element['object']->id]->finalgrade;
+                            // store values up to the parent
+                            if (!$this->is_extra_credit($itemid)) {
+                                $this->cats[$parentid]->grademax += $this->cats[$element['object']->id]->grademax; // can't use $itemid here
+                            }
                             $this->cats[$parentid]->finalgrade += $this->cats[$element['object']->id]->finalgrade; // can't use $itemid here
+                        }
+                    } else if ($item->is_course_item()) {
+                        $this->items[$itemid]->grademax = $this->cats[$element['object']->id]->grademax;
+                        if (isset($grades[$itemid]->rawgrademax)) {
+                            $grades[$itemid]->rawgrademax = $this->cats[$element['object']->id]->grademax;
+                            $grades[$itemid]->finalgrade = $this->cats[$element['object']->id]->finalgrade;
                         }
                     }
                     
@@ -2635,29 +2676,20 @@ class grade_tree extends grade_structure {
                     $parentid = $item->categoryid;
                     // exclude ungraded, hidden, and extra credit items
                     if ($this->exclude_items($item, $grades, $itemid, $grademax)) {
-
-                        // need to do this here before we hit weights calculation
-
                         if ($grademax) {
                             if (!$this->is_extra_credit($itemid)) {
-                                if ($this->check_adjusted_weights($itemid, $parentid, $grademax)) {
+                                if ($this->check_adjusted_weights($itemid)) {
                                     $this->cats[$parentid]->adjusted_grademax[$itemid] = $item->grademax;
                                 }
-//                            if ($this->check_adjusted_weights($itemid, $parentid, $grademax)) {
-//                                $this->cats[$parentid]->adjusted[$itemid] = $item->grademax;
-//                            if ($updategradegrademax 
-//                                    && (!isset($grades[$itemid]->finalgrade) || $grades[$itemid]->finalgrade == null)) {
-//                                $grades[$itemid]->rawgrademax = $this->items[$itemid]->grademax;
-//                            } else {
-                                    $this->cats[$parentid]->grademax += $item->grademax;
+                                $this->cats[$parentid]->grademax += $item->grademax;
                             }
-//                        } else if ($updategradegrademax) {
-//                            $this->cats[$parentid]->value += $grades[$item->id]->rawgrademax;
                         } else { 
-                            if ($this->check_adjusted_weights($itemid, $parentid, $grademax)) {
+                            if ($this->check_adjusted_weights($itemid)) {
                                 $this->cats[$parentid]->adjusted_grademax[$itemid] = $grades[itemid]->rawgrademax;
                             }
-                            $this->cats[$parentid]->grademax += $grades[$itemid]->rawgrademax;
+                            if (!$this->is_extra_credit($itemid)) {
+                                $this->cats[$parentid]->grademax += $grades[$itemid]->rawgrademax;
+                            }
                             $this->cats[$parentid]->finalgrade += $grades[$itemid]->finalgrade;
                         }
                     }
@@ -2674,25 +2706,27 @@ class grade_tree extends grade_structure {
     // store to db
     function cat_rollup($fullweight, &$grades) {
         foreach ($this->cats as $key => $cat) {
-            // update grade_grade rawgrademax field
-            $parentid = $cat->grade_category->parent;
-            if (!$fullweight) {
-                if (isset($cat->grademax) && $grades[$cat->id]->rawgrademax != $cat->grademax) {
-                    $grades[$cat->id]->rawgrademax = $cat->grademax;
+            if (isset($cat->grade_category->parent)) {
+                // update grade_grade rawgrademax field
+                $parentid = $cat->grade_category->parent;
+                if (!$fullweight) {
+                    if (isset($cat->grademax) && $grades[$cat->id]->rawgrademax != $cat->grademax) {
+                        $grades[$cat->id]->rawgrademax = $cat->grademax;
+                    }
+                    $finalgrade = $cat->finalgrade; // can't use $itemid here
+                    if (isset($cat->finalgrade) && $grades[$cat->id]->finalgrade != $cat->finalgrade) {
+                        $grades[$cat->id]->finalgrade = $cat->finalgrade;
+                    }
+    //                if ($parentid !== null) {
+    //                    $parfinal = $this->cats[$parentid]->finalgrade;
+    //                    $this->cats[$parentid]->grademax += $cat->grademax; // can't use $itemid here
+    //                    $this->cats[$parentid]->finalgrade += $cat->finalgrade; // can't use $itemid here
+    //                }
+                    $grades[$cat->id]->update('aggregation');
+                } else if ((isset($cat->value) && $this->items[$cat->id]->grademax != $cat->grademax) || !isset($grades[$cat->id]->id)) {
+                    $this->items[$cat->id]->grademax = $cat->grademax;
+                    $this->items[$cat->id]->update('aggregation');
                 }
-                $finalgrade = $cat->finalgrade; // can't use $itemid here
-                if (isset($cat->finalgrade) && $grades[$cat->id]->finalgrade != $cat->finalgrade) {
-                    $grades[$cat->id]->finalgrade = $cat->finalgrade;
-                }
-//                if ($parentid !== null) {
-//                    $parfinal = $this->cats[$parentid]->finalgrade;
-//                    $this->cats[$parentid]->grademax += $cat->grademax; // can't use $itemid here
-//                    $this->cats[$parentid]->finalgrade += $cat->finalgrade; // can't use $itemid here
-//                }
-                $grades[$cat->id]->update('aggregation');
-            } else if ((isset($cat->value) && $this->items[$cat->id]->grademax != $cat->grademax) || !isset($grades[$cat->id]->id)) {
-                $this->items[$cat->id]->grademax = $cat->grademax;
-                $this->items[$cat->id]->update('aggregation');
             }
         }
     }
@@ -2717,15 +2751,16 @@ class grade_tree extends grade_structure {
         return true;
     }
 
-    function check_adjusted_weights($itemid, $parentid, $grademax) {
+    function check_adjusted_weights($itemid) {
         if (array_key_exists($itemid, $this->checkitems)) {
             return true;
         }
         return false;
     }
     
-    function limit_setup_items($element, $grades, $fullweight, $unsetgrades = true) {
+    function limit_setup_items($element, &$grades, $fullweight, $unsetgrades = true) {
         $catid = $element['object']->id;
+        $catitemid = $this->cats[$catid]->id;
         $this->cat = $this->cats[$catid]->grade_category;
         $maxes = array();
         foreach ($element['children'] as $position => $item) {
@@ -2750,13 +2785,28 @@ class grade_tree extends grade_structure {
                         // no drop low for extra credits
                     } else {
                         $catgrademax -= $grademax;
+                        $this->items[$id]->weight = -1;
+                        if (isset($grades[$id]->weight)) {
+                            $grades[$id]->weight = -1;
+                        }
+                        
                         // take it out of the cat so we can update the tables
                         $this->cats[$catid]->grademax -= $this->items[$id]->grademax;
+                    
+                        // remove it from the rawgrademax for this category
+                        if (isset($grades[$catitemid]->rawgrademax)) {
+                            $grades[$catitemid]->rawgrademax -= $this->items[$id]->grademax;
+                        }
+
                         // remove points from parent of category if exist
                         if (isset($this->cats[$catid]->grade_category->parent)) {
                             $parentid = $this->cats[$this->cats[$catid]->grade_category->parent]->id;
+                            if (isset($grades[$parentid]->rawgrademax)) {
+                                $grades[$parentid]->rawgrademax -= $this->items[$id]->grademax;
+                            }
+                            
                             $this->items[$parentid]->grademax -= $this->items[$id]->grademax;
-                            if ($this->check_adjusted_weights($this->cats[$catid]->id, $parentid, $catgrademax)) {
+                            if ($this->check_adjusted_weights($this->cats[$catid]->id)) {
                                 $this->cats[$this->cats[$catid]->grade_category->parent]->adjusted_grademax[$this->cats[$catid]->id] -= $this->items[$id]->grademax;
                             }
                         }
@@ -2776,16 +2826,29 @@ class grade_tree extends grade_structure {
                 if ($kept < $this->cat->keephigh) {
                     $catgrademax += $grademax;
                     // take it out of the cat so we can update the tables
-                    $this->cats[$catid]->grademax -= $this->items[$id]->grademax;
+//                    $this->cats[$catid]->grademax -= $this->items[$id]->grademax;
                     $kept++;
                 } else {
-                    // remove points from parent of category if exist
                     // take it out of the cat so we can update the tables
                     $this->cats[$catid]->grademax -= $this->items[$id]->grademax;
+                    $this->items[$id]->weight = -1;
+                    if (isset($grades[$id]->weight)) {
+                        $grades[$id]->weight = -1;
+                    }
+                    
+                    // remove it from the rawgrademax for this category
+                    if (isset($grades[$catitemid]->rawgrademax)) {
+                        $grades[$catitemid]->rawgrademax -= $this->items[$id]->grademax;
+                    }
+                    
+                    // if this category has parent categories
                     if (isset($this->cats[$catid]->grade_category->parent)) {
                         $parentid = $this->cats[$this->cats[$catid]->grade_category->parent]->id;
+                        if (isset($grades[$parentid]->rawgrademax)) {
+                            $grades[$parentid]->rawgrademax -= $this->items[$id]->grademax;
+                        }
                         $this->items[$parentid]->grademax -= $this->items[$id]->grademax;
-                        if ($this->check_adjusted_weights($this->cats[$catid]->id, $parentid, $catgrademax)) {
+                        if ($this->check_adjusted_weights($this->cats[$catid]->id)) {
                             $this->cats[$this->cats[$catid]->grade_category->parent]->adjusted_grademax[$this->cats[$catid]->id] -= $this->items[$id]->grademax;
                         }
                     }
@@ -2844,6 +2907,9 @@ class grade_tree extends grade_structure {
                             $parentid = $this->cats[$this->cats[$catid]->grade_category->parent]->id;
                             $grades[$parentid]->rawgrademax -= $grades[$id]->rawgrademax;
                             $grades[$parentid]->finalgrade -= $grades[$id]->finalgrade;
+                            if ($this->check_adjusted_weights($itemid)) {
+                                $this->cats[$this->cats[$catid]->grade_category->parent]->adjusted_grademax[$this->cats[$catid]->id] -= $this->items[$id]->grademax;
+                            }
                         }
                         $dropped++;
                     }
@@ -2875,6 +2941,9 @@ class grade_tree extends grade_structure {
                         $parentid = $this->cats[$this->cats[$catid]->grade_category->parent]->id;
                         $grades[$parentid]->rawgrademax -= $grades[$id]->rawgrademax;
                         $grades[$parentid]->finalgrade -= $grades[$id]->finalgrade;
+                        if ($this->check_adjusted_weights($itemid)) {
+                            $this->cats[$this->cats[$catid]->grade_category->parent]->adjusted_grademax[$this->cats[$catid]->id] -= $this->items[$id]->grademax;
+                        }
                     }
                 }
             }
