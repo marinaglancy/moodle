@@ -2740,9 +2740,10 @@ class grade_tree extends grade_structure {
             return false;
         // exclude ungraded items if specified
         } else if (!$fullweight
-                && $grades[$itemid]->finalgrade === null 
+                && (!isset($grades[$itemid]->finalgrade)
+                        || $grades[$itemid]->finalgrade === null)
                 &&  isset($item->categoryid)
-                && $this->cats[$item->categoryid]->grade_category->aggregateonlygraded !== 0) {    
+                && $this->cats[$item->categoryid]->grade_category->aggregateonlygraded != 0) {    
             return false;
         // exclude hidden    
         } else if ($item->is_hidden() && $this->showtotalsifcontainhidden !== GRADE_REPORT_SHOW_REAL_TOTAL_IF_CONTAINS_HIDDEN) {
