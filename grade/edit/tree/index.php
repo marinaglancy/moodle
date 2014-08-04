@@ -143,6 +143,29 @@ if ($action == 'moveselect') {
     }
 }
 
+// have to store any weight adjustments to the table first before we go get the grade_edit_tree
+if ($data = data_submitted() and confirm_sesskey()) {
+    foreach ($data as $key => $value) {
+        // Grade weight overrides
+        if (preg_match('/^(weight)_([0-9]+)$/', $key, $matches)) {
+            $param = $matches[1];
+            $aid   = $matches[2];
+
+            $value = unformat_float($value);
+            $value = clean_param($value, PARAM_FLOAT);
+
+            $oldkey = 'old_' . $key;
+            if ($value != $data->$oldkey) {
+                $grade_item = grade_item::fetch(array('id'=>$aid, 'courseid'=>$courseid));
+                $grade_item->$param = $value;
+                $grade_item->weightoverride = 1;
+                $grade_item->update();
+                $recreatetree = true;
+            }
+        }
+    }
+}
+
 $grade_edit_tree = new grade_edit_tree($gtree, $movingeid, $gpr);
 
 switch ($action) {
@@ -228,8 +251,7 @@ if ($current_view != '') {
 //Ideally we could do the updates through $grade_edit_tree to avoid recreating it
 $recreatetree = false;
 
-//TODO: turns out this code was alive.  It should do a session key check.
-if ($action === 'reset') {
+if ($action === 'reset' and confirm_sesskey()) {
     $records = $DB->get_records('grade_items', array('courseid' => $courseid, 'weightoverride' => 1));
     foreach ($records as $record) {
         $record->weight = 0;
@@ -292,23 +314,6 @@ if ($data = data_submitted() and confirm_sesskey()) {
             grade_regrade_final_grades($courseid);
 
             $recreatetree = true;
-
-        // Grade weight overrides
-        } elseif (preg_match('/^(weight)_([0-9]+)$/', $key, $matches)) {
-            $param = $matches[1];
-            $aid   = $matches[2];
-
-            $value = unformat_float($value);
-            $value = clean_param($value, PARAM_FLOAT);
-
-            $oldkey = 'old_' . $key;
-            if ($value != $data->$oldkey) {
-                $grade_item = grade_item::fetch(array('id'=>$aid, 'courseid'=>$courseid));
-                $grade_item->$param = $value;
-                $grade_item->weightoverride = 1;
-                $grade_item->update();
-                $recreatetree = true;
-            }
 
         // Grade item checkbox inputs
         } elseif (preg_match('/^extracredit_([0-9]+)$/', $key, $matches)) { // Sum extra credit checkbox

@@ -2439,6 +2439,7 @@ class grade_tree extends grade_structure {
 
                             $parentid = $this->cats[$item->parent]->id;
                             if ($fullweight) {
+                                $this->normalize_weights($element);
                                 if (!$this->is_extra_credit($itemid)) {
                                     if ($this->check_adjusted_weights($itemid)) {
     //                                    $catparent = $this->cats[$item->id]->grade_category->parent;
@@ -2480,6 +2481,7 @@ class grade_tree extends grade_structure {
                             }
                         } else {
                             // course item
+                            $this->normalize_weights($element);
                             if ($fullweight) {
                                 $tempweight = 100;
                                 if ($tempweight != $this->items[$itemid]->weight) {
@@ -2551,6 +2553,48 @@ class grade_tree extends grade_structure {
         }
     }
 
+    function normalize_weights($element) {
+        $adjusted_weights = 0;
+        $normal_weights = 0;
+        foreach($element['children'] as $position => $child) {
+            if ($child['type'] == 'categoryitem') {
+                continue;
+            } else if ($child['type'] == 'category') {
+                $id = $child['object']->grade_item->id;
+            } else {
+                $id = $child['object']->id;
+            }
+            if (array_key_exists($id, $this->checkitems)) {
+                $adjusted_weights += $this->checkitems[$id]->weight;
+            } else {
+                $normal_weights += $this->items[$id]->weight;
+            }
+        }
+        if ($adjusted_weights + $normal_weights == 100) {
+            return;
+        } else if ($adjusted_weights == 0) {
+            return;
+        } else if ($normal_weights == 0) {    
+            $adjuster = 100 / $adjusted_weights;
+            $normalizer = 1;
+        } else {
+            $normalizer = 100 / ($normal_weights + $adjusted_weights);
+            $adjuster = 1;
+        }
+        foreach($element['children'] as $position => $child) {
+            $id = $child['object']->id;
+            if ($child['type'] == 'categoryitem') {
+                continue;
+            } else if (array_key_exists($id, $this->checkitems)) {
+                $this->items[$id]->weight *= $adjuster;
+                $this->checkitems[$id]->weight *= $adjuster;
+            } else {
+                $this->items[$id]->weight *= $normalizer;
+            }
+            $this->update_field($id,'weight', $this->items[$id]->weight, 'grade_items');
+        }
+    }
+    
     function update_field($itemid, $field, $value, $table) {
         global $DB;
         $wheresql = "id=?";

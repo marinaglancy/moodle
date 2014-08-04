@@ -307,8 +307,10 @@ class grade_report_user extends grade_report {
 
     function fill_table() {
         $this->load_final_grades($this->user->id);
-        $this->gtree->calc_values($this->grades, true, true);
-        $this->gtree->calc_values($this->grades, true, false);
+        if (!is_siteadmin($this->user->id)) {
+            $this->gtree->calc_values($this->grades, true, true);
+            $this->gtree->calc_values($this->grades, true, false);
+        }
         $this->fill_table_recursive($this->gtree->top_element);
         return true;
     }
