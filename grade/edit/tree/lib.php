@@ -335,7 +335,8 @@ class grade_edit_tree {
 
         } else { // Dealing with a grade item
 
-            $item = grade_item::fetch(array('id' => $object->id));
+//            $item = grade_item::fetch(array('id' => $object->id));
+            $item = $element['object'];
             $element['type'] = 'item';
             $element['object'] = $item;
 
@@ -783,6 +784,8 @@ class grade_edit_tree_column_weight extends grade_edit_tree_column {
                 $categorycell->text = '-';
             } else if ($gtree_item->weight === '') {
                 $categorycell->text = '-';
+            } else if ($gtree_item->weight == -1) {
+                $categorycell->text = 'dropped';
             } else if ($params['gtree']->action === 'editweights') {
                 $categorycell->text = '<label class="accesshide" for="weight'. $item->id .'">'.get_string('editweight', 'grades').'</label>' .
                                 '<input type="text" size="6" id="weight'. $item->id .'" name="weight_'.$item->id.'" value="' .
@@ -815,6 +818,8 @@ class grade_edit_tree_column_weight extends grade_edit_tree_column {
                 $itemcell->text = '-';
             } else if ($gtree_item->weight == '') {
                 $itemcell->text = '-';
+            } else if ($gtree_item->weight == -1) {
+                $itemcell->text = 'dropped';
             } else if ($params['gtree']->action === 'editweights') {
                 $itemcell->text = '<label class="accesshide" for="weight' . $item->id . '">'.get_string('editweight', 'grades').'</label>' .
                             '<input type="text" size="6" id="weight'. $item->id .'" name="weight_'.$item->id.'" value="'.
