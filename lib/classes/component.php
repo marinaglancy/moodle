@@ -709,13 +709,18 @@ $cache = '.var_export($cache, true).';
      * Get a list of all the plugins of a given type that define a certain class
      * in a certain file. The plugin component names and class names are returned.
      *
-     * @param string $plugintype the type of plugin, e.g. 'mod' or 'report'.
+     * @param string|array $plugintype one of the following:
+     *          plugin type, i.e. 'mod', 'block' for all plugins of this type;
+     *          plugin name, i.e. 'mod_assign', 'block_course_overview', etc.;
+     *          '*' for any of above;
+     *          can also be an array or individual identifiers (list of plugin names or list of plugin types)
      * @param string $class the part of the name of the class after the
      *      frankenstyle prefix. e.g 'thing' if you are looking for classes with
      *      names like report_courselist_thing. If you are looking for classes with
      *      the same name as the plugin name (e.g. qtype_multichoice) then pass ''.
      *      Frankenstyle namespaces are also supported.
-     * @param string $file the name of file within the plugin that defines the class.
+     * @param string $file the name of file within the plugin that defines the class
+     *      (optional, when searching for classes in non autoloaded locations).
      * @return array with frankenstyle plugin names as keys (e.g. 'report_courselist', 'mod_forum')
      *      and the class names as values (e.g. 'report_courselist_thing', 'qtype_multichoice').
      */
@@ -724,26 +729,33 @@ $cache = '.var_export($cache, true).';
 
         if ($class) {
             $suffix = '_' . $class;
+            $namespacedonly = (strpos($class, '\\') !== false);
         } else {
             $suffix = '';
+            $namespacedonly = false;
         }
 
         $pluginclasses = array();
-        $plugins = self::get_plugin_list($plugintype);
-        foreach ($plugins as $plugin => $fulldir) {
+        $plugins = self::resolve_plugin_type($plugintype);
+        foreach ($plugins as $pluginname => $fulldir) {
             // Try class in frankenstyle namespace.
             if ($class) {
-                $classname = '\\' . $plugintype . '_' . $plugin . '\\' . $class;
+                $classname = '\\' . $pluginname . '\\' . $class;
                 if (class_exists($classname, true)) {
-                    $pluginclasses[$plugintype . '_' . $plugin] = $classname;
+                    $pluginclasses[$pluginname] = $classname;
                     continue;
                 }
             }
 
+            if ($namespacedonly) {
+                // If classname contained backslash we skip searching in non-namespaced locations.
+                continue;
+            }
+
             // Try autoloading of class with frankenstyle prefix.
-            $classname = $plugintype . '_' . $plugin . $suffix;
+            $classname = $pluginname . $suffix;
             if (class_exists($classname, true)) {
-                $pluginclasses[$plugintype . '_' . $plugin] = $classname;
+                $pluginclasses[$pluginname] = $classname;
                 continue;
             }
 
@@ -751,7 +763,7 @@ $cache = '.var_export($cache, true).';
             if ($file and file_exists("$fulldir/$file")) {
                 include_once("$fulldir/$file");
                 if (class_exists($classname, false)) {
-                    $pluginclasses[$plugintype . '_' . $plugin] = $classname;
+                    $pluginclasses[$pluginname] = $classname;
                     continue;
                 }
             }
