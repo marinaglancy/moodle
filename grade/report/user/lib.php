@@ -896,7 +896,7 @@ function grade_report_user_settings_definition(&$mform) {
 }
 
 function grade_report_user_profilereport($course, $user) {
-    global $OUTPUT;
+    global $OUTPUT, $USER;
     if (!empty($course->showgrades)) {
 
         $context = context_course::instance($course->id);
@@ -908,6 +908,9 @@ function grade_report_user_profilereport($course, $user) {
         $gpr = new grade_plugin_return(array('type'=>'report', 'plugin'=>'user', 'courseid'=>$course->id, 'userid'=>$user->id));
         // Create a report instance
         $report = new grade_report_user($course->id, $gpr, $context, $user->id);
+        if ($user->id != $USER->id) {
+            $report->gtree->modinfo = get_fast_modinfo($course, $user->id);
+        }
 
         // print the page
         echo '<div class="grade-report-user">'; // css fix to share styles with real report page
