@@ -7,6 +7,6 @@
  * while these gradebook changes are in development.
  */
 
-$plugin->version  = 2014070800;
+$plugin->version  = 2014080700;
 $plugin->requires = 2013110500;
 $plugin->component = 'local_gradebookcoredb';

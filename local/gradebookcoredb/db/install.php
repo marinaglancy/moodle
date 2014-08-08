@@ -26,7 +26,14 @@ function xmldb_local_gradebookcoredb_install() {
     $field = new xmldb_field('extracredit', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'weightoverride');
     if (!$dbman->field_exists($table, $field)) {
         $dbman->add_field($table, $field);
-    }    
+    }
+
+    $table2 = new xmldb_table('grade_grades');
+
+    $field = new xmldb_field('weight', XMLDB_TYPE_NUMBER, '10, 5', null, XMLDB_NOTNULL, null, '0', 'weight');
+    if (!$dbman->field_exists($table2, $field)) {
+        $dbman->add_field($table2, $field);
+    }
 
 }
 
