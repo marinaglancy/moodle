@@ -63,11 +63,7 @@ function block_course_overview_update_mynumber($number) {
  */
 function block_course_overview_update_myorder($sortorder) {
     $value = implode(',', $sortorder);
-    if (core_text::strlen($value) > 1333) {
-        // The value won't fit into the user preference. Remove courses in the end of the list (mostly likely user won't even notice).
-        $value = preg_replace('/,[\d]*$/', '', core_text::substr($value, 0, 1334));
-    }
-    set_user_preference('course_overview_course_sortorder', $value);
+    set_user_preference_long('course_overview_course_sortorder', core_text::substr($value, 0, 13330));
 }
 
 /**
@@ -76,7 +72,7 @@ function block_course_overview_update_myorder($sortorder) {
  * @return array list of course ids
  */
 function block_course_overview_get_myorder() {
-    if ($value = get_user_preferences('course_overview_course_sortorder')) {
+    if ($value = get_user_preference_long('course_overview_course_sortorder')) {
         return explode(',', $value);
     }
     // If preference was not found, look in the old location and convert if found.
