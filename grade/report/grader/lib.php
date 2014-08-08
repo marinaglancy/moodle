@@ -1577,7 +1577,7 @@ class grade_report_grader extends grade_report {
      * @return array
      */
     protected static function get_collapsed_preferences($courseid) {
-        if ($collapsed = get_user_preferences('grade_report_grader_collapsed_categories'.$courseid)) {
+        if ($collapsed = get_user_preference_long('grade_report_grader_collapsed_categories'.$courseid)) {
             return json_decode($collapsed, true);
         }
 
@@ -1622,8 +1622,9 @@ class grade_report_grader extends grade_report {
             $collapsed = static::filter_collapsed_categories($courseid, $collapsed);
         }
 
-        // If this did not help, "forget" about some of the collapsed categories. Still better than to loose all information.
-        while (strlen(json_encode($collapsed)) >= 1333) {
+        // We use set_user_preference_long() here with limit extended to 13330 characters.
+        // If this is not enough, "forget" about some of the collapsed categories. Still better than to loose all information.
+        while (strlen(json_encode($collapsed)) >= 13330) {
             if (count($collapsed['aggregatesonly'])) {
                 array_pop($collapsed['aggregatesonly']);
             }
@@ -1633,9 +1634,9 @@ class grade_report_grader extends grade_report {
         }
 
         if (!empty($collapsed['aggregatesonly']) || !empty($collapsed['gradesonly'])) {
-            set_user_preference('grade_report_grader_collapsed_categories'.$courseid, json_encode($collapsed));
+            set_user_preference_long('grade_report_grader_collapsed_categories'.$courseid, json_encode($collapsed));
         } else {
-            unset_user_preference('grade_report_grader_collapsed_categories'.$courseid);
+            unset_user_preference_long('grade_report_grader_collapsed_categories'.$courseid);
         }
     }
 
