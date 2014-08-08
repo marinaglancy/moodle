@@ -2012,6 +2012,98 @@ function get_user_preferences($name = null, $default = null, $user = null) {
     }
 }
 
+/**
+ * Allows to set the user preference which value may be up to 13330 characters (10 times regular length).
+ *
+ * To get the value you must use {@link get_user_preference_long()}
+ * To unset the value either set $value=null or use {@link unset_user_preference_long()}
+ *
+ * For storage up to 9 additional settings may be used with the keys $name.'-1', $name.'-2', etc.
+ *
+ * @param    string            $name  The key to set as preference for the specified user
+ *                                    (numeric suffix will be added for additional storage)
+ * @param    string            $value The value to set for the $name key in the specified user's
+ *                                    record, null means delete current value.
+ * @param    stdClass|int|null $user  A moodle user object or id, null means current user
+ * @throws   coding_exception
+ * @return   bool                     Always true or exception
+ */
+function set_user_preference_long($name, $value, $user = null) {
+    if ($value === null) {
+        unset_user_preference_long($name, $user);
+        return true;
+    }
+
+    $preferences = get_user_preferences(null, null, $user);
+
+    // Value column maximum length is 1333 characters. Maximum capacity for this function is 10 times bigger.
+    $value = (string)$value;
+    $valuelength = core_text::strlen($value);
+    if ($valuelength > 1333 * 10) {
+        throw new coding_exception('Invalid value in set_user_preference_long() call, value is is too long');
+    }
+
+    for ($i = 0; $i < 10; $i++) {
+        $suffix = $i ? ('-'.$i) : '';
+        if ($valuelength > $i * 1333) {
+            set_user_preference($name.$suffix, core_text::substr($value, $i*1333, 1333), $user);
+        } else if (array_key_exists($name.$suffix, $preferences)) {
+            unset_user_preference($name.$suffix, $user);
+        }
+    }
+    return true;
+}
+
+/**
+ * Allows to get the user preference that was set using set_user_preference_long()
+ *
+ * For storage up to 9 additional settings may be used with the keys $name.'-1', $name.'-2', etc.
+ *
+ * @param    string            $name    Name of the key to use in finding a preference value
+ * @param    mixed|null        $default Value to be returned if the $name key is not set in the user preferences
+ * @param    stdClass|int|null $user    A moodle user object or id, null means current user
+ * @throws   coding_exception
+ * @return   string|mixed|null          A string containing the value of a single preference
+ */
+function get_user_preference_long($name, $default = null, $user = null) {
+    $preferences = get_user_preferences(null, null, $user);
+
+    if (!isset($preferences[$name])) {
+        // Default value (null if not specified).
+        return $default;
+    }
+
+    $value = '';
+    for ($i = 0; $i < 10; $i++) {
+        $suffix = $i ? ('-'.$i) : '';
+        if (array_key_exists($name.$suffix, $preferences)) {
+            $value .= $preferences[$name.$suffix];
+        } else {
+            break;
+        }
+    }
+    return $value;
+}
+
+/**
+ * Unsets the user preference that was set using set_user_preference_long()
+ *
+ * @param    string            $name    Name of the key to use in finding a preference value
+ * @param    stdClass|int|null $user    A moodle user object or id, null means current user
+ * @return   bool                       Always returns true
+ */
+function unset_user_preference_long($name, $user = null) {
+    $preferences = get_user_preferences(null, null, $user);
+
+    for ($i = 0; $i < 10; $i++) {
+        $suffix = $i ? ('-'.$i) : '';
+        if (array_key_exists($name.$suffix, $preferences)) {
+            unset_user_preference($name.$suffix, $user);
+        }
+    }
+    return true;
+}
+
 // FUNCTIONS FOR HANDLING TIME.
 
 /**

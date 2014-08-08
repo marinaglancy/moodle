@@ -1153,6 +1153,75 @@ class core_moodlelib_testcase extends advanced_testcase {
         }
     }
 
+    public function test_set_user_preference_long() {
+
+        $this->resetAfterTest();
+        $user1 = $this->getDataGenerator()->create_user();
+        $user2 = $this->getDataGenerator()->create_user();
+
+
+        $smallvalue = 'Small value';
+        $bigvalue = str_repeat('0123456789', 134);
+        $verybigvalue = str_repeat('9876543210', 350);
+
+        // Setting and getting small value for current user and for another user.
+        $this->setUser($user1);
+        set_user_preference_long('smallvalue', $smallvalue);
+        $this->assertEquals($smallvalue, get_user_preference_long('smallvalue'));
+        $this->assertEquals($smallvalue, get_user_preferences('smallvalue'));
+
+        set_user_preference_long('user2smallvalue', $smallvalue, $user2);
+        $this->assertEquals($smallvalue, get_user_preference_long('user2smallvalue', null, $user2));
+        $this->assertEmpty(get_user_preference_long('user2smallvalue'));
+
+        $this->setUser($user2);
+        $this->assertEquals($smallvalue, get_user_preference_long('user2smallvalue'));
+        $this->assertEmpty(get_user_preference_long('user2smallvalue', null, $user1));
+
+        // Setting and getting big value (over 1333 chars) for current user and for another user.
+        $this->setUser($user1);
+        set_user_preference_long('bigvalue', $bigvalue);
+        $this->assertEquals($bigvalue, get_user_preference_long('bigvalue'));
+        $this->assertEquals(core_text::substr($bigvalue, 0, 1333), get_user_preferences('bigvalue'));
+
+        set_user_preference_long('verybigvalue', $verybigvalue);
+        $this->assertEquals($verybigvalue, get_user_preference_long('verybigvalue'));
+        $this->assertEquals(core_text::substr($verybigvalue, 0, 1333), get_user_preferences('verybigvalue'));
+
+        set_user_preference_long('user2bigvalue', $bigvalue, $user2);
+        $this->assertEquals($bigvalue, get_user_preference_long('user2bigvalue', null, $user2));
+        $this->assertEmpty(get_user_preference_long('user2bigvalue'));
+
+        $this->setUser($user2);
+        $this->assertEquals($bigvalue, get_user_preference_long('user2bigvalue'));
+        $this->assertEmpty(get_user_preference_long('user2bigvalue', null, $user1));
+
+        // Substituting big value with small value.
+        $this->setUser($user1);
+        set_user_preference_long('bigvalue', $smallvalue);
+        $this->assertEquals($smallvalue, get_user_preference_long('bigvalue'));
+        set_user_preference_long('verybigvalue', $smallvalue);
+        $this->assertEquals($smallvalue, get_user_preference_long('verybigvalue'));
+
+        // Unsetting the small and big value.
+        $this->setUser($user2);
+        unset_user_preference_long('user2smallvalue');
+        unset_user_preference_long('user2bigvalue');
+        $this->assertEmpty(get_user_preference_long('user2smallvalue'));
+        $this->assertEmpty(get_user_preference_long('user2bigvalue'));
+        $this->assertEquals('defvalue', get_user_preference_long('user2smallvalue', 'defvalue'));
+        $this->assertEquals('defvalue', get_user_preference_long('user2bigvalue', 'defvalue'));
+
+        // Test > 13330 char values, coding_exception expected.
+        $toobigvalue = str_repeat('a', 13331);
+        try {
+            set_user_preference('toobigvalue', $toobigvalue);
+            $this->fail('Exception expected - longer than 1333 chars not allowed as preference value');
+        } catch (moodle_exception $ex) {
+            $this->assertInstanceOf('coding_exception', $ex);
+        }
+    }
+
     public function test_get_extra_user_fields() {
         global $CFG, $USER, $DB;
         $this->resetAfterTest();
