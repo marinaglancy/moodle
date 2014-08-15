@@ -6078,7 +6078,7 @@ function send_confirmation_email($user) {
 
     $username = urlencode($user->username);
     $username = str_replace('.', '%2E', $username); // Prevent problems with trailing dots.
-    $data->link  = $CFG->wwwroot .'/login/confirm.php?data='. $user->secret .'/'. $username;
+    $data->link  = $CFG->wwwroot .'/login/confirm.php?data=/'. $user->secret .'/'. $username;
     $message     = get_string('emailconfirmation', '', $data);
     $messagehtml = text_to_html(get_string('emailconfirmation', '', $data), false, false, true);
 
@@ -6107,7 +6107,7 @@ function send_password_change_confirmation_email($user, $resetrecord) {
     $data->lastname  = $user->lastname;
     $data->username  = $user->username;
     $data->sitename  = format_string($site->fullname);
-    $data->link      = $CFG->httpswwwroot .'/login/forgot_password.php?token='. $resetrecord->token;
+    $data->link      = $CFG->httpswwwroot .'/login/forgot_password.php?token=/'. $resetrecord->token;
     $data->admin     = generate_email_signoff();
     $data->resetminutes = $pwresetmins;
 
