@@ -539,7 +539,7 @@ class core_media_player_youtube extends core_media_player_external {
         return <<<OET
 <span class="mediaplugin mediaplugin_youtube">
 <iframe title="$info" width="$width" height="$height"
-  src="https://www.youtube.com/embed/$videoid?rel=0&wmode=transparent" frameborder="0" allowfullscreen="1"></iframe>
+  src="//www.youtube.com/embed/$videoid?rel=0&wmode=transparent" frameborder="0" allowfullscreen="1"></iframe>
 </span>
 OET;
 
@@ -597,7 +597,7 @@ class core_media_player_youtube_playlist extends core_media_player_external {
 
         return <<<OET
 <span class="mediaplugin mediaplugin_youtube">
-<iframe width="$width" height="$height" src="https://$site/embed/videoseries?list=$playlist" frameborder="0" allowfullscreen="1"></iframe>
+<iframe width="$width" height="$height" src="//$site/embed/videoseries?list=$playlist" frameborder="0" allowfullscreen="1"></iframe>
 </span>
 OET;
     }
