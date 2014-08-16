@@ -1023,6 +1023,11 @@ class auth_plugin_ldap extends auth_plugin_base {
                     }
 
                     if (!empty($this->config->{'field_updatelocal_' . $key})) {
+                        // If it is a profile field make sure profile fields are loaded (just once).
+                        if (!isset($user->{$key}) && preg_match('/^profile_field_/', $key) && !isset($profileloaded)) {
+                            profile_load_data($user);
+                            $profileloaded = true;
+                        }
                         // Only update if it's changed.
                         if ($user->{$key} != $value) {
                             $newuser->$key = $value;
