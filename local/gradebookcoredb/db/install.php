@@ -30,7 +30,8 @@ function xmldb_local_gradebookcoredb_install() {
 
     $table2 = new xmldb_table('grade_grades');
 
-    $field = new xmldb_field('weight', XMLDB_TYPE_NUMBER, '10, 5', null, XMLDB_NOTNULL, null, '0', 'weight');
+    // After timemodified may not be the best place. Re-evaluate when this code is going into core.
+    $field = new xmldb_field('weight', XMLDB_TYPE_NUMBER, '10, 5', null, XMLDB_NOTNULL, null, '0', 'timemodified');
     if (!$dbman->field_exists($table2, $field)) {
         $dbman->add_field($table2, $field);
     }
