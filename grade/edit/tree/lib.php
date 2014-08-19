@@ -75,7 +75,8 @@ class grade_edit_tree {
         $this->gpr = $gpr;
         $this->deepest_level = $this->get_deepest_level($this->gtree->top_element);
 
-        if (!$gtree->sumofgradesonly || $gtree->sumofgradesonly == 'optional') {
+        //if (!$gtree->sumofgradesonly || $gtree->sumofgradesonly == 'optional') {
+        if (!$gtree->sumofgradesonly) {
             $this->columns = array(grade_edit_tree_column::factory('name', array('deepest_level' => $this->deepest_level)),
                                    grade_edit_tree_column::factory('aggregation', array('flag' => true)));
         } else {
@@ -84,21 +85,22 @@ class grade_edit_tree {
 
         if ($gtree->sumofgradesonly) {
             $this->columns[] = grade_edit_tree_column::factory('weight', array('adv' => 'aggregationcoef'));
-            $this->columns[] = grade_edit_tree_column::factory('extracredit', array('adv' => 'aggregationcoef'));
+            //$this->columns[] = grade_edit_tree_column::factory('extracredit', array('adv' => 'aggregationcoef'));
         } else if ($this->uses_weight) {
             $this->columns[] = grade_edit_tree_column::factory('weight', array('adv' => 'aggregationcoef'));
-        } else if ($this->uses_extra_credit) {
+        } /*else if ($this->uses_extra_credit) {
             $this->columns[] = grade_edit_tree_column::factory('extracredit', array('adv' => 'aggregationcoef'));
-        }
+        }*/
 
         $this->columns[] = grade_edit_tree_column::factory('range'); // This is not a setting... How do we deal with it?
-        $this->columns[] = grade_edit_tree_column::factory('aggregateonlygraded', array('flag' => true));
+        $this->columns[] = grade_edit_tree_column::factory('contribution', array('adv' => 'aggregationcoef'));
+        /*$this->columns[] = grade_edit_tree_column::factory('aggregateonlygraded', array('flag' => true));
         $this->columns[] = grade_edit_tree_column::factory('aggregatesubcats', array('flag' => true));
         $this->columns[] = grade_edit_tree_column::factory('aggregateoutcomes', array('flag' => true));
         $this->columns[] = grade_edit_tree_column::factory('droplow', array('flag' => true));
         $this->columns[] = grade_edit_tree_column::factory('keephigh', array('flag' => true));
         $this->columns[] = grade_edit_tree_column::factory('multfactor', array('adv' => true));
-        $this->columns[] = grade_edit_tree_column::factory('plusfactor', array('adv' => true));
+        $this->columns[] = grade_edit_tree_column::factory('plusfactor', array('adv' => true));*/
         $this->columns[] = grade_edit_tree_column::factory('actions');
         $this->columns[] = grade_edit_tree_column::factory('select');
 
@@ -167,12 +169,12 @@ class grade_edit_tree {
                 $actions .= $OUTPUT->action_icon($aurl, new pix_icon('t/delete', get_string('delete')));
             }
 
-            $aurl = new moodle_url('index.php', array('id' => $COURSE->id, 'action' => 'moveselect', 'eid' => $eid, 'sesskey' => sesskey()));
-            $actions .= $OUTPUT->action_icon($aurl, new pix_icon('t/move', get_string('move')));
+            //$aurl = new moodle_url('index.php', array('id' => $COURSE->id, 'action' => 'moveselect', 'eid' => $eid, 'sesskey' => sesskey()));
+            //$actions .= $OUTPUT->action_icon($aurl, new pix_icon('t/move', get_string('move')));
         }
 
         $actions .= $this->gtree->get_hiding_icon($element, $this->gpr);
-        $actions .= $this->gtree->get_locking_icon($element, $this->gpr);
+        //$actions .= $this->gtree->get_locking_icon($element, $this->gpr);
 
         $mode = ($USER->gradeediting[$COURSE->id]) ? 'advanced' : 'simple';
 
@@ -627,7 +629,7 @@ class grade_edit_tree_column_name extends grade_edit_tree_column {
     }
 
     public function get_item_cell($item, $params) {
-        global $CFG;
+        global $CFG, $OUTPUT;
 
         if (empty($params['element']) || empty($params['name']) || empty($params['level'])) {
             throw new Exception('Array key (name, level or element) missing from 2nd param of grade_edit_tree_column_name::get_item_cell($item, $params)');
@@ -638,7 +640,16 @@ class grade_edit_tree_column_name extends grade_edit_tree_column {
         $itemcell = clone($this->itemcell);
         $itemcell->attributes['class'] .= ' name';
         $itemcell->colspan = ($this->deepest_level + 1) - $params['level'];
-        $itemcell->text = $name;
+
+        //if ($params['itemtype'] == 'mod' or ($params['itemtype'] == 'category' and $params['depth'] > 1)) {
+        if ($params['itemtype'] == 'mod' or $params['itemtype'] == 'category') {
+
+            $eid = $params['eid'];
+            $aurl = new moodle_url('index.php', array('id' => $item->courseid, 'action' => 'moveselect', 'eid' => $eid, 'sesskey' => sesskey()));
+            $itemcell->text = $OUTPUT->action_icon($aurl, new pix_icon('t/move', get_string('move')));
+        }
+
+        $itemcell->text .= $name;
         return $itemcell;
     }
 
@@ -676,23 +687,23 @@ class grade_edit_tree_column_aggregation extends grade_edit_tree_column_category
                          GRADE_AGGREGATE_MODE             => get_string('aggregatemode', 'grades'),
                          GRADE_AGGREGATE_SUM              => get_string('aggregatesum', 'grades'));
 
-        $visible = explode(',', $CFG->grade_aggregations_visible);
+        /*$visible = explode(',', $CFG->grade_aggregations_visible);
         foreach ($options as $constant => $string) {
             if (!in_array($constant, $visible) && $constant != $category->aggregation) {
                 unset($options[$constant]);
             }
-        }
+        }*/
 
-        if ($this->forced) {
+        //if ($this->forced) {
             $aggregation = $options[$category->aggregation];
-        } else {
+        /*} else {
             $attributes = array();
             $attributes['id'] = 'aggregation_'.$category->id;
             $aggregation = html_writer::label(get_string('aggregation', 'grades'), 'aggregation_'.$category->id, false, array('class' => 'accesshide'));
             $aggregation .= html_writer::select($options, 'aggregation_'.$category->id, $category->aggregation, null, $attributes);
             $action = new component_action('change', 'update_category_aggregation', array('courseid' => $params['id'], 'category' => $category->id, 'sesskey' => sesskey()));
             $OUTPUT->add_action_handler($action, 'aggregation_'.$category->id);
-        }
+        }*/
 
         $categorycell = clone($this->categorycell);
         $categorycell->attributes['class'] .= ' ' . $levelclass;
@@ -827,6 +838,103 @@ class grade_edit_tree_column_weight extends grade_edit_tree_column {
                             '<input type="hidden" size="6" id="old_weight'. $item->id . '" name="old_weight_'.$item->id.'" value="'.
                             format_float($gtree_item->weight, 3).'" />';
             } else {
+                $itemcell->text = format_float($gtree_item->weight, 3) . '%';
+            }
+            if ($item->weightoverride > 0) {
+                $itemcell->text .= '<br />' . get_string('adjusted', 'grades');
+          }
+        }
+
+        return $itemcell;
+    }
+
+    public function is_hidden($mode='simple') {
+        global $CFG;
+        if ($mode == 'simple') {
+            return strstr($CFG->grade_item_advanced, 'aggregationcoef');
+        } elseif ($mode == 'advanced') {
+            return false;
+        }
+    }
+}
+
+class grade_edit_tree_column_contribution extends grade_edit_tree_column {
+
+    public function get_header_cell() {
+        global $OUTPUT, $COURSE, $gtree;    //TODO: gtree should NOT be global
+
+        $headercell = clone($this->headercell);
+
+        /*if ($gtree->sumofgradesonly) {
+            $label = get_string('reset');
+            $optionsreset = array('sesskey' => sesskey(), 'id' => $COURSE->id, 'action' => 'reset');
+            $url = new moodle_url('index.php', $optionsreset);
+
+            //TODO: needs to be a better way to get the weight_edit_icon
+            $headercell->text = get_string('contribution', 'grades') . $OUTPUT->help_icon('aggregationcoefweight', 'grades') .
+                                        '<br/>' . $gtree->get_weight_edit_icon() .
+                                        $OUTPUT->action_icon($url, new pix_icon('t/reload', get_string('resetweights', 'grades')));
+        } else {*/
+            $headercell->text = get_string('contribution', 'grades').$OUTPUT->help_icon('contribution', 'grades');
+        //}
+        return $headercell;
+    }
+
+    public function get_category_cell($category, $levelclass, $params) {
+
+        $item = $category->get_grade_item();
+        $categorycell = clone($this->categorycell);
+        $categorycell->attributes['class']  .= ' ' . $levelclass;
+        $gtree_item = $params['gtree']->items[$item->id];
+
+        if ($item->itemtype !== 'course') {
+            if (!isset($gtree_item->weight)) {
+                $categorycell->text = '-';
+            } else if ($gtree_item->weight === '') {
+                $categorycell->text = '-';
+            } else if ($gtree_item->weight == -1) {
+                $categorycell->text = 'dropped';
+            } else if ($params['gtree']->action === 'editweights') {
+                $categorycell->text = '<label class="accesshide" for="weight'. $item->id .'">'.get_string('editweight', 'grades').'</label>' .
+                                '<input type="text" size="6" id="weight'. $item->id .'" name="weight_'.$item->id.'" value="' .
+                                format_float($gtree_item->weight, 3).'" />' .
+                                '<input type="hidden" size="6" id="old_weight'. $item->id .'" name="old_weight_'.$item->id.'" value="' .
+                                format_float($gtree_item->weight, 3).'" />';
+            } else {
+                $categorycell->text = format_float($gtree_item->weight, 3) . '%';
+            }
+
+            if ($item->weightoverride > 0) {
+                $categorycell->text .= '<br/>' . get_string('adjusted', 'grades');
+            }
+        }
+
+        return $categorycell;
+    }
+
+    public function get_item_cell($item, $params) {
+        if (empty($params['element'])) {
+            throw new Exception('Array key (element) missing from 2nd param of grade_edit_tree_column_weight::get_item_cell($item, $params)');
+        }
+        $itemcell = clone($this->itemcell);
+        $itemcell->text = '&nbsp;';
+
+        if (!in_array($params['element']['object']->itemtype, array('courseitem', 'categoryitem', 'category'))) {
+            $gtree_item = $params['gtree']->items[$item->id];
+
+            if (!isset($gtree_item->weight)) {
+                $itemcell->text = '-';
+            } else if ($gtree_item->weight == '') {
+                $itemcell->text = '-';
+            } else if ($gtree_item->weight == -1) {
+                $itemcell->text = 'dropped';
+            } /*else if ($params['gtree']->action === 'editweights') {
+                $itemcell->text = '<label class="accesshide" for="weight' . $item->id . '">'.get_string('editweight', 'grades').'</label>' .
+                            '<input type="text" size="6" id="weight'. $item->id .'" name="weight_'.$item->id.'" value="'.
+                            format_float($gtree_item->weight, 3).'" />' .
+                            '<input type="hidden" size="6" id="old_weight'. $item->id . '" name="old_weight_'.$item->id.'" value="'.
+                            format_float($gtree_item->weight, 3).'" />';
+            } */else {
                 $itemcell->text = format_float($gtree_item->weight, 3) . '%';
             }
             if ($item->weightoverride > 0) {

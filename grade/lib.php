@@ -477,6 +477,9 @@ function print_grade_plugin_selector($plugin_info, $active_type, $active_plugin,
         if ($plugin_type == 'strings') {
             continue;
         }
+        if ($plugin_type == 'edittree') {
+            //continue;
+        }
 
         $first_plugin = reset($plugins);
 
@@ -3423,8 +3426,8 @@ abstract class grade_helper {
         if (has_capability('moodle/grade:manage', context_course::instance($courseid))) {
             $url = new moodle_url('/grade/edit/tree/index.php', array('sesskey'=>sesskey(), 'showadvanced'=>'0', 'id'=>$courseid));
             self::$edittree = array(
-                'simpleview' => new grade_plugin_info('simpleview', $url, get_string('simpleview', 'grades')),
-                'fullview' => new grade_plugin_info('fullview', new moodle_url($url, array('showadvanced'=>'1')), get_string('fullview', 'grades'))
+                'simpleview' => new grade_plugin_info('simpleview', $url, 'Setup')//,
+                //'fullview' => new grade_plugin_info('fullview', new moodle_url($url, array('showadvanced'=>'1')), get_string('fullview', 'grades'))
             );
         } else {
             self::$edittree = false;
