@@ -775,7 +775,7 @@ class grade_edit_tree_column_weight extends grade_edit_tree_column {
 
             //TODO: needs to be a better way to get the weight_edit_icon
             $headercell->text = get_string('weightuc', 'grades') . $OUTPUT->help_icon('aggregationcoefweight', 'grades') .
-                                        '<br/>' . $gtree->get_weight_edit_icon() .
+                                        '<br/>' . //$gtree->get_weight_edit_icon() .
                                         $OUTPUT->action_icon($url, new pix_icon('t/reload', get_string('resetweights', 'grades')));
         } else {
             $headercell->text = get_string('weightuc', 'grades').$OUTPUT->help_icon('aggregationcoefextra', 'grades');
@@ -797,15 +797,16 @@ class grade_edit_tree_column_weight extends grade_edit_tree_column {
                 $categorycell->text = '-';
             } else if ($gtree_item->weight == -1) {
                 $categorycell->text = 'dropped';
-            } else if ($params['gtree']->action === 'editweights') {
+            } //else if ($params['gtree']->action === 'editweights') {
+            else {
                 $categorycell->text = '<label class="accesshide" for="weight'. $item->id .'">'.get_string('editweight', 'grades').'</label>' .
                                 '<input type="text" size="6" id="weight'. $item->id .'" name="weight_'.$item->id.'" value="' .
                                 format_float($gtree_item->weight, 3).'" />' .
                                 '<input type="hidden" size="6" id="old_weight'. $item->id .'" name="old_weight_'.$item->id.'" value="' .
                                 format_float($gtree_item->weight, 3).'" />';
-            } else {
+            } /*else {
                 $categorycell->text = format_float($gtree_item->weight, 3) . '%';
-            }
+            }*/
 
             if ($item->weightoverride > 0) {
                 $categorycell->text .= '<br/>' . get_string('adjusted', 'grades');
@@ -831,15 +832,16 @@ class grade_edit_tree_column_weight extends grade_edit_tree_column {
                 $itemcell->text = '-';
             } else if ($gtree_item->weight == -1) {
                 $itemcell->text = 'dropped';
-            } else if ($params['gtree']->action === 'editweights') {
+            } //else if ($params['gtree']->action === 'editweights') {
+            else {
                 $itemcell->text = '<label class="accesshide" for="weight' . $item->id . '">'.get_string('editweight', 'grades').'</label>' .
                             '<input type="text" size="6" id="weight'. $item->id .'" name="weight_'.$item->id.'" value="'.
                             format_float($gtree_item->weight, 3).'" />' .
                             '<input type="hidden" size="6" id="old_weight'. $item->id . '" name="old_weight_'.$item->id.'" value="'.
                             format_float($gtree_item->weight, 3).'" />';
-            } else {
+            } /*else {
                 $itemcell->text = format_float($gtree_item->weight, 3) . '%';
-            }
+            }*/
             if ($item->weightoverride > 0) {
                 $itemcell->text .= '<br />' . get_string('adjusted', 'grades');
           }
@@ -894,13 +896,13 @@ class grade_edit_tree_column_contribution extends grade_edit_tree_column {
                 $categorycell->text = '-';
             } else if ($gtree_item->weight == -1) {
                 $categorycell->text = 'dropped';
-            } else if ($params['gtree']->action === 'editweights') {
+            } /*else if ($params['gtree']->action === 'editweights') {
                 $categorycell->text = '<label class="accesshide" for="weight'. $item->id .'">'.get_string('editweight', 'grades').'</label>' .
                                 '<input type="text" size="6" id="weight'. $item->id .'" name="weight_'.$item->id.'" value="' .
                                 format_float($gtree_item->weight, 3).'" />' .
                                 '<input type="hidden" size="6" id="old_weight'. $item->id .'" name="old_weight_'.$item->id.'" value="' .
                                 format_float($gtree_item->weight, 3).'" />';
-            } else {
+            }*/ else {
                 $categorycell->text = format_float($gtree_item->weight, 3) . '%';
             }
 
