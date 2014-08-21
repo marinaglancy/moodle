@@ -89,6 +89,9 @@ class lesson_page_type_shortanswer extends lesson_page {
                     $ignorecase = 'i';
                 }
             } else {
+                if($answer->properties->answerformat == FORMAT_HTML){
+                    $expectedanswer = strip_tags($expectedanswer);
+                }
                 $expectedanswer = str_replace('*', '#####', $expectedanswer);
                 $expectedanswer = preg_quote($expectedanswer, '/');
                 $expectedanswer = str_replace('#####', '.*', $expectedanswer);
