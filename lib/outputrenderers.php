@@ -748,6 +748,17 @@ class core_renderer extends renderer_base {
     }
 
     /**
+     * Return the link to the main page that normally appears in the header
+     *
+     * @return string
+     */
+    public function brand_link() {
+        global $CFG, $SITE;
+        $siteshortname = format_string($SITE->shortname, true, array('context' => context_course::instance(SITEID)));
+        return '<a class="brand" href="' . $CFG->wwwroot .'">' . $siteshortname . '</a>';
+    }
+
+    /**
      * Redirects the user by any means possible given the current state
      *
      * This function should not be called directly, it should always be called using
