@@ -753,9 +753,9 @@ class core_renderer extends renderer_base {
      * @return string
      */
     public function brand_link() {
-        global $CFG, $SITE;
+        global $SITE;
         $siteshortname = format_string($SITE->shortname, true, array('context' => context_course::instance(SITEID)));
-        return '<a class="brand" href="' . $CFG->wwwroot .'">' . $siteshortname . '</a>';
+        return html_writer::link(new moodle_url('/'), $siteshortname, array('class' => 'brand'));
     }
 
     /**
