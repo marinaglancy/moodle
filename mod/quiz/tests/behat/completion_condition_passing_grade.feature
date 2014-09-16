@@ -1,4 +1,4 @@
-@mod @mod_quiz
+@mod @mod_quiz @core_grades
 Feature: Set a quiz to be marked complete when the student passes
   In order to ensure a student has learned the material before being marked complete
   As a teacher

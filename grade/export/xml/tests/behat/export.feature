@@ -1,4 +1,4 @@
-@gradeexport @gradeexport_xml
+@gradeexport @gradeexport_xml @core_grades
 Feature: I need to export grades as xml
   In order to easily review marks
   As a teacher

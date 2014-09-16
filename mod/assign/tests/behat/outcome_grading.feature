@@ -1,4 +1,4 @@
-@mod @mod_assign @core_outcome @javascript
+@mod @mod_assign @core_outcome @javascript @core_grades
 Feature: Outcome grading
   In order to give an outcome to my student
   As a teacher
