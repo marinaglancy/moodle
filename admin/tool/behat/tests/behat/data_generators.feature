@@ -291,6 +291,7 @@ Feature: Set up contextual data for tests
       | Cohort in category | 1           |
       | Empty cohort       | 0           |
 
+  @core_grades
   Scenario: Add grade categories with data generator
     Given the following "courses" exist:
       | fullname | shortname |

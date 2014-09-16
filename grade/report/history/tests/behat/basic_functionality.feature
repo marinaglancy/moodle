@@ -1,4 +1,4 @@
-@gradereport @gradereport_history @_bug_phantomjs
+@gradereport @gradereport_history @_bug_phantomjs @core_grades
 Feature: A teacher checks the grade history report in a course
   In order to check the history of the grades
   As a teacher

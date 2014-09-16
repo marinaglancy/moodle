@@ -1,4 +1,4 @@
-@gradeexport @gradeexport_txt
+@gradeexport @gradeexport_txt @core_grades
 Feature: I need to export grades as text
   In order to easily review marks
   As a teacher
