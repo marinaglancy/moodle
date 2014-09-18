@@ -826,7 +826,7 @@ function _tidy_question($question, $loadtags = false) {
     // Load question-type specific fields.
     if (!question_bank::is_qtype_installed($question->qtype)) {
         $question->questiontext = html_writer::tag('p', get_string('warningmissingtype',
-                'qtype_missingtype')) . $question->questiontext;
+                'question')) . $question->questiontext;
     }
     question_bank::get_qtype($question->qtype)->get_question_options($question);
 

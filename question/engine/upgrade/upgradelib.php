@@ -311,7 +311,7 @@ class question_engine_upgrade_question_loader {
         if ($qtype->name() === 'missingtype') {
             $this->logger->log_assumption("Dealing with question id {$question->id}
                     that is of an unknown type {$question->qtype}.");
-            $question->questiontext = '<p>' . get_string('warningmissingtype', 'quiz') .
+            $question->questiontext = '<p>' . get_string('warningmissingtype', 'question') .
                     '</p>' . $question->questiontext;
         }
 
@@ -334,7 +334,7 @@ class question_engine_upgrade_question_loader {
             $question->id = $questionid;
             $question->qtype = 'deleted';
             $question->maxmark = 1; // Guess, but that is all we can do.
-            $question->questiontext = get_string('deletedquestiontext', 'qtype_missingtype');
+            $question->questiontext = get_string('deletedquestiontext', 'question');
         }
 
         $this->cache[$questionid] = $question;

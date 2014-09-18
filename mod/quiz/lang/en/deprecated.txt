@@ -6,3 +6,4 @@ categories,mod_quiz
 import,mod_quiz
 export,mod_quiz
 category,mod_quiz
+warningmissingtype,mod_quiz

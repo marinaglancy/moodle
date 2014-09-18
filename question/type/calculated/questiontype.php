@@ -1651,7 +1651,7 @@ class qtype_calculated extends question_type {
         global $CFG, $DB;
         $datasetdefs = array();
         $lnamemax = 22;
-        $namestr          = get_string('name', 'quiz');
+        $namestr          = get_string('name');
         $rangeofvaluestr  = get_string('minmax', 'qtype_calculated');
         $questionusingstr = get_string('usedinquestion', 'qtype_calculated');
         $itemscountstr    = get_string('itemscount', 'qtype_calculated');

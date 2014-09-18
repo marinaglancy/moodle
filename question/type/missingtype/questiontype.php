@@ -67,7 +67,7 @@ class qtype_missingtype extends question_type {
         $question->parent = 0;
         $question->qtype = question_bank::get_qtype('missingtype');
         $question->name = get_string('deletedquestion', 'qtype_missingtype');
-        $question->questiontext = get_string('deletedquestiontext', 'qtype_missingtype');
+        $question->questiontext = get_string('deletedquestiontext', 'question');
         $question->questiontextformat = FORMAT_HTML;
         $question->generalfeedback = '';
         $question->defaultmark = $maxmark;
@@ -89,7 +89,7 @@ class qtype_missingtype extends question_type {
 
     public function display_question_editing_page($mform, $question, $wizardnow) {
         global $OUTPUT;
-        echo $OUTPUT->heading(get_string('warningmissingtype', 'qtype_missingtype'));
+        echo $OUTPUT->heading(get_string('warningmissingtype', 'question'));
 
         $mform->display();
     }
