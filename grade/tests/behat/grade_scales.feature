@@ -68,6 +68,8 @@ Feature: View gradebook when scales are used
     And I press "Save changes"
     And I turn editing mode off
     And I save a screenshot
+    And I set the field "jump" to "Simple view"
+    And I save a screenshot
     When I follow "User report"
     Given I set the field "Select all or one user" to "All users"
     And I click on "Select all or one user" "select"
@@ -91,6 +93,8 @@ Feature: View gradebook when scales are used
     And I set the field "Minimum grade" to "1"
     And I press "Save changes"
     And I turn editing mode off
+    And I save a screenshot
+    And I set the field "jump" to "Simple view"
     And I save a screenshot
     When I follow "User report"
     Given I set the field "Select all or one user" to "All users"
