@@ -140,6 +140,11 @@ class behat_data_generators extends behat_base {
             'datagenerator' => 'grade_category',
             'required' => array('fullname', 'course'),
             'switchids' => array('course' => 'courseid', 'gradecategory' => 'parent')
+        ),
+        'scales' => array(
+            'datagenerator' => 'scale',
+            'required' => array('name', 'scale'),
+            'switchids' => array('course' => 'courseid')
         )
     );
 
@@ -258,6 +263,11 @@ class behat_data_generators extends behat_base {
         // The the_following_exists() method checks that the field exists.
         $activityname = $data['activity'];
         unset($data['activity']);
+
+        // Convert scale name into scale id (negative number indicates using scale).
+        if (isset($data['grade']) && strlen($data['grade']) && !is_number($data['grade'])) {
+            $data['grade'] = - $DB->get_field('scale', 'id', array('name' => $data['grade']), MUST_EXIST);
+        }
 
         // We split $data in the activity $record and the course module $options.
         $cmoptions = array();
