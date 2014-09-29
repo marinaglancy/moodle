@@ -127,9 +127,8 @@ switch($targetstate) {
         print_error('unsupportedstate');
 }
 
-// Get course-modules entry
-$cm = get_coursemodule_from_id(null, $cmid, null, true, MUST_EXIST);
-$course = $DB->get_record('course', array('id'=>$cm->course), '*', MUST_EXIST);
+// Get cm_info and course.
+list($course, $cm) = get_course_and_cm_from_cmid($cmid);
 
 // Check user is logged in
 require_login($course, false, $cm);

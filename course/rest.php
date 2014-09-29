@@ -101,6 +101,17 @@ switch($requestmethod) {
 
             case 'resource':
                 switch ($field) {
+                    case 'getcompletionstate':
+                        if ($CFG->enablecompletion) {
+                            $completion = new completion_info($course);
+                            if ($completion->is_enabled($cm)) {
+                                $completionstate = $completion->get_data($cm)->completionstate;
+                                echo json_encode(array('completionstate' => $completionstate));
+                                break;
+                            }
+                        }
+                        break;
+
                     case 'visible':
                         require_capability('moodle/course:activityvisibility', $modcontext);
                         set_coursemodule_visible($cm->id, $value);

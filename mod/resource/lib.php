@@ -234,6 +234,11 @@ function resource_get_coursemodule_info($coursemodule) {
 
     }
 
+    if ($display == RESOURCELIB_DISPLAY_DOWNLOAD || $display == RESOURCELIB_DISPLAY_POPUP
+            || $display == RESOURCELIB_DISPLAY_NEW) {
+        $info->extraclasses = 'link-new-window';
+    }
+
     // If any optional extra details are turned on, store in custom data
     $info->customdata = resource_get_optional_details($resource, $coursemodule);
 

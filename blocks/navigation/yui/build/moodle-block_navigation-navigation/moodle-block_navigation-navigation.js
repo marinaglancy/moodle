@@ -162,7 +162,7 @@ var EXPANSIONLIMIT_EVERYTHING = 0,
 
 // Mappings for the different types of nodes coming from the navigation.
 // Copied from lib/navigationlib.php navigation_node constants.
-var NODETYPE = {
+    var NODETYPE = {
     // @type int Root node = 0
     ROOTNODE : 0,
     // @type int System context = 1
