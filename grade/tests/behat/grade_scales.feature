@@ -8,7 +8,7 @@ Feature: View gradebook when scales are used
     And I log in as "admin"
     Given I set the following administration settings values:
       | grade_report_showranges    | 1 |
-      | grade_aggregations_visible | Mean of grades,Weighted mean of grades,Simple weighted mean of grades,Mean of grades (with extra credits),Median of grades,Lowest grade,Highest grade,Mode of grades,Sum of grades |
+      | grade_aggregations_visible | Mean of grades,Weighted mean of grades,Simple weighted mean of grades,Mean of grades (with extra credits),Median of grades,Lowest grade,Highest grade,Mode of grades,Natural |
     And I navigate to "Scales" node in "Site administration > Grades"
     And I press "Add a new scale"
     And I set the following fields to these values:
@@ -66,12 +66,12 @@ Feature: View gradebook when scales are used
     And I turn editing mode on
 
   @javascript
-  Scenario: Test displaying scales in gradebook in aggregation method Sum of grades
+  Scenario: Test displaying scales in gradebook in aggregation method Natural
     And I follow "Edit   Course 1"
-    And I set the field "Aggregation" to "Sum of grades"
+    And I set the field "Aggregation" to "Natural"
     And I press "Save changes"
     And I follow "Edit   Sub category 1"
-    And I set the field "Aggregation" to "Sum of grades"
+    And I set the field "Aggregation" to "Natural"
     And I press "Save changes"
     And I turn editing mode off
     Then the following should exist in the "user-grades" table:
@@ -93,7 +93,7 @@ Feature: View gradebook when scales are used
       | Test assignment one | C     | F–A   | 50.00 %    |
       | Category total      | 3.00  | 0–5   | 60.00 %    |
       | Course total        | 3.00  | 0–5   | 60.00 %    |
-    And I set the field "jump" to "Simple view"
+    And I set the field "jump" to "Set up grades layout"
     Then the following should exist in the "grade_edit_tree_table" table:
       | Name                | Max grade |
       | Test assignment one | 5.00      |
@@ -141,7 +141,7 @@ Feature: View gradebook when scales are used
       | Test assignment one | C              | F–A   | 50.00 %       |
       | Category total      | 3.00           | 1–5   | 50.00 %       |
       | Course total        | <coursetotal3> | 0–100 | <courseperc3> |
-    And I set the field "jump" to "Simple view"
+    And I set the field "jump" to "Set up grades layout"
     Then the following should exist in the "grade_edit_tree_table" table:
       | Name                | Max grade |
       | Test assignment one | A (5)     |
