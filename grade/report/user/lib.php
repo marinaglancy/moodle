@@ -390,6 +390,11 @@ class grade_report_user extends grade_report {
             $this->evenodd[$depth] = (($this->evenodd[$depth] + 1) % 2);
         }
         $alter = ($this->evenodd[$depth] == 0) ? 'even' : 'odd';
+        if ($depth % 2) {
+            $class .= ' deptheven ';
+        } else {
+            $class .= ' depthodd ';
+        }
 
         /// Process those items that have scores associated
         if ($type == 'item' or $type == 'categoryitem' or $type == 'courseitem') {
@@ -452,11 +457,24 @@ class grade_report_user extends grade_report {
                     $header_cat = "cat_{$grade_object->iteminstance}_{$this->user->id}";
                 }
 
+                if ($depth % 2) {
+                    if ($type == 'categoryitem' or $type == 'courseitem'){
+                        $class .= ' deptheven ';
+                    } else {
+                        $class .= ' depthodd ';
+                    }
+                } else {
+                    if ($type == 'categoryitem' or $type == 'courseitem'){
+                        $class .= ' depthodd ';
+                    } else {
+                        $class .= ' deptheven ';
+                    }
+                }
                 /// Name
                 $data['itemname']['content'] = $fullname;
                 $data['itemname']['class'] = $class;
                 $data['itemname']['colspan'] = ($this->maxdepth - $depth);
-                $data['itemname']['celltype'] = 'th';
+                $data['itemname']['celltype'] = 'td';
                 $data['itemname']['id'] = $header_row;
 
                 /// Actual Grade
