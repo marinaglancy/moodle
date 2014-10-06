@@ -49,6 +49,9 @@ class lock {
     /** @var bool $released Has this lock been released? If a lock falls out of scope without being released - show a warning. */
     protected $released;
 
+    protected $info;
+    protected $releaseinfo;
+
     /**
      * Construct a lock containing the unique key required to release it.
      * @param mixed $key - The lock key. The type of this is up to the lock_factory being used.
@@ -59,6 +62,7 @@ class lock {
         $this->factory = $factory;
         $this->key = $key;
         $this->released = false;
+        $this->info = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
     }
 
     /**
@@ -87,6 +91,7 @@ class lock {
      */
     public function release() {
         $this->released = true;
+            $this->releaseinfo = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
         if (empty($this->factory)) {
             return false;
         }
@@ -94,6 +99,8 @@ class lock {
         // Release any held references to the factory.
         unset($this->factory);
         $this->factory = null;
+            $addinfo = "\n------------------------------\n".print_r($this, true)."------------------------------\n";
+            echo $addinfo;
         $this->key = '';
         return $result;
     }
@@ -104,9 +111,11 @@ class lock {
     public function __destruct() {
         if (!$this->released && defined('PHPUNIT_TEST')) {
             $this->release();
+            $this->factory = null;
+            $addinfo = "\n------------------------------\n".print_r($this, true)."------------------------------\n";
             throw new \coding_exception('\core\lock\lock(' . $this->key . ') has fallen out of scope ' .
                                         'without being released.' . "\n" .
-                                        'Locks must ALWAYS be released by calling $mylock->release().');
+                                        'Locks must ALWAYS be released by calling $mylock->release().'.$addinfo);
         }
     }
 
