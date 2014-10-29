@@ -249,7 +249,7 @@ function calendar_get_mini($courses, $groups, $users, $calmonth = false, $calyea
 
     // These are used for DB queries, so we want unixtime, so we need to use Gregorian dates.
     $display->tstart = make_timestamp($gy, $gm, $gd, $gh, $gmin, 0);
-    $display->tend = $display->tstart + ($display->maxdays * DAYSECS) - 1;
+    $display->tend = $display->tstart + strtotime("+$display->maxdays day", 0) - 1;
 
     // Align the starting weekday to fall in our display range
     // This is simple, not foolproof.
@@ -318,9 +318,9 @@ function calendar_get_mini($courses, $groups, $users, $calmonth = false, $calyea
     }
 
     // Now display all the calendar
-    $daytime = $display->tstart - DAYSECS;
+    $daytime = strtotime('-1 day', $display->tstart);
     for($day = 1; $day <= $display->maxdays; ++$day, ++$dayweek) {
-        $daytime += DAYSECS;
+        $daytime = strtotime('+1 day', $daytime);
         if($dayweek > $display->maxwday) {
             // We need to change week (table row)
             $content .= '</tr><tr>';
@@ -534,7 +534,7 @@ function calendar_get_upcoming($courses, $groups, $users, $daysinfuture, $maxeve
 
     // This works correctly with respect to the user's DST, but it is accurate
     // only because $fromtime is always the exact midnight of some day!
-    $display->tend = usergetmidnight($display->tstart + DAYSECS * $display->range + 3 * HOURSECS) - 1;
+    $display->tend = usergetmidnight(strtotime('+1 day', $display->tstart) * $display->range + 3 * HOURSECS) - 1;
 
     // Get the events matching our criteria
     $events = calendar_get_events($display->tstart, $display->tend, $users, $groups, $courses);
@@ -932,8 +932,8 @@ function calendar_top_controls($type, $data) {
         case 'day':
             $days = calendar_get_days();
 
-            $prevtimestamp = $time - DAYSECS;
-            $nexttimestamp = $time + DAYSECS;
+            $prevtimestamp = strtotime('-1 day', $time);
+            $nexttimestamp = strtotime('+1 day', $time);
 
             $prevdate = $calendartype->timestamp_to_date_array($prevtimestamp);
             $nextdate = $calendartype->timestamp_to_date_array($nexttimestamp);
@@ -1650,7 +1650,7 @@ function calendar_format_event_time($event, $now, $linkparams = null, $usecommon
         // Check if we will still be on the same day.
         if ($usermidnightstart == $usermidnightend) {
             // Check if we are running all day.
-            if ($event->timeduration == DAYSECS) {
+            if ($event->timeduration == strtotime('1 day', 0)) {
                 $time = get_string('allday', 'calendar');
             } else { // Specify the time we will be running this from.
                 $datestart = calendar_time_representation($starttime);
@@ -1679,7 +1679,7 @@ function calendar_format_event_time($event, $now, $linkparams = null, $usecommon
             $timeend = calendar_time_representation($event->timestart + $event->timeduration);
 
             // Set printable representation.
-            if ($now >= $usermidnightstart && $now < ($usermidnightstart + DAYSECS)) {
+            if ($now >= $usermidnightstart && $now < (strtotime('+1 day', $usermidnightstart))) {
                 $url = calendar_get_link_href(new moodle_url(CALENDAR_URL . 'view.php', $linkparams), 0, 0, 0, $endtime);
                 $eventtime = $timestart . ' <strong>&raquo;</strong> ' . html_writer::link($url, $dayend) . $timeend;
             } else {
@@ -2775,7 +2775,7 @@ class calendar_information {
      * @return int tomorrow timestamp
      */
     public function timestamp_tomorrow() {
-        return $this->time + DAYSECS;
+        return strtotime('+1 day', $this->time);
     }
     /**
      * Adds the pretend blocks for the calendar

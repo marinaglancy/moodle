@@ -89,9 +89,9 @@ class core_calendar_renderer extends plugin_renderer_base {
         if ($CFG->calendar_customexport) {
             $a = new stdClass();
             $now = time();
-            $time = $now - $CFG->calendar_exportlookback * DAYSECS;
+            $time = $now - strtotime("+ $CFG->calendar_exportlookback day", 0);
             $a->timestart = userdate($time, get_string('strftimedatefullshort', 'langconfig'));
-            $time = $now + $CFG->calendar_exportlookahead * DAYSECS;
+            $time = $now + strtotime("+$CFG->calendar_exportlookahead day", 0);
             $a->timeend = userdate($time, get_string('strftimedatefullshort', 'langconfig'));
             $output .= html_writer::empty_tag('input', array('type' => 'radio', 'name' => 'preset_time', 'id' => 'pt_custom', 'value' => 'custom'));
             $output .= html_writer::tag('label', get_string('customexport', 'calendar', $a), array('for' => 'pt_custom'));
@@ -433,7 +433,7 @@ class core_calendar_renderer extends plugin_renderer_base {
 
         // These are used for DB queries, so we want unixtime, so we need to use Gregorian dates.
         $display->tstart = make_timestamp($gy, $gm, $gd, $gh, $gmin, 0);
-        $display->tend = $display->tstart + ($display->maxdays * DAYSECS) - 1;
+        $display->tend = $display->tstart + strtotime("+$display->maxdays day",0) - 1;
 
         // Align the starting weekday to fall in our display range
         // This is simple, not foolproof.
@@ -498,9 +498,9 @@ class core_calendar_renderer extends plugin_renderer_base {
             $weekend = intval($CFG->calendar_weekend);
         }
 
-        $daytime = $display->tstart - DAYSECS;
+        $daytime = strtotime('-1 day', $display->tstart);
         for ($day = 1; $day <= $display->maxdays; ++$day, ++$dayweek) {
-            $daytime = $daytime + DAYSECS;
+            $daytime = strtotime('+1 day', $daytime);
             if($dayweek > $display->maxwday) {
                 // We need to change week (table row)
                 $table->data[] = $row;
