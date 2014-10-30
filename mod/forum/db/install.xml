@@ -59,7 +59,7 @@
       </KEYS>
       <INDEXES>
         <INDEX NAME="userid" UNIQUE="false" FIELDS="userid"/>
-        <INDEX NAME="course" UNIQUE="false" FIELDS="course"/>
+        <INDEX NAME="course" UNIQUE="false" FIELDS="course,forum,groupid"/>
       </INDEXES>
     </TABLE>
     <TABLE NAME="forum_posts" COMMENT="All posts are stored in this table">

@@ -240,5 +240,24 @@ function xmldb_forum_upgrade($oldversion) {
     // Moodle v2.8.0 release upgrade line.
     // Put any upgrade step following this.
 
+    if ($oldversion < 2015020600) {
+
+        // Define index course (not unique) to be added to forum_discussions.
+        $table = new xmldb_table('forum_discussions');
+
+        // Conditionally launch drop index course (course).
+        $index = new xmldb_index('course', XMLDB_INDEX_NOTUNIQUE, array('course'));
+        if ($dbman->index_exists($table, $index)) {
+            $dbman->drop_index($table, $index);
+        }
+
+        // Add index course (course,forum,groupid).
+        $index = new xmldb_index('course', XMLDB_INDEX_NOTUNIQUE, array('course', 'forum', 'groupid'));
+        $dbman->add_index($table, $index);
+
+        // Forum savepoint reached.
+        upgrade_mod_savepoint(true, 2015020600, 'forum');
+    }
+
     return true;
 }
