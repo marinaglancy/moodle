@@ -1546,7 +1546,8 @@ function forum_print_overview($courses,&$htmlarray) {
         $params = array($USER->id);
 
         foreach ($trackingforums as $track) {
-            $sql .= '(d.forum = ? AND (d.groupid = -1 OR d.groupid = 0 OR d.groupid = ?)) OR ';
+            $sql .= '(d.course = ? AND d.forum = ? AND (d.groupid = -1 OR d.groupid = 0 OR d.groupid = ?)) OR ';
+            $params[] = $track->course;
             $params[] = $track->id;
             if (isset($SESSION->currentgroup[$track->course])) {
                 $groupid =  $SESSION->currentgroup[$track->course];
