@@ -448,7 +448,8 @@ $params = array_merge($params, $relatedctxparams);
 if ($roleid) {
     $wheres[] = "u.id IN (SELECT userid FROM {role_assignments} WHERE roleid = :roleid AND contextid $relatedctxsql)";
     $params = array_merge($params, array('roleid' => $roleid));
-} else {
+} else if ($course->id != SITEID) {
+    // Inside the course show only users who have roles listed in "Profile visible roles".
     $profileroles = explode(',', $CFG->profileroles);
     list($insql, $inparams) = $DB->get_in_or_equal($profileroles, SQL_PARAMS_NAMED);
     $wheres[] = "u.id IN (SELECT userid FROM {role_assignments} WHERE roleid $insql AND contextid $relatedctxsql)";
