@@ -210,34 +210,19 @@ class repository_equella extends repository {
 
         $cookiepathname = $this->prepare_file($USER->id. '_'. uniqid('', true). '.cookie');
         $c = new curl(array('cookie' => $cookiepathname));
-        if (file_extension_in_typegroup($ref->filename, 'web_image')) {
-            $path = $this->prepare_file('');
-            $result = $c->download_one($url, null, array('filepath' => $path, 'followlocation' => true, 'timeout' => $CFG->repositorysyncimagetimeout));
-            if ($result === true) {
-                $fs = get_file_storage();
-                list($contenthash, $filesize, $newfile) = $fs->add_file_to_pool($path);
-                $file->set_synchronized($contenthash, $filesize);
-                return true;
-            }
-        } else {
-            $result = $c->head($url, array('followlocation' => true, 'timeout' => $CFG->repositorysyncfiletimeout));
+
+        $isimage = file_extension_in_typegroup($ref->filename, 'web_image');
+        $curloptions = array('followlocation' => true, 'timeout' => $CFG->repositorysyncimagetimeout);
+        if (!$isimage) {
+            $curloptions['timeout'] = $CFG->repositorysyncfiletimeout;
         }
+        $result = $this->sync_reference_with_url($file, $url, $curloptions, $isimage, $c);
         // Delete cookie jar.
         if (file_exists($cookiepathname)) {
             unlink($cookiepathname);
         }
-
         $this->connection_result($c->get_errno());
-        $curlinfo = $c->get_info();
-        if (isset($curlinfo['http_code']) && $curlinfo['http_code'] == 200
-                && array_key_exists('download_content_length', $curlinfo)
-                && $curlinfo['download_content_length'] >= 0) {
-            // we received a correct header and at least can tell the file size
-            $file->set_synchronized(null, $curlinfo['download_content_length']);
-            return true;
-        }
-        $file->set_missingsource();
-        return true;
+        return $result;
     }
 
     /**

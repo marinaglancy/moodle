@@ -565,32 +565,10 @@ class repository_dropbox extends repository {
         if (!isset($ref->url)) {
             return false;
         }
-        $c = new curl;
         $url = $this->get_file_download_link($ref->url);
-        if (file_extension_in_typegroup($ref->path, 'web_image')) {
-            $saveas = $this->prepare_file('');
-            try {
-                $result = $c->download_one($url, array(), array('filepath' => $saveas, 'timeout' => $CFG->repositorysyncimagetimeout, 'followlocation' => true));
-                $info = $c->get_info();
-                if ($result === true && isset($info['http_code']) && $info['http_code'] == 200) {
-                    $fs = get_file_storage();
-                    list($contenthash, $filesize, $newfile) = $fs->add_file_to_pool($saveas);
-                    $file->set_synchronized($contenthash, $filesize);
-                    return true;
-                }
-            } catch (Exception $e) {}
-        }
-        $c->get($url, null, array('timeout' => $CFG->repositorysyncimagetimeout, 'followlocation' => true, 'nobody' => true));
-        $info = $c->get_info();
-        if (isset($info['http_code']) && $info['http_code'] == 200 &&
-                array_key_exists('download_content_length', $info) &&
-                $info['download_content_length'] >= 0) {
-            $filesize = (int)$info['download_content_length'];
-            $file->set_synchronized(null, $filesize);
-            return true;
-        }
-        $file->set_missingsource();
-        return true;
+        $curloptions = array('followlocation' => true, 'timeout' => $CFG->repositorysyncimagetimeout);
+        $isimage = file_extension_in_typegroup($ref->path, 'web_image');
+        return $this->sync_reference_with_url($file, $url, $curloptions, $isimage);
     }
 
     /**

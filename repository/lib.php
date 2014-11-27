@@ -2901,6 +2901,91 @@ abstract class repository implements cacheable_object {
     }
 
     /**
+     * Helper method for sync_reference when synchronisation with URL is needed.
+     *
+     * Generally if we want to synchronise the content of the file (as we would
+     * do for images) - we download it. If we want to synchronise only the size
+     * of the file - we request the file headers and look for the content length.
+     *
+     * Also in the case when we don't need the content but it was already
+     * downloaded once, we still try to download it to compare not only filesize
+     * but also if contenthash has changed.
+     *
+     * @param stored_file $file
+     * @param string $url
+     * @param array $curloptions options such as timeout, followlocation
+     * @param bool $storecontent whether to attempt to download the file and store
+     *     it in moodle filepool (usually images because they are needed for
+     *     thumbnail generation).
+     * @param curl $curl
+     * @return bool
+     */
+    protected function sync_reference_with_url($file, $url,
+            $curloptions = array(), $storecontent = false, $curl = null) {
+        global $CFG;
+        static $issyncing = false;
+        if ($issyncing) {
+            // Avoid infinite recursion when calling $file->get_filesize() and get_contenthash().
+            return false;
+        }
+        $issyncing = true;
+        if ($curl === null) {
+            $curl = new curl();
+        }
+        if (!isset($curloptions['nobody']) && !$storecontent &&
+                $file->get_contenthash() === sha1('')) {
+            $curloptions['nobody'] = true;
+        }
+        if (empty($curloptions['timeout'])) {
+            $curloptions['timeout'] = $CFG->repositorysyncimagetimeout;
+        }
+        if (empty($curloptions['nobody'])) {
+            $saveas = $this->prepare_file('');
+            $curloptions['filepath'] = $saveas;
+            $result = $curl->download_one($url, array(), $curloptions);
+        } else {
+            $result = $curl->get($url, null, $curloptions);
+        }
+        $info = $curl->get_info();
+        if (isset($info['http_code']) && $info['http_code'] == 200) {
+            if ($result && empty($curloptions['nobody']) && $storecontent) {
+                // File was downloaded fully and we need to save it in the filepool.
+                $fs = get_file_storage();
+                list($contenthash, $filesize, $newfile) = $fs->add_file_to_pool($saveas);
+                $file->set_synchronized($contenthash, $filesize);
+            } else if ($result && empty($curloptions['nobody'])) {
+                // File was downloaded fully but we don't need to save it in the filepool
+                // unless it's already there.
+                $contenthash = sha1_file($saveas);
+                $filesize = filesize($saveas);
+                if ($contenthash !== $file->get_contenthash()) {
+                    $contenthash = sha1('');
+                }
+                $file->set_synchronized($contenthash, $filesize);
+            } else if (array_key_exists('download_content_length', $info) &&
+                    $info['download_content_length'] >= 0) {
+                // File was not downloaded fully but we know the filesize.
+                $filesize = (int)$info['download_content_length'];
+                if ($filesize == $file->get_filesize()) {
+                    // This is not 100% correct but we assume that if filesize has not changed
+                    // than the file content has not changed.
+                    $file->set_synchronized(null, $filesize);
+                } else {
+                    // Set filecontent to 'unknown' and fill the filesize.
+                    $file->set_synchronized(sha1(''), $filesize);
+                }
+            } else {
+                // No information about the file could be retrieved, do not synchronise.
+            }
+        } else {
+            // Request http_code is not 200, file is most likely missing.
+            $file->set_missingsource();
+        }
+        $issyncing = false;
+        return true;
+    }
+
+    /**
      * Build draft file's source field
      *
      * {@link file_restore_source_field_from_draft_file()}
