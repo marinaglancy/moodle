@@ -1849,6 +1849,48 @@ class cm_info implements IteratorAggregate {
         return $this->uservisible;
     }
 
+    public function get_users_with_uservisible($modulecaps = '', $groupid = 0, $userfields = 'u.*', $orderby = null) {
+
+        if (empty($modulecaps)) {
+            $modulecaps = array();
+        } else if (!is_array($modulecaps)) {
+            $modulecaps = array($modulecaps);
+        }
+        if (!$this->visible) {
+            $modulecaps[] = 'moodle/course:viewhiddenactivities';
+        }
+        $capability = 'mod/' . $this->modname . ':view';
+        if (get_capability_info($capability)) {
+            $modulecaps[] = $capability;
+        }
+
+        if (!$this->get_course()->visible) {
+            $modulecaps[] = 'moodle/course:viewhidden';
+        }
+
+        $withcap = '';
+        if ($modulecaps) {
+            $withcap = array_shift($modulecaps);
+        }
+        $users = get_enrolled_users($this->context, $withcap, $groupid, $userfields, $orderby, 0, 0, true);
+        if (empty($users)) {
+            return $users;
+        }
+        if ($modulecaps) {
+            // TODO optimise.
+            foreach ($users as $id => $user) {
+                if (!has_all_capabilities($modulecaps, $this->context, $id)) {
+                    unset($users[$id]);
+                }
+            }
+        }
+
+        $info = new \core_availability\info_module($this);
+        // TODO how about users with 'moodle/course:viewhiddenactivities' ?
+        $users = $info->filter_user_list($users);
+        return $users;
+    }
+
     /**
      * Returns whether this module is visible to the current user on course page
      *
