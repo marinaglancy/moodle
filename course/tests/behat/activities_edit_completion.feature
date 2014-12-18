@@ -1,4 +1,4 @@
-@core @core_course
+@core @core_course @javascript
 Feature: Edit completion settings of an activity
   In order to edit completion settings without accidentally breaking user data
   As a teacher
@@ -20,6 +20,7 @@ Feature: Edit completion settings of an activity
 
   Scenario: Completion is not locked when the activity has not yet been viewed
     Given I turn editing mode on
+    And I open "TestPage" actions menu
     And I click on "Edit settings" "link" in the "TestPage" activity
     When I expand all fieldsets
     Then I should see "Completion tracking"
@@ -31,7 +32,6 @@ Feature: Edit completion settings of an activity
     And I expand all fieldsets
     Then I should see "Completion options locked"
 
-  @javascript
   Scenario: Pressing the unlock button allows the user to edit completion settings
     Given I follow "TestPage"
     When I follow "Edit settings"
@@ -44,7 +44,6 @@ Feature: Edit completion settings of an activity
     And I expand all fieldsets
     Then the field "Completion tracking" matches value "Students can manually mark the activity as completed"
 
-  @javascript
   Scenario: Even when completion is locked, the user can still set the date
     Given I follow "TestPage"
     And I follow "Edit settings"
