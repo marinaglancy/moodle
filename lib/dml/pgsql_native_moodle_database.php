@@ -310,6 +310,17 @@ class pgsql_native_moodle_database extends moodle_database {
         if ($usecache and $this->tables !== null) {
             return $this->tables;
         }
+
+        if ($usecache) {
+            $properties = array('dbfamily' => $this->get_dbfamily(), 'settings' => $this->get_settings_hash());
+            $cache = cache::make('core', 'databasemeta', $properties);
+            if ($cached = $cache->get('tablelist')) {
+                $temptables = $this->temptables->get_temptables();
+                $temptables = array_combine($temptables, $temptables);
+                return $this->tables = array_merge($cached, $temptables);
+            }
+        }
+
         $this->tables = array();
         $prefix = str_replace('_', '|_', $this->prefix);
         $sql = "SELECT c.relname
@@ -335,6 +346,21 @@ class pgsql_native_moodle_database extends moodle_database {
             }
             pg_free_result($result);
         }
+
+        $temptables = $this->temptables->get_temptables();
+        $temptables = array_combine($temptables, $temptables);
+
+        foreach ($temptables as $k => $table) {
+            if (!isset($this->tables[$table])) {
+                $this->temptables->delete_temptable($table);
+                unset($temptables[$k]);
+            }
+        }
+
+        if ($usecache) {
+            $cache->set('tablelist', array_diff_key($this->tables, $temptables));
+        }
+
         return $this->tables;
     }
 
@@ -390,8 +416,15 @@ class pgsql_native_moodle_database extends moodle_database {
      */
     public function get_columns($table, $usecache=true) {
         if ($usecache) {
-            $properties = array('dbfamily' => $this->get_dbfamily(), 'settings' => $this->get_settings_hash());
-            $cache = cache::make('core', 'databasemeta', $properties);
+            if (isset($this->columns[$table])) {
+                return $this->columns[$table];
+            }
+        }
+
+        $properties = array('dbfamily' => $this->get_dbfamily(), 'settings' => $this->get_settings_hash());
+        $cache = cache::make('core', 'databasemeta', $properties);
+
+        if ($usecache) {
             if ($data = $cache->get($table)) {
                 return $data;
             }
@@ -574,11 +607,38 @@ class pgsql_native_moodle_database extends moodle_database {
 
         pg_free_result($result);
 
-        if ($usecache) {
-            $cache->set($table, $structure);
+        $result = $cache->set($table, $structure);
+        $this->columns[$table] = $structure;
+        return $structure;
+    }
+
+    /**
+     * Resets the internal column/table details cache
+     * @return void
+     */
+    public function reset_caches($sql = null) {
+        $properties = array('dbfamily' => $this->get_dbfamily(), 'settings' => $this->get_settings_hash());
+        $cache = cache::make('core', 'databasemeta', $properties);
+        $toclear = array();
+
+        if (empty($sql)) {
+            $this->columns = array();
+            $this->tables = null;
+            $cache->purge();
+            return;
+        }
+        if (preg_match_all("#{$this->prefix}(?![\\w\\d]+_(?:pk|uix|ix))([\\w\\d]+)#", $sql, $matches)) {
+            $toclear = array_unique($matches[1]);
+        }
+        if (preg_match("#(?:CREATE|DROP).*?TABLE#is", $sql) || preg_match("#ALTER TABLE.*?RENAME#is", $sql)) {
+            $toclear[] = 'tablelist';
+            $this->tables = null;
         }
 
-        return $structure;
+        foreach ($toclear as $table) {
+            unset($this->columns[$table]);
+        }
+        $cache->delete_many($toclear);
     }
 
     /**
@@ -589,12 +649,11 @@ class pgsql_native_moodle_database extends moodle_database {
      * @return mixed the normalised value
      */
     protected function normalise_value($column, $value) {
-        $this->detect_objects($value);
-
         if (is_bool($value)) { // Always, convert boolean to int
             $value = (int)$value;
 
         } else if ($column->meta_type === 'B') { // BLOB detected, we return 'blob' array instead of raw value to allow
+            $this->detect_objects($value);
             if (!is_null($value)) {             // binding/executing code later to know about its nature
                 $value = array('blob' => $value);
             }
@@ -603,6 +662,8 @@ class pgsql_native_moodle_database extends moodle_database {
             if ($column->meta_type === 'I' or $column->meta_type === 'F' or $column->meta_type === 'N') {
                 $value = 0; // prevent '' problems in numeric fields
             }
+        } else if (is_object($value)) {
+            $this->detect_objects($value);
         }
         return $value;
     }
@@ -658,7 +719,7 @@ class pgsql_native_moodle_database extends moodle_database {
             throw $e;
         }
 
-        $this->reset_caches();
+        $this->reset_caches($sql);
         return true;
     }
 
@@ -678,7 +739,11 @@ class pgsql_native_moodle_database extends moodle_database {
         }
 
         $this->query_start($sql, $params, SQL_QUERY_UPDATE);
-        $result = pg_query_params($this->pgsql, $sql, $params);
+        if (empty($params)) {
+            $result = pg_query($this->pgsql, $sql);
+        } else {
+            $result = pg_query_params($this->pgsql, $sql, $params);
+        }
         $this->query_end($result);
 
         pg_free_result($result);
@@ -713,7 +778,12 @@ class pgsql_native_moodle_database extends moodle_database {
                 // this is a workaround for weird max int problem
                 $limitnum = "ALL";
             }
-            $sql .= " LIMIT $limitnum OFFSET $limitfrom";
+            if ($limitnum != 'ALL') {
+                $sql .= " LIMIT $limitnum";
+            }
+            if (!empty($limitfrom)) {
+                $sql .= " OFFSET $limitfrom";
+            }
         }
 
         list($sql, $params, $type) = $this->fix_sql_params($sql, $params);
@@ -755,7 +825,12 @@ class pgsql_native_moodle_database extends moodle_database {
                 // this is a workaround for weird max int problem
                 $limitnum = "ALL";
             }
-            $sql .= " LIMIT $limitnum OFFSET $limitfrom";
+            if ($limitnum != 'ALL') {
+                $sql .= " LIMIT $limitnum";
+            }
+            if (!empty($limitfrom)) {
+                $sql .= " OFFSET $limitfrom";
+            }
         }
 
         list($sql, $params, $type) = $this->fix_sql_params($sql, $params);
@@ -773,26 +848,24 @@ class pgsql_native_moodle_database extends moodle_database {
             }
         }
 
-        $rows = pg_fetch_all($result);
-        pg_free_result($result);
-
         $return = array();
-        if ($rows) {
-            foreach ($rows as $row) {
+        if ($result) {
+            while ($row = pg_fetch_object($result)) {
                 $id = reset($row);
                 if ($blobs) {
                     foreach ($blobs as $blob) {
                         // note: in PostgreSQL 9.0 the returned blobs are hexencoded by default - see http://www.postgresql.org/docs/9.0/static/runtime-config-client.html#GUC-BYTEA-OUTPUT
-                        $row[$blob] = $row[$blob] !== null ? pg_unescape_bytea($row[$blob]) : null;
+                        $row->$blob = $row->$blob !== null ? pg_unescape_bytea($row->$blob) : null;
                     }
                 }
                 if (isset($return[$id])) {
-                    $colname = key($row);
-                    debugging("Did you remember to make the first column something unique in your call to get_records? Duplicate value '$id' found in column '$colname'.", DEBUG_DEVELOPER);
+                    debugging("Did you remember to make the first column something unique in your call to get_records? Duplicate value '$id' found in column '".key($row)."'.", DEBUG_DEVELOPER);
                 }
-                $return[$id] = (object)$row;
+                $return[$id] = $row;
             }
         }
+
+        pg_free_result($result);
 
         return $return;
     }
@@ -1473,6 +1546,7 @@ class pgsql_native_moodle_database extends moodle_database {
         $this->query_start($sql, NULL, SQL_QUERY_AUX);
         $result = pg_query($this->pgsql, $sql);
         $this->query_end($result);
+        $this->reset_caches();
 
         pg_free_result($result);
     }
