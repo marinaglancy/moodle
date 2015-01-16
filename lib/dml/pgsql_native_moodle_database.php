@@ -347,17 +347,9 @@ class pgsql_native_moodle_database extends moodle_database {
             pg_free_result($result);
         }
 
-        $temptables = $this->temptables->get_temptables();
-        $temptables = array_combine($temptables, $temptables);
-
-        foreach ($temptables as $k => $table) {
-            if (!isset($this->tables[$table])) {
-                $this->temptables->delete_temptable($table);
-                unset($temptables[$k]);
-            }
-        }
-
         if ($usecache) {
+            $temptables = $this->temptables->get_temptables();
+            $temptables = array_combine($temptables, $temptables);
             $cache->set('tablelist', array_diff_key($this->tables, $temptables));
         }
 
@@ -421,10 +413,9 @@ class pgsql_native_moodle_database extends moodle_database {
             }
         }
 
-        $properties = array('dbfamily' => $this->get_dbfamily(), 'settings' => $this->get_settings_hash());
-        $cache = cache::make('core', 'databasemeta', $properties);
-
         if ($usecache) {
+            $properties = array('dbfamily' => $this->get_dbfamily(), 'settings' => $this->get_settings_hash());
+            $cache = cache::make('core', 'databasemeta', $properties);
             if ($data = $cache->get($table)) {
                 return $data;
             }
@@ -607,38 +598,11 @@ class pgsql_native_moodle_database extends moodle_database {
 
         pg_free_result($result);
 
-        $result = $cache->set($table, $structure);
-        $this->columns[$table] = $structure;
+        if ($usecache) {
+            $result = $cache->set($table, $structure);
+            $this->columns[$table] = $structure;
+        }
         return $structure;
-    }
-
-    /**
-     * Resets the internal column/table details cache
-     * @return void
-     */
-    public function reset_caches($sql = null) {
-        $properties = array('dbfamily' => $this->get_dbfamily(), 'settings' => $this->get_settings_hash());
-        $cache = cache::make('core', 'databasemeta', $properties);
-        $toclear = array();
-
-        if (empty($sql)) {
-            $this->columns = array();
-            $this->tables = null;
-            $cache->purge();
-            return;
-        }
-        if (preg_match_all("#{$this->prefix}(?![\\w\\d]+_(?:pk|uix|ix))([\\w\\d]+)#", $sql, $matches)) {
-            $toclear = array_unique($matches[1]);
-        }
-        if (preg_match("#(?:CREATE|DROP).*?TABLE#is", $sql) || preg_match("#ALTER TABLE.*?RENAME#is", $sql)) {
-            $toclear[] = 'tablelist';
-            $this->tables = null;
-        }
-
-        foreach ($toclear as $table) {
-            unset($this->columns[$table]);
-        }
-        $cache->delete_many($toclear);
     }
 
     /**
@@ -719,7 +683,7 @@ class pgsql_native_moodle_database extends moodle_database {
             throw $e;
         }
 
-        $this->reset_caches($sql);
+        $this->reset_caches();
         return true;
     }
 
