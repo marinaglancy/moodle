@@ -145,6 +145,7 @@ $string['cannotsetupblock'] = 'Blocks tables could NOT be set up successfully!';
 $string['cannotsetupcapformod'] = 'Could not set up the capabilities for {$a}';
 $string['cannotsetupcapforplugin'] = 'Could not set up the capabilities for {$a}';
 $string['cannotshowhidecoursesincategory'] = 'Cannot show/hide the courses in category {$a}.';
+$string['cannotsignup'] = 'You are already logged in as {$a}, you need to log out before signing up as a different user. After logging out, press the "Create new account" button to proceed';
 $string['cannotunassigncap'] = 'Could not unassign deprecated capability {$a->cap} from role {$a->role}';
 $string['cannotunassignrolefrom'] = 'Cannot unassign this user from role id: {$a}';
 $string['cannotunzipfile'] = 'Cannot unzip file';
