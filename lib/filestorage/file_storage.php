@@ -1800,6 +1800,23 @@ class file_storage {
     }
 
     /**
+     * Tries to guess the mimetype of the file using finfo lib
+     *
+     * @param string $contenthash
+     * @return string mimetype or null if failed to guess
+     */
+    public function guess_mimetype($contenthash) {
+        $mimetype = null;
+        if (function_exists('finfo_open')) {
+            $dir = $this->path_from_hash($contenthash);
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            $mimetype = finfo_file($finfo, $dir . '/' . $contenthash);
+            finfo_close($finfo);
+        }
+        return $mimetype;
+    }
+
+    /**
      * Content exists
      *
      * @param string $contenthash

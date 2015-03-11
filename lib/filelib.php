@@ -1834,6 +1834,17 @@ function readfile_accel($file, $mimetype, $accelerate) {
     if ($mimetype === 'text/plain') {
         // there is no encoding specified in text files, we need something consistent
         header('Content-Type: text/plain; charset=utf-8');
+    } else if ($mimetype === 'document/unknown') {
+        $mimetype = null;
+        if (is_object($file)) {
+            $fs = get_file_storage();
+            $mimetype = $fs->guess_mimetype($file->get_contenthash());
+        } else if (function_exists('finfo_open')) {
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            $mimetype = finfo_file($finfo, $file);
+            finfo_close($finfo);
+        }
+        header('Content-Type: '.($mimetype ? $mimetype : 'application/octet-stream'));
     } else {
         header('Content-Type: '.$mimetype);
     }
