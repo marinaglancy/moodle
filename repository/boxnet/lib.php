@@ -428,31 +428,11 @@ class repository_boxnet extends repository {
             // Synchronise not more often than once a day.
             return false;
         }
-        $c = new curl();
         $reference = unserialize(self::convert_to_valid_reference($file->get_reference()));
         $url = $reference->downloadurl;
-        if (file_extension_in_typegroup($file->get_filename(), 'web_image')) {
-            $path = $this->prepare_file('');
-            $result = $c->download_one($url, null, array('filepath' => $path, 'timeout' => $CFG->repositorysyncimagetimeout));
-            $info = $c->get_info();
-            if ($result === true && isset($info['http_code']) && $info['http_code'] == 200) {
-                $fs = get_file_storage();
-                list($contenthash, $filesize, $newfile) = $fs->add_file_to_pool($path);
-                $file->set_synchronized($contenthash, $filesize);
-                return true;
-            }
-        }
-        $c->get($url, null, array('timeout' => $CFG->repositorysyncimagetimeout, 'followlocation' => true, 'nobody' => true));
-        $info = $c->get_info();
-        if (isset($info['http_code']) && $info['http_code'] == 200 &&
-                array_key_exists('download_content_length', $info) &&
-                $info['download_content_length'] >= 0) {
-            $filesize = (int)$info['download_content_length'];
-            $file->set_synchronized(null, $filesize);
-            return true;
-        }
-        $file->set_missingsource();
-        return true;
+        $curloptions = array('timeout' => $CFG->repositorysyncimagetimeout);
+        $isimage = file_extension_in_typegroup($file->get_filename(), 'web_image');
+        return $this->sync_reference_with_url($file, $url, $curloptions, $isimage);
     }
 
     /**
