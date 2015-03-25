@@ -814,6 +814,24 @@ class manager {
     }
 
     /**
+     * Checks if user can return from being logged in as without entering password
+     *
+     * @return bool|null whether user can return without password (null if the user is not logged in as)
+     */
+    public static function can_return_from_loginas() {
+        global $CFG;
+        if (self::is_loggedinas()) {
+            if (!empty($CFG->forceclean)) {
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            return null;
+        }
+    }
+
+    /**
      * Returns the $USER object ignoring current login-as session
      * @return \stdClass user object
      */

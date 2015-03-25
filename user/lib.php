@@ -907,11 +907,18 @@ function user_get_user_navigation_info($user, $page, $options = array()) {
         $userrevert->itemtype = 'link';
         $userrevert->url = new moodle_url('/course/loginas.php', array(
             'id' => $course->id,
+            'return' => 1,
             'sesskey' => sesskey()
         ));
-        $userrevert->pix = "a/logout";
-        $userrevert->title = get_string('logout');
-        $userrevert->titleidentifier = 'logout,moodle';
+        if (\core\session\manager::can_return_from_loginas() === true) {
+            $userrevert->pix = "t/left";
+            $userrevert->title = get_string('returntooriginaluser', 'moodle', fullname($realuser, true));
+            $userrevert->titleidentifier = 'returntooriginaluser,moodle';
+        } else {
+            $userrevert->pix = "a/logout";
+            $userrevert->title = get_string('logout');
+            $userrevert->titleidentifier = 'logout,moodle';
+        }
         $returnobject->navitems[] = $userrevert;
 
     } else {

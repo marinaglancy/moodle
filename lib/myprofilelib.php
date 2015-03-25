@@ -121,6 +121,17 @@ function core_myprofile_navigation(core_user\output\myprofile\tree $tree, $user,
         $tree->add_node($node);
     }
 
+    // Check if the user is currently logged in as another user and can return to original session.
+    if ($iscurrentuser && \core\session\manager::can_return_from_loginas() === true) {
+        // Get the actual user, we need this so we can display an informative return link
+        $realuser = \core\session\manager::get_realuser();
+        // Add the informative return to original user link
+        $url = new moodle_url('/course/loginas.php',array('id' => $courseid, 'return' => 1,'sesskey' => sesskey()));
+        $node = new core_user\output\myprofile\node('administration', 'loginasreturn',
+            get_string('returntooriginaluser', 'moodle', fullname($realuser, true)), null, $url);
+        $tree->add_node($node);
+    }
+
     // Contact details.
     if (has_capability('moodle/user:viewhiddendetails', $courseorusercontext)) {
         $hiddenfields = array();
