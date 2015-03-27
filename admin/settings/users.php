@@ -167,6 +167,7 @@ if ($hassiteconfig
                              'lastaccess' => new lang_string('lastaccess'),
                              'lastip' => new lang_string('lastip'),
                              'mycourses' => new lang_string('mycourses'),
+                             'cohorts' => new lang_string('cohorts', 'core_cohort'),
                              'groups' => new lang_string('groups'),
                              'suspended' => new lang_string('suspended', 'auth'),
                        )));

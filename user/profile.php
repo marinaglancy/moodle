@@ -36,6 +36,7 @@ require_once(dirname(__FILE__) . '/../config.php');
 require_once($CFG->dirroot . '/my/lib.php');
 require_once($CFG->dirroot . '/tag/lib.php');
 require_once($CFG->dirroot . '/user/profile/lib.php');
+require_once($CFG->dirroot . '/cohort/lib.php');
 require_once($CFG->libdir.'/filelib.php');
 
 $userid         = optional_param('id', 0, PARAM_INT);
@@ -377,6 +378,23 @@ if ($user->msn && !isset($hiddenfields['msnid'])) {
 // Print the Custom User Fields.
 profile_display_fields($user->id);
 
+
+if (!isset($hiddenfields['cohorts']) && ($usercohorts = cohorts_get_user_cohorts(null, $user->id))) {
+    $cohortlisting = '';
+    foreach ($usercohorts as $usercohort) {
+        $attributes = null;
+        if ($usercohort->visible == 0) {
+            if (!has_capability('moodle/cohort:view', $context)) {
+                continue;
+            }
+            $attributes['class'] = 'dimmed_text';
+        }
+        $cohortlisting .= html_writer::tag('span', $usercohort->name, $attributes);
+        $cohortlisting .= ', ';
+    }
+    echo html_writer::tag('dt', get_string('cohorts', 'core_cohort'));
+    echo html_writer::tag('dd', rtrim($cohortlisting, ', '));
+}
 
 if (!isset($hiddenfields['mycourses'])) {
     if ($mycourses = enrol_get_all_users_courses($user->id, true, null, 'visible DESC, sortorder ASC')) {

@@ -25,6 +25,7 @@
 require_once("../config.php");
 require_once($CFG->dirroot.'/user/profile/lib.php');
 require_once($CFG->dirroot.'/tag/lib.php');
+require_once($CFG->dirroot.'/cohort/lib.php');
 require_once($CFG->libdir . '/filelib.php');
 require_once($CFG->libdir . '/badgeslib.php');
 
@@ -325,6 +326,25 @@ if (!isset($hiddenfields['groups'])) {
             echo html_writer::tag('dd', rtrim($groupstr, ', '));
         }
     }
+}
+
+$category = $DB->get_record('course', array('id' => $courseid), '*', MUST_EXIST);
+if (!isset($hiddenfields['cohorts']) &&
+        ($usercohorts = cohorts_get_user_cohorts(context_coursecat::instance($category->category)->id, $user->id))) {
+    $cohortlisting = '';
+    foreach ($usercohorts as $usercohort) {
+        $attributes = null;
+        if ($usercohort->visible == 0) {
+            if (!has_capability('moodle/cohort:view', $coursecontext)) {
+                continue;
+            }
+            $attributes['class'] = 'dimmed_text';
+        }
+        $cohortlisting .= html_writer::tag('span', $usercohort->name, $attributes);
+        $cohortlisting .= ', ';
+    }
+    echo html_writer::tag('dt', get_string('cohorts', 'core_cohort'));
+    echo html_writer::tag('dd', rtrim($cohortlisting, ', '));
 }
 
 // Show other courses they may be in.

@@ -507,3 +507,36 @@ function cohort_edit_controls(context $context, moodle_url $currenturl) {
     }
     return null;
 }
+
+/**
+ * Get users cohorts.
+ *
+ * The function does not check user capability to view/manage cohorts in the given context
+ * assuming that it has been already verified.
+ *
+ * @param int $contextid
+ * @param int $userid
+ * @return array $cohorts
+ */
+function cohorts_get_user_cohorts($contextid, $userid) {
+    global $DB;
+    
+    $fields = "SELECT name, {cohort}.visible";
+    $sql = " FROM ({cohort} INNER JOIN {cohort_members}
+             ON {cohort}.id={cohort_members}.cohortid)
+             INNER JOIN {user}
+             ON {cohort_members}.userid={user}.id
+             WHERE {user}.id = :userid";
+    $params = array('userid' =>$userid);
+    $order = " ORDER BY {cohort}.name ASC, {cohort}.idnumber ASC";
+    
+    if (!empty($contextid)) {
+        $sql .= ' AND {cohort}.contextid = :contextid';
+        $params = array_merge($params, array('contextid' => $contextid));
+    }
+    
+    $cohorts = $DB->get_records_sql($fields . $sql . $order, $params);
+    
+    return $cohorts;
+}
+
