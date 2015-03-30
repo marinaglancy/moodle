@@ -330,17 +330,16 @@ if (!isset($hiddenfields['groups'])) {
 
 $category = $DB->get_record('course', array('id' => $courseid), '*', MUST_EXIST);
 if (!isset($hiddenfields['cohorts']) &&
-        ($usercohorts = cohorts_get_user_cohorts(context_coursecat::instance($category->category)->id, $user->id))) {
+        ($usercohorts = cohort_get_user_course_cohorts($user->id, context_course::instance($courseid)))) {
     $cohortlisting = '';
     foreach ($usercohorts as $usercohort) {
         $attributes = null;
         if ($usercohort->visible == 0) {
-            if (!has_capability('moodle/cohort:view', $coursecontext)) {
-                continue;
-            }
             $attributes['class'] = 'dimmed_text';
         }
-        $cohortlisting .= html_writer::tag('span', $usercohort->name, $attributes);
+        $cohortlisting .= html_writer::tag('span',
+            format_string($usercohort->name, true, array('context' => context::instance_by_id($usercohort->contextid))),
+            $attributes);
         $cohortlisting .= ', ';
     }
     echo html_writer::tag('dt', get_string('cohorts', 'core_cohort'));

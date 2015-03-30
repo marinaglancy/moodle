@@ -737,4 +737,64 @@ class core_cohort_cohortlib_testcase extends advanced_testcase {
         $result = cohort_get_available_cohorts($course1ctx, COHORT_ALL, 0, 0, '');
         $this->assertEquals(array($cohort1->id, $cohort2->id, $cohort4->id), array_keys($result));
     }
+
+    public function test_cohort_get_user_cohorts() {
+        global $DB;
+
+        $this->resetAfterTest();
+
+        $category1 = $this->getDataGenerator()->create_category();
+        $category2 = $this->getDataGenerator()->create_category();
+
+        $course1 = $this->getDataGenerator()->create_course(array('category' => $category1->id));
+        $course2 = $this->getDataGenerator()->create_course(array('category' => $category2->id));
+
+        $category1ctx = context_coursecat::instance($category1->id);
+        $category2ctx = context_coursecat::instance($category2->id);
+        $course1ctx = context_course::instance(($course1->id));
+        $course2ctx = context_course::instance(($course2->id));
+        $systemctx = context_system::instance();
+
+        $cohort1 = $this->getDataGenerator()->create_cohort(array('contextid'=>$category1ctx->id, 'name'=>'aaa'));
+        $cohort2 = $this->getDataGenerator()->create_cohort(array('contextid'=>$category1ctx->id, 'name'=>'bbb', 'visible'=>0));
+        $cohort3 = $this->getDataGenerator()->create_cohort(array('contextid'=>$category2ctx->id, 'name'=>'ccc'));
+        $cohort4 = $this->getDataGenerator()->create_cohort(array('contextid'=>$systemctx->id, 'name' => 'ddd'));
+        $cohort5 = $this->getDataGenerator()->create_cohort(array('contextid'=>$systemctx->id, 'visible'=>0, 'name' => 'eee'));
+
+        $student = $this->getDataGenerator()->create_user();
+        cohort_add_member($cohort1->id, $student->id);
+        cohort_add_member($cohort2->id, $student->id);
+        cohort_add_member($cohort3->id, $student->id);
+        cohort_add_member($cohort4->id, $student->id);
+        cohort_add_member($cohort5->id, $student->id);
+
+        $teacher = $this->getDataGenerator()->create_user();
+
+        $studentrole = $DB->get_record('role', array('shortname' => 'student'));
+        $teacherrole = $DB->get_record('role', array('shortname' => 'editingteacher'));
+        $userrole = $DB->get_record('role', array('shortname' => 'user'));
+        $this->getDataGenerator()->enrol_user($student->id, $course1->id, $studentrole->id);
+        $this->getDataGenerator()->enrol_user($student->id, $course2->id, $studentrole->id);
+        $this->getDataGenerator()->enrol_user($teacher->id, $course1->id, $teacherrole->id);
+        $this->getDataGenerator()->enrol_user($teacher->id, $course2->id, $teacherrole->id);
+
+        $this->setAdminUser();
+
+        $namesfunc = create_function('$a', 'return $a->name;');
+
+        $cohorts = join(',', array_map($namesfunc, cohort_get_user_cohorts($student->id)));
+        $this->assertEquals('aaa,bbb,ccc,ddd,eee', $cohorts);
+
+        $this->setUser($teacher);
+        $this->assertEmpty(cohort_get_user_cohorts($student->id));
+        $cohorts = join(',', array_map($namesfunc, cohort_get_user_course_cohorts($student->id, $course1ctx)));
+        $this->assertEquals('aaa,ddd', $cohorts);
+        $cohorts = join(',', array_map($namesfunc, cohort_get_user_course_cohorts($student->id, $course2ctx)));
+        $this->assertEquals('ccc,ddd', $cohorts);
+
+        assign_capability('moodle/cohort:view', CAP_ALLOW, $userrole->id, $category1ctx->id, true);
+        reload_all_capabilities();
+        $cohorts = join(',', array_map($namesfunc, cohort_get_user_course_cohorts($student->id, $course1ctx)));
+        $this->assertEquals('aaa,bbb,ddd', $cohorts);
+    }
 }

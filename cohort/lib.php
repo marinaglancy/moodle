@@ -509,34 +509,68 @@ function cohort_edit_controls(context $context, moodle_url $currenturl) {
 }
 
 /**
- * Get users cohorts.
+ * Get cohorts where the given user is member of
  *
- * The function does not check user capability to view/manage cohorts in the given context
- * assuming that it has been already verified.
+ * Capability to view or mange cohorts on each cohort level is required regardless of cohort visibility
  *
- * @param int $contextid
  * @param int $userid
  * @return array $cohorts
  */
-function cohorts_get_user_cohorts($contextid, $userid) {
+function cohort_get_user_cohorts($userid) {
     global $DB;
-    
-    $fields = "SELECT name, {cohort}.visible";
-    $sql = " FROM ({cohort} INNER JOIN {cohort_members}
-             ON {cohort}.id={cohort_members}.cohortid)
-             INNER JOIN {user}
-             ON {cohort_members}.userid={user}.id
-             WHERE {user}.id = :userid";
-    $params = array('userid' =>$userid);
-    $order = " ORDER BY {cohort}.name ASC, {cohort}.idnumber ASC";
-    
-    if (!empty($contextid)) {
-        $sql .= ' AND {cohort}.contextid = :contextid';
-        $params = array_merge($params, array('contextid' => $contextid));
+
+    $sql = "SELECT DISTINCT c.*, " . context_helper::get_preload_record_columns_sql('ctx') . "
+             FROM {cohort} c, {cohort_members} cm, {context} ctx
+             WHERE c.id = cm.cohortid AND cm.userid = :userid AND c.contextid = ctx.id
+             ORDER BY c.name ASC, c.idnumber ASC";
+    $params = array('userid' => $userid);
+
+    $records = $DB->get_records_sql($sql, $params);
+    $cohorts = array();
+    foreach ($records as $record) {
+        context_helper::preload_from_record($record);
+        if (has_any_capability(array('moodle/cohort:manage', 'moodle/cohort:view'), context::instance_by_id($record->contextid))) {
+            $cohorts[$record->id] = $record;
+        }
     }
-    
-    $cohorts = $DB->get_records_sql($fields . $sql . $order, $params);
-    
+
+    return $cohorts;
+}
+
+
+/**
+ * Get cohorts where the given user is member of that are defined course parent categories' contexts
+ *
+ * @param int $userid
+ * @param context $coursecontext
+ * @return array $cohorts
+ */
+function cohort_get_user_course_cohorts($userid, $coursecontext) {
+    global $DB;
+
+    if (!has_capability('moodle/cohort:view', $coursecontext)) {
+        return array();
+    }
+
+    $parentcontexts = $coursecontext->get_parent_context_ids();
+    list($contextsql, $contextparams) = $DB->get_in_or_equal($parentcontexts, SQL_PARAMS_NAMED);
+
+    $sql = "SELECT DISTINCT c.*, " . context_helper::get_preload_record_columns_sql('ctx') . "
+             FROM {cohort} c, {cohort_members} cm, {context} ctx
+             WHERE c.id = cm.cohortid AND cm.userid = :userid AND c.contextid = ctx.id
+             AND c.contextid " . $contextsql . "
+             ORDER BY c.name ASC, c.idnumber ASC";
+    $params = array_merge(array('userid' => $userid), $contextparams);
+
+    $records = $DB->get_records_sql($sql, $params);
+    $cohorts = array();
+    foreach ($records as $record) {
+        context_helper::preload_from_record($record);
+        if ($record->visible || has_capability('moodle/cohort:view', context::instance_by_id($record->contextid))) {
+            $cohorts[$record->id] = $record;
+        }
+    }
+
     return $cohorts;
 }
 
