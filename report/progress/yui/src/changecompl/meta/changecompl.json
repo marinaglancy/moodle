@@ -1,0 +1,8 @@
+{
+    "moodle-report_progress-changecompl": {
+        "requires": [
+            "base",
+            "node"
+        ]
+    }
+}

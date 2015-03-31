@@ -1,0 +1,10 @@
+{
+    "name": "moodle-report_progress-changecompl",
+    "builds": {
+        "moodle-report_progress-changecompl": {
+            "jsfiles": [
+                "changecompl.js"
+            ]
+        }
+    }
+}

@@ -174,6 +174,10 @@ if ($csv && $grandtotal && count($activities)>0) { // Only show CSV if there are
 
     $PAGE->set_title($strcompletion);
     $PAGE->set_heading($course->fullname);
+
+    //$PAGE->requires->strings_for_js(array('pause', 'resume'), 'report_progress');
+    //$PAGE->requires->yui_module('moodle-report_progress-changecompl', 'Y.M.report_progress.ChangeCompl.init', array());
+
     echo $OUTPUT->header();
     $PAGE->requires->js('/report/progress/textrotate.js');
     $PAGE->requires->js_function_call('textrotate_init', null, true);
