@@ -51,6 +51,9 @@ $sifirst = optional_param('sifirst', 'all', PARAM_NOTAGS);
 $silast  = optional_param('silast', 'all', PARAM_NOTAGS);
 $start   = optional_param('start', 0, PARAM_INT);
 
+// Action.
+$changecompl = optional_param('changecompl', '', PARAM_ALPHANUMEXT);
+
 // Whether to show extra user identity information
 $extrafields = get_extra_user_fields($context);
 $leftcols = 1 + count($extrafields);
@@ -74,6 +77,12 @@ if ($format !== '') {
 if ($start !== 0) {
     $url->param('start', $start);
 }
+if ($sifirst !== 'all') {
+    $url->param('sifirst', $sifirst);
+}
+if ($silast !== 'all') {
+    $url->param('silast', $silast);
+}
 $PAGE->set_url($url);
 $PAGE->set_pagelayout('report');
 
@@ -93,6 +102,18 @@ if ($group===0 && $course->groupmode==SEPARATEGROUPS) {
 $reportsurl = $CFG->wwwroot.'/course/report.php?id='.$course->id;
 $completion = new completion_info($course);
 $activities = $completion->get_activities();
+
+if ($changecompl) {
+    require_capability('moodle/course:overridecompletion', $context);
+    require_sesskey();
+    list($userid, $cmid, $newstate) = preg_split('/-/', $changecompl, 3);
+    // Make sure the activity and user are tracked.
+    if (isset($activities[$cmid]) &&
+            $completion->get_num_tracked_users('u.id = :userid', array('userid' => (int)$userid), $group)) {
+        $completion->update_state($activities[$cmid], $newstate, $userid);
+    }
+    redirect($PAGE->url);
+}
 
 // Generate where clause
 $where = array();
@@ -399,9 +420,18 @@ foreach($progress as $user) {
         if ($csv) {
             print $sep.csv_quote($describe).$sep.csv_quote($date);
         } else {
+            $celltext = '<img src="'.$OUTPUT->pix_url('i/'.$completionicon).
+                '" alt="'.s($describe).'" title="'.s($fulldescribe).'" />';
+            if (has_capability('moodle/course:overridecompletion', $context) && $activity->completion == COMPLETION_TRACKING_MANUAL) {
+                $newstate = ($state == COMPLETION_COMPLETE) ? COMPLETION_INCOMPLETE : COMPLETION_COMPLETE;
+                $changecompl = $user->id . '-' . $activity->id . '-' . $newstate;
+                $url = new moodle_url($PAGE->url, array('sesskey' => sesskey(),
+                    'changecompl' => $changecompl));
+                $celltext = html_writer::link($url, $celltext, array('class' => 'changecompl',
+                    'data-changecompl' => $changecompl));
+            }
             print '<td class="completion-progresscell '.$formattedactivities[$activity->id]->datepassedclass.'">'.
-                '<img src="'.$OUTPUT->pix_url('i/'.$completionicon).
-                '" alt="'.s($describe).'" title="'.s($fulldescribe).'" /></td>';
+                $celltext.'</td>';
         }
     }
 

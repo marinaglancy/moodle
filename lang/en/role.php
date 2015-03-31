@@ -140,6 +140,7 @@ $string['course:managegroups'] = 'Manage groups';
 $string['course:managescales'] = 'Manage scales';
 $string['course:markcomplete'] = 'Mark users as complete in course completion';
 $string['course:movesections'] = 'Move sections';
+$string['course:overridecompletion'] = 'Override completion status set by other users';
 $string['course:publish'] = 'Publish a course into hub';
 $string['course:request'] = 'Request new courses';
 $string['course:reset'] = 'Reset course';
