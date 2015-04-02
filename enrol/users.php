@@ -177,7 +177,8 @@ if ($action) {
 $renderer = $PAGE->get_renderer('core_enrol');
 $userdetails = array('picture' => false);
 // Get all the user names in a reasonable default order.
-$allusernames = get_all_user_name_fields(false, null, null, null, true);
+$nameformat = ($CFG->fullnamedisplay == 'language') ? get_string('fullnamedisplay') : $CFG->fullnamedisplay;
+$allusernames = order_in_string(get_all_user_name_fields(), $nameformat);
 // Initialise the variable for the user's names in the table header.
 $usernameheader = null;
 // Get the alternative full name format for users with the viewfullnames capability.
