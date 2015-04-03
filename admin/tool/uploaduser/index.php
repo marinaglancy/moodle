@@ -187,7 +187,8 @@ if ($formdata = $mform2->is_cancelled()) {
     // caches
     $ccache         = array(); // course cache - do not fetch all courses here, we  will not probably use them all anyway!
     $cohorts        = array();
-    $rolecache      = uu_allowed_roles_cache(); // roles lookup cache
+    $rolecache      = uu_allowed_roles_cache(); // Course roles lookup cache.
+    $sysrolecache   = uu_allowed_sysroles_cache(); // System roles lookup cache.
     $manualcache    = array(); // cache of used manual enrol plugins in each course
     $supportedauths = uu_supported_auths(); // officially supported plugins that are enabled
 
@@ -889,6 +890,42 @@ if ($formdata = $mform2->is_cancelled()) {
         // find course enrolments, groups, roles/types and enrol periods
         // this is again a special case, we always do this for any updated or created users
         foreach ($filecolumns as $column) {
+            if (preg_match('/^sysrole\d+$/', $column)) {
+                $i = substr($column, 7);
+
+                if (!empty($user->{'sysrole'.$i})) {
+                    $addrole = $user->{'sysrole'.$i};
+                    if ($addrole[0] == '-') {
+                        $sub = true;
+                        $addrole = substr($addrole,1);
+                    } else {
+                        $sub = false;
+                    }
+
+                    if (array_key_exists($addrole, $sysrolecache)) {
+                        $rid = $sysrolecache[$addrole]->id;
+                    } else {
+                        $upt->track('enrolments', get_string('unknownrole', 'error', s($addrole)), 'error');
+                        continue;
+                    }
+
+                    if ($sub) {
+                        if (user_has_role_assignment($user->id, $rid, SYSCONTEXTID)) {
+                            role_unassign($rid, $user->id, SYSCONTEXTID);
+                            $upt->track('enrolments', get_string('unassignedsysrole',
+                                    'tool_uploaduser', $sysrolecache[$rid]->name));
+                        }
+                    } else {
+                        if (!user_has_role_assignment($user->id, $rid, SYSCONTEXTID)) {
+                            role_assign($rid, $user->id, SYSCONTEXTID);
+                            $upt->track('enrolments', get_string('assignedsysrole',
+                                    'tool_uploaduser', $sysrolecache[$rid]->name));
+                        }
+                    }
+                }
+
+                continue;
+            }
             if (!preg_match('/^course\d+$/', $column)) {
                 continue;
             }
