@@ -897,7 +897,7 @@ if ($formdata = $mform2->is_cancelled()) {
                     $addrole = $user->{'sysrole'.$i};
                     if ($addrole[0] == '-') {
                         $sub = true;
-                        $addrole = substr($addrole,1);
+                        $addrole = substr($addrole, 1);
                     } else {
                         $sub = false;
                     }
