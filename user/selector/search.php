@@ -64,6 +64,7 @@ $results = $userselector->find_users($search);
 $json = array();
 foreach ($results as $groupname => $users) {
     $groupdata = array('name' => $groupname, 'users' => array());
+    $potentialmembersids = array();
     foreach ($users as $user) {
         $output = new stdClass;
         $output->id = $user->id;
@@ -75,7 +76,9 @@ foreach ($results as $groupname => $users) {
             $output->infobelow = $user->infobelow;
         }
         $groupdata['users'][] = $output;
+        $potentialmembersids[] = $user->id;
     }
+    $groupdata['userSummaries'] = $userselector->get_user_summaries(0, $potentialmembersids);
     $json[] = $groupdata;
 }
 

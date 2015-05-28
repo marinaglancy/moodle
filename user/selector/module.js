@@ -212,6 +212,7 @@ M.core_user.init_user_selector = function (Y, name, hash, extrafields, lastsearc
             for (var key in data.results) {
                 var groupdata = data.results[key];
                 this.output_group(groupdata.name, groupdata.users, selectedusers, true);
+                userSummaries = groupdata.userSummaries;
                 count ++;
             }
             if (!count) {

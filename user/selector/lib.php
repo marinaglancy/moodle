@@ -804,13 +804,23 @@ class group_non_members_selector extends groups_user_selector_base {
      * @param int $courseid
      */
     public function print_user_summaries($courseid) {
-        global $DB, $PAGE;
+        global $PAGE;
+        $potentialmembersids = $this->potentialmembersids;
+        $usersummaries = $this->get_user_summaries($courseid, $potentialmembersids);
+
+        $PAGE->requires->data_for_js('userSummaries', $usersummaries);
+    }
+
+    public function get_user_summaries($courseid, $potentialmembersids) {
+        global $DB;
+        if (!$courseid) {
+            $courseid = $this->courseid;
+        }
 
         $usersummaries = array();
 
         // Get other groups user already belongs to.
         $usergroups = array();
-        $potentialmembersids = $this->potentialmembersids;
         if (empty($potentialmembersids) == false) {
             list($membersidsclause, $params) = $DB->get_in_or_equal($potentialmembersids, SQL_PARAMS_NAMED, 'pm');
             $sql = "SELECT u.id AS userid, g.*
@@ -838,8 +848,7 @@ class group_non_members_selector extends groups_user_selector_base {
                 $usersummaries[] = $usergrouplist;
             }
         }
-
-        $PAGE->requires->data_for_js('userSummaries', $usersummaries);
+        return $usersummaries;
     }
 
     /**
