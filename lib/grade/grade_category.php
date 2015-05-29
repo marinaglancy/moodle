@@ -1198,7 +1198,11 @@ class grade_category extends grade_object {
                             $userweights[$itemid] = 0;
                             continue;
                         }
-                        $userweights[$itemid] = $items[$itemid]->aggregationcoef2 / $sumweights;
+                        $userweights[$itemid] = $sumweights ? ($items[$itemid]->aggregationcoef2 / $sumweights) : 0;
+                        if (isset($extracredititems[$itemid])) {
+                            // Extra credit items do not affect totals.
+                            continue;
+                        }
                         $totaloverriddenweight += $userweights[$itemid];
                         $usergrademax = $items[$itemid]->grademax;
                         if (isset($grademaxoverrides[$itemid])) {
