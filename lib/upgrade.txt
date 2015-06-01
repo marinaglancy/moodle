@@ -1,6 +1,10 @@
 This files describes API changes in core libraries and APIs,
 information provided here is intended especially for developers.
 
+=== 2.9.4 ===
+
+* \core\progress\null is renamed to \core\progress\none for improved PHP7 compatibility as null is a reserved word (see MDL-50453 and MDL-52406).
+
 === 2.9.2 ===
 
 * The actionmenu hideMenu() function now expects an EventFacade object to be passed to it,
