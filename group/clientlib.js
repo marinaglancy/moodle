@@ -224,18 +224,25 @@ function updateUserSummary() {
         summaryDiv = document.getElementById('group-usersummary'),
         length = selectEl.length,
         selectCnt = 0,
-        selectIdx = -1,
+        selectedValue,
         i;
 
     for (i = 0; i < length; i++) {
         if (selectEl.options[i].selected) {
             selectCnt++;
-            selectIdx = i;
+            selectedValue = selectEl.options[i].value;
         }
     }
 
-    if (selectCnt == 1 && userSummaries[selectIdx]) {
-        summaryDiv.innerHTML = userSummaries[selectIdx];
+    if (selectCnt == 1 && userSummaries[selectedValue]) {
+        summaryDiv.innerHTML = '';
+        var list = document.createElement('ul');
+        for (var key in userSummaries[selectedValue]) {
+            var item = document.createElement('li');
+            item.appendChild(document.createTextNode(userSummaries[selectedValue][key]));
+            list.appendChild(item);
+        }
+        summaryDiv.appendChild(list);
     } else {
         summaryDiv.innerHTML = '';
     }

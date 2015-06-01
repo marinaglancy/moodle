@@ -827,19 +827,19 @@ class group_non_members_selector extends groups_user_selector_base {
 
             foreach ($potentialmembersids as $userid) {
                 if (isset($usergroups[$userid])) {
-                    $usergrouplist = html_writer::start_tag('ul');
                     foreach ($usergroups[$userid] as $groupitem) {
-                        $usergrouplist .= html_writer::tag('li', format_string($groupitem->name));
+                        $usersummaries[$userid][] = format_string($groupitem->name);
                     }
-                    $usergrouplist .= html_writer::end_tag('ul');
                 } else {
-                    $usergrouplist = '';
+                    $usersummaries[$userid] = array();
                 }
-                $usersummaries[] = $usergrouplist;
             }
         }
 
         $PAGE->requires->data_for_js('userSummaries', $usersummaries);
+
+        // This return is mainly here to enable back end unit tests
+        return $usersummaries;
     }
 
     /**
