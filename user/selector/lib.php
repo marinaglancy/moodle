@@ -829,13 +829,13 @@ class group_non_members_selector extends groups_user_selector_base {
                 if (isset($usergroups[$userid])) {
                     $usergrouplist = html_writer::start_tag('ul');
                     foreach ($usergroups[$userid] as $groupitem) {
-                        $usergrouplist .= html_writer::tag('li', format_string($groupitem->name));
+                        $usergrouplist .= html_writer::tag('li', format_string($groupitem->name),array('value'=>$userid));
                     }
                     $usergrouplist .= html_writer::end_tag('ul');
                 } else {
                     $usergrouplist = '';
                 }
-                $usersummaries[] = $usergrouplist;
+                $usersummaries[$userid] = $usergrouplist;
             }
         }
 

@@ -225,20 +225,24 @@ function updateUserSummary() {
         length = selectEl.length,
         selectCnt = 0,
         selectIdx = -1,
+        selectedUID =0,
         i;
 
     for (i = 0; i < length; i++) {
         if (selectEl.options[i].selected) {
             selectCnt++;
-            selectIdx = i;
+            selectIdx = selectEl.options[i].value;
+
         }
     }
 
     if (selectCnt == 1 && userSummaries[selectIdx]) {
         summaryDiv.innerHTML = userSummaries[selectIdx];
-    } else {
-        summaryDiv.innerHTML = '';
     }
+    else{
+        summaryDiv.innerHTML ='';
+    }
+
 
     return true;
 }
