@@ -1213,9 +1213,9 @@ class grade_category extends grade_object {
                 }
                 $nonoverriddenpoints = $grademax - $totaloverriddengrademax;
 
-                // Then we need to recalculate the automatic weights.
+                // Then we need to recalculate the automatic weights except for extra credit items.
                 foreach ($grade_values as $itemid => $gradevalue) {
-                    if (!$items[$itemid]->weightoverride) {
+                    if (!$items[$itemid]->weightoverride && !isset($extracredititems[$itemid])) {
                         $usergrademax = $items[$itemid]->grademax;
                         if (isset($grademaxoverrides[$itemid])) {
                             $usergrademax = $grademaxoverrides[$itemid];
@@ -1230,6 +1230,17 @@ class grade_category extends grade_object {
                                 $grademax -= $usergrademax;
                             }
                         }
+                    }
+                }
+
+                // Now when we finally know the grademax we can adjust the automatic weights of extra credit items.
+                foreach ($grade_values as $itemid => $gradevalue) {
+                    if (!$items[$itemid]->weightoverride && isset($extracredititems[$itemid])) {
+                        $usergrademax = $items[$itemid]->grademax;
+                        if (isset($grademaxoverrides[$itemid])) {
+                            $usergrademax = $grademaxoverrides[$itemid];
+                        }
+                        $userweights[$itemid] = $grademax ? ($usergrademax / $grademax) : 0;
                     }
                 }
 
@@ -1533,6 +1544,16 @@ class grade_category extends grade_object {
                 continue;
             } else if (empty($CFG->grade_includescalesinaggregation) && $gradeitem->gradetype == GRADE_TYPE_SCALE) {
                 // We will not aggregate the scales, so we can ignore upating their weights.
+                continue;
+            }
+
+            if ($gradeitem->aggregationcoef > 0) {
+                // For an item with extra credit ignore other weigths and overrides.
+                // Do not change anything at all if it's weight was already overridden.
+                if (!$gradeitem->weightoverride) {
+                    $gradeitem->aggregationcoef2 = $totalgrademax ? ($gradeitem->grademax / $totalgrademax) : 0;
+                    $gradeitem->update();
+                }
                 continue;
             }
 
