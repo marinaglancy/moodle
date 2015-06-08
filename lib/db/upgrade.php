@@ -4378,5 +4378,25 @@ function xmldb_main_upgrade($oldversion) {
     // Moodle v2.9.0 release upgrade line.
     // Put any upgrade step following this.
 
+    if ($oldversion < 2015060400.01) {
+        // MDL-49257. Changed the algorithm of calculating automatic weights of extra credit items.
+
+        // Before the change, in case when grade category (in "Natural" agg. method) had items with
+        // overridden weights, the automatic weight of extra credit items was illogical.
+        // In order to prevent grades changes after the upgrade we need to set the "weightoverride"
+        // of such illogical items to "1".
+
+        // This script in included in each major version upgrade process so make sure we don't run it twice.
+        if (empty($CFG->extracreditweightsupgradescriptwasrun)) {
+            upgrade_extra_credit_weightoverride();
+
+            // To skip running the same script on the upgrade to the next major release.
+            set_config('extracreditweightsupgradescriptwasrun', 1);
+        }
+
+        // Main savepoint reached.
+        upgrade_main_savepoint(true, 2015060400.01);
+    }
+
     return true;
 }

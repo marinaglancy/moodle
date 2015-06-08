@@ -353,4 +353,14 @@ class core_upgradelib_testcase extends advanced_testcase {
                     (object)array('userfield' => 'email', 'shortname' => null, 'operator' => 'isempty'),
                 )));
     }
+
+    public function test_upgrade_extra_credit_weightoverride() {
+        global $DB, $SITE;
+
+        $this->resetAfterTest(true);
+
+        $course = $this->getDataGenerator()->create_course();
+
+
+    }
 }

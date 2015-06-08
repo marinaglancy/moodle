@@ -530,3 +530,31 @@ function upgrade_mimetypes($filetypes) {
         );
     }
 }
+
+/**
+ * Sets the weight of extra credit item as "overridden" in case when the grade category contains other items with overridden weights.
+ *
+ * This upgrade script is needed because we changed the algorithm for calculating the automatic weights of extra
+ * credit items and want to prevent changes in the existing student grades.
+ */
+function upgrade_extra_credit_weightoverride() {
+    global $DB;
+
+    $DB->execute(
+        "UPDATE {grade_items}
+        SET weightoverride = :weightoverriden
+        WHERE weightoverride <> :weightoverriden1 AND aggregationcoef = :extracredit1 AND
+        categoryid IN (SELECT gc.id
+          FROM {grade_categories} gc
+          INNER JOIN {grade_items} gi ON gc.id = gi.categoryid AND gi.weightoverride = :weightoverriden2 AND gi.aggregationcoef <> :extracredit2
+          WHERE gc.aggregation = :naturalaggmethod
+        )",
+        array('naturalaggmethod' => 13,
+            'weightoverriden' => 1,
+            'weightoverriden1' => 1,
+            'weightoverriden2' => 1,
+            'extracredit1' => 1,
+            'extracredit2' => 1,
+        )
+    );
+}
