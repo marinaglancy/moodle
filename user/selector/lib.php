@@ -799,12 +799,30 @@ class group_non_members_selector extends groups_user_selector_base {
      *
      * Used by /group/clientlib.js
      *
-     * @global moodle_database $DB
      * @global moodle_page $PAGE
      * @param int $courseid
      */
     public function print_user_summaries($courseid) {
-        global $DB, $PAGE;
+        global $PAGE;
+
+        $usersummaries = $this->get_user_summaries($courseid);
+
+        $PAGE->requires->data_for_js('userSummaries', $usersummaries);
+    }
+
+    /**
+     * Fetches the user summaries for each userid in the potentialmembersids array.
+     *
+     * Used by
+     *  - group_non_members_selector->print_user_summaries
+     *  - /user/selector/search.php
+     *
+     * @global moodle_database $DB
+     * @param int $courseid
+     * @return array
+     */
+    public function get_user_summaries($courseid) {
+        global $DB;
 
         $usersummaries = array();
 
@@ -835,11 +853,13 @@ class group_non_members_selector extends groups_user_selector_base {
                 } else {
                     $usergrouplist = '';
                 }
-                $usersummaries[] = $usergrouplist;
+
+                // Assign userid as key for the associated usergrouplist item.
+                $usersummaries[$userid] = $usergrouplist;
             }
         }
 
-        $PAGE->requires->data_for_js('userSummaries', $usersummaries);
+        return $usersummaries;
     }
 
     /**

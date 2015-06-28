@@ -79,4 +79,10 @@ foreach ($results as $groupname => $users) {
     $json[] = $groupdata;
 }
 
-echo json_encode(array('results' => $json));
+// Get updated user summaries
+$userSummaries = array();
+if (isset($options['courseid'])) {
+    $userSummaries = $userselector->get_user_summaries($options['courseid']);
+}
+
+echo json_encode(array('results' => $json, 'userSummaries' => $userSummaries));

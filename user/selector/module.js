@@ -214,6 +214,12 @@ M.core_user.init_user_selector = function (Y, name, hash, extrafields, lastsearc
                 this.output_group(groupdata.name, groupdata.users, selectedusers, true);
                 count ++;
             }
+
+            // Update userSummaries global variable (if defined).
+            if (typeof userSummaries !== 'undefined' && data.userSummaries) {
+                userSummaries = data.userSummaries;
+            }
+
             if (!count) {
                 var searchstr = (this.lastsearch != '') ? this.insert_search_into_str(M.util.get_string('nomatchingusers', 'moodle'), this.lastsearch) : M.util.get_string('none', 'moodle');
                 this.output_group(searchstr, {}, selectedusers, true)
