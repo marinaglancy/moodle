@@ -835,7 +835,9 @@ class group_non_members_selector extends groups_user_selector_base {
                 } else {
                     $usergrouplist = '';
                 }
-                $usersummaries[] = $usergrouplist;
+
+                // Assign userid as key for the associated usergrouplist item.
+                $usersummaries[$userid] = $usergrouplist;
             }
         }
 
@@ -891,13 +893,6 @@ class group_non_members_selector extends groups_user_selector_base {
         $params['courseid'] = $this->courseid;
         $params['groupid']  = $this->groupid;
 
-        if (!$this->is_validating()) {
-            $potentialmemberscount = $DB->count_records_sql("SELECT COUNT(DISTINCT u.id) $sql", $params);
-            if ($potentialmemberscount > $this->maxusersperpage) {
-                return $this->too_many_results($search, $potentialmemberscount);
-            }
-        }
-
         $rs = $DB->get_recordset_sql("$fields $sql $orderby", array_merge($params, $sortparams));
         $roles = groups_calculate_role_people($rs, $context);
 
@@ -911,6 +906,12 @@ class group_non_members_selector extends groups_user_selector_base {
                         }
                     }
                 }
+            }
+
+            // Check record count and show 'too many results' message if maxusersperpage is exceeded.
+            $potentialmemberscount = $DB->count_records_sql("SELECT COUNT(DISTINCT u.id) $sql", $params);
+            if ($potentialmemberscount > $this->maxusersperpage) {
+                return $this->too_many_results($search, $potentialmemberscount);
             }
         }
 

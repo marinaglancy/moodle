@@ -230,7 +230,8 @@ function updateUserSummary() {
     for (i = 0; i < length; i++) {
         if (selectEl.options[i].selected) {
             selectCnt++;
-            selectIdx = i;
+            // Set selectIdx as the selected option's value (userid)
+            selectIdx = selectEl.options[i].value;
         }
     }
 
