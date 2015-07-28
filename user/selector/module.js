@@ -254,6 +254,7 @@ M.core_user.init_user_selector = function (Y, name, hash, extrafields, lastsearc
                     extraoption.appendChild(document.createTextNode(user.infobelow));
                     optgroup.append(extraoption);
                 }
+                userSummaries[user.id] = user.groups;
                 count ++;
             }
 

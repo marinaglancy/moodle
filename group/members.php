@@ -177,7 +177,7 @@ if (!empty($groupinforow)) {
 
 <?php
     //outputs the JS array used to display the other groups users are in
-    $potentialmembersselector->print_user_summaries($course->id);
+    $potentialmembersselector->print_user_summaries();
 
     //this must be after calling display() on the selectors so their setup JS executes first
     $PAGE->requires->js_init_call('init_add_remove_members_page', null, false, $potentialmembersselector->get_js_module());

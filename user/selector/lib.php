@@ -793,17 +793,7 @@ class group_non_members_selector extends groups_user_selector_base {
         return self::$jsmodule;
     }
 
-    /**
-     * Creates a global JS variable (userSummaries) that is used by the group selector
-     * to print related information when the user clicks on a user in the groups UI.
-     *
-     * Used by /group/clientlib.js
-     *
-     * @global moodle_database $DB
-     * @global moodle_page $PAGE
-     * @param int $courseid
-     */
-    public function print_user_summaries($courseid) {
+    public function get_user_summaries() {
         global $DB, $PAGE;
 
         $usersummaries = array();
@@ -818,7 +808,7 @@ class group_non_members_selector extends groups_user_selector_base {
                     JOIN {groups_members} gm ON u.id = gm.userid
                     JOIN {groups} g ON gm.groupid = g.id
                     WHERE u.id $membersidsclause AND g.courseid = :courseid ";
-            $params['courseid'] = $courseid;
+            $params['courseid'] = $this->courseid;
             $rs = $DB->get_recordset_sql($sql, $params);
             foreach ($rs as $usergroup) {
                 $usergroups[$usergroup->userid][$usergroup->id] = $usergroup;
@@ -839,9 +829,15 @@ class group_non_members_selector extends groups_user_selector_base {
             }
         }
 
-        $PAGE->requires->data_for_js('userSummaries', $usersummaries);
+        return $usersummaries;
     }
 
+    public function print_user_summaries() {
+        global $PAGE;
+        
+        $PAGE->requires->data_for_js('userSummaries', $this->get_user_summaries($this->courseid));
+    }
+    
     /**
      * Finds users to display in this control.
      *

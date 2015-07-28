@@ -61,6 +61,7 @@ $userselector = new $classname($name, $options);
 
 // Do the search and output the results.
 $results = $userselector->find_users($search);
+$summaries = $userselector->get_user_summaries();
 $json = array();
 foreach ($results as $groupname => $users) {
     $groupdata = array('name' => $groupname, 'users' => array());
@@ -68,6 +69,7 @@ foreach ($results as $groupname => $users) {
         $output = new stdClass;
         $output->id = $user->id;
         $output->name = $userselector->output_user($user);
+        $output->groups = $summaries[$user->id];
         if (!empty($user->disabled)) {
             $output->disabled = true;
         }
