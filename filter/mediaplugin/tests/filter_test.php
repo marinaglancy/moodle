@@ -145,5 +145,11 @@ class filter_mediaplugin_testcase extends advanced_testcase {
         // Testing for cases where: to be filtered content has 6+ text afterwards.
         $filter = $filterplugin->filter($paddedurl);
         $this->assertEquals($validpaddedurl, $filter, $msg);
+
+        // Make sure filter is NOT applied for emails:
+        foreach ($validtexts as $text) {
+            $filter = $filterplugin->filter($text, array('target' => 'email'));
+            $this->assertEquals($text, $filter);
+        }
     }
 }

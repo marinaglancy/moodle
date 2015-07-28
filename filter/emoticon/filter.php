@@ -48,6 +48,12 @@ class filter_emoticon extends moodle_text_filter {
             // be stripped. therefore, we do nothing
             return $text;
         }
+
+        if (isset($options['target']) && $options['target'] === 'email') {
+            // Do not apply for text that is used in emails, image sources would not available there.
+            return $text;
+        }
+
         if (in_array($options['originalformat'], explode(',', get_config('filter_emoticon', 'formats')))) {
             $this->replace_emoticons($text);
         }

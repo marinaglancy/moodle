@@ -58,6 +58,10 @@ class filter_emoticon_testcase extends advanced_testcase {
                     ' src="http://www.example.com/moodle/theme/image.php/_s/clean/core/1/s/angry" />';
         $options = array('originalformat' => FORMAT_HTML); // Only FORMAT_HTML is filtered, see {@link testable_filter_emoticon}.
         $this->assertEquals($expected, $filter->filter('(grr)', $options));
+
+        $expected = '(grr)';
+        $options = array('originalformat' => FORMAT_HTML, 'target' => 'email'); // Filter emoticon is skipped for emails.
+        $this->assertEquals($expected, $filter->filter('(grr)', $options));
     }
 }
 

@@ -55,6 +55,11 @@ class filter_mediaplugin extends moodle_text_filter {
             return $text;
         }
 
+        if (isset($options['target']) && $options['target'] === 'email') {
+            // Do not apply for text that is used in emails, email clients would not display embedded videos anyway.
+            return $text;
+        }
+
         if (stripos($text, '</a>') === false) {
             // Performance shortcut - if not </a> tag, nothing can match.
             return $text;
