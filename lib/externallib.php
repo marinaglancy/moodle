@@ -745,7 +745,7 @@ function external_format_text($text, $textformat, $contextid, $component, $filea
     }
 
     if (!$settings->get_raw()) {
-        $text = format_text($text, $textformat, array('para' => false, 'filter' => $settings->get_filter()));
+        $text = format_text($text, $textformat, array('para' => false, 'filter' => $settings->get_filter(), 'target' => 'ws'));
         $textformat = FORMAT_HTML; // Once converted to html (from markdown, plain... lets inform consumer this is already HTML).
     }
 

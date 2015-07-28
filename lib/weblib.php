@@ -1128,7 +1128,7 @@ function format_text_menu() {
  *                      with the class no-overflow before being returned. Default false.
  *      allowid     :   If true then id attributes will not be removed, even when
  *                      using htmlpurifier. Default false.
- *      target      :   Where do we want to use this text. Default 'web', possible other value 'email'
+ *      target      :   Where do we want to use this text. Default 'web', possible other values 'email' and 'ws'
  * </pre>
  *
  * @staticvar array $croncache
