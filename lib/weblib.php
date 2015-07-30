@@ -1128,6 +1128,7 @@ function format_text_menu() {
  *                      with the class no-overflow before being returned. Default false.
  *      allowid     :   If true then id attributes will not be removed, even when
  *                      using htmlpurifier. Default false.
+ *      target      :   Where do we want to use this text. Default 'web', possible other values 'email' and 'ws'
  * </pre>
  *
  * @staticvar array $croncache
@@ -1175,6 +1176,9 @@ function format_text($text, $format = FORMAT_MOODLE, $options = null, $courseidd
     if (!isset($options['overflowdiv'])) {
         $options['overflowdiv'] = false;
     }
+    if (!isset($options['target'])) {
+        $options['target'] = 'web';
+    }
 
     // Calculate best context.
     if (empty($CFG->version) or $CFG->version < 2013051400 or during_initial_install()) {
@@ -1207,6 +1211,7 @@ function format_text($text, $format = FORMAT_MOODLE, $options = null, $courseidd
         $filteroptions = array(
             'originalformat' => $format,
             'noclean' => $options['noclean'],
+            'target' => $options['target'],
         );
     } else {
         $filtermanager = new null_filter_manager();
@@ -1218,7 +1223,11 @@ function format_text($text, $format = FORMAT_MOODLE, $options = null, $courseidd
             if (!$options['noclean']) {
                 $text = clean_text($text, FORMAT_HTML, $options);
             }
-            $text = $filtermanager->filter_text($text, $context, $filteroptions);
+            $skipfilters = null;
+            if ($options['target'] === 'email') {
+                $skipfilters = preg_split('/,/', $CFG->filterskipemail, -1, PREG_SPLIT_NO_EMPTY);
+            }
+            $text = $filtermanager->filter_text($text, $context, $filteroptions, $skipfilters);
             break;
 
         case FORMAT_PLAIN:

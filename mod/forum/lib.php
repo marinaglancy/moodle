@@ -3046,6 +3046,7 @@ function forum_make_mail_post($course, $cm, $forum, $discussion, $post, $userfro
     // format the post body
     $options = new stdClass();
     $options->para = true;
+    $options->target = 'email';
     $formattedtext = format_text($post->message, $post->messageformat, $options, $course->id);
 
     $output = '<table border="0" cellpadding="3" cellspacing="0" class="forumpost">';

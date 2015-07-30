@@ -4745,12 +4745,6 @@ class admin_setting_pickfilters extends admin_setting_configmulticheckbox {
         if (empty($default)) {
             $default = array();
         }
-        $this->load_choices();
-        foreach ($default as $plugin) {
-            if (!isset($this->choices[$plugin])) {
-                unset($default[$plugin]);
-            }
-        }
         parent::__construct($name, $visiblename, $description, $default, null);
     }
 
@@ -4762,6 +4756,12 @@ class admin_setting_pickfilters extends admin_setting_configmulticheckbox {
 
         foreach (core_component::get_plugin_list('filter') as $plugin => $unused) {
             $this->choices[$plugin] = filter_get_name($plugin);
+        }
+        // Validate default settings.
+        foreach ($this->defaultsetting as $plugin) {
+            if (!isset($this->choices[$plugin])) {
+                unset($this->defaultsetting[$plugin]);
+            }
         }
         return true;
     }

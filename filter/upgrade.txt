@@ -13,6 +13,11 @@ information provided here is intended especially for developers.
   deprecated. There were use by the old Moodle filtered text caching system
   that was removed several releases ago.
 
+* Filter may change the way how it applies to text analysing the $option['target']
+  argument to filter_text() which could be 'email' for text used in an email or 'ws'
+  for text returned by web services. Admin can set $CFG->filterskipemail to
+  skip some filters completely for emails.
+
 === 2.7 ===
 
 * Finally filter may use $PAGE and $OUTPUT, yay!

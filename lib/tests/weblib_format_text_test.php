@@ -95,4 +95,33 @@ class core_weblib_format_text_testcase extends advanced_testcase {
         $this->assertEquals('<div class="no-overflow"><p>:-)</p></div>',
                 format_text('<p>:-)</p>', FORMAT_HTML, array('overflowdiv' => true)));
     }
+
+    public function test_format_text_target_email() {
+        $this->resetAfterTest();
+        filter_set_global_state('emoticon', TEXTFILTER_ON);
+        $sampletext = '<p>:-)</p>';
+
+        // Set emoticon among the filters to be skipped for email target.
+        set_config('filterskipemail', 'mediaplugin,emoticon');
+
+        // Emoticon filter applies if no target is specified.
+        $formattedsampletext = format_text($sampletext, FORMAT_HTML,
+            array('overflowdiv' => false));
+        $this->assertNotEquals($sampletext, $formattedsampletext);
+
+        // If email target is specified the filter does not apply.
+        set_config('filterskipemail', 'mediaplugin,emoticon');
+        $this->assertEquals($sampletext, format_text($sampletext, FORMAT_HTML,
+            array('overflowdiv' => false, 'target' => 'email')));
+
+        // Remove emoticon from the filters to be skipped for email target. Now filter applies.
+        set_config('filterskipemail', 'mediaplugin');
+        $this->assertEquals($formattedsampletext, format_text($sampletext, FORMAT_HTML,
+            array('overflowdiv' => false, 'target' => 'email')));
+
+        // Test the same with completely empty config variable.
+        set_config('filterskipemail', '');
+        $this->assertEquals($formattedsampletext, format_text($sampletext, FORMAT_HTML,
+            array('overflowdiv' => false, 'target' => 'email')));
+    }
 }
