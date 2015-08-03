@@ -434,10 +434,15 @@ class qtype_calculated_variable_substituter {
      */
     protected function calculate_raw($expression) {
         // This validation trick from http://php.net/manual/en/function.eval.php .
-        if (!@eval('return true; $result = ' . $expression . ';')) {
+        try {
+            if (!@eval('return true; $result = ' . $expression . ';')) {
+                throw new moodle_exception('illegalformulasyntax', 'qtype_calculated', '', $expression);
+            }
+            return eval('return ' . $expression . ';');
+        } catch (Throwable $e) {
+            // PHP7 throws ParseException and friends from eval().
             throw new moodle_exception('illegalformulasyntax', 'qtype_calculated', '', $expression);
         }
-        return eval('return ' . $expression . ';');
     }
 
     /**
