@@ -249,10 +249,15 @@ class qtype_calculated_qe2_attempt_updater extends question_qtype_attempt_update
      */
     protected function calculate_raw($expression) {
         // This validation trick from http://php.net/manual/en/function.eval.php.
-        if (!@eval('return true; $result = ' . $expression . ';')) {
+        try {
+            if (!@eval('return true; $result = ' . $expression . ';')) {
+                return '[Invalid expression ' . $expression . ']';
+            }
+            return eval('return ' . $expression . ';');
+        } catch (Throwable $e) {
+            // PHP7 throws ParseException and friends from eval().
             return '[Invalid expression ' . $expression . ']';
         }
-        return eval('return ' . $expression . ';');
     }
 
     /**
