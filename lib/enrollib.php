@@ -1528,6 +1528,26 @@ abstract class enrol_plugin {
     }
 
     /**
+     * This returns false for backwards compatibility, but it is really recommended.
+     *
+     * @since Moodle 3.0
+     * @return boolean
+     */
+    public function use_standard_add_instance_page() {
+        return false;
+    }
+
+    /**
+     * Default implementation is just for backwards compatibility.
+     *
+     * @param int $courseid
+     * @return boolean
+     */
+    public function can_add_instance($courseid) {
+        return !empty($this->get_newinstance_link($courseid));
+    }
+
+    /**
      * Returns link to page which may be used to add new instance of enrolment plugin in course.
      * @param int $courseid
      * @return moodle_url page url
@@ -1634,6 +1654,36 @@ abstract class enrol_plugin {
     }
 
     /**
+     * Adds form elements to add/edit instance form.
+     *
+     * @since Moodle 3.0
+     * @param object $instance enrol instance or null if does not exist yet
+     * @param MoodleQuickForm $mform
+     * @param context $context
+     * @return void
+     */
+    public function edit_instance_form($instance, MoodleQuickForm $mform, $context) {
+        // Do nothing by default.
+    }
+
+    /**
+     * Perform custom validation of the data used to edit the instance.
+     *
+     * @since Moodle 3.0
+     * @param array $data array of ("fieldname"=>value) of submitted data
+     * @param array $files array of uploaded files "element_name"=>tmp_file_path
+     * @param object $instance The instance data loaded from the DB.
+     * @param context $context The context of the instance we are editing
+     * @return array of "element_name"=>"error_description" if there are errors,
+     *         or an empty array if everything is OK.
+     */
+    public function edit_instance_validation($data, $files, $instance, $context) {
+        // No errors by default.
+        debugging('enrol_plugin::edit_instance_validation() is missing. This plugin has no validation!', DEBUG_DEVELOPER);
+        return array();
+    }
+
+    /**
      * Validates course edit form data
      *
      * @param object $instance enrol instance or null if does not exist yet
@@ -1693,6 +1743,33 @@ abstract class enrol_plugin {
         }
 
         return $DB->insert_record('enrol', $instance);
+    }
+
+    /**
+     * Update instance of enrol plugin.
+     *
+     * @since Moodle 3.0
+     * @param stdClass $instance
+     * @param stdClass $data modified instance fields
+     * @return boolean
+     */
+    public function update_instance($instance, $data) {
+        global $DB;
+        $properties = array('status', 'name', 'password', 'customint1', 'customint2', 'customint3',
+                            'customint4', 'customint5', 'customint6', 'customint7', 'customint8',
+                            'customchar1', 'customchar2', 'customchar3', 'customdec1', 'customdec2',
+                            'customtext1', 'customtext2', 'customtext3', 'customtext4', 'roleid',
+                            'enrolperiod', 'expirynotify', 'notifyall', 'expirythreshold',
+                            'enrolstartdate', 'enrolenddate', 'cost', 'currency');
+
+        foreach ($properties as $key) {
+            if (isset($data->$key)) {
+                $instance->$key = $data->$key;
+            }
+        }
+        $instance->timemodified = time();
+
+        return $DB->update_record('enrol', $instance);
     }
 
     /**
@@ -2338,5 +2415,40 @@ abstract class enrol_plugin {
     public function restore_group_member($instance, $groupid, $userid) {
         // Implement if you want to restore protected group memberships,
         // usually this is not necessary because plugins should be able to recreate the memberships automatically.
+    }
+
+    /**
+     * Returns defaults for new instances.
+     * @since Moodle 3.0
+     * @return array
+     */
+    public function get_instance_defaults() {
+        return array();
+    }
+
+    /**
+     * Validate a list of parameter names and types.
+     * @since Moodle 3.0
+     *
+     * @param array $data array of ("fieldname"=>value) of submitted data
+     * @param array $rules array of ("fieldname"=>PARAM_X types - or "fieldname"=>array( list of valid options )
+     * @return array of "element_name"=>"error_description" if there are errors,
+     *         or an empty array if everything is OK.
+     */
+    public function validate_param_types($data, $rules) {
+        $errors = array();
+        $invalidstr = get_string('invaliddata', 'error');
+        foreach ($rules as $fieldname => $rule) {
+            if (is_array($rule)) {
+                if (!in_array($data[$fieldname], $rule)) {
+                    $errors[$fieldname] = $invalidstr;
+                }
+            } else {
+                if ($data[$fieldname] != clean_param($data[$fieldname], $rule)) {
+                    $errors[$fieldname] = $invalidstr;
+                }
+            }
+        }
+        return $errors;
     }
 }

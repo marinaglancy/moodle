@@ -15,75 +15,80 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Adds new instance of enrol_paypal to specified course
+ * Adds new instance of an enrolment plugin to specified course
  * or edits current instance.
  *
- * @package    enrol_paypal
- * @copyright  2010 Petr Skoda  {@link http://skodak.org}
+ * @package    core_enrol
+ * @copyright  2015 Damyon Wiese
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require('../../config.php');
-require_once('edit_form.php');
+require('../config.php');
+require_once('editinstance_form.php');
 
 $courseid   = required_param('courseid', PARAM_INT);
-$instanceid = optional_param('id', 0, PARAM_INT); // instanceid
+$type   = required_param('type', PARAM_COMPONENT);
+$instanceid = optional_param('id', 0, PARAM_INT);
 
 $course = $DB->get_record('course', array('id'=>$courseid), '*', MUST_EXIST);
 $context = context_course::instance($course->id, MUST_EXIST);
 
-require_login($course);
-require_capability('enrol/paypal:config', $context);
+$plugin = enrol_get_plugin($type);
+if (!$plugin) {
+    throw new moodle_exception('invaliddata', 'error');
+}
 
-$PAGE->set_url('/enrol/paypal/edit.php', array('courseid'=>$course->id, 'id'=>$instanceid));
+require_login($course);
+require_capability('enrol/' . $type . ':config', $context);
+
+$PAGE->set_url('/enrol/editinstance.php', array('courseid'=>$course->id, 'id'=>$instanceid, 'type'=>$type));
 $PAGE->set_pagelayout('admin');
 
 $return = new moodle_url('/enrol/instances.php', array('id'=>$course->id));
-if (!enrol_is_enabled('paypal')) {
+if (!enrol_is_enabled($type)) {
     redirect($return);
 }
 
-$plugin = enrol_get_plugin('paypal');
-
 if ($instanceid) {
-    $instance = $DB->get_record('enrol', array('courseid'=>$course->id, 'enrol'=>'paypal', 'id'=>$instanceid), '*', MUST_EXIST);
-    $instance->cost = format_float($instance->cost, 2, true);
+    $instance = $DB->get_record('enrol', array('courseid'=>$course->id, 'enrol'=>$type, 'id'=>$instanceid), '*', MUST_EXIST);
+
 } else {
     require_capability('moodle/course:enrolconfig', $context);
-    // no instance yet, we have to add new instance
+    // No instance yet, we have to add new instance.
     navigation_node::override_active_url(new moodle_url('/enrol/instances.php', array('id'=>$course->id)));
-    $instance = new stdClass();
+
+    $instance = (object)$plugin->get_instance_defaults();
     $instance->id       = null;
     $instance->courseid = $course->id;
+    $instance->status   = ENROL_INSTANCE_ENABLED; // Do not use default for automatically created instances here.
 }
 
-$mform = new enrol_paypal_edit_form(NULL, array($instance, $plugin, $context));
+$mform = new enrol_instance_edit_form(NULL, array($instance, $plugin, $context, $type));
 
 if ($mform->is_cancelled()) {
     redirect($return);
 
 } else if ($data = $mform->get_data()) {
-    if ($instance->id) {
-        $reset = ($instance->status != $data->status);
 
-        $instance->status         = $data->status;
-        $instance->name           = $data->name;
-        $instance->cost           = unformat_float($data->cost);
-        $instance->currency       = $data->currency;
-        $instance->roleid         = $data->roleid;
-        $instance->enrolperiod    = $data->enrolperiod;
-        $instance->enrolstartdate = $data->enrolstartdate;
-        $instance->enrolenddate   = $data->enrolenddate;
+    if ($instance->id) {
+        $reset = false;
+        if (isset($data->status)) {
+            $reset = ($instance->status != $data->status);
+        }
+
+        foreach ($data as $key => $value) {
+            $instance->$key = $value;
+        }
+
         $instance->timemodified   = time();
-        $DB->update_record('enrol', $instance);
+        $plugin->update_instance($instance, $data);
 
         if ($reset) {
             $context->mark_dirty();
         }
 
     } else {
-        $fields = array('status'=>$data->status, 'name'=>$data->name, 'cost'=>unformat_float($data->cost), 'currency'=>$data->currency, 'roleid'=>$data->roleid,
-                        'enrolperiod'=>$data->enrolperiod, 'enrolstartdate'=>$data->enrolstartdate, 'enrolenddate'=>$data->enrolenddate);
+        $fields = (array) $data;
         $plugin->add_instance($course, $fields);
     }
 
@@ -91,9 +96,9 @@ if ($mform->is_cancelled()) {
 }
 
 $PAGE->set_heading($course->fullname);
-$PAGE->set_title(get_string('pluginname', 'enrol_paypal'));
+$PAGE->set_title(get_string('pluginname', 'enrol_' . $type));
 
 echo $OUTPUT->header();
-echo $OUTPUT->heading(get_string('pluginname', 'enrol_paypal'));
+echo $OUTPUT->heading(get_string('pluginname', 'enrol_' . $type));
 $mform->display();
 echo $OUTPUT->footer();

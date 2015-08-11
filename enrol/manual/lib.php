@@ -93,7 +93,7 @@ class enrol_manual_plugin extends enrol_plugin {
 
         $context = context_course::instance($instance->courseid);
         if (has_capability('enrol/manual:config', $context)) {
-            $managelink = new moodle_url('/enrol/manual/edit.php', array('courseid'=>$instance->courseid));
+            $managelink = new moodle_url('/enrol/editinstance.php', array('courseid'=>$instance->courseid, 'type'=>'manual'));
             $instancesnode->add($this->get_instance_name($instance), $managelink, navigation_node::TYPE_SETTING);
         }
     }
@@ -118,33 +118,12 @@ class enrol_manual_plugin extends enrol_plugin {
             $icons[] = $OUTPUT->action_icon($managelink, new pix_icon('t/enrolusers', get_string('enrolusers', 'enrol_manual'), 'core', array('class'=>'iconsmall')));
         }
         if (has_capability('enrol/manual:config', $context)) {
-            $editlink = new moodle_url("/enrol/manual/edit.php", array('courseid'=>$instance->courseid));
+            $editlink = new moodle_url("/enrol/editinstance.php", array('courseid'=>$instance->courseid, 'type'=>'manual'));
             $icons[] = $OUTPUT->action_icon($editlink, new pix_icon('t/edit', get_string('edit'), 'core',
                     array('class' => 'iconsmall')));
         }
 
         return $icons;
-    }
-
-    /**
-     * Returns link to page which may be used to add new instance of enrolment plugin in course.
-     * @param int $courseid
-     * @return moodle_url page url
-     */
-    public function get_newinstance_link($courseid) {
-        global $DB;
-
-        $context = context_course::instance($courseid, MUST_EXIST);
-
-        if (!has_capability('moodle/course:enrolconfig', $context) or !has_capability('enrol/manual:config', $context)) {
-            return NULL;
-        }
-
-        if ($DB->record_exists('enrol', array('courseid'=>$courseid, 'enrol'=>'manual'))) {
-            return NULL;
-        }
-
-        return new moodle_url('/enrol/manual/edit.php', array('courseid'=>$courseid));
     }
 
     /**
@@ -610,4 +589,123 @@ class enrol_manual_plugin extends enrol_plugin {
             $this->enrol_user($instance, $userid, $roleid, $timestart, $timeend, $status, $recovergrades);
         }
     }
+
+    /**
+     * We are a good plugin and don't invent our own UI/validation code path.
+     *
+     * @return boolean
+     */
+    function use_standard_add_instance_page() {
+        return true;
+    }
+
+    /**
+     * Return an array of valid options for the status.
+     *
+     * @return array
+     */
+    protected function get_status_options() {
+        $options = array(ENROL_INSTANCE_ENABLED  => get_string('yes'),
+                         ENROL_INSTANCE_DISABLED => get_string('no'));
+        return $options;
+    }
+
+    /**
+     * Return an array of valid options for the roleid.
+     *
+     * @return array
+     */
+    protected function get_roleid_options($instance, $context) {
+        if ($instance->id) {
+            $roles = get_default_enrol_roles($context, $instance->roleid);
+        } else {
+            $roles = get_default_enrol_roles($context, self::get_config('roleid'));
+        }
+        return $roles;
+    }
+
+    /**
+     * Return an array of valid options for the expirynotify.
+     *
+     * @return array
+     */
+    protected function get_expirynotify_options() {
+        $options = array(
+            0 => get_string('no'),
+            1 => get_string('expirynotifyenroller', 'core_enrol'),
+            2 => get_string('expirynotifyall', 'core_enrol')
+        );
+        return $options;
+    }
+
+    /**
+     * Add elements to the edit instance form.
+     *
+     * @param MoodleQuickForm $mform
+     * @return bool
+     */
+    public function edit_instance_form($instance, MoodleQuickForm $mform, $context) {
+
+        $options = self::get_status_options();
+        $mform->addElement('select', 'status', get_string('status', 'enrol_manual'), $options);
+        $mform->addHelpButton('status', 'status', 'enrol_manual');
+        $mform->setDefault('status', self::get_config('status'));
+
+        $roles = self::get_roleid_options($instance, $context);
+        $mform->addElement('select', 'roleid', get_string('defaultrole', 'role'), $roles);
+        $mform->setDefault('roleid', self::get_config('roleid'));
+
+        $mform->addElement('duration', 'enrolperiod', get_string('defaultperiod', 'enrol_manual'), array('optional' => true, 'defaultunit' => 86400));
+        $mform->setDefault('enrolperiod', self::get_config('enrolperiod'));
+        $mform->addHelpButton('enrolperiod', 'defaultperiod', 'enrol_manual');
+
+        $options = self::get_expirynotify_options();
+        $mform->addElement('select', 'expirynotify', get_string('expirynotify', 'core_enrol'), $options);
+        $mform->addHelpButton('expirynotify', 'expirynotify', 'core_enrol');
+
+        $mform->addElement('duration', 'expirythreshold', get_string('expirythreshold', 'core_enrol'), array('optional' => false, 'defaultunit' => 86400));
+        $mform->addHelpButton('expirythreshold', 'expirythreshold', 'core_enrol');
+        $mform->disabledIf('expirythreshold', 'expirynotify', 'eq', 0);
+
+        if (enrol_accessing_via_instance($instance)) {
+            $mform->addElement('static', 'selfwarn', get_string('instanceeditselfwarning', 'core_enrol'), get_string('instanceeditselfwarningtext', 'core_enrol'));
+        }
+    }
+
+    /**
+     * Perform custom validation of the data used to edit the instance.
+     *
+     * @param array $data array of ("fieldname"=>value) of submitted data
+     * @param array $files array of uploaded files "element_name"=>tmp_file_path
+     * @param object $instance The instance loaded from the DB
+     * @param context $context The context of the instance we are editing
+     * @return array of "element_name"=>"error_description" if there are errors,
+     *         or an empty array if everything is OK.
+     * @return void
+     */
+    function edit_instance_validation($data, $files, $instance, $context) {
+        $errors = array();
+
+        if ($data['expirynotify'] > 0 and $data['expirythreshold'] < 86400) {
+            $errors['expirythreshold'] = get_string('errorthresholdlow', 'core_enrol');
+        }
+
+        $validstatus = array_keys(self::get_status_options());
+        $validroles = array_keys(self::get_roleid_options($instance, $context));
+        $validexpirynotify = array_keys(self::get_expirynotify_options());
+
+        $tovalidate = array(
+            'status' => $validstatus,
+            'roleid' => $validroles,
+            'enrolperiod' => PARAM_INT,
+            'expirynotify' => $validexpirynotify,
+            'expirythreshold' => PARAM_INT
+        );
+
+        $typeerrors = self::validate_param_types($data, $tovalidate);
+        $errors = array_merge($errors, $typeerrors);
+
+        return $errors;
+    }
+
 }
