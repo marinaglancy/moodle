@@ -977,7 +977,7 @@ function message_format_message_text($message, $forcetexttohtml = false) {
 
     $format = $message->fullmessageformat;
 
-    if ($message->smallmessage !== '') {
+    if ('' . $message->smallmessage !== '') {
         if ($message->notification == 1) {
             if ($message->fullmessagehtml !== '' or $message->fullmessage !== '') {
                 $format = FORMAT_PLAIN;
@@ -986,7 +986,7 @@ function message_format_message_text($message, $forcetexttohtml = false) {
         $messagetext = $message->smallmessage;
 
     } else if ($message->fullmessageformat == FORMAT_HTML) {
-        if ($message->fullmessagehtml !== '') {
+        if ('' . $message->fullmessagehtml !== '') {
             $messagetext = $message->fullmessagehtml;
         } else {
             $messagetext = $message->fullmessage;
@@ -994,7 +994,7 @@ function message_format_message_text($message, $forcetexttohtml = false) {
         }
 
     } else {
-        if ($message->fullmessage !== '') {
+        if ('' . $message->fullmessage !== '') {
             $messagetext = $message->fullmessage;
         } else {
             $messagetext = $message->fullmessagehtml;
