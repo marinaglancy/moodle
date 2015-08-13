@@ -708,15 +708,13 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
         }
         $managerroles = explode(',', $CFG->coursecontact);
         $cache = cache::make('core', 'coursecontacts');
-        $cacheddata = $cache->get_many(array_merge(array('basic'), array_keys($courses)));
+        $cacheddata = $cache->get_many(array_merge(array('roles'), array_keys($courses)));
         // Check if cache was set for the current course contacts and it is not yet expired.
-        if (empty($cacheddata['basic']) || $cacheddata['basic']['roles'] !== $CFG->coursecontact ||
-                $cacheddata['basic']['lastreset'] < time() - self::CACHE_COURSE_CONTACTS_TTL) {
-            // Reset cache.
-            $keys = $DB->get_fieldset_select('course', 'id', '');
-            $cache->delete_many($keys);
-            $cache->set('basic', array('roles' => $CFG->coursecontact, 'lastreset' => time()));
-            $cacheddata = $cache->get_many(array_merge(array('basic'), array_keys($courses)));
+        if (empty($cacheddata['roles']) || $cacheddata['roles'] !== $CFG->coursecontact) {
+            // Course contacts setting has been changes, purge all caches.
+            $cache->purge();
+            $cache->set('roles', $CFG->coursecontact);
+            $cacheddata = $cache->get_many(array_merge(array('roles'), array_keys($courses)));
         }
         $courseids = array();
         foreach (array_keys($courses) as $id) {
