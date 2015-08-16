@@ -1394,11 +1394,13 @@ function tag_get_correlated($tag_id, $limitnum=null) {
     }
 
     // this is (and has to) return the same fields as the query in tag_get_tags
-    $sql = "SELECT ti.id AS taginstanceid, tg.id, tg.tagtype, tg.name, tg.rawname, tg.flag, ti.ordering
+    $sql = "SELECT MIN(ti.id) AS taginstanceid, tg.id, tg.tagtype, tg.name, tg.rawname, tg.flag,
+                   MIN(ti.ordering) AS ordering
               FROM {tag} tg
         INNER JOIN {tag_instance} ti ON tg.id = ti.tagid
              WHERE tg.id IN ({$tag_correlation->correlatedtags})
-          ORDER BY ti.ordering ASC";
+          GROUP BY tg.id, tg.tagtype, tg.name, tg.rawname, tg.flag
+          ORDER BY MIN(ti.ordering) ASC";
     $result = $DB->get_records_sql($sql);
     if (!$result) {
         return array();
