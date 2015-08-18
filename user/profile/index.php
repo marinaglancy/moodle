@@ -153,7 +153,11 @@ echo '<div class="profileeditor">';
 // Create a new field link.
 $options = profile_list_datatypes();
 $popupurl = new moodle_url('/user/profile/index.php?id=0&action=editfield');
-echo $OUTPUT->single_select($popupurl, 'datatype', $options, '', null, 'newfieldform', array('label' => $strcreatefield));
+$select = new single_select($popupurl, 'datatype', $options, '', array('' => $strcreatefield),
+    'newfieldform');
+$select->set_label($strcreatefield);
+$select->labelattributes = array('class' => 'accesshide');
+echo $OUTPUT->render($select);
 
 // Add a div with a class so themers can hide, style or reposition the text.
 html_writer::start_tag('div', array('class' => 'adminuseractionhint'));
