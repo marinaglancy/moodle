@@ -145,7 +145,6 @@ switch($action) {
                 // tag exists, change the type
                 tag_type_set($new_otag_id, 'official');
             } else {
-                require_capability('moodle/tag:create', context_system::instance());
                 tag_add($new_otag, 'official');
             }
             $notice .= get_string('addedotag', 'tag', $new_otag) .' ';

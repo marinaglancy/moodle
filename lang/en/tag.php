@@ -27,6 +27,7 @@ $string['addotags'] = 'Add official tags';
 $string['addtagtomyinterests'] = 'Add "{$a}" to my interests';
 $string['alltagpages'] = 'All tag pages';
 $string['count'] = 'Count';
+$string['coursetags'] = 'Course tags';
 $string['delete'] = 'Delete';
 $string['deleted'] = 'Deleted';
 $string['deletedcoursetags'] = 'Deleted - Course tags';

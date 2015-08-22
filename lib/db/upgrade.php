@@ -4470,5 +4470,24 @@ function xmldb_main_upgrade($oldversion) {
         upgrade_main_savepoint(true, 2015082400.00);
     }
 
+    if ($oldversion < 2015082801.00) {
+        // This upgrade script merges all tag instances pointing to the same course tag.
+        // User id is no longer used for those tag instances.
+        upgrade_course_tags();
+
+        // If configuration variable "Show course tags" is set, disable the block
+        // 'tags' because it can not be used for tagging courses any more.
+        if (!empty($CFG->block_tags_showcoursetags)) {
+            if ($record = $DB->get_record('block', array('name' => 'tags'), 'id, visible')) {
+                if ($record->visible) {
+                    $DB->update_record('block', array('id' => $record->id, 'visible' => 0));
+                }
+            }
+        }
+
+        // Main savepoint reached.
+        upgrade_main_savepoint(true, 2015082801.00);
+    }
+
     return true;
 }

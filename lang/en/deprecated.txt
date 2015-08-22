@@ -11,3 +11,4 @@ mypreferences,core_grades
 myprofile,core
 viewallmyentries,core_blog
 cannotdeletepost,core_notes
+tag:create,core_role
