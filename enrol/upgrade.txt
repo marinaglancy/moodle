@@ -5,6 +5,12 @@ Enrolment plugins UI have been consolidated. Plugins can implement use_standard_
 and add edit_instance_form() and edit_instance_validation() methods instead of providing their own edit.php and form. In future
 this will mean they can be called by webservices/user upload tools because they can validate their data.
 
+=== 3.0 ===
+
+* Added new events enrol_instance_created, enrol_instance_updated and
+  enrol_instance_deleted . Always trigger them when changing records in the
+  DB table 'enrol'.
+
 === 2.9 ===
 
 * External function core_enrol_external::get_users_courses now returns additional optional fields:

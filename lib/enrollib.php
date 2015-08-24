@@ -1742,7 +1742,11 @@ abstract class enrol_plugin {
             $instance->$field = $value;
         }
 
-        return $DB->insert_record('enrol', $instance);
+        $instance->id = $DB->insert_record('enrol', $instance);
+
+        \core\event\enrol_instance_created::create_from_record($instance)->trigger();
+
+        return $instance->id;
     }
 
     /**
@@ -1769,7 +1773,11 @@ abstract class enrol_plugin {
         }
         $instance->timemodified = time();
 
-        return $DB->update_record('enrol', $instance);
+        $rv = $DB->update_record('enrol', $instance);
+
+        \core\event\enrol_instance_updated::create_from_record($instance)->trigger();
+
+        return $rv;
     }
 
     /**
@@ -1800,8 +1808,10 @@ abstract class enrol_plugin {
         $instance->status = $newstatus;
         $DB->update_record('enrol', $instance);
 
-        // invalidate all enrol caches
         $context = context_course::instance($instance->courseid);
+        \core\event\enrol_instance_updated::create_from_record($instance)->trigger();
+
+        // Invalidate all enrol caches.
         $context->mark_dirty();
     }
 
@@ -1833,8 +1843,10 @@ abstract class enrol_plugin {
         // finally drop the enrol row
         $DB->delete_records('enrol', array('id'=>$instance->id));
 
-        // invalidate all enrol caches
         $context = context_course::instance($instance->courseid);
+        \core\event\enrol_instance_deleted::create_from_record($instance)->trigger();
+
+        // Invalidate all enrol caches.
         $context->mark_dirty();
     }
 
