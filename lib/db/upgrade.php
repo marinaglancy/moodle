@@ -4485,6 +4485,15 @@ function xmldb_main_upgrade($oldversion) {
             }
         }
 
+        // Define index idname (unique) to be dropped form tag (it's really weird).
+        $table = new xmldb_table('tag');
+        $index = new xmldb_index('idname', XMLDB_INDEX_UNIQUE, array('id', 'name'));
+
+        // Conditionally launch drop index idname.
+        if ($dbman->index_exists($table, $index)) {
+            $dbman->drop_index($table, $index);
+        }
+
         // Main savepoint reached.
         upgrade_main_savepoint(true, 2015082801.00);
     }
