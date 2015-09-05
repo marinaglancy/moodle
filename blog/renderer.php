@@ -132,14 +132,14 @@ class core_blog_renderer extends plugin_renderer_base {
         }
 
         // Links to tags.
-        $officialtags = tag_get_tags_csv('post', $entry->id, TAG_RETURN_HTML, 'official');
-        $defaulttags = tag_get_tags_csv('post', $entry->id, TAG_RETURN_HTML, 'default');
+        $officialtags = core_tag::get_item_tags_csv('post', 'core', $entry->id, true, true);
+        $defaulttags = core_tag::get_item_tags_csv('post', 'core', $entry->id, true, false);
 
-        if (!empty($CFG->usetags) && ($officialtags || $defaulttags) ) {
+        if ($officialtags || $defaulttags) {
             $o .= $this->output->container_start('tags');
 
             if ($officialtags) {
-                $o .= get_string('tags', 'tag') .': '. $this->output->container($officialtags, 'officialblogtags');
+                $o .= get_string('tags', 'tag') .': '. html_writer::span($officialtags, 'officialblogtags');
                 if ($defaulttags) {
                     $o .=  ', ';
                 }

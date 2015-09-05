@@ -61,6 +61,7 @@ class block_blog_tags extends block_base {
 
     function get_content() {
         global $CFG, $SITE, $USER, $DB, $OUTPUT;
+        require_once($CFG->dirroot . '/tag/lib.php');
 
         if ($this->content !== NULL) {
             return $this->content;
@@ -75,7 +76,7 @@ class block_blog_tags extends block_base {
             }
             return $this->content;
 
-        } else if (empty($CFG->usetags)) {
+        } else if (!core_tag::is_enabled('post', 'core')) {
             $this->content = new stdClass();
             $this->content->text = '';
             if ($this->page->user_is_editing()) {
@@ -126,6 +127,7 @@ class block_blog_tags extends block_base {
                   WHERE t.id = ti.tagid AND p.id = ti.itemid
                         $type
                         AND ti.itemtype = 'post'
+                        AND ti.component = 'core'
                         AND ti.timemodified > $timewithin";
 
         if ($context->contextlevel == CONTEXT_MODULE) {

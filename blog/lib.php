@@ -29,7 +29,6 @@ defined('MOODLE_INTERNAL') || die();
  * Library of functions and constants for blog
  */
 require_once($CFG->dirroot .'/blog/rsslib.php');
-require_once($CFG->dirroot.'/tag/lib.php');
 
 /**
  * User can edit a blog entry if this is their own blog entry and they have
@@ -254,8 +253,8 @@ function blog_sync_external_entries($externalblog) {
             $id = $DB->insert_record('post', $newentry);
 
             // Set tags.
-            if ($tags = tag_get_tags_array('blog_external', $externalblog->id)) {
-                tag_set('post', $id, $tags, 'core', context_user::instance($externalblog->userid)->id);
+            if ($tags = core_tag::get_item_tags_array('blog_external', 'core', $externalblog->id)) {
+                core_tag::set_item_tags('post', 'core', $id, context_user::instance($externalblog->userid), $tags);
             }
         } else {
             $newentry->id = $postid;

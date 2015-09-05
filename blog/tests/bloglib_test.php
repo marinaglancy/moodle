@@ -61,12 +61,8 @@ class core_bloglib_testcase extends advanced_testcase {
         $user = $this->getDataGenerator()->create_user(array('username'=>'testuser', 'firstname'=>'Jimmy', 'lastname'=>'Kinnon'));
 
         // Create default tag.
-        $tag = new stdClass();
-        $tag->userid = $user->id;
-        $tag->name = 'testtagname';
-        $tag->rawname = 'Testtagname';
-        $tag->tagtype = 'official';
-        $tag->id = $DB->insert_record('tag', $tag);
+        $tag = $this->getDataGenerator()->create_tag(array('userid' => $user->id,
+            'rawname' => 'Testtagname', 'tagtype' => 'official'));
 
         // Create default post.
         $post = new stdClass();

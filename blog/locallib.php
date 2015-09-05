@@ -256,14 +256,11 @@ class blog_entry implements renderable {
         // Insert the new blog entry.
         $this->id = $DB->insert_record('post', $this);
 
-        // Update tags.
-        $this->add_tags_info();
-
         if (!empty($CFG->useblogassociations)) {
             $this->add_associations();
         }
 
-        tag_set('post', $this->id, $this->tags, 'core', context_user::instance($this->userid)->id);
+        core_tag::set_item_tags('post', 'core', $this->id, context_user::instance($this->userid), $this->tags);
 
         // Trigger an event for the new entry.
         $event = \core\event\blog_entry_created::create(array(
@@ -312,7 +309,7 @@ class blog_entry implements renderable {
 
         // Update record.
         $DB->update_record('post', $entry);
-        tag_set('post', $entry->id, $entry->tags, 'core', context_user::instance($this->userid)->id);
+        core_tag::set_item_tags('post', 'core', $entry->id, context_user::instance($this->userid), $entry->tags);
 
         $event = \core\event\blog_entry_updated::create(array(
             'objectid'      => $entry->id,
@@ -336,7 +333,7 @@ class blog_entry implements renderable {
         // Get record to pass onto the event.
         $record = $DB->get_record('post', array('id' => $this->id));
         $DB->delete_records('post', array('id' => $this->id));
-        tag_set('post', $this->id, array(), 'core', context_user::instance($this->userid)->id);
+        core_tag::remove_all_item_tags('post', 'core', $this->id);
 
         $event = \core\event\blog_entry_deleted::create(array(
             'objectid'      => $this->id,
@@ -422,26 +419,6 @@ class blog_entry implements renderable {
         $fs = get_file_storage();
         $fs->delete_area_files(SYSCONTEXTID, 'blog', 'attachment', $this->id);
         $fs->delete_area_files(SYSCONTEXTID, 'blog', 'post', $this->id);
-    }
-
-    /**
-     * function to attach tags into an entry
-     * @return void
-     */
-    public function add_tags_info() {
-
-        $tags = array();
-
-        if ($otags = optional_param('otags', '', PARAM_INT)) {
-            foreach ($otags as $tagid) {
-                // TODO : make this use the tag name in the form.
-                if ($tag = tag_get('id', $tagid)) {
-                    $tags[] = $tag->name;
-                }
-            }
-        }
-
-        tag_set('post', $this->id, $tags, 'core', context_user::instance($this->userid)->id);
     }
 
     /**
@@ -1012,6 +989,7 @@ class blog_filter_tag extends blog_filter {
 
         $this->conditions = array('ti.tagid = t.id',
                                   "ti.itemtype = 'post'",
+                                  "ti.component = 'core'",
                                   'ti.itemid = p.id',
                                   't.id = ?');
         $this->params = array($this->id);
