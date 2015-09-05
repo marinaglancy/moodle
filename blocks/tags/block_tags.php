@@ -78,6 +78,10 @@ class block_tags extends block_base {
             $this->config->tagtype = '';
         }
 
+        if (empty($this->config->tagcoll)) {
+            $this->config->tagcoll = 0;
+        }
+
         if ($this->content !== NULL) {
             return $this->content;
         }
@@ -95,7 +99,7 @@ class block_tags extends block_base {
 
         require_once($CFG->dirroot.'/tag/locallib.php');
 
-        $this->content->text = tag_print_cloud(null, $this->config->numberoftags, true);
+        $this->content->text = tag_print_cloud(null, $this->config->numberoftags, true, '', $this->config->tagcoll);
 
         return $this->content;
     }

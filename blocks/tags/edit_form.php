@@ -30,12 +30,20 @@
  */
 class block_tags_edit_form extends block_edit_form {
     protected function specific_definition($mform) {
+        global $CFG;
         // Fields for editing HTML block title and contents.
         $mform->addElement('header', 'configheader', get_string('blocksettings', 'block'));
 
         $mform->addElement('text', 'config_title', get_string('configtitle', 'block_tags'));
         $mform->setType('config_title', PARAM_TEXT);
         $mform->setDefault('config_title', get_string('pluginname', 'block_tags'));
+
+        $tagcolls = core_tag_collection::get_collections_menu();
+        if (count($tagcolls) > 1) {
+            $options = array(0 => get_string('any')) + $tagcolls;
+            $mform->addElement('select', 'config_tagcoll', get_string('tagcollection', 'tag'), $options);
+            $mform->setDefault('config_tagcoll', 0);
+        }
 
         $numberoftags = array();
         for ($i = 1; $i <= 200; $i++) {
@@ -44,7 +52,9 @@ class block_tags_edit_form extends block_edit_form {
         $mform->addElement('select', 'config_numberoftags', get_string('numberoftags', 'blog'), $numberoftags);
         $mform->setDefault('config_numberoftags', 80);
 
-        $defaults = array('default'=>'default', 'official'=>'official', ''=>'both');
+        $defaults = array(
+            'official' => get_string('officialonly', 'block_tags'),
+            '' => get_string('anytype', 'block_tags'));
         $mform->addElement('select', 'config_tagtype', get_string('defaultdisplay', 'block_tags'), $defaults);
         $mform->setDefault('config_tagtype', '');
     }

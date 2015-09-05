@@ -22,9 +22,11 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+$string['anytype'] = 'All';
 $string['configtitle'] = 'Block title';
 $string['disabledtags'] = 'Tags are disabled';
 $string['defaultdisplay'] = 'Tag type to display';
+$string['officialonly'] = 'Only official';
 $string['pluginname'] = 'Tags';
 $string['tags:addinstance'] = 'Add a new tags block';
 $string['tags:myaddinstance'] = 'Add a new tags block to Dashboard';
