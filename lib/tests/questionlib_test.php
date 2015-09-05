@@ -29,7 +29,6 @@ global $CFG;
 
 require_once($CFG->libdir . '/questionlib.php');
 require_once($CFG->dirroot . '/mod/quiz/locallib.php');
-require_once($CFG->dirroot . '/tag/lib.php');
 
 // Get the necessary files to perform backup and restore.
 require_once($CFG->dirroot . '/backup/util/includes/backup_includes.php');
@@ -154,6 +153,7 @@ class core_questionlib_testcase extends advanced_testcase {
      */
     public function test_altering_tag_instance_context() {
         global $CFG, $DB;
+        require_once($CFG->dirroot . '/tag/lib.php');
 
         // Set to admin user.
         $this->setAdminUser();
