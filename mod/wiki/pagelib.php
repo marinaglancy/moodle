@@ -565,18 +565,9 @@ class page_wiki_edit extends page_wiki {
             $params['filearea']   = 'attachments';
         }
 
+        $data->tags = core_tag::get_item_tags_array('wiki_pages', 'mod_wiki', $this->page->id);
+
         $form = new mod_wiki_edit_form($url, $params);
-
-        if ($formdata = $form->get_data()) {
-            if (!empty($CFG->usetags)) {
-                $data->tags = $formdata->tags;
-            }
-        } else {
-            if (!empty($CFG->usetags)) {
-                $data->tags = tag_get_tags_array('wiki_pages', $this->page->id);
-            }
-        }
-
         $form->set_data($data);
         $form->display();
     }
@@ -2055,9 +2046,7 @@ class page_wiki_save extends page_wiki_edit {
         }
 
         if ($save && $data) {
-            if (!empty($CFG->usetags)) {
-                tag_set('wiki_pages', $this->page->id, $data->tags, 'mod_wiki', $this->modcontext->id);
-            }
+            core_tag::set_item_tags('wiki_pages', 'mod_wiki', $this->page->id, $this->modcontext, $data->tags);
 
             $message = '<p>' . get_string('saving', 'wiki') . '</p>';
 

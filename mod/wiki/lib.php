@@ -144,7 +144,6 @@ function wiki_delete_instance($id) {
 function wiki_reset_userdata($data) {
     global $CFG,$DB;
     require_once($CFG->dirroot . '/mod/wiki/pagelib.php');
-    require_once($CFG->dirroot . '/tag/lib.php');
 
     $componentstr = get_string('modulenameplural', 'wiki');
     $status = array();
@@ -154,14 +153,17 @@ function wiki_reset_userdata($data) {
         return false;
     }
     $errors = false;
+    if (empty($data->reset_wiki_comments) && empty($data->reset_wiki_tags)) {
+        return $status;
+    }
     foreach ($wikis as $wiki) {
+        if (!$cm = get_coursemodule_from_instance('wiki', $wiki->id)) {
+            continue;
+        }
+        $context = context_module::instance($cm->id);
 
         // remove all comments
         if (!empty($data->reset_wiki_comments)) {
-            if (!$cm = get_coursemodule_from_instance('wiki', $wiki->id)) {
-                continue;
-            }
-            $context = context_module::instance($cm->id);
             $DB->delete_records_select('comments', "contextid = ? AND commentarea='wiki_page'", array($context->id));
             $status[] = array('component'=>$componentstr, 'item'=>get_string('deleteallcomments'), 'error'=>false);
         }
@@ -173,15 +175,11 @@ function wiki_reset_userdata($data) {
             foreach ($subwikis as $subwiki) {
                 if ($pages = $DB->get_records('wiki_pages', array('subwikiid' => $subwiki->id))) {
                     foreach ($pages as $page) {
-                        $tags = tag_get_tags_array('wiki_pages', $page->id);
-                        foreach ($tags as $tagid => $tagname) {
-                            // Delete the related tag_instances related to the wiki page.
-                            $errors = tag_delete_instance('wiki_pages', $page->id, $tagid);
-                            $status[] = array('component' => $componentstr, 'item' => get_string('tagsdeleted', 'wiki'), 'error' => $errors);
-                        }
+                        core_tag::remove_all_item_tags('wiki_pages', 'mod_wiki', $page->id);
                     }
                 }
             }
+            $status[] = array('component' => $componentstr, 'item' => get_string('tagsdeleted', 'wiki'), 'error' => false);
         }
     }
     return $status;
