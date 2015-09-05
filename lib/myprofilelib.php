@@ -214,11 +214,9 @@ function core_myprofile_navigation(core_user\output\myprofile\tree $tree, $user,
     }
 
     // Printing tagged interests. We want this only for full profile.
-    if (!empty($CFG->usetags) && empty($course)) {
-        if ($interests = tag_get_tags_csv('user', $user->id) ) {
-            $node = new core_user\output\myprofile\node('contact', 'interests', get_string('interests'), null, null, $interests);
-            $tree->add_node($node);
-        }
+    if (empty($course) && ($interests = core_tag::get_item_tags_csv('user', 'core', $user->id))) {
+        $node = new core_user\output\myprofile\node('contact', 'interests', get_string('interests'), null, null, $interests);
+        $tree->add_node($node);
     }
 
     if (!isset($hiddenfields['mycourses'])) {

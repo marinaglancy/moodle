@@ -457,11 +457,9 @@ function user_get_user_details($user, $course = null, array $userfields = array(
         $userdetails['email'] = $user->email;
     }
 
-    if (in_array('interests', $userfields) && !empty($CFG->usetags)) {
-        require_once($CFG->dirroot . '/tag/lib.php');
-        if ($interests = tag_get_tags_csv('user', $user->id, TAG_RETURN_TEXT) ) {
-            $userdetails['interests'] = $interests;
-        }
+    if (in_array('interests', $userfields) &&
+            ($interests = core_tag::get_item_tags_csv('user', 'core', $user->id, false))) {
+        $userdetails['interests'] = $interests;
     }
 
     // Departement/Institution/Idnumber are not displayed on any profile, however you can get them from editing profile.

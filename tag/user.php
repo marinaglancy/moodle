@@ -4,8 +4,6 @@ require_once('../config.php');
 require_once('lib.php');
 
 $action = optional_param('action', '', PARAM_ALPHA);
-$id = optional_param('id', 0, PARAM_INT);
-$tag = optional_param('tag', '', PARAM_TAG);
 
 require_login();
 
@@ -25,32 +23,31 @@ $usercontext = context_user::instance($USER->id);
 
 switch ($action) {
     case 'addinterest':
-        if (empty($tag) && $id) { // for backward-compatibility (people saving bookmarks, mostly..)
-            $tag = tag_get_name($id);
+        if (!core_tag::is_enabled('user', 'core')) {
+            print_error('tagdisabled');
         }
-
-        tag_set_add('user', $USER->id, $tag, 'core', $usercontext->id);
-
-        redirect($CFG->wwwroot.'/tag/index.php?tag='. rawurlencode($tag));
+        $tag = required_param('tag', PARAM_TAG);
+        core_tag::add_item_tag('user', 'core', $USER->id, $usercontext, $tag);
+        $tc = core_tag_collection::get_tag_coll_id('user', 'core');
+        redirect(core_tag::get_view_url($tc, $tag));
         break;
 
     case 'removeinterest':
-        if (empty($tag) && $id) { // for backward-compatibility (people saving bookmarks, mostly..)
-            $tag = tag_get_name($id);
+        if (!core_tag::is_enabled('user', 'core')) {
+            print_error('tagdisabled');
         }
-
-        tag_set_delete('user', $USER->id, $tag, 'core', $usercontext->id);
-
-        redirect($CFG->wwwroot.'/tag/index.php?tag='. rawurlencode($tag));
+        $tag = required_param('tag', PARAM_TAG);
+        core_tag::remove_item_tag('user', 'core', $USER->id, $tag);
+        $tc = core_tag_collection::get_tag_coll_id('user', 'core');
+        redirect(core_tag::get_view_url($tc, $tag));
         break;
 
     case 'flaginappropriate':
         require_capability('moodle/tag:flag', context_system::instance());
-        $tagid = tag_get_id($tag);
-
-        tag_set_flag($tagid);
-
-        redirect($CFG->wwwroot.'/tag/index.php?tag='. rawurlencode($tag), get_string('responsiblewillbenotified', 'tag'));
+        $id = required_param('id', PARAM_INT);
+        $tagobject = core_tag::get($id, '*', MUST_EXIST);
+        $tagobject->flag();
+        redirect($tagobject->viewurl, get_string('responsiblewillbenotified', 'tag'));
         break;
 
     default:
