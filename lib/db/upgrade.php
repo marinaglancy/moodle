@@ -4558,5 +4558,122 @@ function xmldb_main_upgrade($oldversion) {
         upgrade_main_savepoint(true, 2015090301.00);
     }
 
+    if ($oldversion < 2015090501.00) {
+
+        // This is a big upgrade script. We create new table tag_coll and the field
+        // tag.tagcollid pointing to it.
+
+        // Define table tag_coll to be created.
+        $table = new xmldb_table('tag_coll');
+
+        // Adding fields to table tagcloud.
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('name', XMLDB_TYPE_CHAR, '255', null, null, null, null);
+        $table->add_field('isdefault', XMLDB_TYPE_INTEGER, '2', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('itemtypes', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('component', XMLDB_TYPE_CHAR, '100', null, null, null, null);
+        $table->add_field('sortorder', XMLDB_TYPE_INTEGER, '5', null, XMLDB_NOTNULL, null, '0');
+
+        // Adding keys to table tagcloud.
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
+
+        // Conditionally launch create table for tagcloud.
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Table {tag}.
+        // Define index name (unique) to be dropped form tag - we will replace it with index on (tagcollid,name) later.
+        $table = new xmldb_table('tag');
+        $index = new xmldb_index('name', XMLDB_INDEX_UNIQUE, array('name'));
+
+        // Conditionally launch drop index name.
+        if ($dbman->index_exists($table, $index)) {
+            $dbman->drop_index($table, $index);
+        }
+
+        // Define field tagcollid to be added to tag, we create it as null first and will change to notnull later.
+        $table = new xmldb_table('tag');
+        $field = new xmldb_field('tagcollid', XMLDB_TYPE_INTEGER, '10', null, null, null, null, 'userid');
+
+        // Conditionally launch add field tagcloudid.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Main savepoint reached.
+        upgrade_main_savepoint(true, 2015090501.00);
+    }
+
+    if ($oldversion < 2015090501.02) {
+        // Create a default tag collection if not exists and update the field tag.tagcollid to point to it.
+        if (!$tcid = $DB->get_field_sql('SELECT id FROM {tag_coll} ORDER BY isdefault DESC, sortorder, id', null, IGNORE_MULTIPLE)) {
+            $tcid = $DB->insert_record('tag_coll', array('isdefault' => 1, 'sortorder' => 0));
+        }
+        $DB->execute('UPDATE {tag} SET tagcollid = ? WHERE tagcollid IS NULL', array($tcid));
+
+        // Define index tagcollname (unique) to be added to tag.
+        $table = new xmldb_table('tag');
+        $index = new xmldb_index('tagcollname', XMLDB_INDEX_UNIQUE, array('tagcollid', 'name'));
+        $field = new xmldb_field('tagcollid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null, 'userid');
+
+        // Conditionally launch add index tagcollname.
+        if (!$dbman->index_exists($table, $index)) {
+            // Launch change of nullability for field tagcollid.
+            $dbman->change_field_notnull($table, $field);
+            $dbman->add_index($table, $index);
+        }
+
+        // Define key tagcollid (foreign) to be added to tag.
+        $table = new xmldb_table('tag');
+        $key = new xmldb_key('tagcollid', XMLDB_KEY_FOREIGN, array('tagcollid'), 'tag_coll', array('id'));
+
+        // Launch add key tagcloudid.
+        $dbman->add_key($table, $key);
+
+        // Define index tagcolltype (not unique) to be added to tag.
+        $table = new xmldb_table('tag');
+        $index = new xmldb_index('tagcolltype', XMLDB_INDEX_NOTUNIQUE, array('tagcollid', 'tagtype'));
+
+        // Conditionally launch add index tagcolltype.
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        // Main savepoint reached.
+        upgrade_main_savepoint(true, 2015090501.02);
+    }
+
+    // TODO change index on tag_instance to include component
+    // itemtype, itemid, tagid, tiuserid -> itemtype, itemid, tagid, component, tiuserid
+
+    if ($oldversion < 2015090501.03) {
+
+        // Define table tag_area to be created.
+        $table = new xmldb_table('tag_area');
+
+        // Adding fields to table tag_area.
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('component', XMLDB_TYPE_CHAR, '100', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('itemtype', XMLDB_TYPE_CHAR, '100', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('enabled', XMLDB_TYPE_INTEGER, '2', null, XMLDB_NOTNULL, null, '1');
+        $table->add_field('tagcollid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+
+        // Adding keys to table tag_area.
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
+        $table->add_key('tagcollid', XMLDB_KEY_FOREIGN, array('tagcollid'), 'tag_coll', array('id'));
+
+        // Adding indexes to table tag_area.
+        $table->add_index('compitemtype', XMLDB_INDEX_UNIQUE, array('component', 'itemtype'));
+
+        // Conditionally launch create table for tag_area.
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Main savepoint reached.
+        upgrade_main_savepoint(true, 2015090501.03);
+    }
+
     return true;
 }

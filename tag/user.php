@@ -28,7 +28,7 @@ switch ($action) {
         }
         $tag = required_param('tag', PARAM_TAG);
         core_tag::add_item_tag('user', 'core', $USER->id, $usercontext, $tag);
-        $tc = core_tag_collection::get_tag_coll_id('user', 'core');
+        $tc = core_tag_area::get_collection('user', 'core');
         redirect(core_tag::get_view_url($tc, $tag));
         break;
 
@@ -38,7 +38,7 @@ switch ($action) {
         }
         $tag = required_param('tag', PARAM_TAG);
         core_tag::remove_item_tag('user', 'core', $USER->id, $tag);
-        $tc = core_tag_collection::get_tag_coll_id('user', 'core');
+        $tc = core_tag_area::get_collection('user', 'core');
         redirect(core_tag::get_view_url($tc, $tag));
         break;
 

@@ -18,23 +18,26 @@
 /**
  * Moodle tag library
  *
- * Tag strings : you can use any character in tags, except the comma (which is the separator) and
- * the '\' (backslash).  Note that many spaces (or other blank characters) will get "compressed"
- * into one. A tag string is always a rawurlencode'd string. This is the same behavior as
- * http://del.icio.us.
+ * This file contains methods related to tag management and handling in moodle,
+ * however majority of them have been moved to the class {@link core_tag}.
+ * If you are developing a moodle plugin, you will most likely not need any
+ * functions from this file and only need ones in {@link core_tag}
  *
- * A "record" is a php array (note that an object will work too) that contains the following
- * variables :
- *  - type: The database table containing the record that we are tagging (eg: for a blog, this is
- *          the table named 'post', and for a user it is the table name 'user')
- *  - id:   The id of the record
+ * Tags can be added to any database records.
+ * $itemtype (or $record_type) refers to the DB table name
+ * $itemid (or $record_id) refers to id field in this DB table
+ * $component is the component that is responsible for the tag instance
  *
  * BASIC INSTRUCTIONS :
  *  - to "tag a blog post" (for example):
- *        tag_set('post', $blog_post->id, $array_of_tags, 'core', $thecontext);
+ *        tag_set('post', $blogpost->id, $arrayoftags, 'core', $context);
+ *        or
+ *        core_tag::set_item_tags('post', 'core', $blogpost->id, $context, $arrayoftags);
  *
  *  - to "remove all the tags on a blog post":
- *        tag_set('post', $blog_post->id, array(), 'core', $thecontext);
+ *        tag_set('post', $blogpost->id, array(), 'core', $context);
+ *        or
+ *        core_tag::remove_all_item_tags('post', 'core', $blogpost->id);
  *
  * Tag set will create tags that need to be created.
  *
@@ -107,6 +110,10 @@ define('TAG_RELATED_CORRELATED', 2);
  *
  * This function is meant to be fed the string coming up from the user interface, which contains all tags assigned to a record.
  *
+ * Due to API change $component and $contextid are now required. Instead of
+ * calling  this function you can use {@link core_tag::set_item_tags()} or
+ * {@link core_tag::set_related_tags()}
+ *
  * @package core_tag
  * @category tag
  * @access public
@@ -118,67 +125,27 @@ define('TAG_RELATED_CORRELATED', 2);
  * @return bool|null
  */
 function tag_set($record_type, $record_id, $tags, $component = null, $contextid = null) {
-
-    static $in_recursion_semaphore = false; // this is to prevent loops when tagging a tag
-
-    if ( $record_type == 'tag' && !$in_recursion_semaphore) {
-        $current_tagged_tag_name = tag_get_name($record_id);
-    }
-
-    $tags_ids = tag_get_id($tags, TAG_RETURN_ARRAY); // force an array, even if we only have one tag.
-    $cleaned_tags = tag_normalize($tags);
-    //echo 'tags-in-tag_set'; var_dump($tags); var_dump($tags_ids); var_dump($cleaned_tags);
-
-    $current_ids = tag_get_tags_ids($record_type, $record_id);
-    //var_dump($current_ids);
-
-    // for data coherence reasons, it's better to remove deleted tags
-    // before adding new data: ordering could be duplicated.
-    foreach($current_ids as $current_id) {
-        if (!in_array($current_id, $tags_ids)) {
-            tag_delete_instance($record_type, $record_id, $current_id);
-            if ( $record_type == 'tag' && !$in_recursion_semaphore) {
-                // if we are removing a tag-on-a-tag (manually related tag),
-                // we need to remove the opposite relationship as well.
-                tag_delete_instance('tag', $current_id, $record_id);
-            }
+    if ($record_type === 'tag') {
+        return core_tag::get($record_id, '*', MUST_EXIST)->set_related_tags($tags);
+    } else {
+        if ($component === null || $contextid === null) {
+            debugging('You should specify the component and contextid of the item being tagged in your call to tag_set.',
+                DEBUG_DEVELOPER);
         }
-    }
-
-    if (empty($tags)) {
-        return true;
-    }
-
-    foreach($tags as $ordering => $tag) {
-        $tag = trim($tag);
-        if (!$tag) {
-            continue;
+        if ($contextid === null) {
+            $context = context_system::instance();
+        } else {
+            $context = context::instance_by_id($contextid);
         }
-
-        $clean_tag = $cleaned_tags[$tag];
-        $tag_current_id = $tags_ids[$clean_tag];
-
-        if ( is_null($tag_current_id) ) {
-            // create new tags
-            //echo "call to add tag $tag\n";
-            $new_tag = tag_add($tag);
-            $tag_current_id = $new_tag[$clean_tag];
-        }
-
-        tag_assign($record_type, $record_id, $tag_current_id, $ordering, 0, $component, $contextid);
-
-        // if we are tagging a tag (adding a manually-assigned related tag), we
-        // need to create the opposite relationship as well.
-        if ( $record_type == 'tag' && !$in_recursion_semaphore) {
-            $in_recursion_semaphore = true;
-            tag_set_add('tag', $tag_current_id, $current_tagged_tag_name, $component, $contextid);
-            $in_recursion_semaphore = false;
-        }
+        return core_tag::set_item_tags($record_type, $component, $record_id, $context, $tags);
     }
 }
 
 /**
  * Adds a tag to a record, without overwriting the current tags.
+ *
+ * This function remains here for backward compatiblity. It is recommended to use
+ * {@link core_tag::add_item_tag()} or {@link core_tag::add_related_tags()} instead
  *
  * @package core_tag
  * @category tag
@@ -193,7 +160,7 @@ function tag_set($record_type, $record_id, $tags, $component = null, $contextid 
 function tag_set_add($record_type, $record_id, $tag, $component = null, $contextid = null) {
 
     $new_tags = array();
-    foreach( tag_get_tags($record_type, $record_id) as $current_tag ) {
+    foreach (core_tag::get_item_tags($record_type, $component, $record_id) as $current_tag) {
         $new_tags[] = $current_tag->rawname;
     }
     $new_tags[] = $tag;
@@ -203,6 +170,9 @@ function tag_set_add($record_type, $record_id, $tag, $component = null, $context
 
 /**
  * Removes a tag from a record, without overwriting other current tags.
+ *
+ * This function remains here for backward compatiblity. It is recommended to use
+ * {@link core_tag::remove_item_tag()} instead
  *
  * @package core_tag
  * @category tag
@@ -217,7 +187,8 @@ function tag_set_add($record_type, $record_id, $tag, $component = null, $context
 function tag_set_delete($record_type, $record_id, $tag, $component = null, $contextid = null) {
 
     $new_tags = array();
-    foreach( tag_get_tags($record_type, $record_id) as $current_tag ) {
+    $tag = core_text::strtolower(clean_param($tag, PARAM_TAG));
+    foreach (core_tag::get_item_tags($record_type, $component, $record_id) as $current_tag ) {
         if ($current_tag->name != $tag) {  // Keep all tags but the one specified
             $new_tags[] = $current_tag->name;
         }
@@ -226,88 +197,15 @@ function tag_set_delete($record_type, $record_id, $tag, $component = null, $cont
     return tag_set($record_type, $record_id, $new_tags, $component, $contextid);
 }
 
-/**
- * Set the type of a tag.  At this time (version 2.2) the possible values are 'default' or 'official'.  Official tags will be
- * displayed separately "at tagging time" (while selecting the tags to apply to a record).
- *
- * @package  core_tag
- * @category tag
- * @access   public
- * @param    string   $tagid tagid to modify
- * @param    string   $type either 'default' or 'official'
- * @return   bool     true on success, false otherwise
- */
-function tag_type_set($tagid, $type) {
-    global $DB;
-
-    if ($tag = $DB->get_record('tag', array('id' => $tagid), 'id, userid, name, rawname')) {
-        $tag->tagtype = $type;
-        $tag->timemodified = time();
-        $DB->update_record('tag', $tag);
-
-        $event = \core\event\tag_updated::create(array(
-            'objectid' => $tag->id,
-            'relateduserid' => $tag->userid,
-            'context' => context_system::instance(),
-            'other' => array(
-                'name' => $tag->name,
-                'rawname' => $tag->rawname
-            )
-        ));
-        $event->trigger();
-
-        return true;
-    }
-    return false;
-}
-
-/**
- * Set the description of a tag
- *
- * @package  core_tag
- * @category tag
- * @access   public
- * @param    int      $tagid the id of the tag
- * @param    string   $description the tag's description string to be set
- * @param    int      $descriptionformat the moodle text format of the description
- *                    {@link http://docs.moodle.org/dev/Text_formats_2.0#Database_structure}
- * @return   bool     true on success, false otherwise
- */
-function tag_description_set($tagid, $description, $descriptionformat) {
-    global $DB;
-
-    if ($tag = $DB->get_record('tag', array('id' => $tagid), 'id, userid, name, rawname')) {
-        $tag->description = $description;
-        $tag->descriptionformat = $descriptionformat;
-        $tag->timemodified = time();
-        $DB->update_record('tag', $tag);
-
-        $event = \core\event\tag_updated::create(array(
-            'objectid' => $tag->id,
-            'relateduserid' => $tag->userid,
-            'context' => context_system::instance(),
-            'other' => array(
-                'name' => $tag->name,
-                'rawname' => $tag->rawname
-            )
-        ));
-        $event->trigger();
-
-        return true;
-    }
-
-    return false;
-}
-
-
-
-
-
 
 /// Functions for getting information about tags //////
 
 /**
  * Simple function to just return a single tag object when you know the name or something
+ *
+ * Since Moodle 3.0 this function may only be used to retrieve tag by id since
+ * name is not unique in tag table and caller must specify tag collection as well.
+ * See also {@link core_tag::get()} and {@link core_tag::get_by_name()}
  *
  * @package  core_tag
  * @category tag
@@ -318,206 +216,24 @@ function tag_description_set($tagid, $description, $descriptionformat) {
  *                                'id', 'name', 'rawname' or '*' to include all fields.
  * @return   mixed  tag object
  */
-function tag_get($field, $value, $returnfields='id, name, rawname') {
+function tag_get($field, $value, $returnfields='id, name, rawname, tagcollid') {
     global $DB;
-
-    if ($field == 'name') {
-        $value = core_text::strtolower($value);   // To cope with input that might just be wrong case
-    }
-    return $DB->get_record('tag', array($field=>$value), $returnfields);
-}
-
-
-/**
- * Get the array of db record of tags associated to a record (instances).  Use {@see tag_get_tags_csv()} if you wish to get the same
- * data in a comma-separated string, for instances such as needing to simply display a list of tags to the end user. This should
- * really be called tag_get_tag_instances().
- *
- * @package core_tag
- * @category tag
- * @access public
- * @param string $record_type the record type for which we want to get the tags
- * @param int $record_id the record id for which we want to get the tags
- * @param string $type the tag type (either 'default' or 'official'). By default, all tags are returned.
- * @param int $userid (optional) only required for course tagging
- * @return array the array of tags
- */
-function tag_get_tags($record_type, $record_id, $type=null, $userid=0) {
-    global $CFG, $DB;
-
-    $params = array();
-
-    if ($type) {
-        $sql_type = "AND tg.tagtype = :type";
-        $params['type'] = $type;
+    if ($field === 'id') {
+        $tag = core_tag::get((int)$value, $returnfields);
+    } else if ($field === 'name') {
+        debugging('Function tag_get() when searching by tag name may not return correct tag. Use ".'
+                . '"core_tag::get_by_name() instead and specify the tag collection.',
+                DEBUG_DEVELOPER);
+        $tag = core_tag::get_by_name(0, $value, $returnfields);
     } else {
-        $sql_type = '';
+        $params = array($field => $value);
+        return $DB->get_record('tag', $params, $returnfields);
     }
-
-   $u = null;
-    if ($userid) {
-        $u =  "AND ti.tiuserid = :userid ";
-        $params['userid'] = $userid;
+    if ($tag) {
+        return $tag->to_object();
     }
-
-    $sql = "SELECT ti.id AS taginstanceid, tg.id, tg.tagtype, tg.name, tg.rawname, tg.flag, ti.ordering
-              FROM {tag_instance} ti
-              JOIN {tag} tg ON tg.id = ti.tagid
-              WHERE ti.itemtype = :recordtype AND ti.itemid = :recordid $u $sql_type
-           ORDER BY ti.ordering ASC";
-    $params['recordtype'] = $record_type;
-    $params['recordid']   = $record_id;
-
-    // if the fields in this query are changed, you need to do the same changes in tag_get_correlated_tags
-    return $DB->get_records_sql($sql, $params);
-    // This version of the query, reversing the ON clause, "correctly" returns
-    // a row with NULL values for instances that are still in the DB even though
-    // the tag has been deleted.  This shouldn't happen, but if it did, using
-    // this query could help "clean it up".  This causes bugs at this time.
-    //$tags = $DB->get_records_sql("SELECT ti.tagid, tg.tagtype, tg.name, tg.rawname, tg.flag, ti.ordering ".
-    //    "FROM {tag_instance} ti LEFT JOIN {tag} tg ON ti.tagid = tg.id ".
-    //    "WHERE ti.itemtype = '{$record_type}' AND ti.itemid = '{$record_id}' {$type} ".
-    //    "ORDER BY ti.ordering ASC");
+    return null;
 }
-
-/**
- * Get the array of tags display names, indexed by id.
- *
- * @package  core_tag
- * @category tag
- * @access   public
- * @param    string $record_type the record type for which we want to get the tags
- * @param    int    $record_id   the record id for which we want to get the tags
- * @param    string $type        the tag type (either 'default' or 'official'). By default, all tags are returned.
- * @return   array  the array of tags (with the value returned by tag_display_name), indexed by id
- */
-function tag_get_tags_array($record_type, $record_id, $type=null) {
-    $tags = array();
-    foreach(tag_get_tags($record_type, $record_id, $type) as $tag) {
-        $tags[$tag->id] = tag_display_name($tag);
-    }
-    return $tags;
-}
-
-/**
- * Get a comma-separated string of tags associated to a record.  Use {@see tag_get_tags()} to get the same information in an array.
- *
- * @package  core_tag
- * @category tag
- * @access   public
- * @param    string   $record_type the record type for which we want to get the tags
- * @param    int      $record_id   the record id for which we want to get the tags
- * @param    int      $html        either TAG_RETURN_HTML or TAG_RETURN_TEXT, depending on the type of output desired
- * @param    string   $type        either 'official' or 'default', if null, all tags are returned
- * @return   string   the comma-separated list of tags.
- */
-function tag_get_tags_csv($record_type, $record_id, $html=TAG_RETURN_HTML, $type=null) {
-    global $CFG;
-
-    $tags_names = array();
-    foreach(tag_get_tags($record_type, $record_id, $type) as $tag) {
-        if ($html == TAG_RETURN_TEXT) {
-            $tags_names[] = tag_display_name($tag, TAG_RETURN_TEXT);
-        } else { // TAG_RETURN_HTML
-            $tags_names[] = '<a href="'. $CFG->wwwroot .'/tag/index.php?tag='. rawurlencode($tag->name) .'">'. tag_display_name($tag) .'</a>';
-        }
-    }
-    return implode(', ', $tags_names);
-}
-
-/**
- * Get an array of tag ids associated to a record.
- *
- * @package  core_tag
- * @category tag
- * @access   public
- * @todo     MDL-31150 Update ordering property
- * @param    string    $record_type the record type for which we want to get the tags
- * @param    int       $record_id the record id for which we want to get the tags
- * @return   array     tag ids, indexed and sorted by 'ordering'
- */
-function tag_get_tags_ids($record_type, $record_id) {
-    $tag_ids = array();
-    foreach (tag_get_tags($record_type, $record_id) as $tag) {
-        if ( array_key_exists($tag->ordering, $tag_ids) ) {
-            // until we can add a unique constraint, in table tag_instance,
-            // on (itemtype, itemid, ordering), this is needed to prevent a bug
-            // TODO MDL-31150 modify database in 2.0
-            $tag->ordering++;
-        }
-        $tag_ids[$tag->ordering] = $tag->id;
-    }
-    ksort($tag_ids);
-    return $tag_ids;
-}
-
-/**
- * Returns the database ID of a set of tags.
- *
- * @package  core_tag
- * @category tag
- * @access   public
- * @todo     MDL-31152 Test the commented MDL-31152 todo in this function to see if it helps performance
- *                     without breaking anything.
- * @param    mixed $tags one tag, or array of tags, to look for.
- * @param    bool  $return_value specify the type of the returned value. Either TAG_RETURN_OBJECT, or TAG_RETURN_ARRAY (default).
- *                               If TAG_RETURN_ARRAY is specified, an array will be returned even if only one tag was passed in $tags.
- * @return   mixed tag-indexed array of ids (or objects, if second parameter is TAG_RETURN_OBJECT), or only an int, if only one tag
- *                 is given *and* the second parameter is null. No value for a key means the tag wasn't found.
- */
-function tag_get_id($tags, $return_value=null) {
-    global $CFG, $DB;
-
-    static $tag_id_cache = array();
-
-    $return_an_int = false;
-    if (!is_array($tags)) {
-        if(is_null($return_value) || $return_value == TAG_RETURN_OBJECT) {
-            $return_an_int = true;
-        }
-        $tags = array($tags);
-    }
-
-    $result = array();
-
-    //TODO MDL-31152 test this and see if it helps performance without breaking anything
-    //foreach($tags as $key => $tag) {
-    //    $clean_tag = core_text::strtolower($tag);
-    //    if ( array_key_exists($clean_tag), $tag_id_cache) ) {
-    //        $result[$clean_tag] = $tag_id_cache[$clean_tag];
-    //        $tags[$key] = ''; // prevent further processing for this one.
-    //    }
-    //}
-
-    $tags = array_values(tag_normalize($tags));
-    foreach($tags as $key => $tag) {
-        $tags[$key] = core_text::strtolower($tag);
-        $result[core_text::strtolower($tag)] = null; // key must exists : no value for a key means the tag wasn't found.
-    }
-
-    if (empty($tags)) {
-        return array();
-    }
-
-    list($tag_string, $params) = $DB->get_in_or_equal($tags);
-
-    $rs = $DB->get_recordset_sql("SELECT * FROM {tag} WHERE name $tag_string ORDER BY name", $params);
-    foreach ($rs as $record) {
-        if ($return_value == TAG_RETURN_OBJECT) {
-            $result[$record->name] = $record;
-        } else { // TAG_RETURN_ARRAY
-            $result[$record->name] = $record->id;
-        }
-    }
-    $rs->close();
-
-    if ($return_an_int) {
-        return array_pop($result);
-    }
-
-    return $result;
-}
-
 
 /**
  * Returns tags related to a tag
@@ -541,7 +257,7 @@ function tag_get_related_tags($tagid, $type=TAG_RELATED_ALL, $limitnum=10) {
 
     if ( $type == TAG_RELATED_ALL || $type == TAG_RELATED_MANUAL) {
         //gets the manually added related tags
-        $related_tags = tag_get_tags('tag', $tagid);
+        $related_tags = core_tag::get_item_tags('tag', 'core', $tagid);
     }
 
     if ( $type == TAG_RELATED_ALL || $type == TAG_RELATED_CORRELATED ) {
@@ -574,76 +290,19 @@ function tag_get_related_tags($tagid, $type=TAG_RELATED_ALL, $limitnum=10) {
  * @return   string   comma-separated list
  */
 function tag_get_related_tags_csv($related_tags, $html=TAG_RETURN_HTML) {
-    global $CFG;
-
     $tags_names = array();
     foreach($related_tags as $tag) {
         if ( $html == TAG_RETURN_TEXT) {
             $tags_names[] = tag_display_name($tag, TAG_RETURN_TEXT);
         } else {
             // TAG_RETURN_HTML
-            $tags_names[] = '<a href="'. $CFG->wwwroot .'/tag/index.php?tag='. rawurlencode($tag->name) .'">'. tag_display_name($tag) .'</a>';
+            $viewurl = core_tag::get_view_url($tag->tagcollid, $tag->name);
+            $tags_names[] = html_writer::link($viewurl, tag_display_name($tag));
         }
     }
 
     return implode(', ', $tags_names);
 }
-
-/**
- * Change the "value" of a tag, and update the associated 'name'.
- *
- * @package  core_tag
- * @category tag
- * @access   public
- * @param    int      $tagid  the id of the tag to modify
- * @param    string   $newrawname the new rawname
- * @return   bool     true on success, false otherwise
- */
-function tag_rename($tagid, $newrawname) {
-    global $COURSE, $DB;
-
-    $norm = tag_normalize($newrawname, TAG_CASE_ORIGINAL);
-    if (! $newrawname_clean = array_shift($norm) ) {
-        return false;
-    }
-
-    if (! $newname_clean = core_text::strtolower($newrawname_clean)) {
-        return false;
-    }
-
-    // Prevent the rename if a tag with that name already exists
-    if ($existing = tag_get('name', $newname_clean, 'id, name, rawname')) {
-        if ($existing->id != $tagid) {  // Another tag already exists with this name
-            return false;
-        }
-    }
-
-    if ($tag = tag_get('id', $tagid, 'id, userid, name, rawname')) {
-        // Store the name before we change it.
-        $oldname = $tag->name;
-
-        $tag->rawname = $newrawname_clean;
-        $tag->name = $newname_clean;
-        $tag->timemodified = time();
-        $DB->update_record('tag', $tag);
-
-        $event = \core\event\tag_updated::create(array(
-            'objectid' => $tag->id,
-            'relateduserid' => $tag->userid,
-            'context' => context_system::instance(),
-            'other' => array(
-                'name' => $newname_clean,
-                'rawname' => $newrawname_clean
-            )
-        ));
-        $event->set_legacy_logdata(array($COURSE->id, 'tag', 'update', 'index.php?id='. $tag->id, $oldname . '->'. $tag->name));
-        $event->trigger();
-
-        return true;
-    }
-    return false;
-}
-
 
 /**
  * Delete one or more tag, and all their instances if there are any left.
@@ -659,6 +318,9 @@ function tag_delete($tagids) {
 
     if (!is_array($tagids)) {
         $tagids = array($tagids);
+    }
+    if (empty($tagids)) {
+        return;
     }
 
     // Use the tagids to create a select statement to be used later.
@@ -746,111 +408,8 @@ function tag_delete($tagids) {
  * @param int $contextid if null, then we delete all tag instances for the $component
  */
 function tag_delete_instances($component, $contextid = null) {
-    global $DB;
-
-    $sql = "SELECT ti.*, t.name, t.rawname
-              FROM {tag_instance} ti
-              JOIN {tag} t
-                ON ti.tagid = t.id ";
-    if (is_null($contextid)) {
-        $params = array('component' => $component);
-        $sql .= "WHERE ti.component = :component";
-    } else {
-        $params = array('component' => $component, 'contextid' => $contextid);
-        $sql .= "WHERE ti.component = :component
-                   AND ti.contextid = :contextid";
-    }
-    if ($taginstances = $DB->get_records_sql($sql, $params)) {
-        // Now remove all the tag instances.
-        $DB->delete_records('tag_instance',$params);
-        // Save the system context in case the 'contextid' column in the 'tag_instance' table is null.
-        $syscontextid = context_system::instance()->id;
-        // Loop through the tag instances and fire an 'tag_removed' event.
-        foreach ($taginstances as $taginstance) {
-            // We can not fire an event with 'null' as the contextid.
-            if (is_null($taginstance->contextid)) {
-                $taginstance->contextid = $syscontextid;
-            }
-
-            // Trigger tag removed event.
-            $event = \core\event\tag_removed::create(array(
-                'objectid' => $taginstance->id,
-                'contextid' => $taginstance->contextid,
-                'other' => array(
-                    'tagid' => $taginstance->tagid,
-                    'tagname' => $taginstance->name,
-                    'tagrawname' => $taginstance->rawname,
-                    'itemid' => $taginstance->itemid,
-                    'itemtype' => $taginstance->itemtype
-                )
-            ));
-            $event->add_record_snapshot('tag_instance', $taginstance);
-            $event->trigger();
-        }
-    }
+    core_tag::delete_instances($component, null, $contextid);
 }
-
-/**
- * Delete one instance of a tag.  If the last instance was deleted, it will also delete the tag, unless its type is 'official'.
- *
- * @package  core_tag
- * @category tag
- * @access   public
- * @param    string $record_type the type of the record for which to remove the instance
- * @param    int    $record_id   the id of the record for which to remove the instance
- * @param    int    $tagid       the tagid that needs to be removed
- * @param    int    $userid      (optional) the userid
- * @return   bool   true on success, false otherwise
- */
-function tag_delete_instance($record_type, $record_id, $tagid, $userid = null) {
-    global $DB;
-
-    if (is_null($userid)) {
-        $taginstance = $DB->get_record('tag_instance', array('tagid' => $tagid, 'itemtype' => $record_type, 'itemid' => $record_id));
-    } else {
-        $taginstance = $DB->get_record('tag_instance', array('tagid' => $tagid, 'itemtype' => $record_type, 'itemid' => $record_id,
-            'tiuserid' => $userid));
-    }
-    if ($taginstance) {
-        // Get the tag.
-        $tag = $DB->get_record('tag', array('id' => $tagid));
-
-        $DB->delete_records('tag_instance', array('id' => $taginstance->id));
-
-        // We can not fire an event with 'null' as the contextid.
-        if (is_null($taginstance->contextid)) {
-            $taginstance->contextid = context_system::instance()->id;
-        }
-
-        // Trigger tag removed event.
-        $event = \core\event\tag_removed::create(array(
-            'objectid' => $taginstance->id,
-            'contextid' => $taginstance->contextid,
-            'other' => array(
-                'tagid' => $tag->id,
-                'tagname' => $tag->name,
-                'tagrawname' => $tag->rawname,
-                'itemid' => $taginstance->itemid,
-                'itemtype' => $taginstance->itemtype
-            )
-        ));
-        $event->add_record_snapshot('tag_instance', $taginstance);
-        $event->trigger();
-
-        // If there are no other instances of the tag then consider deleting the tag as well.
-        if (!$DB->record_exists('tag_instance', array('tagid' => $tagid))) {
-            // If the tag is a personal tag then delete it - don't delete official tags.
-            if ($tag->tagtype == 'default') {
-                tag_delete($tagid);
-            }
-        }
-    } else {
-        return false;
-    }
-
-    return true;
-}
-
 
 /**
  * Function that returns the name that should be displayed for a specific tag
@@ -858,7 +417,7 @@ function tag_delete_instance($record_type, $record_id, $tagid, $userid = null) {
  * @package  core_tag
  * @category tag
  * @access   public
- * @param    object   $tagobject a line out of tag table, as returned by the adobd functions
+ * @param    stdClass|core_tag   $tagobject a line out of tag table, as returned by the adobd functions
  * @param    int      $html TAG_RETURN_HTML (default) will return htmlspecialchars encoded string, TAG_RETURN_TEXT will not encode.
  * @return   string
  */
@@ -887,163 +446,8 @@ function tag_display_name($tagobject, $html=TAG_RETURN_HTML) {
     }
 }
 
-/**
- * Find all records tagged with a tag of a given type ('post', 'user', etc.)
- *
- * @package  core_tag
- * @category tag
- * @access   public
- * @param    string   $tag       tag to look for
- * @param    string   $type      type to restrict search to.  If null, every matching record will be returned
- * @param    int      $limitfrom (optional, required if $limitnum is set) return a subset of records, starting at this point.
- * @param    int      $limitnum  (optional, required if $limitfrom is set) return a subset comprising this many records.
- * @return   array of matching objects, indexed by record id, from the table containing the type requested
- */
-function tag_find_records($tag, $type, $limitfrom='', $limitnum='') {
-    global $CFG, $DB;
-
-    if (!$tag || !$type) {
-        return array();
-    }
-
-    $tagid = tag_get_id($tag);
-
-    $query = "SELECT it.*
-                FROM {".$type."} it INNER JOIN {tag_instance} tt ON it.id = tt.itemid
-               WHERE tt.itemtype = ? AND tt.tagid = ?";
-    $params = array($type, $tagid);
-
-    return $DB->get_records_sql($query, $params, $limitfrom, $limitnum);
-}
-
-
-
-
 ///////////////////////////////////////////////////////
 /////////////////// PRIVATE TAG API ///////////////////
-
-/**
- * Adds one or more tag in the database.  This function should not be called directly : you should
- * use tag_set.
- *
- * @package core_tag
- * @access  private
- * @param   mixed    $tags     one tag, or an array of tags, to be created
- * @param   string   $type     type of tag to be created ("default" is the default value and "official" is the only other supported
- *                             value at this time). An official tag is kept even if there are no records tagged with it.
- * @return array     $tags ids indexed by their lowercase normalized names. Any boolean false in the array indicates an error while
- *                             adding the tag.
- */
-function tag_add($tags, $type="default") {
-    global $USER, $DB;
-
-    if (!is_array($tags)) {
-        $tags = array($tags);
-    }
-
-    $tag_object = new StdClass;
-    $tag_object->tagtype      = $type;
-    $tag_object->userid       = $USER->id;
-    $tag_object->timemodified = time();
-
-    $clean_tags = tag_normalize($tags, TAG_CASE_ORIGINAL);
-
-    $tags_ids = array();
-    foreach($clean_tags as $tag) {
-        $tag = trim($tag);
-        if (!$tag) {
-            $tags_ids[$tag] = false;
-        } else {
-            // note that the difference between rawname and name is only
-            // capitalization : the rawname is NOT the same at the rawtag.
-            $tag_object->rawname = $tag;
-            $tag_name_lc         = core_text::strtolower($tag);
-            $tag_object->name    = $tag_name_lc;
-            //var_dump($tag_object);
-            $tags_ids[$tag_name_lc] = $DB->insert_record('tag', $tag_object);
-
-            $event = \core\event\tag_created::create(array(
-                'objectid' => $tags_ids[$tag_name_lc],
-                'relateduserid' => $tag_object->userid,
-                'context' => context_system::instance(),
-                'other' => array(
-                    'name' => $tag_object->name,
-                    'rawname' => $tag_object->rawname
-                )
-            ));
-            $event->trigger();
-        }
-    }
-
-    return $tags_ids;
-}
-
-/**
- * Assigns a tag to a record; if the record already exists, the time and ordering will be updated.
- *
- * @package core_tag
- * @access private
- * @param string $record_type the type of the record that will be tagged
- * @param int $record_id the id of the record that will be tagged
- * @param string $tagid the tag id to set on the record.
- * @param int $ordering the order of the instance for this record
- * @param int $userid (optional) only required for course tagging
- * @param string|null $component the component that was tagged
- * @param int|null $contextid the context id of where this tag was assigned
- * @return bool true on success, false otherwise
- */
-function tag_assign($record_type, $record_id, $tagid, $ordering, $userid = 0, $component = null, $contextid = null) {
-    global $DB;
-
-    if ($component === null || $contextid === null) {
-        debugging('You should specify the component and contextid of the item being tagged in your call to tag_assign.',
-            DEBUG_DEVELOPER);
-    }
-
-    // Get the tag.
-    $tag = $DB->get_record('tag', array('id' => $tagid), 'name, rawname', MUST_EXIST);
-
-    if ( $tag_instance_object = $DB->get_record('tag_instance', array('tagid'=>$tagid, 'itemtype'=>$record_type, 'itemid'=>$record_id, 'tiuserid'=>$userid), 'id')) {
-        $tag_instance_object->ordering     = $ordering;
-        $tag_instance_object->timemodified = time();
-
-        $DB->update_record('tag_instance', $tag_instance_object);
-    } else {
-        $tag_instance_object = new StdClass;
-        $tag_instance_object->tagid        = $tagid;
-        $tag_instance_object->component    = $component;
-        $tag_instance_object->itemid       = $record_id;
-        $tag_instance_object->itemtype     = $record_type;
-        $tag_instance_object->contextid    = $contextid;
-        $tag_instance_object->ordering     = $ordering;
-        $tag_instance_object->timecreated  = time();
-        $tag_instance_object->timemodified = $tag_instance_object->timecreated;
-        $tag_instance_object->tiuserid     = $userid;
-
-        $tag_instance_object->id = $DB->insert_record('tag_instance', $tag_instance_object);
-    }
-
-    // We can not fire an event with 'null' as the contextid.
-    if (is_null($contextid)) {
-        $contextid = context_system::instance()->id;
-    }
-
-    // Trigger tag added event.
-    $event = \core\event\tag_added::create(array(
-        'objectid' => $tag_instance_object->id,
-        'contextid' => $contextid,
-        'other' => array(
-            'tagid' => $tagid,
-            'tagname' => $tag->name,
-            'tagrawname' => $tag->rawname,
-            'itemid' => $record_id,
-            'itemtype' => $record_type
-        )
-    ));
-    $event->trigger();
-
-    return true;
-}
 
 /**
  * Function that returns tags that start with some text, for use by the autocomplete feature
@@ -1054,10 +458,10 @@ function tag_assign($record_type, $record_id, $tagid, $ordering, $userid = 0, $c
  * @param   int      $tagcollid tag collection id
  * @return  mixed    an array of objects, or false if no records were found or an error occured.
  */
-function tag_autocomplete($text) {
+function tag_autocomplete($text, $tagcollid = 0) {
     global $DB;
     if (!$tagcollid) {
-        $tagcollid = core_tag_collection::get_default_collection();
+        $tagcollid = core_tag_collection::get_default();
     }
     return $DB->get_records_sql("SELECT tg.id, tg.name, tg.rawname, tg.tagcollid
                                FROM {tag} tg
@@ -1074,7 +478,6 @@ function tag_autocomplete($text) {
  *
  * @package core_tag
  * @access  private
- * @todo    MDL-31212 Update tag cleanup sql so that it supports multiple types of tags
  */
 function tag_cleanup() {
     global $DB;
@@ -1130,24 +533,7 @@ function tag_cleanup() {
         tag_bulk_delete_instances($instances);
     }
 
-    // TODO MDL-31212 this will only clean tags of type 'default'.  This is good as
-    // it won't delete 'official' tags, but the day we get more than two
-    // types, we need to fix this.
-    $unused_tags = $DB->get_recordset_sql("SELECT tg.id
-                                             FROM {tag} tg
-                                            WHERE tg.tagtype = 'default'
-                                                  AND NOT EXISTS (
-                                                      SELECT 'x'
-                                                        FROM {tag_instance} ti
-                                                       WHERE ti.tagid = tg.id
-                                                  )");
-
-    // cleanup tags
-    foreach ($unused_tags as $unused_tag) {
-        tag_delete($unused_tag->id);
-        //debugging('deleting unused tag #'. $unused_tag->id,  DEBUG_DEVELOPER);
-    }
-    $unused_tags->close();
+    core_tag_collection::cleanup_unused_tags();
 }
 
 /**
@@ -1221,7 +607,9 @@ function tag_compute_correlations($mincorrelation = 2) {
               FROM (
                        SELECT ta.tagid, tb.tagid AS correlation, COUNT(*) AS ocurrences
                          FROM {tag_instance} ta
+                         JOIN {tag} tga ON ta.tagid = tga.id
                          JOIN {tag_instance} tb ON (ta.itemtype = tb.itemtype AND ta.itemid = tb.itemid AND ta.tagid <> tb.tagid)
+                         JOIN {tag} tgb ON tb.tagid = tgb.id AND tgb.tagcollid = tga.tagcollid
                      GROUP BY ta.tagid, tb.tagid
                        HAVING COUNT(*) > :mincorrelation
                    ) pairs
@@ -1328,26 +716,28 @@ function tag_cron() {
  * @param   bool          $ordered   If true, tags are ordered by their popularity. If false, no ordering.
  * @param   int/string    $limitfrom (optional, required if $limitnum is set) return a subset of records, starting at this point.
  * @param   int/string    $limitnum  (optional, required if $limitfrom is set) return a subset comprising this many records.
+ * @param   int           $tagcollid
  * @return  array/boolean an array of objects, or false if no records were found or an error occured.
  */
-function tag_find_tags($text, $ordered=true, $limitfrom='', $limitnum='') {
+function tag_find_tags($text, $ordered=true, $limitfrom='', $limitnum='', $tagcollid = null) {
     global $DB;
 
-    $norm = tag_normalize($text, TAG_CASE_LOWER);
-    $text = array_shift($norm);
+    $text = core_text::strtolower(clean_param($text, PARAM_TAG));
+
+    list($sql, $params) = $DB->get_in_or_equal($tagcollid ? array($tagcollid) : array_keys(core_tag_collection::get_collections()));
+    array_unshift($params, "%{$text}%");
 
     if ($ordered) {
-        $query = "SELECT tg.id, tg.name, tg.rawname, COUNT(ti.id) AS count
+        $query = "SELECT tg.id, tg.name, tg.rawname, tg.tagcollid, COUNT(ti.id) AS count
                     FROM {tag} tg LEFT JOIN {tag_instance} ti ON tg.id = ti.tagid
-                   WHERE tg.name LIKE ?
+                   WHERE tg.name LIKE ? AND tg.tagcollid $sql
                 GROUP BY tg.id, tg.name, tg.rawname
                 ORDER BY count DESC";
     } else {
-        $query = "SELECT tg.id, tg.name, tg.rawname
+        $query = "SELECT tg.id, tg.name, tg.rawname, tg.tagcollid
                     FROM {tag} tg
-                   WHERE tg.name LIKE ?";
+                   WHERE tg.name LIKE ? AND tg.tagcollid $sql";
     }
-    $params = array("%{$text}%");
     return $DB->get_records_sql($query, $params, $limitfrom , $limitnum);
 }
 
@@ -1404,12 +794,13 @@ function tag_get_correlated($tag_id, $notused = null) {
         return array();
     }
 
-    // this is (and has to) return the same fields as the query in tag_get_tags
-    $sql = "SELECT ti.id AS taginstanceid, tg.id, tg.tagtype, tg.name, tg.rawname, tg.flag, ti.ordering
+    // This is (and has to) return the same fields as the query in core_tag::get_item_tags()
+    $sql = "SELECT ti.id AS taginstanceid, tg.id, tg.tagtype, tg.name, tg.rawname, tg.flag,
+                tg.tagcollid, ti.ordering, ti.contextid AS taginstancecontextid
               FROM {tag} tg
         INNER JOIN {tag_instance} ti ON tg.id = ti.tagid
              WHERE tg.id IN ({$tag_correlation->correlatedtags})
-          ORDER BY ti.ordering ASC";
+          ORDER BY ti.ordering ASC, ti.id";
     return $DB->get_records_sql($sql);
 }
 
@@ -1451,120 +842,6 @@ function tag_normalize($rawtags, $case = TAG_CASE_LOWER) {
     }
 
     return $result;
-}
-
-/**
- * Count how many records are tagged with a specific tag.
- *
- * @package core_tag
- * @access  private
- * @param   string   $record_type record to look for ('post', 'user', etc.)
- * @param   int      $tagid       is a single tag id
- * @return  int      number of mathing tags.
- */
-function tag_record_count($record_type, $tagid) {
-    global $DB;
-    return $DB->count_records('tag_instance', array('itemtype'=>$record_type, 'tagid'=>$tagid));
-}
-
-/**
- * Determine if a record is tagged with a specific tag
- *
- * @package core_tag
- * @access  private
- * @param   string   $record_type the record type to look for
- * @param   int      $record_id   the record id to look for
- * @param   string   $tag         a tag name
- * @return  bool/int true if it is tagged, 0 (false) otherwise
- */
-function tag_record_tagged_with($record_type, $record_id, $tag) {
-    global $DB;
-    if ($tagid = tag_get_id($tag)) {
-        return $DB->count_records('tag_instance', array('itemtype'=>$record_type, 'itemid'=>$record_id, 'tagid'=>$tagid));
-    } else {
-        return 0; // tag doesn't exist
-    }
-}
-
-/**
- * Flag a tag as inappropriate.
- *
- * @param int|array $tagids a single tagid, or an array of tagids
- */
-function tag_set_flag($tagids) {
-    global $DB;
-
-    $tagids = (array) $tagids;
-
-    // Use the tagids to create a select statement to be used later.
-    list($tagsql, $tagparams) = $DB->get_in_or_equal($tagids, SQL_PARAMS_NAMED);
-
-    // Update all the tags to flagged.
-    $sql = "UPDATE {tag}
-               SET flag = flag + 1, timemodified = :time
-             WHERE id $tagsql";
-
-    // Update all the tags.
-    $DB->execute($sql, array_merge(array('time' => time()), $tagparams));
-
-    // Get all the tags.
-    if ($tags = $DB->get_records_select('tag', 'id '. $tagsql, $tagparams, 'id ASC')) {
-        // Loop through and fire an event for each tag that it was flagged.
-        foreach ($tags as $tag) {
-            $event = \core\event\tag_flagged::create(array(
-                'objectid' => $tag->id,
-                'relateduserid' => $tag->userid,
-                'context' => context_system::instance(),
-                'other' => array(
-                    'name' => $tag->name,
-                    'rawname' => $tag->rawname
-                )
-
-            ));
-            $event->add_record_snapshot('tag', $tag);
-            $event->trigger();
-        }
-    }
-}
-
-/**
- * Remove the inappropriate flag on a tag.
- *
- * @param int|array $tagids a single tagid, or an array of tagids
- */
-function tag_unset_flag($tagids) {
-    global $DB;
-
-    $tagids = (array) $tagids;
-
-    // Use the tagids to create a select statement to be used later.
-    list($tagsql, $tagparams) = $DB->get_in_or_equal($tagids, SQL_PARAMS_NAMED);
-
-    // Update all the tags to unflagged.
-    $sql = "UPDATE {tag}
-               SET flag = 0, timemodified = :time
-             WHERE id $tagsql";
-
-    // Update all the tags.
-    $DB->execute($sql, array_merge(array('time' => time()), $tagparams));
-
-    // Get all the tags.
-    if ($tags = $DB->get_records_select('tag', 'id '. $tagsql, $tagparams, 'id ASC')) {
-        // Loop through and fire an event for each tag that it was unflagged.
-        foreach ($tags as $tag) {
-            $event = \core\event\tag_unflagged::create(array(
-                'objectid' => $tag->id,
-                'relateduserid' => $tag->userid,
-                'context' => context_system::instance(),
-                'other' => array(
-                    'name' => $tag->name,
-                    'rawname' => $tag->rawname
-                )
-            ));
-            $event->add_record_snapshot('tag', $tag);
-            $event->trigger();
-        }
-    }
 }
 
 /**

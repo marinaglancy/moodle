@@ -63,7 +63,8 @@ class MoodleQuickForm_tags extends MoodleQuickForm_group {
      * Control the fieldnames for form elements display => int, one of the constants above.
      * @var array
      */
-    protected $_options = array('display' => MoodleQuickForm_tags::DEFAULTUI);
+    protected $_options = array('display' => MoodleQuickForm_tags::DEFAULTUI,
+        'tagcollid' => 0, 'itemtype' => '', 'component' => '');
 
     /**
      * Caches the list of official tags, to save repeat DB queries.
@@ -96,10 +97,38 @@ class MoodleQuickForm_tags extends MoodleQuickForm_group {
                 }
             }
         }
-        global $CFG;
-        if (empty($CFG->usetags)) {
-            debugging('A tags formslib field has been created even thought $CFG->usetags is false.', DEBUG_DEVELOPER);
+    }
+
+    protected function is_tagging_enabled() {
+        if (!empty($this->_options['itemtype']) && !empty($this->_options['component'])) {
+            $enabled = core_tag::is_enabled($this->_options['itemtype'], $this->_options['component']);
+            if ($enabled === false) {
+                return false;
+            }
         }
+        // Backward compatibility with code developed before Moodle 3.0 where itemtype/component were not specified.
+        return true;
+    }
+
+    /**
+     * Finds the tag collection to use for official tag selector
+     *
+     * @return type
+     */
+    protected function get_tag_collection() {
+        if (empty($this->_options['tagcollid']) && (empty($this->_options['itemtype']) || empty($this->_options['component']))) {
+            debugging('You need to specify \'itemtype\' and \'component\' of the tagged area in the tags form element options',
+                    DEBUG_DEVELOPER);
+        }
+        if (!empty($this->_options['tagcollid'])) {
+            return $this->_options['tagcollid'];
+        }
+        if ($this->_options['itemtype']) {
+            $this->_options['tagcollid'] = core_tag_area::get_collection($this->_options['itemtype'], $this->_options['component']);
+        } else {
+            $this->_options['tagcollid'] = core_tag_collection::get_default();
+        }
+        return $this->_options['tagcollid'];
     }
 
     /**
@@ -113,7 +142,10 @@ class MoodleQuickForm_tags extends MoodleQuickForm_group {
             return;
         }
         $namefield = empty($CFG->keeptagnamecase) ? 'name' : 'rawname';
-        $this->_officialtags = $DB->get_records_menu('tag', array('tagtype' => 'official'), $namefield, 'id,' . $namefield);
+        // TODO use API function.
+        $this->_officialtags = $DB->get_records_menu('tag',
+            array('tagtype' => 'official', 'tagcollid' => $this->get_tag_collection()),
+            $namefield, 'id,' . $namefield);
     }
 
     /**
@@ -122,6 +154,13 @@ class MoodleQuickForm_tags extends MoodleQuickForm_group {
     function _createElements() {
         global $CFG, $OUTPUT;
         $this->_elements = array();
+        if (!$this->is_tagging_enabled()) {
+            $othertags = @MoodleQuickForm::createElement('hidden', 'officialtags');
+            $this->_elements[] = $othertags;
+            $othertags = @MoodleQuickForm::createElement('hidden', 'othertags');
+            $this->_elements[] = $othertags;
+            return;
+        }
 
         // Official tags.
         $showingofficial = $this->_options['display'] != MoodleQuickForm_tags::NOOFFICIAL;
@@ -131,7 +170,7 @@ class MoodleQuickForm_tags extends MoodleQuickForm_group {
             // If the user can manage official tags, give them a link to manage them.
             $label = get_string('otags', 'tag');
             if (has_capability('moodle/tag:manage', context_system::instance())) {
-                $url = $CFG->wwwroot .'/tag/manage.php';
+                $url = new moodle_url('/tag/manage.php', array('tc' => $this->get_tag_collection()));
                 $label .= ' (' . $OUTPUT->action_link(
                     $url,
                     get_string('manageofficialtags', 'tag'),
@@ -257,7 +296,11 @@ class MoodleQuickForm_tags extends MoodleQuickForm_group {
      */
     function accept(&$renderer, $required = false, $error = null)
     {
-        $renderer->renderElement($this, $required, $error);
+        if ($this->is_tagging_enabled()) {
+            $renderer->renderElement($this, $required, $error);
+        } else {
+            $renderer->renderHidden($this);
+        }
     }
 
     /**
@@ -268,6 +311,10 @@ class MoodleQuickForm_tags extends MoodleQuickForm_group {
      * @return array
      */
     function exportValue(&$submitValues, $assoc = false) {
+        if (!$this->is_tagging_enabled()) {
+            return array($this->getName() => array());
+        }
+
         $valuearray = array();
 
         // Get the data out of our child elements.

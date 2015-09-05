@@ -2596,27 +2596,15 @@ function coursetag_store_keywords($tags, $courseid, $userid=0, $tagtype='officia
     require_once $CFG->dirroot.'/tag/lib.php';
 
     if (is_array($tags) and !empty($tags)) {
+        if ($tagtype === 'official') {
+            $tagcoll = core_tag_area::get_collection('course', 'core');
+            // We don't normally need to create tags, they are created automatically when added to items. but we do here because we want them to be official.
+            core_tag::create_if_missing($tagcoll, $tags, true);
+        }
         foreach ($tags as $tag) {
             $tag = trim($tag);
             if (strlen($tag) > 0) {
-                //tag_set_add('course', $courseid, $tag, $userid); //deletes official tags
-
-                //add tag if does not exist
-                if (!$tagid = tag_get_id($tag)) {
-                    $tag_id_array = tag_add(array($tag), $tagtype);
-                    $tagid = $tag_id_array[core_text::strtolower($tag)];
-                }
-                //ordering
-                $ordering = 0;
-                if ($current_ids = tag_get_tags_ids('course', $courseid)) {
-                    end($current_ids);
-                    $ordering = key($current_ids) + 1;
-                }
-                //set type
-                tag_type_set($tagid, $tagtype);
-
-                //tag_instance entry
-                tag_assign('course', $courseid, $tagid, $ordering, $userid, 'core', context_course::instance($courseid)->id);
+                core_tag::add_item_tag('course', 'core', $courseid, context_course::instance($courseid), $tag, $userid);
             }
         }
     }
@@ -2636,7 +2624,8 @@ function coursetag_store_keywords($tags, $courseid, $userid=0, $tagtype='officia
 function coursetag_delete_keyword($tagid, $userid, $courseid) {
     debugging('Function coursetag_delete_keyword() is deprecated. Userid is no longer used for tagging courses.', DEBUG_DEVELOPER);
 
-    tag_delete_instance('course', $courseid, $tagid, $userid);
+    $tag = core_tag::get($tagid);
+    core_tag::remove_item_tag('course', 'core', $courseid, $tag->rawname, $userid);
 }
 
 /**
@@ -2685,20 +2674,375 @@ function coursetag_get_tagged_courses($tagid) {
  * @param   bool     $showfeedback if we should output a notification of the delete to the end user
  */
 function coursetag_delete_course_tags($courseid, $showfeedback=false) {
-    debugging('Function coursetag_delete_course_tags() is deprecated. Userid is no longer used for tagging courses.', DEBUG_DEVELOPER);
+    debugging('Function coursetag_delete_course_tags() is deprecated. Use core_tag::remove_all_item_tags().', DEBUG_DEVELOPER);
 
-    global $DB, $OUTPUT;
-
-    if ($taginstances = $DB->get_recordset_select('tag_instance', "itemtype = 'course' AND itemid = :courseid",
-        array('courseid' => $courseid), '', 'tagid, tiuserid')) {
-
-        foreach ($taginstances as $record) {
-            tag_delete_instance('course', $courseid, $record->tagid, $record->tiuserid);
-        }
-        $taginstances->close();
-    }
+    global $OUTPUT;
+    core_tag::remove_all_item_tags('course', 'core', $courseid);
 
     if ($showfeedback) {
         echo $OUTPUT->notification(get_string('deletedcoursetags', 'tag'), 'notifysuccess');
+    }
+}
+
+/**
+ * Set the type of a tag.  At this time (version 2.2) the possible values are 'default' or 'official'.  Official tags will be
+ * displayed separately "at tagging time" (while selecting the tags to apply to a record).
+ *
+ * @package  core_tag
+ * @deprecated since 3.0
+ * @param    string   $tagid tagid to modify
+ * @param    string   $type either 'default' or 'official'
+ * @return   bool     true on success, false otherwise
+ */
+function tag_type_set($tagid, $type) {
+    debugging('Function tag_type_set() is deprecated and can be replaced with use core_tag::get($tagid)->update().', DEBUG_DEVELOPER);
+    if ($tag = core_tag::get($tagid, '*')) {
+        return $tag->update(array('tagtype' => $type));
+    }
+    return false;
+}
+
+/**
+ * Set the description of a tag
+ *
+ * @package  core_tag
+ * @deprecated since 3.0
+ * @param    int      $tagid the id of the tag
+ * @param    string   $description the tag's description string to be set
+ * @param    int      $descriptionformat the moodle text format of the description
+ *                    {@link http://docs.moodle.org/dev/Text_formats_2.0#Database_structure}
+ * @return   bool     true on success, false otherwise
+ */
+function tag_description_set($tagid, $description, $descriptionformat) {
+    debugging('Function tag_type_set() is deprecated and can be replaced with core_tag::get($tagid)->update().', DEBUG_DEVELOPER);
+    if ($tag = core_tag::get($tagid, '*')) {
+        return $tag->update(array('description' => $description, 'descriptionformat' => $descriptionformat));
+    }
+    return false;
+}
+
+/**
+ * Get the array of db record of tags associated to a record (instances).
+ *
+ * Use {@see core_tag::get_item_tags_csv()} if you wish to get the same
+ * data in a comma-separated string, for instances such as needing to simply
+ * display a list of tags to the end user.
+ *
+ * @package core_tag
+ * @deprecated since 3.0
+ * @param string $record_type the record type for which we want to get the tags
+ * @param int $record_id the record id for which we want to get the tags
+ * @param string $type the tag type (either 'default' or 'official'). By default, all tags are returned.
+ * @param int $userid (optional) only required for course tagging
+ * @return array the array of tags
+ */
+function tag_get_tags($record_type, $record_id, $type=null, $userid=0) {
+    debugging('Method tag_get_tags() is deprecated and replaced with core_tag::get_item_tags(). ' .
+        'Component is now required when retrieving tag instances.', DEBUG_DEVELOPER);
+    $official = ($type === 'official' ? true : (!empty($type) ? false : null));
+    $tags = core_tag::get_item_tags($record_type, null, $record_id, $official, $userid);
+    $rv = array();
+    foreach ($tags as $id => $t) {
+        $rv[$id] = $t->to_object();
+    }
+    return $rv;
+}
+
+/**
+ * Get the array of tags display names, indexed by id.
+ *
+ * @package  core_tag
+ * @deprecated since 3.0
+ * @param    string $record_type the record type for which we want to get the tags
+ * @param    int    $record_id   the record id for which we want to get the tags
+ * @param    string $type        the tag type (either 'default' or 'official'). By default, all tags are returned.
+ * @return   array  the array of tags (with the value returned by tag_display_name), indexed by id
+ */
+function tag_get_tags_array($record_type, $record_id, $type=null) {
+    debugging('Method tag_get_tags_array() is deprecated and replaced with core_tag::get_item_tags_array(). ' .
+        'Component is now required when retrieving tag instances.', DEBUG_DEVELOPER);
+    $official = ($type === 'official' ? true : (!empty($type) ? false : null));
+    return core_tag::get_item_tags_array($record_type, '', $record_id, $official);
+}
+
+/**
+ * Get a comma-separated string of tags associated to a record.  Use {@see tag_get_tags()} to get the same information in an array.
+ *
+ * @package  core_tag
+ * @deprecated since 3.0
+ * @param    string   $record_type the record type for which we want to get the tags
+ * @param    int      $record_id   the record id for which we want to get the tags
+ * @param    int      $html        either TAG_RETURN_HTML or TAG_RETURN_TEXT, depending on the type of output desired
+ * @param    string   $type        either 'official' or 'default', if null, all tags are returned
+ * @return   string   the comma-separated list of tags.
+ */
+function tag_get_tags_csv($record_type, $record_id, $html=null, $type=null) {
+    global $CFG;
+    require_once($CFG->dirroot . '/tag/lib.php');
+    debugging('Method tag_get_tags_csv() is deprecated and replaced with core_tag::get_item_tags_csv(). ' .
+        'Component is now required when retrieving tag instances.', DEBUG_DEVELOPER);
+    $official = ($type === 'official' ? true : (!empty($type) ? false : null));
+    return core_tag::get_item_tags_csv($record_type, '', $record_id, $html != TAG_RETURN_TEXT, $official);
+}
+
+/**
+ * Get an array of tag ids associated to a record.
+ *
+ * @package  core_tag
+ * @deprecated since 3.0
+ * @param    string    $record_type the record type for which we want to get the tags
+ * @param    int       $record_id the record id for which we want to get the tags
+ * @return   array     tag ids, indexed and sorted by 'ordering'
+ */
+function tag_get_tags_ids($record_type, $record_id) {
+    debugging('Method tag_get_tags_ids() is deprecated. Please consider using core_tag::get_item_tags() or similar methods.', DEBUG_DEVELOPER);
+    $tag_ids = array();
+    $tagobjects = core_tag::get_item_tags($record_type, null, $record_id);
+    foreach ($tagobjects as $tagobject) {
+        $tag = $tagobject->to_object();
+        if ( array_key_exists($tag->ordering, $tag_ids) ) {
+            $tag->ordering++;
+        }
+        $tag_ids[$tag->ordering] = $tag->id;
+    }
+    ksort($tag_ids);
+    return $tag_ids;
+}
+
+/**
+ * Returns the database ID of a set of tags.
+ *
+ * @deprecated since 3.0
+ * @param    mixed $tags one tag, or array of tags, to look for.
+ * @param    bool  $return_value specify the type of the returned value. Either TAG_RETURN_OBJECT, or TAG_RETURN_ARRAY (default).
+ *                               If TAG_RETURN_ARRAY is specified, an array will be returned even if only one tag was passed in $tags.
+ * @return   mixed tag-indexed array of ids (or objects, if second parameter is TAG_RETURN_OBJECT), or only an int, if only one tag
+ *                 is given *and* the second parameter is null. No value for a key means the tag wasn't found.
+ */
+function tag_get_id($tags, $return_value = null) {
+    global $CFG, $DB;
+    require_once($CFG->dirroot . '/tag/lib.php');
+    debugging('Method tag_get_id() is deprecated and can be replaced with core_tag::get_by_name() or core_tag::get_by_name_bulk(). ' .
+        'You need to specify tag collection when retrieving tag by name', DEBUG_DEVELOPER);
+
+    if (!is_array($tags)) {
+        if(is_null($return_value) || $return_value == TAG_RETURN_OBJECT) {
+            if ($tagobject = core_tag::get_by_name(core_tag_collection::get_default(), $tags)) {
+                return $tagobject->id;
+            } else {
+                return 0;
+            }
+        }
+        $tags = array($tags);
+    }
+
+    $records = core_tag::get_by_name_bulk(core_tag_collection::get_default(), $tags,
+        $return_value == TAG_RETURN_OBJECT ? '*' : 'id, name');
+    foreach ($records as $name => $record) {
+        if ($return_value != TAG_RETURN_OBJECT) {
+            $records[$name] = $record->id ? $record->id : null;
+        } else {
+            $records[$name] = $record->to_object();
+        }
+    }
+    return $records;
+}
+
+/**
+ * Change the "value" of a tag, and update the associated 'name'.
+ *
+ * @package  core_tag
+ * @deprecated since 3.0
+ * @param    int      $tagid  the id of the tag to modify
+ * @param    string   $newrawname the new rawname
+ * @return   bool     true on success, false otherwise
+ */
+function tag_rename($tagid, $newrawname) {
+    debugging('Function tag_rename() is deprecated and may be replaced with core_tag::get($tagid)->update().', DEBUG_DEVELOPER);
+    if ($tag = core_tag::get($tagid, '*')) {
+        return $tag->update(array('rawname' => $newrawname));
+    }
+    return false;
+}
+
+/**
+ * Delete one instance of a tag.  If the last instance was deleted, it will also delete the tag, unless its type is 'official'.
+ *
+ * @package  core_tag
+ * @deprecated since 3.0
+ * @param    string $record_type the type of the record for which to remove the instance
+ * @param    int    $record_id   the id of the record for which to remove the instance
+ * @param    int    $tagid       the tagid that needs to be removed
+ * @param    int    $userid      (optional) the userid
+ * @return   bool   true on success, false otherwise
+ */
+function tag_delete_instance($record_type, $record_id, $tagid, $userid = null) {
+    debugging('Function tag_delete_instance() is deprecated and replaced with core_tag::remove_item_tag() instead. ' .
+        'Component is required for retrieving instances', DEBUG_DEVELOPER);
+    $tag = core_tag::get($tagid);
+    core_tag::remove_item_tag($record_type, '', $record_id, $tag->rawname, $userid);
+}
+
+/**
+ * Find all records tagged with a tag of a given type ('post', 'user', etc.)
+ *
+ * @package  core_tag
+ * @category tag
+ * @access   public
+ * @param    string   $tag       tag to look for
+ * @param    string   $type      type to restrict search to.  If null, every matching record will be returned
+ * @param    int      $limitfrom (optional, required if $limitnum is set) return a subset of records, starting at this point.
+ * @param    int      $limitnum  (optional, required if $limitfrom is set) return a subset comprising this many records.
+ * @return   array of matching objects, indexed by record id, from the table containing the type requested
+ */
+function tag_find_records($tag, $type, $limitfrom='', $limitnum='') {
+    debugging('Function tag_find_records() is deprecated and replaced with core_tag::get_by_name()->get_tagged_items(). '.
+        'You need to specify tag collection when retrieving tag by name', DEBUG_DEVELOPER);
+
+    if (!$tag || !$type) {
+        return array();
+    }
+
+    $tagobject = core_tag::get_by_name(core_tag_area::get_collection($type, ''), $tag);
+    return $tagobject->get_tagged_items($type, '', $limitfrom, $limitnum);
+}
+
+/**
+ * Adds one or more tag in the database.  This function should not be called directly : you should
+ * use tag_set.
+ *
+ * @package core_tag
+ * @deprecated since 3.0
+ * @param   mixed    $tags     one tag, or an array of tags, to be created
+ * @param   string   $type     type of tag to be created ("default" is the default value and "official" is the only other supported
+ *                             value at this time). An official tag is kept even if there are no records tagged with it.
+ * @return array     $tags ids indexed by their lowercase normalized names. Any boolean false in the array indicates an error while
+ *                             adding the tag.
+ */
+function tag_add($tags, $type="default") {
+    debugging('Function tag_add() is deprecated. You can use core_tag::create_if_missing(), however it should not be necessary ' .
+        'since tags are created automatically when assigned to items', DEBUG_DEVELOPER);
+    if (!is_array($tags)) {
+        $tags = array($tags);
+    }
+    $objects = core_tag::create_if_missing(core_tag_collection::get_default(), $tags, $type === 'official');
+
+    // New function returns the tags in different format, for BC we keep the format that this function used to have.
+    $rv = array();
+    foreach ($objects as $name => $tagobject) {
+        if (isset($tagobject->id)) {
+            $rv[$tagobject->name] = $tagobject->id;
+        } else {
+            $rv[$name] = false;
+        }
+    }
+    return $rv;
+}
+
+/**
+ * Assigns a tag to a record; if the record already exists, the time and ordering will be updated.
+ *
+ * @package core_tag
+ * @deprecated since 3.0
+ * @param string $record_type the type of the record that will be tagged
+ * @param int $record_id the id of the record that will be tagged
+ * @param string $tagid the tag id to set on the record.
+ * @param int $ordering the order of the instance for this record
+ * @param int $userid (optional) only required for course tagging
+ * @param string|null $component the component that was tagged
+ * @param int|null $contextid the context id of where this tag was assigned
+ * @return bool true on success, false otherwise
+ */
+function tag_assign($record_type, $record_id, $tagid, $ordering, $userid = 0, $component = null, $contextid = null) {
+    debugging('Function tag_assign() is deprecated. Use core_tag::set_item_tags() or core_tag::add_item_tag() instead. ' .
+        'Tag instance ordering should not be set manually', DEBUG_DEVELOPER);
+    global $DB;
+
+    if ($component === null || $contextid === null) {
+        debugging('You should specify the component and contextid of the item being tagged in your call to tag_assign.',
+            DEBUG_DEVELOPER);
+    }
+    if ($contextid) {
+        $context = context::instance_by_id($contextid);
+    } else {
+        $context = context_system::instance();
+    }
+
+    // Get the tag.
+    $tag = $DB->get_record('tag', array('id' => $tagid), 'name, rawname', MUST_EXIST);
+
+    $taginstanceid = core_tag::add_item_tag($record_type, $component, $record_id, $context, $tag->rawname, $userid);
+
+    // Alter the "ordering" of tag_instance. This should never be done manually and only remains here for the backward compatibility.
+    $taginstance = new stdClass();
+    $taginstance->id = $taginstanceid;
+    $taginstance->ordering     = $ordering;
+    $taginstance->timemodified = time();
+
+    $DB->update_record('tag_instance', $taginstance);
+
+    return true;
+}
+
+/**
+ * Count how many records are tagged with a specific tag.
+ *
+ * @package core_tag
+ * @deprecated since 3.0
+ * @param   string   $record_type record to look for ('post', 'user', etc.)
+ * @param   int      $tagid       is a single tag id
+ * @return  int      number of mathing tags.
+ */
+function tag_record_count($record_type, $tagid) {
+    debugging('Method tag_record_count() is deprecated and replaced with core_tag::get($tagid)->count_tagged_items(). '.
+        'Component is now required when retrieving tag instances.', DEBUG_DEVELOPER);
+    core_tag::get($tagid)->count_tagged_items($record_type, '');
+}
+
+/**
+ * Determine if a record is tagged with a specific tag
+ *
+ * @package core_tag
+ * @deprecated since 3.0
+ * @param   string   $record_type the record type to look for
+ * @param   int      $record_id   the record id to look for
+ * @param   string   $tag         a tag name
+ * @return  bool/int true if it is tagged, 0 (false) otherwise
+ */
+function tag_record_tagged_with($record_type, $record_id, $tag) {
+    debugging('Method tag_record_tagged_with() is deprecated and replaced with core_tag::get($tagid)->is_item_tagged_with(). '.
+        'Component is now required when retrieving tag instances.', DEBUG_DEVELOPER);
+    return core_tag::is_item_tagged_with($record_type, '', $record_id, $tag);
+}
+
+/**
+ * Flag a tag as inappropriate.
+ *
+ * @deprecated since 3.0
+ * @param int|array $tagids a single tagid, or an array of tagids
+ */
+function tag_set_flag($tagids) {
+    debugging('Function tag_set_flag() is deprecated and replaced with core_tag::get($tagid)->flag().', DEBUG_DEVELOPER);
+    $tagids = (array) $tagids;
+    foreach ($tagids as $tagid) {
+        if ($tag = core_tag::get($tagid, '*')) {
+            $tag->flag();
+        }
+    }
+}
+
+/**
+ * Remove the inappropriate flag on a tag.
+ *
+ * @deprecated since 3.0
+ * @param int|array $tagids a single tagid, or an array of tagids
+ */
+function tag_unset_flag($tagids) {
+    debugging('Function tag_unset_flag() is deprecated and replaced with core_tag::get($tagid)->reset_flag().', DEBUG_DEVELOPER);
+    $tagids = (array) $tagids;
+    foreach ($tagids as $tagid) {
+        if ($tag = core_tag::get($tagid, '*')) {
+            $tag->reset_flag();
+        }
     }
 }

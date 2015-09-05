@@ -811,6 +811,10 @@ EOD;
             $record['tagtype'] = 'default';
         }
 
+        if (!isset($record['tagcollid'])) {
+            $record['tagcollid'] = core_tag_collection::get_default();
+        }
+
         if (!isset($record['description'])) {
             $record['description'] = 'Tag description';
         }

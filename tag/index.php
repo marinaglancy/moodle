@@ -44,16 +44,31 @@ $perpage     = optional_param('perpage', 24, PARAM_INT);
 $systemcontext   = context_system::instance();
 
 if ($tagname) {
-    $tag = tag_get('name', $tagname, '*');
+    $tagcollid = optional_param('tc', 0, PARAM_INT);
+    if (!$tagcollid) {
+        // Tag name specified but tag collection was not. Try to guess it.
+        $tags = core_tag::guess_by_name($tagname, '*');
+        if (count($tags) > 1) {
+            // This tag was found in more than one collection, redirect to search.
+            redirect(new moodle_url('/tag/search.php', array('tag' => $tagname)));
+        } else if (count($tags) == 1) {
+            $tag = reset($tags);
+        }
+    } else {
+        if (!$tag = core_tag::get_by_name($tagcollid, $tagname, '*')) {
+            redirect(new moodle_url('/tag/search.php', array('tagcollid' => $tagcollid, 'query' => $tagname)));
+        }
+    }
 } else if ($tagid) {
-    $tag = tag_get('id', $tagid, '*');
+    $tag = core_tag::get($tagid, '*');
 }
 unset($tagid);
 if (empty($tag)) {
-    redirect($CFG->wwwroot.'/tag/search.php');
+    redirect(new moodle_url('/tag/search.php'));
 }
+$tagcollid = $tag->tagcollid;
 
-$PAGE->set_url('/tag/index.php', array('id' => $tag->id));
+$PAGE->set_url($tag->viewurl);
 $PAGE->set_subpage($tag->id);
 $PAGE->set_context($systemcontext);
 $tagnode = $PAGE->navigation->find('tags', null);
@@ -70,7 +85,7 @@ $title = get_string('tag', 'tag') .' - '. $tagname;
 
 $button = '';
 if ($PAGE->user_allowed_editing() ) {
-    $button = $OUTPUT->edit_button(new moodle_url("$CFG->wwwroot/tag/index.php", array('id' => $tag->id)));
+    $button = $OUTPUT->edit_button($tag->viewurl);
 }
 
 $PAGE->navbar->add($tagname);
@@ -106,7 +121,7 @@ if (!empty($CFG->enableblogs) && has_capability('moodle/blog:view', $systemconte
     $start = 0;
     $blogs = $bloglisting->get_entries($start, $limit);
 }
-$usercount = tag_record_count('user', $tag->id);
+$usercount = $tag->count_tagged_items('user', 'core');
 
 // Only include <a href />'s to those anchors that actually will be shown
 $relatedpageslink = "";
@@ -190,7 +205,7 @@ if ($usercount > 0) {
     echo "<a name='user'></a>";
     echo $OUTPUT->heading($heading, 3);
 
-    $baseurl = new moodle_url('/tag/index.php', array('id' => $tag->id));
+    $baseurl = $tag->viewurl;
     $pagingbar = new paging_bar($usercount, $userpage, $perpage, $baseurl);
     $pagingbar->pagevar = 'userpage';
     echo $OUTPUT->render($pagingbar);

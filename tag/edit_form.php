@@ -78,4 +78,21 @@ class tag_edit_form extends moodleform {
 
     }
 
+    public function validation($data, $files) {
+        $errors = parent::validation($data, $files);
+
+        if (isset($data['rawname'])) {
+            $newname = core_text::strtolower($data['rawname']);
+            $tag = $this->_customdata['tag'];
+            if ($tag->name != $newname) {  // The name has changed, let's make sure it's not another existing tag
+                if (core_tag::get_by_name($tag->tagcollid, $newname)) {
+                    // Something exists already, so flag an error.
+                    $errors['rawname'] = get_string('namesalreadybeeingused', 'tag');
+                }
+            }
+        }
+
+        return $errors;
+    }
+
 }

@@ -35,6 +35,11 @@ if (empty($CFG->usetags)) {
 $query   = optional_param('query', '', PARAM_RAW);
 $page    = optional_param('page', 0, PARAM_INT); // which page to show
 $perpage = optional_param('perpage', 18, PARAM_INT);
+$tagcollid = optional_param('tagcollid', 0, PARAM_INT);
+
+if (!$tagcollid && count(core_tag_collection::get_collections()) == 1) {
+    $tagcollid = core_tag_collection::get_default();
+}
 
 $params = array();
 if ($query !== '') {
@@ -55,6 +60,7 @@ $manage_link = '&nbsp;';
 
 $PAGE->set_title(get_string('tags', 'tag'));
 $PAGE->set_heading($SITE->fullname);
+
 echo $OUTPUT->header();
 
 echo $OUTPUT->heading(get_string('searchtags', 'tag'), 2);
@@ -66,13 +72,13 @@ if ( has_capability('moodle/tag:manage',$systemcontext) ) {
 tag_print_search_box();
 
 if(!empty($query)) {
-     tag_print_search_results($query, $page, $perpage);
+     tag_print_search_results($query, $page, $perpage, false, $tagcollid);
 }
 
 echo '<br/><br/>';
 
 echo $OUTPUT->box_start('generalbox', 'big-tag-cloud-box');
-tag_print_cloud(null, 150);
+tag_print_cloud(null, 150, false, '', $tagcollid);
 echo $OUTPUT->box_end();
 
 echo $OUTPUT->footer();

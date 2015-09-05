@@ -36,20 +36,25 @@ require_once($CFG->libdir.'/filelib.php');
  * @param    int       $nr_of_tags Limit for the number of tags to return/display, used if $tagset is null
  * @param    bool      $return     if true the function will return the generated tag cloud instead of displaying it.
  * @param    string    $sort (optional) selected sorting, default is alpha sort (name) also timemodified or popularity
+ * @param    int       $tagcollid
  * @return string|null a HTML string or null if this function does the output
  */
-function tag_print_cloud($tagset=null, $nr_of_tags=150, $return=false, $sort='') {
+function tag_print_cloud($tagset=null, $nr_of_tags=150, $return=false, $sort='', $tagcollid = 0) {
     global $CFG, $DB;
 
     $can_manage_tags = has_capability('moodle/tag:manage', context_system::instance());
 
     if (is_null($tagset)) {
-        // No tag set received, so fetch tags from database
-        if ( !$tagsincloud = $DB->get_records_sql('SELECT tg.rawname, tg.id, tg.name, tg.tagtype, COUNT(ti.id) AS count, tg.flag
+        // No tag set received, so fetch tags from database.
+        // Always add query by tagcollid even when it's not known to make use of the table index.
+        list($sql, $params) = $DB->get_in_or_equal($tagcollid ? array($tagcollid) : array_keys(core_tag_collection::get_collections()));
+        if ( !$tagsincloud = $DB->get_records_sql('SELECT tg.id, tg.rawname, tg.name, tg.tagtype, COUNT(ti.id) AS count,
+                                                        tg.flag, tg.tagcollid
                                                    FROM {tag_instance} ti JOIN {tag} tg ON tg.id = ti.tagid
-                                                   WHERE ti.itemtype <> \'tag\'
-                                                   GROUP BY tg.id, tg.rawname, tg.name, tg.flag, tg.tagtype
-                                                   ORDER BY count DESC, tg.name ASC', null, 0, $nr_of_tags) ) {
+                                                   WHERE ti.itemtype <> \'tag\' AND tg.tagcollid ' . $sql . '
+                                                   GROUP BY tg.id, tg.rawname, tg.name, tg.flag, tg.tagtype, tg.tagcollid
+                                                   ORDER BY count DESC, tg.name ASC',
+                            $params, 0, $nr_of_tags) ) {
             $tagsincloud = array();
         }
     } else {
@@ -92,8 +97,9 @@ function tag_print_cloud($tagset=null, $nr_of_tags=150, $return=false, $sort='')
             $tagname = tag_display_name($tag);
         }
 
-        $link = $CFG->wwwroot .'/tag/index.php?tag='. rawurlencode($tag->name);
-        $output .= '<li><a href="'. $link .'" class="'. $tag->class .'" '.
+        $tagcollid = !empty($tag->tagcollid) ? $tag->tagcollid : $tagcollid;
+        $link = core_tag::get_view_url($tagcollid, $tag->name);
+        $output .= '<li><a href="'. $link->out() .'" class="'. $tag->class .'" '.
             'title="'. get_string('numberofentries', 'blog', $tag->count) .'">'.
             $tagname .'</a></li> ';
     }
@@ -140,7 +146,7 @@ function tag_cloud_sort($a, $b) {
  * @package core_tag
  * @access  public
  * @todo    MDL-31149 create a system setting for $max_tags_displayed, instead of using an in code literal
- * @param   stdClass    $tag_object
+ * @param   core_tag|stdClass    $tag_object
  * @param   bool        $return     if true the function will return the generated tag cloud instead of displaying it.
  * @return  string/null a HTML box showing a description of the tag object and it's relationsips or null if output is done directly
  *                      in the function.
@@ -196,7 +202,7 @@ function tag_print_description_box($tag_object, $return=false) {
  * Prints a box that contains the management links of a tag
  *
  * @access public
- * @param  stdClass    $tag_object
+ * @param  core_tag|stdClass    $tag_object
  * @param  bool        $return     if true the function will return the generated tag cloud instead of displaying it.
  * @return string|null a HTML string or null if this function does the output
  */
@@ -213,21 +219,23 @@ function tag_print_management_box($tag_object, $return=false) {
         $links = array();
 
         // Add a link for users to add/remove this from their interests
-        if (tag_record_tagged_with('user', $USER->id, $tag_object->name)) {
-            $links[] = '<a href="'. $CFG->wwwroot .'/tag/user.php?action=removeinterest&amp;sesskey='. sesskey() .'&amp;tag='. rawurlencode($tag_object->name) .'">'. get_string('removetagfrommyinterests', 'tag', $tagname) .'</a>';
-        } else {
-            $links[] = '<a href="'. $CFG->wwwroot .'/tag/user.php?action=addinterest&amp;sesskey='. sesskey() .'&amp;tag='. rawurlencode($tag_object->name) .'">'. get_string('addtagtomyinterests', 'tag', $tagname) .'</a>';
+        if (core_tag::is_enabled('user', 'core') && core_tag_area::get_collection('user', 'core') == $tag_object->tagcollid) {
+            if (core_tag::is_item_tagged_with('user', 'core', $USER->id, $tag_object->name)) {
+                $links[] = '<a href="'. $CFG->wwwroot .'/tag/user.php?action=removeinterest&amp;sesskey='. sesskey() .'&amp;tag='. rawurlencode($tag_object->name) .'">'. get_string('removetagfrommyinterests', 'tag', $tagname) .'</a>';
+            } else {
+                $links[] = '<a href="'. $CFG->wwwroot .'/tag/user.php?action=addinterest&amp;sesskey='. sesskey() .'&amp;tag='. rawurlencode($tag_object->name) .'">'. get_string('addtagtomyinterests', 'tag', $tagname) .'</a>';
+            }
         }
 
         // Flag as inappropriate link.  Only people with moodle/tag:flag capability.
         if (has_capability('moodle/tag:flag', $systemcontext)) {
-            $links[] = '<a href="'. $CFG->wwwroot .'/tag/user.php?action=flaginappropriate&amp;sesskey='. sesskey() .'&amp;tag='. rawurlencode($tag_object->name) .'">'. get_string('flagasinappropriate', 'tag', rawurlencode($tagname)) .'</a>';
+            $links[] = '<a href="'. $CFG->wwwroot .'/tag/user.php?action=flaginappropriate&amp;sesskey='. sesskey() . '&amp;id='. $tag_object->id . '">'. get_string('flagasinappropriate', 'tag', rawurlencode($tagname)) .'</a>';
         }
 
         // Edit tag: Only people with moodle/tag:edit capability who either have it as an interest or can manage tags
         if (has_capability('moodle/tag:edit', $systemcontext) ||
             has_capability('moodle/tag:manage', $systemcontext)) {
-            $links[] = '<a href="'. $CFG->wwwroot .'/tag/edit.php?tag='. rawurlencode($tag_object->name) .'">'. get_string('edittag', 'tag') .'</a>';
+            $links[] = '<a href="'. $CFG->wwwroot .'/tag/edit.php?id='. $tag_object->id . '">'. get_string('edittag', 'tag') .'</a>';
         }
 
         $output .= implode(' | ', $links);
@@ -251,11 +259,19 @@ function tag_print_management_box($tag_object, $return=false) {
 function tag_print_search_box($return=false) {
     global $CFG, $OUTPUT;
 
+    $query = optional_param('query', '', PARAM_RAW);
+    $tagcollid = optional_param('tagcollid', 0, PARAM_INT);
+
     $output = $OUTPUT->box_start('','tag-search-box');
     $output .= '<form action="'.$CFG->wwwroot.'/tag/search.php" style="display:inline">';
     $output .= '<div>';
     $output .= '<label class="accesshide" for="searchform_search">'.get_string('searchtags', 'tag').'</label>';
-    $output .= '<input id="searchform_search" name="query" type="text" size="40" />';
+    $output .= '<input id="searchform_search" name="query" type="text" size="40" value="'.s($query).'" />';
+    $tagcolls = core_tag_collection::get_collections_menu(false, true);
+    if (count($tagcolls) > 1) {
+        $options = array(0 => get_string('inalltagcoll', 'tag')) + $tagcolls;
+        $output .= html_writer::select($options, 'tagcollid', $tagcollid, false);
+    }
     $output .= '<button id="searchform_button" type="submit">'. get_string('search', 'tag') .'</button><br />';
     $output .= '</div>';
     $output .= '</form>';
@@ -277,30 +293,31 @@ function tag_print_search_box($return=false) {
  * @param int          $page current page
  * @param int          $perpage nr of users displayed per page
  * @param bool         $return if true return html string
+ * @param int          $tagcollid
  * @return string|null a HTML string or null if this function does the output
  */
-function tag_print_search_results($query,  $page, $perpage, $return=false) {
+function tag_print_search_results($query,  $page, $perpage, $return=false, $tagcollid = null) {
 
     global $CFG, $USER, $OUTPUT;
 
-    $norm = tag_normalize($query, TAG_CASE_ORIGINAL);
-    $query = array_shift($norm);
+    $query = clean_param($query, PARAM_TAG);
 
-    $count = sizeof(tag_find_tags($query, false));
+    $count = sizeof(tag_find_tags($query, false, '', '', $tagcollid));
     $tags = array();
 
-    if ( $found_tags = tag_find_tags($query, true,  $page * $perpage, $perpage) ) {
+    if ( $found_tags = tag_find_tags($query, true,  $page * $perpage, $perpage, $tagcollid) ) {
         $tags = array_values($found_tags);
     }
 
-    $baseurl = $CFG->wwwroot.'/tag/search.php?query='. rawurlencode($query);
+    $baseurl = $CFG->wwwroot.'/tag/search.php?query='. rawurlencode($query).'&tagcollid='.((int)$tagcollid);
     $output = '';
 
     // link "Add $query to my interests"
     $addtaglink = '';
-    if( !tag_record_tagged_with('user', $USER->id, $query) ) {
-        $addtaglink = '<a href="'. $CFG->wwwroot .'/tag/user.php?action=addinterest&amp;sesskey='. sesskey() .'&amp;tag='. rawurlencode($query) .'">';
-        $addtaglink .= get_string('addtagtomyinterests', 'tag', htmlspecialchars($query)) .'</a>';
+    $cantaguser = (!$tagcollid || core_tag_area::get_collection('user', 'core') == $tagcollid);
+    if (core_tag::is_enabled('user', 'core') && $cantaguser && !core_tag::is_item_tagged_with('user', 'core', $USER->id, $query)) {
+        $addtaglink = html_writer::link(new moodle_url('/tag/user.php', array('action' => 'addinterest', 'sesskey' => sesskey(),
+            'tag' => $query)), get_string('addtagtomyinterests', 'tag', s($query)));
     }
 
     if ( !empty($tags) ) { // there are results to display!!
@@ -318,7 +335,7 @@ function tag_print_search_results($query,  $page, $perpage, $return=false) {
         for($i = 0; $i < $nr_of_uls; $i++) {
             $output .= '<li>';
             foreach (array_slice($tags, $i * $nr_of_lis_per_ul, $nr_of_lis_per_ul) as $tag) {
-                $tag_link = ' <a href="'. $CFG->wwwroot .'/tag/index.php?id='. $tag->id .'">'. tag_display_name($tag) .'</a>';
+                $tag_link = html_writer::link(core_tag::get_view_url($tag->tagcollid, $tag->name), tag_display_name($tag));
                 $output .= '&#8226;'. $tag_link .'<br/>';
             }
             $output .= '</li>';
@@ -348,16 +365,19 @@ function tag_print_search_results($query,  $page, $perpage, $return=false) {
 /**
  * Prints a table of the users tagged with the tag passed as argument
  *
- * @param  int         $tag_object the tag we wish to return data for
+ * @param  core_tag|stdClass $tagobject the tag we wish to return data for
  * @param  int         $limitfrom (optional, required if $limitnum is set) prints users starting at this point.
  * @param  int         $limitnum (optional, required if $limitfrom is set) prints this many users.
  * @param  bool        $return if true return html string
  * @return string|null a HTML string or null if this function does the output
  */
-function tag_print_tagged_users_table($tag_object, $limitfrom='', $limitnum='', $return=false) {
+function tag_print_tagged_users_table($tagobject, $limitfrom='', $limitnum='', $return=false) {
 
     //List of users with this tag
-    $userlist = tag_find_records($tag_object->name, 'user', $limitfrom, $limitnum);
+    if (!$tagobject instanceof core_tag) {
+        $tagobject = core_tag::get($tagobject->id);
+    }
+    $userlist = $tagobject->get_tagged_items('user', 'core', $limitfrom, $limitnum);
 
     $output = tag_print_user_list($userlist, true);
 

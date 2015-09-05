@@ -75,7 +75,6 @@ class core_tag_external extends external_api {
      */
     public static function update_tags($tags) {
         global $CFG, $PAGE, $DB;
-        require_once($CFG->dirroot.'/tag/lib.php');
 
         // Validate and normalize parameters.
         $tags = self::validate_parameters(self::update_tags_parameters(), array('tags' => $tags));
@@ -96,8 +95,6 @@ class core_tag_external extends external_api {
                 $tag['rawname'] = clean_param($tag['rawname'], PARAM_TAG);
                 if (empty($tag['rawname'])) {
                     unset($tag['rawname']);
-                } else {
-                    $tag['name'] = core_text::strtolower($tag['rawname']);
                 }
             }
             if (!$canmanage) {
@@ -118,7 +115,7 @@ class core_tag_external extends external_api {
                 );
                 continue;
             }
-            if (!$tagobject = $DB->get_record('tag', array('id' => $tag['id']))) {
+            if (!$tagobject = core_tag::get($tag['id'], '*')) {
                 $warnings[] = array(
                     'item' => $tag['id'],
                     'warningcode' => 'tagnotfound',
@@ -127,7 +124,7 @@ class core_tag_external extends external_api {
                 continue;
             }
             // First check if new tag name is allowed.
-            if (!empty($tag['name']) && ($existing = $DB->get_record('tag', array('name' => $tag['name']), 'id'))) {
+            if (!empty($tag['rawname']) && ($existing = core_tag::get_by_name($tagobject->tagcollid, $tag['rawname']))) {
                 if ($existing->id != $tag['id']) {
                     $warnings[] = array(
                         'item' => $tag['id'],
@@ -141,23 +138,18 @@ class core_tag_external extends external_api {
                 $tag['tagtype'] = $tag['official'] ? 'official' : 'default';
                 unset($tag['official']);
             }
-            $tag['timemodified'] = time();
-            $DB->update_record('tag', $tag);
-
-            foreach ($tag as $key => $value) {
-                $tagobject->$key = $value;
+            if (isset($tag['flag'])) {
+                if ($tag['flag']) {
+                    $tagobject->flag();
+                } else {
+                    $tagobject->reset_flag();
+                }
+                unset($tag['flag']);
             }
-
-            $event = \core\event\tag_updated::create(array(
-                'objectid' => $tagobject->id,
-                'relateduserid' => $tagobject->userid,
-                'context' => context_system::instance(),
-                'other' => array(
-                    'name' => $tagobject->name,
-                    'rawname' => $tagobject->rawname
-                )
-            ));
-            $event->trigger();
+            unset($tag['id']);
+            if (count($tag)) {
+                $tagobject->update($tag);
+            }
         }
         return array('warnings' => $warnings);
     }
@@ -266,6 +258,7 @@ class core_tag_external extends external_api {
                 'tags' => new external_multiple_structure( new external_single_structure(
                     array(
                         'id' => new external_value(PARAM_INT, 'tag id'),
+                        'tagcollid' => new external_value(PARAM_INT, 'tag collection id'),
                         'name' => new external_value(PARAM_TAG, 'name'),
                         'rawname' => new external_value(PARAM_RAW, 'tag raw name (may contain capital letters)'),
                         'description' => new external_value(PARAM_RAW, 'tag description'),
