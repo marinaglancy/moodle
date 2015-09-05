@@ -42,13 +42,14 @@ if (isguestuser()) {
 require_capability('moodle/tag:edit', context_system::instance());
 
 $query = optional_param('query', '', PARAM_TAG);
+$tagcollid = optional_param('tagcollid', '', PARAM_INT);
 
 echo $OUTPUT->header();
 
 // Limit the query to a minimum of 3 characters.
 $similartags = array();
 if (core_text::strlen($query) >= 3) {
-    $similartags = tag_autocomplete($query);
+    $similartags = tag_autocomplete($query, $tagcollid);
 }
 
 foreach ($similartags as $tag) {

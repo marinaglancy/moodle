@@ -1051,13 +1051,18 @@ function tag_assign($record_type, $record_id, $tagid, $ordering, $userid = 0, $c
  * @package core_tag
  * @access  private
  * @param   string   $text string that the tag names will be matched against
+ * @param   int      $tagcollid tag collection id
  * @return  mixed    an array of objects, or false if no records were found or an error occured.
  */
 function tag_autocomplete($text) {
     global $DB;
-    return $DB->get_records_sql("SELECT tg.id, tg.name, tg.rawname
-                                   FROM {tag} tg
-                                  WHERE tg.name LIKE ?", array(core_text::strtolower($text)."%"));
+    if (!$tagcollid) {
+        $tagcollid = core_tag_collection::get_default_collection();
+    }
+    return $DB->get_records_sql("SELECT tg.id, tg.name, tg.rawname, tg.tagcollid
+                               FROM {tag} tg
+                              WHERE tg.tagcollid = ? AND tg.name LIKE ?",
+        array($tagcollid, core_text::strtolower($text)."%"));
 }
 
 /**

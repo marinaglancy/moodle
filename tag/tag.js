@@ -1,9 +1,10 @@
 var coursetagdivs = null;
 var coursetag_tags = new Array();
 
-function init_tag_autocomplete() {
+function init_tag_autocomplete(tagcollid) {
 YUI().use('yui2-autocomplete', 'yui2-datasource', 'yui2-animation', 'yui2-connection', function(Y) {
     var myDataSource = new Y.YUI2.util.XHRDataSource("./tag_autocomplete.php");
+    myDataSource.scriptQueryParam = "tagcollid=" + tagcollid + "&query";
     myDataSource.responseType = Y.YUI2.util.XHRDataSource.TYPE_TEXT;
     myDataSource.responseSchema = {
         recordDelim: "\n",
