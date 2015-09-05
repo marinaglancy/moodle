@@ -133,10 +133,10 @@ class block_tag_youtube extends block_base {
         $tagid = optional_param('id', 0, PARAM_INT);   // tag id - for backware compatibility
         $tag = optional_param('tag', '', PARAM_TAG); // tag
 
-        if ($tag) {
-            $tagobject = tag_get('name', $tag);
-        } else if ($tagid) {
-            $tagobject = tag_get('id', $tagid);
+        if ($tagid) {
+            $tagobject = core_tag::get($tagid);
+        } else if ($tag) {
+            $tagobject = core_tag::get_by_name(0, $tag);
         }
 
         if (empty($tagobject)) {
@@ -173,10 +173,10 @@ class block_tag_youtube extends block_base {
         $tagid = optional_param('id', 0, PARAM_INT);   // tag id - for backware compatibility
         $tag = optional_param('tag', '', PARAM_TAG); // tag
 
-        if ($tag) {
-            $tagobject = tag_get('name', $tag);
-        } else if ($tagid) {
-            $tagobject = tag_get('id', $tagid);
+        if ($tagid) {
+            $tagobject = core_tag::get($tagid);
+        } else if ($tag) {
+            $tagobject = core_tag::get_by_name(0, $tag);
         }
 
         if (empty($tagobject)) {
