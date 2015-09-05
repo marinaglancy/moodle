@@ -2624,8 +2624,8 @@ function create_course($data, $editoroptions = NULL) {
     enrol_course_updated(true, $course, $data);
 
     // Update course tags.
-    if ($CFG->usetags && isset($data->tags)) {
-        tag_set('course', $course->id, $data->tags, 'core', context_course::instance($course->id)->id);
+    if (isset($data->tags)) {
+        core_tag::set_item_tags('course', 'core', $course->id, context_course::instance($course->id), $data->tags);
     }
 
     // Trigger a course created event.
@@ -2739,8 +2739,8 @@ function update_course($data, $editoroptions = NULL) {
     enrol_course_updated(false, $course, $data);
 
     // Update course tags.
-    if ($CFG->usetags && isset($data->tags)) {
-        tag_set('course', $course->id, $data->tags, 'core', context_course::instance($course->id)->id);
+    if (isset($data->tags)) {
+        core_tag::set_item_tags('course', 'core', $course->id, context_course::instance($course->id), $data->tags);
     }
 
     // Trigger a course updated event.

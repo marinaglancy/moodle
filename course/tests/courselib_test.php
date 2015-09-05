@@ -29,7 +29,6 @@ global $CFG;
 require_once($CFG->dirroot . '/course/lib.php');
 require_once($CFG->dirroot . '/course/tests/fixtures/course_capability_assignment.php');
 require_once($CFG->dirroot . '/enrol/imsenterprise/tests/imsenterprise_test.php');
-require_once($CFG->dirroot . '/tag/lib.php');
 
 class core_course_courselib_testcase extends advanced_testcase {
 
@@ -1500,7 +1499,9 @@ class core_course_courselib_testcase extends advanced_testcase {
      * @dataProvider provider_course_delete_module
      */
     public function test_course_delete_module($type, $options) {
-        global $DB;
+        global $DB, $CFG;
+        require_once($CFG->dirroot . '/tag/lib.php');
+
         $this->resetAfterTest(true);
         $this->setAdminUser();
 

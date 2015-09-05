@@ -1272,8 +1272,8 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
             } else if (!empty($search['tagid'])) {
                 // Search courses that are tagged with the specified tag.
                 $where = "c.id IN (SELECT t.itemid ".
-                        "FROM {tag_instance} t WHERE t.tagid = :tagid AND t.itemtype = :itemtype)";
-                $params = array('tagid' => $search['tagid'], 'itemtype' => 'course');
+                        "FROM {tag_instance} t WHERE t.tagid = :tagid AND t.itemtype = :itemtype AND t.component = :component)";
+                $params = array('tagid' => $search['tagid'], 'itemtype' => 'course', 'component' => 'core');
             } else {
                 debugging('No criteria is specified while searching courses', DEBUG_DEVELOPER);
                 return array();
