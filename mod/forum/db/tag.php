@@ -15,15 +15,20 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version information
+ * Tag area definitions
+ *
+ * File db/tag.php lists all available tag areas in core or a plugin.
  *
  * @package   mod_forum
- * @copyright 1999 onwards Martin Dougiamas  {@link http://moodle.com}
+ * @copyright 2015 Marina Glancy
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2015051102;       // The current module version (Date: YYYYMMDDXX)
-$plugin->requires  = 2015050500;       // Requires this Moodle version
-$plugin->component = 'mod_forum';      // Full name of the plugin (used for diagnostics)
+$tagareas = array(
+    array(
+        'itemtype' => 'post',
+        'collection' => 'forumposts',
+    )
+);

@@ -23,6 +23,10 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+$string['tagarea_post'] = 'Forum post';
+$string['tagcollection_forumposts'] = 'Forum posts';
+
+
 $string['activityoverview'] = 'There are new forum posts';
 $string['addanewdiscussion'] = 'Add a new discussion topic';
 $string['addanewquestion'] = 'Add a new question';
