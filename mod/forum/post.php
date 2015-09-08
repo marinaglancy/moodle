@@ -674,7 +674,11 @@ $mform_post->set_data(array(        'attachments'=>$draftitemid,
 
                             (isset($discussion->id)?
                                     array('discussion'=>$discussion->id):
-                                    array()));
+                                    array())+
+
+                            (isset($post->id) ?
+                                array('tags' => core_tag::get_item_tags_array('post', 'mod_forum', $post->id)):
+                                array()));
 
 if ($mform_post->is_cancelled()) {
     if (!isset($discussion->id) || $forum->type === 'qanda') {

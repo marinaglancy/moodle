@@ -138,6 +138,8 @@ class mod_forum_post_form extends moodleform {
             $mform->addHelpButton('attachments', 'attachment', 'forum');
         }
 
+        $mform->addElement('tags', 'tags', 'Tags', array('component'=>'mod_forum', 'itemtype'=>'post'));
+
         if (empty($post->id) && $manageactivities) {
             $mform->addElement('checkbox', 'mailnow', get_string('mailnow', 'forum'));
         }

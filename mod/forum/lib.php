@@ -4375,6 +4375,9 @@ function forum_add_new_post($post, $mform, $unused = null) {
             mod_forum_post_form::editor_options($context, null), $post->message);
     $DB->set_field('forum_posts', 'message', $post->message, array('id'=>$post->id));
     forum_add_attachment($post, $forum, $cm, $mform);
+    if (isset($post->tags)) {
+        core_tag::set_item_tags('post', 'mod_forum', $post->id, $context, $post->tags);
+    }
 
     // Update discussion modified date
     $DB->set_field("forum_discussions", "timemodified", $post->modified, array("id" => $post->discussion));
@@ -4428,6 +4431,10 @@ function forum_update_post($post, $mform, &$message) {
     $DB->update_record('forum_discussions', $discussion);
 
     forum_add_attachment($post, $forum, $cm, $mform, $message);
+
+    if (isset($post->tags)) {
+        core_tag::set_item_tags('post', 'mod_forum', $post->id, $context, $post->tags);
+    }
 
     if (forum_tp_can_track_forums($forum) && forum_tp_is_tracked($forum)) {
         forum_tp_mark_post_read($post->userid, $post, $post->forum);
