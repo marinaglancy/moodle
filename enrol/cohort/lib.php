@@ -434,7 +434,7 @@ class enrol_cohort_plugin extends enrol_plugin {
      *
      * @return boolean
      */
-    function use_standard_add_instance_page() {
+    function use_standard_editing_ui() {
         return true;
     }
 
@@ -450,10 +450,10 @@ class enrol_cohort_plugin extends enrol_plugin {
         $mform->addElement('text', 'name', get_string('custominstancename', 'enrol'));
         $mform->setType('name', PARAM_TEXT);
 
-        $options = self::get_status_options();
+        $options = $this->get_status_options();
         $mform->addElement('select', 'status', get_string('status', 'enrol_cohort'), $options);
 
-        $options = self::get_cohort_options($instance, $coursecontext);
+        $options = $this->get_cohort_options($instance, $coursecontext);
         $mform->addElement('select', 'customint1', get_string('cohort', 'cohort'), $options);
         if ($instance->id) {
             $mform->setConstant('customint1', $instance->customint1);
@@ -462,10 +462,10 @@ class enrol_cohort_plugin extends enrol_plugin {
             $mform->addRule('customint1', get_string('required'), 'required', null, 'client');
         }
 
-        $roles = self::get_role_options($instance, $coursecontext);
+        $roles = $this->get_role_options($instance, $coursecontext);
         $mform->addElement('select', 'roleid', get_string('assignrole', 'enrol_cohort'), $roles);
-        $mform->setDefault('roleid', self::get_config('roleid'));
-        $groups = self::get_group_options($coursecontext);
+        $mform->setDefault('roleid', $this->get_config('roleid'));
+        $groups = $this->get_group_options($coursecontext);
         $mform->addElement('select', 'customint2', get_string('addgroup', 'enrol_cohort'), $groups);
     }
 
@@ -488,10 +488,10 @@ class enrol_cohort_plugin extends enrol_plugin {
         if ($DB->record_exists_select('enrol', "roleid = :roleid AND customint1 = :customint1 AND courseid = :courseid AND enrol = 'cohort' AND id <> :id", $params)) {
             $errors['roleid'] = get_string('instanceexists', 'enrol_cohort');
         }
-        $validstatus = array_keys(self::get_status_options());
-        $validcohorts = array_keys(self::get_cohort_options($instance, $context));
-        $validroles = array_keys(self::get_role_options($instance, $context));
-        $validgroups = array_keys(self::get_group_options($context));
+        $validstatus = array_keys($this->get_status_options());
+        $validcohorts = array_keys($this->get_cohort_options($instance, $context));
+        $validroles = array_keys($this->get_role_options($instance, $context));
+        $validgroups = array_keys($this->get_group_options($context));
         $tovalidate = array(
             'name' => PARAM_TEXT,
             'status' => $validstatus,
@@ -499,7 +499,7 @@ class enrol_cohort_plugin extends enrol_plugin {
             'roleid' => $validroles,
             'customint2' => $validgroups
         );
-        $typeerrors = self::validate_param_types($data, $tovalidate);
+        $typeerrors = $this->validate_param_types($data, $tovalidate);
         $errors = array_merge($errors, $typeerrors);
 
         return $errors;

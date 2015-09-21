@@ -278,7 +278,7 @@ echo html_writer::table($table);
 $candidates = array();
 foreach (enrol_get_plugins(true) as $name=>$plugin) {
     $link = '';
-    if ($plugin->use_standard_add_instance_page()) {
+    if ($plugin->use_standard_editing_ui()) {
         if ($plugin->can_add_instance($course->id)) {
             // Standard add/edit UI.
             $params = array('type' => $name, 'courseid' => $course->id);

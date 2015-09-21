@@ -64,17 +64,18 @@ class enrol_meta_plugin extends enrol_plugin {
     }
 
     /**
-     * Returns link to page which may be used to add new instance of enrolment plugin in course.
+     * Returns true if we can add a new instance to this course.
+     *
      * @param int $courseid
-     * @return moodle_url page url
+     * @return boolean
      */
-    public function get_newinstance_link($courseid) {
+    public function can_add_instance($courseid) {
         $context = context_course::instance($courseid, MUST_EXIST);
         if (!has_capability('moodle/course:enrolconfig', $context) or !has_capability('enrol/meta:config', $context)) {
-            return NULL;
+            return false;
         }
         // Multiple instances supported - multiple parent courses linked.
-        return new moodle_url('/enrol/editinstance.php', array('courseid' => $courseid, 'type' => 'meta'));
+        return true;
     }
 
     /**
@@ -231,7 +232,7 @@ class enrol_meta_plugin extends enrol_plugin {
      *
      * @return boolean
      */
-    function use_standard_add_instance_page() {
+    function use_standard_editing_ui() {
         return true;
     }
 
@@ -311,6 +312,9 @@ class enrol_meta_plugin extends enrol_plugin {
 
         $mform->addElement('select', 'customint1', get_string('linkedcourse', 'enrol_meta'), $courses);
         $mform->addRule('customint1', get_string('required'), 'required', null, 'client');
+        if (!empty($instance->id)) {
+            $mform->freeze('customint1');
+        }
 
         $mform->addElement('select', 'customint2', get_string('addgroup', 'enrol_meta'), $groups);
     }
@@ -357,7 +361,7 @@ class enrol_meta_plugin extends enrol_plugin {
             'customint1' => $validcourses,
             'customint2' => $validgroups
         );
-        $typeerrors = self::validate_param_types($data, $tovalidate);
+        $typeerrors = $this->validate_param_types($data, $tovalidate);
         $errors = array_merge($errors, $typeerrors);
 
         return $errors;

@@ -160,7 +160,7 @@ class enrol_paypal_plugin extends enrol_plugin {
      *
      * @return boolean
      */
-    function use_standard_add_instance_page() {
+    function use_standard_editing_ui() {
         return true;
     }
 
@@ -368,7 +368,7 @@ class enrol_paypal_plugin extends enrol_plugin {
         if ($instance->id) {
             $roles = get_default_enrol_roles($context, $instance->roleid);
         } else {
-            $roles = get_default_enrol_roles($context, self::get_config('roleid'));
+            $roles = get_default_enrol_roles($context, $this->get_config('roleid'));
         }
         return $roles;
     }
@@ -458,7 +458,7 @@ class enrol_paypal_plugin extends enrol_plugin {
             'enrolenddate' => PARAM_INT
         );
 
-        $typeerrors = self::validate_param_types($data, $tovalidate);
+        $typeerrors = $this->validate_param_types($data, $tovalidate);
         $errors = array_merge($errors, $typeerrors);
 
         return $errors;

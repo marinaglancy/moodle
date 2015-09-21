@@ -99,6 +99,22 @@ class enrol_manual_plugin extends enrol_plugin {
     }
 
     /**
+     * Return true if we can add a new instance to this course.
+     *
+     * @param int $courseid
+     * @return boolean
+     */
+    public function can_add_instance($courseid) {
+        $context = context_course::instance($courseid, MUST_EXIST);
+        if (!has_capability('moodle/course:enrolconfig', $context) or !has_capability('enrol/manual:config', $context)) {
+            return false;
+        }
+        // Multiple instances supported - multiple parent courses linked.
+        return true;
+    }
+
+
+    /**
      * Returns edit icons for the page with list of instances.
      * @param stdClass $instance
      * @return array
@@ -118,7 +134,7 @@ class enrol_manual_plugin extends enrol_plugin {
             $icons[] = $OUTPUT->action_icon($managelink, new pix_icon('t/enrolusers', get_string('enrolusers', 'enrol_manual'), 'core', array('class'=>'iconsmall')));
         }
         if (has_capability('enrol/manual:config', $context)) {
-            $editlink = new moodle_url("/enrol/editinstance.php", array('courseid'=>$instance->courseid, 'type'=>'manual'));
+            $editlink = new moodle_url("/enrol/editinstance.php", array('courseid'=>$instance->courseid, 'type'=>'manual', 'id'=>$instance->id));
             $icons[] = $OUTPUT->action_icon($editlink, new pix_icon('t/edit', get_string('edit'), 'core',
                     array('class' => 'iconsmall')));
         }
@@ -165,6 +181,26 @@ class enrol_manual_plugin extends enrol_plugin {
         }
 
         return parent::add_instance($course, $fields);
+    }
+
+    /**
+     * Update instance of enrol plugin.
+     * @param stdClass $instance
+     * @param stdClass $data modified instance fields
+     * @return boolean
+     */
+    public function update_instance($instance, $data) {
+        global $DB;
+
+        // Delete all other instances, leaving only one.
+        if ($instances = $DB->get_records('enrol', array('courseid'=>$instance->courseid, 'enrol'=>'manual'), 'id ASC')) {
+            foreach ($instances as $anotherinstance) {
+                if ($anotherinstance->id != $instance->id) {
+                    $this->delete_instance($anotherinstance);
+                }
+            }
+        }
+        return parent::update_instance($instance, $data);
     }
 
     /**
@@ -595,7 +631,7 @@ class enrol_manual_plugin extends enrol_plugin {
      *
      * @return boolean
      */
-    function use_standard_add_instance_page() {
+    function use_standard_editing_ui() {
         return true;
     }
 
@@ -619,7 +655,7 @@ class enrol_manual_plugin extends enrol_plugin {
         if ($instance->id) {
             $roles = get_default_enrol_roles($context, $instance->roleid);
         } else {
-            $roles = get_default_enrol_roles($context, self::get_config('roleid'));
+            $roles = get_default_enrol_roles($context, $this->get_config('roleid'));
         }
         return $roles;
     }
@@ -646,20 +682,20 @@ class enrol_manual_plugin extends enrol_plugin {
      */
     public function edit_instance_form($instance, MoodleQuickForm $mform, $context) {
 
-        $options = self::get_status_options();
+        $options = $this->get_status_options();
         $mform->addElement('select', 'status', get_string('status', 'enrol_manual'), $options);
         $mform->addHelpButton('status', 'status', 'enrol_manual');
-        $mform->setDefault('status', self::get_config('status'));
+        $mform->setDefault('status', $this->get_config('status'));
 
-        $roles = self::get_roleid_options($instance, $context);
+        $roles = $this->get_roleid_options($instance, $context);
         $mform->addElement('select', 'roleid', get_string('defaultrole', 'role'), $roles);
-        $mform->setDefault('roleid', self::get_config('roleid'));
+        $mform->setDefault('roleid', $this->get_config('roleid'));
 
         $mform->addElement('duration', 'enrolperiod', get_string('defaultperiod', 'enrol_manual'), array('optional' => true, 'defaultunit' => 86400));
-        $mform->setDefault('enrolperiod', self::get_config('enrolperiod'));
+        $mform->setDefault('enrolperiod', $this->get_config('enrolperiod'));
         $mform->addHelpButton('enrolperiod', 'defaultperiod', 'enrol_manual');
 
-        $options = self::get_expirynotify_options();
+        $options = $this->get_expirynotify_options();
         $mform->addElement('select', 'expirynotify', get_string('expirynotify', 'core_enrol'), $options);
         $mform->addHelpButton('expirynotify', 'expirynotify', 'core_enrol');
 
@@ -690,9 +726,9 @@ class enrol_manual_plugin extends enrol_plugin {
             $errors['expirythreshold'] = get_string('errorthresholdlow', 'core_enrol');
         }
 
-        $validstatus = array_keys(self::get_status_options());
-        $validroles = array_keys(self::get_roleid_options($instance, $context));
-        $validexpirynotify = array_keys(self::get_expirynotify_options());
+        $validstatus = array_keys($this->get_status_options());
+        $validroles = array_keys($this->get_roleid_options($instance, $context));
+        $validexpirynotify = array_keys($this->get_expirynotify_options());
 
         $tovalidate = array(
             'status' => $validstatus,
@@ -702,7 +738,7 @@ class enrol_manual_plugin extends enrol_plugin {
             'expirythreshold' => PARAM_INT
         );
 
-        $typeerrors = self::validate_param_types($data, $tovalidate);
+        $typeerrors = $this->validate_param_types($data, $tovalidate);
         $errors = array_merge($errors, $typeerrors);
 
         return $errors;

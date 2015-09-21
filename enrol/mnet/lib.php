@@ -171,7 +171,7 @@ class enrol_mnet_plugin extends enrol_plugin {
      *
      * @return boolean
      */
-    function use_standard_add_instance_page() {
+    function use_standard_editing_ui() {
         return true;
     }
 
@@ -203,7 +203,7 @@ class enrol_mnet_plugin extends enrol_plugin {
             'roleid' => $validroles,
             'name' => PARAM_TEXT
         );
-        $typeerrors = self::validate_param_types($data, $tovalidate);
+        $typeerrors = $this->validate_param_types($data, $tovalidate);
         $errors = array_merge($errors, $typeerrors);
 
         return $errors;

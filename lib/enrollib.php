@@ -1533,7 +1533,7 @@ abstract class enrol_plugin {
      * @since Moodle 3.0
      * @return boolean
      */
-    public function use_standard_add_instance_page() {
+    public function use_standard_editing_ui() {
         return false;
     }
 

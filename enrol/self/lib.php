@@ -163,7 +163,7 @@ class enrol_self_plugin extends enrol_plugin {
     }
 
     /**
-     * Default implementation is just for backwards compatibility.
+     * Return true if we can add a new instance to this course.
      *
      * @param int $courseid
      * @return boolean
@@ -767,11 +767,11 @@ class enrol_self_plugin extends enrol_plugin {
         $mform->setType('name', PARAM_TEXT);
         $mform->addRule('name', get_string('maximumchars', '', 255), 'maxlength', 255, 'server');
 
-        $options = self::get_status_options();
+        $options = $this->get_status_options();
         $mform->addElement('select', 'status', get_string('status', 'enrol_self'), $options);
         $mform->addHelpButton('status', 'status', 'enrol_self');
 
-        $options = self::get_newenrols_options();
+        $options = $this->get_newenrols_options();
         $mform->addElement('select', 'customint6', get_string('newenrols', 'enrol_self'), $options);
         $mform->addHelpButton('customint6', 'newenrols', 'enrol_self');
         $mform->disabledIf('customint6', 'status', 'eq', ENROL_INSTANCE_DISABLED);
@@ -784,7 +784,7 @@ class enrol_self_plugin extends enrol_plugin {
         }
         $mform->addRule('password', get_string('maximumchars', '', 50), 'maxlength', 50, 'server');
 
-        $options = self::get_groupkey_options();
+        $options = $this->get_groupkey_options();
         $mform->addElement('select', 'customint1', get_string('groupkey', 'enrol_self'), $options);
         $mform->addHelpButton('customint1', 'groupkey', 'enrol_self');
 
@@ -794,7 +794,7 @@ class enrol_self_plugin extends enrol_plugin {
         $mform->addElement('duration', 'enrolperiod', get_string('enrolperiod', 'enrol_self'), array('optional' => true, 'defaultunit' => 86400));
         $mform->addHelpButton('enrolperiod', 'enrolperiod', 'enrol_self');
 
-        $options = self::get_expirynotify_options();
+        $options = $this->get_expirynotify_options();
         $mform->addElement('select', 'expirynotify', get_string('expirynotify', 'core_enrol'), $options);
         $mform->addHelpButton('expirynotify', 'expirynotify', 'core_enrol');
 
@@ -810,7 +810,7 @@ class enrol_self_plugin extends enrol_plugin {
         $mform->setDefault('enrolenddate', 0);
         $mform->addHelpButton('enrolenddate', 'enrolenddate', 'enrol_self');
 
-        $options = self::get_longtimenosee_options();
+        $options = $this->get_longtimenosee_options();
         $mform->addElement('select', 'customint2', get_string('longtimenosee', 'enrol_self'), $options);
         $mform->addHelpButton('customint2', 'longtimenosee', 'enrol_self');
 
@@ -862,7 +862,7 @@ class enrol_self_plugin extends enrol_plugin {
      *
      * @return boolean
      */
-    function use_standard_add_instance_page() {
+    function use_standard_editing_ui() {
         return true;
     }
 
@@ -921,16 +921,16 @@ class enrol_self_plugin extends enrol_plugin {
         if (core_text::strlen($data['name']) > 255) {
             $errors['name'] = get_string('err_maxlength', 'form', 255);
         }
-        $validstatus = array_keys(self::get_status_options());
-        $validnewenrols = array_keys(self::get_newenrols_options());
+        $validstatus = array_keys($this->get_status_options());
+        $validnewenrols = array_keys($this->get_newenrols_options());
         if (core_text::strlen($data['password']) > 50) {
             $errors['name'] = get_string('err_maxlength', 'form', 50);
         }
-        $validgroupkey = array_keys(self::get_groupkey_options());
+        $validgroupkey = array_keys($this->get_groupkey_options());
         $context = context_course::instance($instance->courseid);
         $validroles = array_keys($this->extend_assignable_roles($context, $instance->roleid));
-        $validexpirynotify = array_keys(self::get_expirynotify_options());
-        $validlongtimenosee = array_keys(self::get_longtimenosee_options());
+        $validexpirynotify = array_keys($this->get_expirynotify_options());
+        $validlongtimenosee = array_keys($this->get_longtimenosee_options());
         $tovalidate = array(
             'enrolstartdate' => PARAM_INT,
             'enrolenddate' => PARAM_INT,
@@ -949,7 +949,7 @@ class enrol_self_plugin extends enrol_plugin {
         if ($data['expirynotify'] != 0) {
             $tovalidate['expirythreshold'] = PARAM_INT;
         }
-        $typeerrors = self::validate_param_types($data, $tovalidate);
+        $typeerrors = $this->validate_param_types($data, $tovalidate);
         $errors = array_merge($errors, $typeerrors);
 
         return $errors;
