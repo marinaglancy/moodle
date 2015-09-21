@@ -144,7 +144,9 @@ class enrol_mnet_plugin extends enrol_plugin {
     /**
      * Add elements to the edit instance form.
      *
+     * @param stdClass $instance
      * @param MoodleQuickForm $mform
+     * @param context $context
      * @return bool
      */
     public function edit_instance_form($instance, MoodleQuickForm $mform, $context) {
@@ -171,7 +173,7 @@ class enrol_mnet_plugin extends enrol_plugin {
      *
      * @return boolean
      */
-    function use_standard_editing_ui() {
+    public function use_standard_editing_ui() {
         return true;
     }
 
@@ -186,7 +188,7 @@ class enrol_mnet_plugin extends enrol_plugin {
      *         or an empty array if everything is OK.
      * @return void
      */
-    function edit_instance_validation($data, $files, $instance, $context) {
+    public function edit_instance_validation($data, $files, $instance, $context) {
         global $DB;
         $errors = array();
 

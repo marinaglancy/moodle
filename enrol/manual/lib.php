@@ -93,7 +93,7 @@ class enrol_manual_plugin extends enrol_plugin {
 
         $context = context_course::instance($instance->courseid);
         if (has_capability('enrol/manual:config', $context)) {
-            $managelink = new moodle_url('/enrol/editinstance.php', array('courseid'=>$instance->courseid, 'type'=>'manual'));
+            $managelink = new moodle_url('/enrol/editinstance.php', array('courseid' => $instance->courseid, 'type' => 'manual'));
             $instancesnode->add($this->get_instance_name($instance), $managelink, navigation_node::TYPE_SETTING);
         }
     }
@@ -134,7 +134,8 @@ class enrol_manual_plugin extends enrol_plugin {
             $icons[] = $OUTPUT->action_icon($managelink, new pix_icon('t/enrolusers', get_string('enrolusers', 'enrol_manual'), 'core', array('class'=>'iconsmall')));
         }
         if (has_capability('enrol/manual:config', $context)) {
-            $editlink = new moodle_url("/enrol/editinstance.php", array('courseid'=>$instance->courseid, 'type'=>'manual', 'id'=>$instance->id));
+            $urlparams = array('courseid' => $instance->courseid, 'type' => 'manual', 'id' => $instance->id);
+            $editlink = new moodle_url("/enrol/editinstance.php", $urlparams);
             $icons[] = $OUTPUT->action_icon($editlink, new pix_icon('t/edit', get_string('edit'), 'core',
                     array('class' => 'iconsmall')));
         }
@@ -193,7 +194,7 @@ class enrol_manual_plugin extends enrol_plugin {
         global $DB;
 
         // Delete all other instances, leaving only one.
-        if ($instances = $DB->get_records('enrol', array('courseid'=>$instance->courseid, 'enrol'=>'manual'), 'id ASC')) {
+        if ($instances = $DB->get_records('enrol', array('courseid' => $instance->courseid, 'enrol' => 'manual'), 'id ASC')) {
             foreach ($instances as $anotherinstance) {
                 if ($anotherinstance->id != $instance->id) {
                     $this->delete_instance($anotherinstance);
@@ -631,7 +632,7 @@ class enrol_manual_plugin extends enrol_plugin {
      *
      * @return boolean
      */
-    function use_standard_editing_ui() {
+    public function use_standard_editing_ui() {
         return true;
     }
 
@@ -649,6 +650,8 @@ class enrol_manual_plugin extends enrol_plugin {
     /**
      * Return an array of valid options for the roleid.
      *
+     * @param stdClass $instance
+     * @param context $context
      * @return array
      */
     protected function get_roleid_options($instance, $context) {
@@ -677,7 +680,9 @@ class enrol_manual_plugin extends enrol_plugin {
     /**
      * Add elements to the edit instance form.
      *
+     * @param stdClass $instance
      * @param MoodleQuickForm $mform
+     * @param context $context
      * @return bool
      */
     public function edit_instance_form($instance, MoodleQuickForm $mform, $context) {
@@ -691,7 +696,8 @@ class enrol_manual_plugin extends enrol_plugin {
         $mform->addElement('select', 'roleid', get_string('defaultrole', 'role'), $roles);
         $mform->setDefault('roleid', $this->get_config('roleid'));
 
-        $mform->addElement('duration', 'enrolperiod', get_string('defaultperiod', 'enrol_manual'), array('optional' => true, 'defaultunit' => 86400));
+        $options = array('optional' => true, 'defaultunit' => 86400);
+        $mform->addElement('duration', 'enrolperiod', get_string('defaultperiod', 'enrol_manual'), $options);
         $mform->setDefault('enrolperiod', $this->get_config('enrolperiod'));
         $mform->addHelpButton('enrolperiod', 'defaultperiod', 'enrol_manual');
 
@@ -699,12 +705,14 @@ class enrol_manual_plugin extends enrol_plugin {
         $mform->addElement('select', 'expirynotify', get_string('expirynotify', 'core_enrol'), $options);
         $mform->addHelpButton('expirynotify', 'expirynotify', 'core_enrol');
 
-        $mform->addElement('duration', 'expirythreshold', get_string('expirythreshold', 'core_enrol'), array('optional' => false, 'defaultunit' => 86400));
+        $options = array('optional' => false, 'defaultunit' => 86400);
+        $mform->addElement('duration', 'expirythreshold', get_string('expirythreshold', 'core_enrol'), $options);
         $mform->addHelpButton('expirythreshold', 'expirythreshold', 'core_enrol');
         $mform->disabledIf('expirythreshold', 'expirynotify', 'eq', 0);
 
         if (enrol_accessing_via_instance($instance)) {
-            $mform->addElement('static', 'selfwarn', get_string('instanceeditselfwarning', 'core_enrol'), get_string('instanceeditselfwarningtext', 'core_enrol'));
+            $warntext = get_string('instanceeditselfwarningtext', 'core_enrol');
+            $mform->addElement('static', 'selfwarn', get_string('instanceeditselfwarning', 'core_enrol'), $warntext);
         }
     }
 
@@ -719,7 +727,7 @@ class enrol_manual_plugin extends enrol_plugin {
      *         or an empty array if everything is OK.
      * @return void
      */
-    function edit_instance_validation($data, $files, $instance, $context) {
+    public function edit_instance_validation($data, $files, $instance, $context) {
         $errors = array();
 
         if ($data['expirynotify'] > 0 and $data['expirythreshold'] < 86400) {

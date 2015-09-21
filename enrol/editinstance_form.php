@@ -15,8 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Adds new instance of enrol_plugin to specified course
- * or edits current instance.
+ * Adds new instance of enrol_plugin to specified course or edits current instance.
  *
  * @package    core_enrol
  * @copyright  2015 Damyon Wiese
@@ -27,9 +26,21 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir.'/formslib.php');
 
+/**
+ * Standard edit form shared by all enrol plugins.
+ *
+ * @package    core_enrol
+ * @copyright  2015 Damyon Wiese
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class enrol_instance_edit_form extends moodleform {
 
-    function definition() {
+    /**
+     * Called to define this moodle form
+     *
+     * @return void
+     */
+    public function definition() {
         global $DB;
 
         $mform = $this->_form;
@@ -54,7 +65,14 @@ class enrol_instance_edit_form extends moodleform {
         $this->set_data($instance);
     }
 
-    function validation($data, $files) {
+    /**
+     * Validate this form. Calls plugin validation method.
+     *
+     * @param array $data
+     * @param array $files
+     * @return array
+     */
+    public function validation($data, $files) {
         $errors = parent::validation($data, $files);
 
         list($instance, $plugin, $context, $type) = $this->_customdata;

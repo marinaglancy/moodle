@@ -131,10 +131,10 @@ class enrol_meta_plugin extends enrol_plugin {
     /**
      * Add new instance of enrol plugin.
      * @param object $course
-     * @param array instance fields
+     * @param array $fields instance fields
      * @return int id of new instance, null if can not be created
      */
-    public function add_instance($course, array $fields = NULL) {
+    public function add_instance($course, array $fields = null) {
         global $CFG;
 
         require_once("$CFG->dirroot/enrol/meta/locallib.php");
@@ -232,13 +232,15 @@ class enrol_meta_plugin extends enrol_plugin {
      *
      * @return boolean
      */
-    function use_standard_editing_ui() {
+    public function use_standard_editing_ui() {
         return true;
     }
 
     /**
      * Return an array of valid options for the courses.
      *
+     * @param stdClass $instance
+     * @param context $coursecontext
      * @return array
      */
     protected function get_course_options($instance, $coursecontext) {
@@ -251,7 +253,8 @@ class enrol_meta_plugin extends enrol_plugin {
         } else {
             $where = '';
             $params = array();
-            $existing = $DB->get_records('enrol', array('enrol' => 'meta', 'courseid' => $instance->courseid), '', 'customint1, id');
+            $instanceparams = array('enrol' => 'meta', 'courseid' => $instance->courseid);
+            $existing = $DB->get_records('enrol', $instanceparams, '', 'customint1, id');
         }
 
         // TODO: this has to be done via ajax or else it will fail very badly on large sites!
@@ -284,6 +287,7 @@ class enrol_meta_plugin extends enrol_plugin {
     /**
      * Return an array of valid options for the groups.
      *
+     * @param context $coursecontext
      * @return array
      */
     protected function get_group_options($coursecontext) {
@@ -301,7 +305,9 @@ class enrol_meta_plugin extends enrol_plugin {
     /**
      * Add elements to the edit instance form.
      *
+     * @param stdClass $instance
      * @param MoodleQuickForm $mform
+     * @param context $coursecontext
      * @return bool
      */
     public function edit_instance_form($instance, MoodleQuickForm $mform, $coursecontext) {
@@ -330,21 +336,21 @@ class enrol_meta_plugin extends enrol_plugin {
      *         or an empty array if everything is OK.
      * @return void
      */
-    function edit_instance_validation($data, $files, $instance, $context) {
+    public function edit_instance_validation($data, $files, $instance, $context) {
         global $DB;
         $errors = array();
         $thiscourseid = $context->instanceid;
         $c = false;
 
         if (!empty($data['customint1'])) {
-            $c = $DB->get_record('course', array('id'=>$data['customint1']));
+            $c = $DB->get_record('course', array('id' => $data['customint1']));
         }
 
         if (!$c) {
             $errors['customint1'] = get_string('required');
         } else {
             $coursecontext = context_course::instance($c->id);
-            $existing = $DB->get_records('enrol', array('enrol'=>'meta', 'courseid'=>$thiscourseid), '', 'customint1, id');
+            $existing = $DB->get_records('enrol', array('enrol' => 'meta', 'courseid' => $thiscourseid), '', 'customint1, id');
             if (!$c->visible and !has_capability('moodle/course:viewhiddencourses', $coursecontext)) {
                 $errors['customint1'] = get_string('error');
             } else if (!has_capability('enrol/meta:selectaslinked', $coursecontext)) {

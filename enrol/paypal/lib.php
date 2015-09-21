@@ -160,17 +160,17 @@ class enrol_paypal_plugin extends enrol_plugin {
      *
      * @return boolean
      */
-    function use_standard_editing_ui() {
+    public function use_standard_editing_ui() {
         return true;
     }
 
     /**
      * Add new instance of enrol plugin.
      * @param object $course
-     * @param array instance fields
+     * @param array $fields instance fields
      * @return int id of new instance, null if can not be created
      */
-    public function add_instance($course, array $fields = NULL) {
+    public function add_instance($course, array $fields = null) {
         if ($fields) {
             $fields['cost'] = unformat_float($fields['cost']);
         }
@@ -362,6 +362,8 @@ class enrol_paypal_plugin extends enrol_plugin {
     /**
      * Return an array of valid options for the roleid.
      *
+     * @param stdClass $instance
+     * @param context $context
      * @return array
      */
     protected function get_roleid_options($instance, $context) {
@@ -377,7 +379,9 @@ class enrol_paypal_plugin extends enrol_plugin {
     /**
      * Add elements to the edit instance form.
      *
+     * @param stdClass $instance
      * @param MoodleQuickForm $mform
+     * @param context $context
      * @return bool
      */
     public function edit_instance_form($instance, MoodleQuickForm $mform, $context) {
@@ -389,7 +393,7 @@ class enrol_paypal_plugin extends enrol_plugin {
         $mform->addElement('select', 'status', get_string('status', 'enrol_paypal'), $options);
         $mform->setDefault('status', $this->get_config('status'));
 
-        $mform->addElement('text', 'cost', get_string('cost', 'enrol_paypal'), array('size'=>4));
+        $mform->addElement('text', 'cost', get_string('cost', 'enrol_paypal'), array('size' => 4));
         $mform->setType('cost', PARAM_RAW);
         $mform->setDefault('cost', format_float($this->get_config('cost'), 2, true));
 
@@ -433,7 +437,7 @@ class enrol_paypal_plugin extends enrol_plugin {
      *         or an empty array if everything is OK.
      * @return void
      */
-    function edit_instance_validation($data, $files, $instance, $context) {
+    public function edit_instance_validation($data, $files, $instance, $context) {
         $errors = array();
 
         if (!empty($data['enrolenddate']) and $data['enrolenddate'] < $data['enrolstartdate']) {

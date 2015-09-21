@@ -131,7 +131,7 @@ class enrol_self_plugin extends enrol_plugin {
 
         $context = context_course::instance($instance->courseid);
         if (has_capability('enrol/self:config', $context)) {
-            $linkparams = array('courseid'=>$instance->courseid, 'id'=>$instance->id, 'type'=>'self');
+            $linkparams = array('courseid' => $instance->courseid, 'id' => $instance->id, 'type' => 'self');
             $managelink = new moodle_url('/enrol/editinstance.php', $linkparams);
             $instancesnode->add($this->get_instance_name($instance), $managelink, navigation_node::TYPE_SETTING);
         }
@@ -153,7 +153,7 @@ class enrol_self_plugin extends enrol_plugin {
         $icons = array();
 
         if (has_capability('enrol/self:config', $context)) {
-            $linkparams = array('courseid'=>$instance->courseid, 'id'=>$instance->id, 'type'=>'self');
+            $linkparams = array('courseid' => $instance->courseid, 'id' => $instance->id, 'type' => 'self');
             $editlink = new moodle_url("/enrol/editinstance.php", $linkparams);
             $icons[] = $OUTPUT->action_icon($editlink, new pix_icon('t/edit', get_string('edit'), 'core',
                 array('class' => 'iconsmall')));
@@ -239,7 +239,7 @@ class enrol_self_plugin extends enrol_plugin {
 
         // Don't show enrolment instance form, if user can't enrol using it.
         if (true === $enrolstatus) {
-            $form = new enrol_self_enrol_form(NULL, $instance);
+            $form = new enrol_self_enrol_form(null, $instance);
             $instanceid = optional_param('instance', 0, PARAM_INT);
             if ($instance->id == $instanceid) {
                 if ($data = $form->get_data()) {
@@ -750,7 +750,9 @@ class enrol_self_plugin extends enrol_plugin {
     /**
      * Add elements to the edit instance form.
      *
+     * @param stdClass $instance
      * @param MoodleQuickForm $mform
+     * @param context $context
      * @return bool
      */
     public function edit_instance_form($instance, MoodleQuickForm $mform, $context) {
@@ -791,22 +793,26 @@ class enrol_self_plugin extends enrol_plugin {
         $roles = $this->extend_assignable_roles($context, $instance->roleid);
         $mform->addElement('select', 'roleid', get_string('role', 'enrol_self'), $roles);
 
-        $mform->addElement('duration', 'enrolperiod', get_string('enrolperiod', 'enrol_self'), array('optional' => true, 'defaultunit' => 86400));
+        $options = array('optional' => true, 'defaultunit' => 86400);
+        $mform->addElement('duration', 'enrolperiod', get_string('enrolperiod', 'enrol_self'), $options);
         $mform->addHelpButton('enrolperiod', 'enrolperiod', 'enrol_self');
 
         $options = $this->get_expirynotify_options();
         $mform->addElement('select', 'expirynotify', get_string('expirynotify', 'core_enrol'), $options);
         $mform->addHelpButton('expirynotify', 'expirynotify', 'core_enrol');
 
-        $mform->addElement('duration', 'expirythreshold', get_string('expirythreshold', 'core_enrol'), array('optional' => false, 'defaultunit' => 86400));
+        $options = array('optional' => false, 'defaultunit' => 86400);
+        $mform->addElement('duration', 'expirythreshold', get_string('expirythreshold', 'core_enrol'), $options);
         $mform->addHelpButton('expirythreshold', 'expirythreshold', 'core_enrol');
         $mform->disabledIf('expirythreshold', 'expirynotify', 'eq', 0);
 
-        $mform->addElement('date_time_selector', 'enrolstartdate', get_string('enrolstartdate', 'enrol_self'), array('optional' => true));
+        $options = array('optional' => true);
+        $mform->addElement('date_time_selector', 'enrolstartdate', get_string('enrolstartdate', 'enrol_self'), $options);
         $mform->setDefault('enrolstartdate', 0);
         $mform->addHelpButton('enrolstartdate', 'enrolstartdate', 'enrol_self');
 
-        $mform->addElement('date_time_selector', 'enrolenddate', get_string('enrolenddate', 'enrol_self'), array('optional' => true));
+        $options = array('optional' => true);
+        $mform->addElement('date_time_selector', 'enrolenddate', get_string('enrolenddate', 'enrol_self'), $options);
         $mform->setDefault('enrolenddate', 0);
         $mform->addHelpButton('enrolenddate', 'enrolenddate', 'enrol_self');
 
@@ -822,10 +828,15 @@ class enrol_self_plugin extends enrol_plugin {
 
         $cohorts = array(0 => get_string('no'));
         $allcohorts = cohort_get_available_cohorts($context, 0, 0, 0);
-        if ($instance->customint5 && !isset($allcohorts[$instance->customint5]) &&
-                ($c = $DB->get_record('cohort', array('id' => $instance->customint5), 'id, name, idnumber, contextid, visible', IGNORE_MISSING))) {
-            // Current cohort was not found because current user can not see it. Still keep it.
-            $allcohorts[$instance->customint5] = $c;
+        if ($instance->customint5 && !isset($allcohorts[$instance->customint5])) {
+            $c = $DB->get_record('cohort',
+                                 array('id' => $instance->customint5),
+                                 'id, name, idnumber, contextid, visible',
+                                 IGNORE_MISSING);
+            if ($c) {
+                // Current cohort was not found because current user can not see it. Still keep it.
+                $allcohorts[$instance->customint5] = $c;
+            }
         }
         foreach ($allcohorts as $c) {
             $cohorts[$c->id] = format_string($c->name, true, array('context' => context::instance_by_id($c->contextid)));
@@ -849,11 +860,13 @@ class enrol_self_plugin extends enrol_plugin {
         $mform->addElement('advcheckbox', 'customint4', get_string('sendcoursewelcomemessage', 'enrol_self'));
         $mform->addHelpButton('customint4', 'sendcoursewelcomemessage', 'enrol_self');
 
-        $mform->addElement('textarea', 'customtext1', get_string('customwelcomemessage', 'enrol_self'), array('cols'=>'60', 'rows'=>'8'));
+        $options = array('cols' => '60', 'rows' => '8');
+        $mform->addElement('textarea', 'customtext1', get_string('customwelcomemessage', 'enrol_self'), $options);
         $mform->addHelpButton('customtext1', 'customwelcomemessage', 'enrol_self');
 
         if (enrol_accessing_via_instance($instance)) {
-            $mform->addElement('static', 'selfwarn', get_string('instanceeditselfwarning', 'core_enrol'), get_string('instanceeditselfwarningtext', 'core_enrol'));
+            $warntext = get_string('instanceeditselfwarningtext', 'core_enrol');
+            $mform->addElement('static', 'selfwarn', get_string('instanceeditselfwarning', 'core_enrol'), $warntext);
         }
     }
 
@@ -862,7 +875,7 @@ class enrol_self_plugin extends enrol_plugin {
      *
      * @return boolean
      */
-    function use_standard_editing_ui() {
+    public function use_standard_editing_ui() {
         return true;
     }
 
@@ -877,7 +890,7 @@ class enrol_self_plugin extends enrol_plugin {
      *         or an empty array if everything is OK.
      * @return void
      */
-    function edit_instance_validation($data, $files, $instance, $context) {
+    public function edit_instance_validation($data, $files, $instance, $context) {
         $errors = array();
 
         $checkpassword = false;
@@ -958,10 +971,10 @@ class enrol_self_plugin extends enrol_plugin {
     /**
      * Add new instance of enrol plugin.
      * @param object $course
-     * @param array instance fields
+     * @param array $fields instance fields
      * @return int id of new instance, null if can not be created
      */
-    public function add_instance($course, array $fields = NULL) {
+    public function add_instance($course, array $fields = null) {
         // In the form we are representing 2 db columns with one field.
         if (!empty($fields)) {
             if ($fields['expirynotify'] == 2) {
@@ -1008,12 +1021,12 @@ class enrol_self_plugin extends enrol_plugin {
      * @param integer $defaultrole the id of the role that is set as the default for self-enrolment
      * @return array index is the role id, value is the role name
      */
-    function extend_assignable_roles($context, $defaultrole) {
+    public function extend_assignable_roles($context, $defaultrole) {
         global $DB;
 
         $roles = get_assignable_roles($context, ROLENAME_BOTH);
         if (!isset($roles[$defaultrole])) {
-            if ($role = $DB->get_record('role', array('id'=>$defaultrole))) {
+            if ($role = $DB->get_record('role', array('id' => $defaultrole))) {
                 $roles[$defaultrole] = role_get_name($role, $context, ROLENAME_BOTH);
             }
         }

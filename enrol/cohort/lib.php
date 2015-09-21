@@ -99,10 +99,10 @@ class enrol_cohort_plugin extends enrol_plugin {
     /**
      * Add new instance of enrol plugin.
      * @param object $course
-     * @param array instance fields
+     * @param array $fields instance fields
      * @return int id of new instance, null if can not be created
      */
-    public function add_instance($course, array $fields = NULL) {
+    public function add_instance($course, array $fields = null) {
 
         if ($fields['customint2'] == COHORT_CREATE_GROUP) {
             // Create a new group for the cohort if requested.
@@ -126,7 +126,13 @@ class enrol_cohort_plugin extends enrol_plugin {
         $context = context_course::instance($instance->courseid);
         if ($data->roleid != $instance->roleid) {
             // The sync script can only add roles, for perf reasons it does not modify them.
-            role_unassign_all(array('contextid'=>$context->id, 'roleid'=>$instance->roleid, 'component'=>'enrol_cohort', 'itemid'=>$instance->id));
+            $params = array(
+                'contextid' => $context->id,
+                'roleid' => $instance->roleid,
+                'component' => 'enrol_cohort',
+                'itemid' => $instance->id
+            );
+            role_unassign_all($params);
         }
         // Create a new group for the cohort if requested.
         if ($data->customint2 == COHORT_CREATE_GROUP) {
@@ -154,7 +160,7 @@ class enrol_cohort_plugin extends enrol_plugin {
         $icons = array();
 
         if (has_capability('enrol/cohort:config', $context)) {
-            $linkparams = array('courseid'=>$instance->courseid, 'id'=>$instance->id, 'type'=>'cohort');
+            $linkparams = array('courseid' => $instance->courseid, 'id' => $instance->id, 'type' => 'cohort');
             $editlink = new moodle_url("/enrol/editinstance.php", $linkparams);
             $icons[] = $OUTPUT->action_icon($editlink, new pix_icon('t/edit', get_string('edit'), 'core',
                     array('class' => 'iconsmall')));
@@ -361,6 +367,8 @@ class enrol_cohort_plugin extends enrol_plugin {
     /**
      * Return an array of valid options for the cohorts.
      *
+     * @param stdClass $instance
+     * @param context $context
      * @return array
      */
     protected function get_cohort_options($instance, $context) {
@@ -371,11 +379,11 @@ class enrol_cohort_plugin extends enrol_plugin {
         $cohorts = array();
 
         if ($instance->id) {
-            if ($cohort = $DB->get_record('cohort', array('id'=>$instance->customint1))) {
-                $name = format_string($cohort->name, true, array('context'=>context::instance_by_id($cohort->contextid)));
-                $cohorts = array($instance->customint1=>$name);
+            if ($cohort = $DB->get_record('cohort', array('id' => $instance->customint1))) {
+                $name = format_string($cohort->name, true, array('context' => context::instance_by_id($cohort->contextid)));
+                $cohorts = array($instance->customint1 => $name);
             } else {
-                $cohorts = array($instance->customint1=>get_string('error'));
+                $cohorts = array($instance->customint1 => get_string('error'));
             }
         } else {
             $cohorts = array('' => get_string('choosedots'));
@@ -390,6 +398,8 @@ class enrol_cohort_plugin extends enrol_plugin {
     /**
      * Return an array of valid options for the roles.
      *
+     * @param stdClass $instance
+     * @param context $coursecontext
      * @return array
      */
     protected function get_role_options($instance, $coursecontext) {
@@ -399,7 +409,7 @@ class enrol_cohort_plugin extends enrol_plugin {
         $roles[0] = get_string('none');
         $roles = array_reverse($roles, true); // Descending default sortorder.
         if ($instance->id and !isset($roles[$instance->roleid])) {
-            if ($role = $DB->get_record('role', array('id'=>$instance->roleid))) {
+            if ($role = $DB->get_record('role', array('id' => $instance->roleid))) {
                 $roles = role_fix_names($roles, $coursecontext, ROLENAME_ALIAS, true);
                 $roles[$instance->roleid] = role_get_name($role, $coursecontext);
             } else {
@@ -413,6 +423,7 @@ class enrol_cohort_plugin extends enrol_plugin {
     /**
      * Return an array of valid options for the groups.
      *
+     * @param context $coursecontext
      * @return array
      */
     protected function get_group_options($coursecontext) {
@@ -422,9 +433,8 @@ class enrol_cohort_plugin extends enrol_plugin {
         }
 
         foreach (groups_get_all_groups($coursecontext->instanceid) as $group) {
-            $groups[$group->id] = format_string($group->name, true, array('context'=>$coursecontext));
+            $groups[$group->id] = format_string($group->name, true, array('context' => $coursecontext));
         }
-
 
         return $groups;
     }
@@ -434,14 +444,16 @@ class enrol_cohort_plugin extends enrol_plugin {
      *
      * @return boolean
      */
-    function use_standard_editing_ui() {
+    public function use_standard_editing_ui() {
         return true;
     }
 
     /**
      * Add elements to the edit instance form.
      *
+     * @param stdClass $instance
      * @param MoodleQuickForm $mform
+     * @param context $coursecontext
      * @return bool
      */
     public function edit_instance_form($instance, MoodleQuickForm $mform, $coursecontext) {
@@ -472,20 +484,26 @@ class enrol_cohort_plugin extends enrol_plugin {
     /**
      * Perform custom validation of the data used to edit the instance.
      *
-     * @param array $data array of ("fieldname"=>value) of submitted data
-     * @param array $files array of uploaded files "element_name"=>tmp_file_path
+     * @param array $data array of ("fieldname" => value) of submitted data
+     * @param array $files array of uploaded files "element_name" => tmp_file_path
      * @param object $instance The instance loaded from the DB
      * @param context $context The context of the instance we are editing
-     * @return array of "element_name"=>"error_description" if there are errors,
+     * @return array of "element_name" => "error_description" if there are errors,
      *         or an empty array if everything is OK.
      * @return void
      */
-    function edit_instance_validation($data, $files, $instance, $context) {
+    public function edit_instance_validation($data, $files, $instance, $context) {
         global $DB;
         $errors = array();
 
-        $params = array('roleid'=>$data['roleid'], 'customint1'=>$data['customint1'], 'courseid'=>$data['courseid'], 'id'=>$data['id']);
-        if ($DB->record_exists_select('enrol', "roleid = :roleid AND customint1 = :customint1 AND courseid = :courseid AND enrol = 'cohort' AND id <> :id", $params)) {
+        $params = array(
+            'roleid' => $data['roleid'],
+            'customint1' => $data['customint1'],
+            'courseid' => $data['courseid'],
+            'id' => $data['id']
+        );
+        $sql = "roleid = :roleid AND customint1 = :customint1 AND courseid = :courseid AND enrol = 'cohort' AND id <> :id";
+        if ($DB->record_exists_select('enrol', $sql, $params)) {
             $errors['roleid'] = get_string('instanceexists', 'enrol_cohort');
         }
         $validstatus = array_keys($this->get_status_options());
