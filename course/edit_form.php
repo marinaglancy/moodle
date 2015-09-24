@@ -311,9 +311,9 @@ class course_edit_form extends moodleform {
         // When two elements we need a group.
         $buttonarray = array();
         if ($returnto !== 0) {
-            $buttonarray[] = &$mform->createElement('submit', 'saveandreturn', get_string('savechangesandreturn'));
+            $buttonarray[] = &$mform->createElement('submit', 'saveandreturn', get_string('savechangesandreturn'), array('class' => 'form-submit'));
         }
-        $buttonarray[] = &$mform->createElement('submit', 'saveanddisplay', get_string('savechangesanddisplay'));
+        $buttonarray[] = &$mform->createElement('submit', 'saveanddisplay', get_string('savechangesanddisplay'), array('class' => 'form-submit'));
         $buttonarray[] = &$mform->createElement('cancel');
         $mform->addGroup($buttonarray, 'buttonar', '', array(' '), false);
         $mform->closeHeaderBefore('buttonar');
