@@ -44,10 +44,18 @@ class sync_task extends \core\task\scheduled_task {
      * Run users sync.
      */
     public function execute() {
+        global $CFG;
         if (is_enabled_auth('db')) {
+
+            if ($CFG->debugdeveloper) {
+                $trace = new \text_progress_trace();
+            } else {
+                $trace = new \null_progress_trace();
+            }
+
             $auth = get_auth_plugin('db');
-            $trace = new \null_progress_trace();
-            $auth->sync_users($trace, true);
+            $doupdates = get_config('auth/db', 'doupdates');
+            $auth->sync_users($trace, $doupdates);
         }
     }
 
