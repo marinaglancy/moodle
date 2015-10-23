@@ -325,10 +325,12 @@ function resource_get_optional_details($resource, $cm) {
             $uploaddate = $mainfile->get_timecreated();
             $modifieddate = $mainfile->get_timemodified();
 
-            if ($modifieddate > $uploaddate) {
-                $date = get_string('modifieddate', 'mod_resource', userdate($modifieddate));
+            // Modified date may be up to several minutes later than uploaded date just because
+            // teacher did not submit the form promptly. Give teacher 5 minutes to do it.
+            if ($modifieddate > $uploaddate + 5 * MINSECS) {
+                $date = get_string('modifieddate', 'mod_resource', userdate($modifieddate, get_string('strftimedatetimeshort', 'langconfig')));
             } else {
-                $date = get_string('uploadeddate', 'mod_resource', userdate($uploaddate));
+                $date = get_string('uploadeddate', 'mod_resource', userdate($uploaddate, get_string('strftimedatetimeshort', 'langconfig')));
             }
             $langstring .= 'date';
             $infodisplayed += 1;
