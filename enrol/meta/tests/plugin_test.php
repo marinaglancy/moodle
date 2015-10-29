@@ -530,6 +530,11 @@ class enrol_meta_plugin_testcase extends advanced_testcase {
         $this->assertTrue(groups_is_member($group31->id, $user4->id));
         $this->assertTrue(is_enrolled(context_course::instance($course3->id), $user4));
         $this->assertFalse(is_enrolled(context_course::instance($course3->id), $user4, '', true));
+
+        // Manually remove the user from the group and make sure he is not added back during sync.
+        groups_remove_member($group31->id, $user4->id);
+        enrol_meta_sync(null, false);
+        $this->assertFalse(groups_is_member($group31->id, $user4->id));
     }
 
     /**

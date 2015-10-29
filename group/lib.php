@@ -1037,10 +1037,16 @@ function groups_calculate_role_people($rs, $context) {
 function groups_sync_with_enrolment($enrolname, $courseid = 0, $gidfield = 'customint2') {
     global $DB;
     $onecourse = $courseid ? "AND e.courseid = :courseid" : "";
+    $active = "AND e.status = :enabled AND ue.status = :active AND (ue.timeend = 0 OR ue.timeend >= :curtime1) AND ue.timestart <= :curtime2";
+    $time = time();
     $params = array(
         'enrolname' => $enrolname,
         'component' => 'enrol_'.$enrolname,
-        'courseid' => $courseid
+        'courseid' => $courseid,
+        'active' => ENROL_USER_ACTIVE,
+        'enabled' => ENROL_INSTANCE_ENABLED,
+        'curtime1' => $time,
+        'curtime2' => $time,
     );
 
     $affectedusers = array(
@@ -1063,14 +1069,14 @@ function groups_sync_with_enrolment($enrolname, $courseid = 0, $gidfield = 'cust
     }
     $rs->close();
 
-    // Add missing.
+    // Add missing. Only active enrolments are added to the groups.
     $sql = "SELECT ue.userid, ue.enrolid, e.courseid, g.id AS groupid, g.name AS groupname
               FROM {user_enrolments} ue
               JOIN {enrol} e ON (e.id = ue.enrolid AND e.enrol = :enrolname $onecourse)
               JOIN {groups} g ON (g.courseid = e.courseid AND g.id = e.{$gidfield})
               JOIN {user} u ON (u.id = ue.userid AND u.deleted = 0)
          LEFT JOIN {groups_members} gm ON (gm.groupid = g.id AND gm.userid = ue.userid)
-             WHERE gm.id IS NULL";
+             WHERE gm.id IS NULL {$active}";
 
     $rs = $DB->get_recordset_sql($sql, $params);
     foreach ($rs as $ue) {

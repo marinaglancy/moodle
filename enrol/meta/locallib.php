@@ -173,7 +173,9 @@ class enrol_meta_handler {
             $ue->userid = $userid;
             $ue->enrolid = $instance->id;
             $ue->status = $parentstatus;
-            if ($instance->customint2) {
+            $isactiveenrolment = $ue->status == ENROL_USER_ACTIVE && $instance->status == ENROL_INSTANCE_ENABLED &&
+                (!$parenttimeend || $parenttimeend >= time()) && (!$parenttimestart || $parenttimestart <= time());
+            if ($instance->customint2 && $isactiveenrolment) {
                 groups_add_member($instance->customint2, $userid, 'enrol_meta', $instance->id);
             }
         }
