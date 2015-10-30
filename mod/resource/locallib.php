@@ -294,6 +294,10 @@ function resource_get_file_details($resource, $cm) {
             foreach ($files as $file) {
                 // This will also synchronize the file size for external files if needed.
                 $filedetails['size'] += $file->get_filesize();
+                if ($file->get_repository_id()) {
+                    // If file is a reference the 'size' attribute can not be cached.
+                    $filedetails['isref'] = true;
+                }
             }
         }
         if (!empty($options['showtype'])) {
@@ -315,6 +319,10 @@ function resource_get_file_details($resource, $cm) {
                     $filedetails['modifieddate'] = $mainfile->get_timemodified();
                 } else {
                     $filedetails['uploadeddate'] = $mainfile->get_timecreated();
+                }
+                if ($mainfile->get_repository_id()) {
+                    // If main file is a reference the 'date' attribute can not be cached.
+                    $filedetails['isref'] = true;
                 }
             } else {
                 $filedetails['uploadeddate'] = '';
