@@ -89,6 +89,10 @@ Do not make the requirements too strict though, as this can result in users not 
 $string['check_passwordpolicy_error'] = 'Password policy not set.';
 $string['check_passwordpolicy_name'] = 'Password policy';
 $string['check_passwordpolicy_ok'] = 'Password policy enabled.';
+$string['check_requestorder_details'] = '<p>Setting PHP setting <code>request_order</code> to anything except just "GP" is not recommended on production sites because sensitive information can be sent to embedded code.</p>';
+$string['check_requestorder_error'] = 'The PHP setting request_order contains information other than just GET and POST data';
+$string['check_requestorder_name'] = 'Contents of $_REQUEST variable';
+$string['check_requestorder_ok'] = '$_REQUEST contains only $_GET and $_POST.';
 $string['check_riskadmin_detailsok'] = '<p>Please verify the following list of system administrators:</p>{$a}';
 $string['check_riskadmin_detailswarning'] = '<p>Please verify the following list of system administrators:</p>{$a->admins}
 <p>It is recommended to assign administrator role in the system context only. The following users have (unsupported) admin role assignments in other contexts:</p>{$a->unsupported}';

@@ -41,6 +41,7 @@ function report_security_get_issue_list() {
     return array(
         'report_security_check_unsecuredataroot',
         'report_security_check_displayerrors',
+        'report_security_check_requestorder',
         'report_security_check_noauth',
         'report_security_check_embed',
         'report_security_check_mediafilterswf',
@@ -266,6 +267,40 @@ function report_security_check_displayerrors($detailed=false) {
 
     if ($detailed) {
         $result->details = get_string('check_displayerrors_details', 'report_security');
+    }
+
+    return $result;
+}
+
+/**
+ * Verifies variable request_order - problem for flowplayer
+ * @param bool $detailed
+ * @return object result
+ */
+function report_security_check_requestorder($detailed=false) {
+    $result = new stdClass();
+    $result->issue   = 'report_security_check_requestorder';
+    $result->name    = get_string('check_requestorder_name', 'report_security');
+    $result->info    = null;
+    $result->details = null;
+    $result->status  = null;
+    $result->link    = null;
+
+    $requestorder = ini_get('request_order');
+    if (!$requestorder) {
+        $requestorder = ini_get('variables_order');
+    }
+
+    if (preg_match('/[^GP]/', $requestorder)) {
+        $result->status = REPORT_SECURITY_SERIOUS;
+        $result->info   = get_string('check_requestorder_error', 'report_security');
+    } else {
+        $result->status = REPORT_SECURITY_OK;
+        $result->info   = get_string('check_requestorder_ok', 'report_security');
+    }
+
+    if ($detailed) {
+        $result->details = get_string('check_requestorder_details', 'report_security');
     }
 
     return $result;
