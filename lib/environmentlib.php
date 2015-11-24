@@ -117,6 +117,17 @@ function check_moodle_environment($version, $env_select = ENV_SELECT_NEWER) {
         } else if ($environment_result->getStatus() && $environment_result->getLevel() == 'required'
           && $environment_result->getRestrictStr()) {
             $result = false; // required item that is restricted
+            if ($environment_result->part === 'php') {
+                // While under alpha maturity, lower any error caused by PHP version restrictions down
+                // to feedback only. That way, people will be able to work in dev branches not becoming
+                // stuck by the, normally strict, restriction.
+                include(__DIR__ . '/../version.php');
+                if (isset($maturity) && $maturity == MATURITY_ALPHA) {
+                    $result = true;
+                    $environment_result->setFeedbackStr($environment_result->getRestrictStr());
+                    $environment_result->setRestrictStr(null);
+                }
+            }
         } else if ($environment_result->getErrorCode()) {
             $result = false;
         }
