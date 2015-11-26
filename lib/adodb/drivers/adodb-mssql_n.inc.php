@@ -55,7 +55,7 @@ class ADODB_mssql_n extends ADODB_mssql {
 
 	function ADODB_mssqlpo()
 	{
-		ADODB_mssql::ADODB_mssql();
+		parent::__construct();
 	}
 
 	function _query($sql,$inputarr=false)
@@ -163,8 +163,8 @@ class ADODB_mssql_n extends ADODB_mssql {
 
 class ADORecordset_mssql_n extends ADORecordset_mssql {
 	var $databaseType = "mssql_n";
-	function ADORecordset_mssql_n($id,$mode=false)
+	function __construct($id,$mode=false)
 	{
-		$this->ADORecordset_mssql($id,$mode);
+		parent::__construct($id,$mode);
 	}
 }
