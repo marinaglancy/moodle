@@ -1271,7 +1271,7 @@ class environment_results {
      *
      * @param string $part
      */
-    function environment_results($part) {
+    public function __construct($part) {
         $this->part=$part;
         $this->status=false;
         $this->error_code=NO_ERROR;
