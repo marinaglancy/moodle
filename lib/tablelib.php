@@ -1562,8 +1562,21 @@ class table_default_export_format_parent {
      * started yet.
      */
     var $documentstarted = false;
-    function table_default_export_format_parent(&$table) {
+
+    /**
+     * Constructor
+     *
+     * @param flexible_table $table
+     */
+    public function __construct(&$table) {
         $this->table =& $table;
+    }
+
+    /**
+     * Old syntax of class constructor for backward compatibility.
+     */
+    public function table_default_export_format_parent(&$table) {
+        self::__construct($table);
     }
 
     function set_table(&$table) {
