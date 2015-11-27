@@ -174,7 +174,7 @@ class PEAR
     }
 
     /**
-     * Old syntax of class constructor. Deprecated in PHP7.
+     * Old syntax of class constructor for backward compatibility.
      */
     public function PEAR($error_class = null) {
         self::__construct($error_class);
