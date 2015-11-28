@@ -66,20 +66,22 @@ class format_topics extends format_base {
      * Returns the default section name for the topics course format.
      *
      * If the section number is 0, it will use the string with key = section0name from the course format's lang file.
-     * If the section number is not 0, the base implementation of format_base::get_default_section_name which uses
-     * the string with the key = 'sectionname' from the course format's lang file + the section number will be used.
+     * If the section number is not 0, return the string 'topic' concatenated with the section number.
      *
-     * @param stdClass $section Section object from database or just field course_sections section
+     * @param int|stdClass|section_info $section Section object from database or just field course_sections section
      * @return string The default value for the section name.
      */
     public function get_default_section_name($section) {
-        if ($section->section == 0) {
+        if (is_object($section)) {
+            $sectionnum = $section->section;
+        } else {
+            $sectionnum = $section;
+        }
+        if ($sectionnum == 0) {
             // Return the general section.
             return get_string('section0name', 'format_topics');
         } else {
-            // Use format_base::get_default_section_name implementation which
-            // will display the section name in "Topic n" format.
-            return parent::get_default_section_name($section);
+            return get_string('topic').' '.$sectionnum;
         }
     }
 

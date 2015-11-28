@@ -345,28 +345,29 @@ abstract class format_base {
      * @return Display name that the course format prefers, e.g. "Topic 2"
      */
     public function get_section_name($section) {
-        if (is_object($section)) {
-            $sectionnum = $section->section;
-        } else {
-            $sectionnum = $section;
-        }
-
-        if (get_string_manager()->string_exists('sectionname', 'format_' . $this->format)) {
-            return get_string('sectionname', 'format_' . $this->format) . ' ' . $sectionnum;
-        }
-
-        // Return an empty string if there's no available section name string for the given format.
-        return '';
+        return $this->get_default_section_name($section);
     }
 
     /**
      * Returns the default section using format_base's implementation of get_section_name.
      *
-     * @param int|stdClass $section Section object from database or just field course_sections section
+     * @param int|stdClass|section_info $section Section object from database or just field course_sections section
      * @return string The default value for the section name based on the given course format.
      */
     public function get_default_section_name($section) {
-        return self::get_section_name($section);
+        if (is_object($section)) {
+            $sectionnum = $section->section;
+        } else {
+            $sectionnum = $section;
+        }
+        if ($sectionnum == 0 && get_string_manager()->string_exists('section0name', 'format_' . $this->format)) {
+            // Return the general section.
+            return get_string('section0name', 'format_' . $this->format);
+        } else if (get_string_manager()->string_exists('sectionname', 'format_' . $this->format)) {
+            // Return the 'sectionname' string from the current course format.
+            return get_string('sectionname', 'format_' . $this->format) . ' ' . $sectionnum;
+        }
+        return '';
     }
 
     /**
