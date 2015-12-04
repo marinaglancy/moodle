@@ -72,6 +72,11 @@ class MoodleQuickForm_tags extends MoodleQuickForm_group {
     protected $_officialtags = null;
 
     /**
+     * @var MoodleQuickForm
+     */
+    protected $_moodleform = null;
+
+    /**
      * Constructor
      *
      * @param string $elementName Element name
@@ -80,7 +85,7 @@ class MoodleQuickForm_tags extends MoodleQuickForm_group {
      * @param mixed $attributes Either a typical HTML attribute string or an associative array.
      */
     public function __construct($elementName = null, $elementLabel = null, $options = array(), $attributes = null) {
-        $this->HTML_QuickForm_element($elementName, $elementLabel, $attributes);
+        HTML_QuickForm_element::__construct($elementName, $elementLabel, $attributes);
         $this->_persistantFreeze = true;
         $this->_appendName = true;
         $this->_type = 'tags';
@@ -157,8 +162,13 @@ class MoodleQuickForm_tags extends MoodleQuickForm_group {
 
             // Create the element.
             $size = min(5, count($officialtags));
-            // E_STRICT creating elements without forms is nasty because it internally uses $this
-            $officialtagsselect = @MoodleQuickForm::createElement('select', 'officialtags', $label, $officialtags, array('size' => $size));
+            if ($this->_moodleform) {
+                $officialtagsselect = $this->_moodleform->createElement('select', 'officialtags', $label, $officialtags, array('size' => $size));
+            } else {
+                // This code throws exception in PHP7, it is left here just in case it is ever possible to get to this
+                // point before the element was added to the form. At least it worked in PHP5 for years.
+                $officialtagsselect = @MoodleQuickForm::createElement('select', 'officialtags', $label, $officialtags, array('size' => $size));
+            }
             $officialtagsselect->setMultiple(true);
             if ($noofficial) {
                 $officialtagsselect->updateAttributes(array('disabled' => 'disabled'));
@@ -173,8 +183,13 @@ class MoodleQuickForm_tags extends MoodleQuickForm_group {
             } else {
                 $label = get_string('entertags', 'tag');
             }
-            // E_STRICT creating elements without forms is nasty because it internally uses $this
-            $othertags = @MoodleQuickForm::createElement('textarea', 'othertags', $label, array('cols'=>'40', 'rows'=>'5'));
+            if ($this->_moodleform) {
+                $othertags = $this->_moodleform->createElement('textarea', 'othertags', $label, array('cols'=>'40', 'rows'=>'5'));
+            } else {
+                // This code throws exception in PHP7, it is left here just in case it is ever possible to get to this
+                // point before the element was added to the form. At least it worked in PHP5 for years.
+                $othertags = @MoodleQuickForm::createElement('textarea', 'othertags', $label, array('cols'=>'40', 'rows'=>'5'));
+            }
             $this->_elements[] = $othertags;
         }
 
@@ -196,6 +211,9 @@ class MoodleQuickForm_tags extends MoodleQuickForm_group {
      */
     function onQuickFormEvent($event, $arg, &$caller) {
         switch ($event) {
+            case 'createElement':
+                $this->_moodleform = $caller;
+                return parent::onQuickFormEvent($event, $arg, $caller);
             case 'updateValue':
                 // Get the value we should be setting.
                 $value = $this->_findValue($caller->_constantValues);
