@@ -1547,7 +1547,7 @@ function process_environment_result($element, &$result) {
  * @return bool result of version check
  */
 function restrict_php_version_7(&$result) {
-    return restrict_php_version($result, '7');
+    return false;
 }
 
 /**
