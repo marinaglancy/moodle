@@ -37,12 +37,16 @@ if (!class_exists('pdf_context', false)) {
     
     	// Constructor
     
-    	function pdf_context(&$f) {
+    	function __construct(&$f) {
     		$this->file =& $f;
     		if (is_string($this->file))
     		    $this->_mode = 1;
     		$this->reset();
     	}
+
+		function pdf_context(&$f) {
+			self::__construct($f);
+		}
     
     	// Optionally move the file
     	// pointer to a new location
