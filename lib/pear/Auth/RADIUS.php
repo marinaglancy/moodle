@@ -125,10 +125,16 @@ class Auth_RADIUS extends PEAR {
      *
      * @return void
      */
-    function Auth_RADIUS()
-    {
+    public function __construct() {
         $this->loadExtension('radius'); // Moodle added. See MDL-38373.
-        $this->PEAR();
+        parent::__construct();
+    }
+
+    /**
+     * Old syntax of class constructor for backward compatibility.
+     */
+    public function Auth_RADIUS() {
+        self::__construct();
     }
 
     /**
@@ -576,11 +582,17 @@ class Auth_RADIUS_PAP extends Auth_RADIUS
      * @param  string  $password   Password
      * @return void
      */
-    function Auth_RADIUS_PAP($username = null, $password = null)
-    {
-        $this->Auth_RADIUS();
+    public function __construct($username = null, $password = null) {
+        parent::__construct();
         $this->username = $username;
         $this->password = $password;
+    }
+
+    /**
+     * Old syntax of class constructor for backward compatibility.
+     */
+    public function Auth_RADIUS_PAP($username = null, $password = null) {
+        self::__construct($username, $password);
     }
 
     /**
@@ -670,12 +682,18 @@ class Auth_RADIUS_CHAP_MD5 extends Auth_RADIUS_PAP
      * @param  integer $chapid     Requestnumber
      * @return void
      */
-    function Auth_RADIUS_CHAP_MD5($username = null, $challenge = null, $chapid = 1)
-    {
-        $this->Auth_RADIUS_PAP();
+    public function __construct($username = null, $challenge = null, $chapid = 1) {
+        parent::__construct();
         $this->username = $username;
         $this->challenge = $challenge;
         $this->chapid = $chapid;
+    }
+
+    /**
+     * Old syntax of class constructor for backward compatibility.
+     */
+    public function Auth_RADIUS_CHAP_MD5($username = null, $challenge = null, $chapid = 1) {
+        self::__construct($username, $challenge, $chapid);
     }
 
     /**
@@ -877,9 +895,8 @@ class Auth_RADIUS_Acct extends Auth_RADIUS
      * Generates a predefined session_id. We use the Remote-Address, the PID, and the Current user.
      * @return void
      */
-    function Auth_RADIUS_Acct()
-    {
-        $this->Auth_RADIUS();
+    public function __construct() {
+        parent::__construct();
 
         if (isset($_SERVER)) {
             $var = &$_SERVER;
@@ -888,6 +905,13 @@ class Auth_RADIUS_Acct extends Auth_RADIUS
         }
 
         $this->session_id = sprintf("%s:%d-%s", isset($var['REMOTE_ADDR']) ? $var['REMOTE_ADDR'] : '127.0.0.1' , getmypid(), get_current_user());
+    }
+
+    /**
+     * Old syntax of class constructor for backward compatibility.
+     */
+    public function Auth_RADIUS_Acct() {
+        self::__construct();
     }
 
     /**
