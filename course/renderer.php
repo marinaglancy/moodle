@@ -1264,10 +1264,14 @@ class core_course_renderer extends plugin_renderer_base {
         $content = '';
 
         // display course summary
-        if ($course->has_summary()) {
+        $tags = $course->get_course_tags();
+        if ($course->has_summary() || $tags) {
             $content .= html_writer::start_tag('div', array('class' => 'summary'));
-            $content .= $chelper->get_course_formatted_summary($course,
+            if ($course->has_summary()) {
+                $content .= $chelper->get_course_formatted_summary($course,
                     array('overflowdiv' => true, 'noclean' => true, 'para' => false));
+            }
+            $content .= $this->output->tags_list($tags, get_string('coursetags'));
             $content .= html_writer::end_tag('div'); // .summary
         }
 

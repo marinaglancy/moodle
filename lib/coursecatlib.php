@@ -2852,6 +2852,17 @@ class course_in_list implements IteratorAggregate {
         return $this->coursecontacts;
     }
 
+    public function get_course_tags() {
+        if (!core_tag::is_enabled('core', 'course')) {
+            return array();
+        }
+        // TODO prefetching.
+        if (!isset($this->record->tags)) {
+            $this->record->tags = core_tag::get_item_tags('core', 'course', $this->id);
+        }
+        return $this->record->tags;
+    }
+
     /**
      * Checks if course has any associated overview files
      *
