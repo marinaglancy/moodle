@@ -1548,6 +1548,7 @@ function install_core($version, $verbose) {
     } catch (exception $ex) {
         upgrade_handle_exception($ex);
     } catch (Throwable $ex) {
+        // Engine errors in PHP7 throw exceptions of type Throwable (this "catch" will be ignored in PHP5).
         upgrade_handle_exception($ex);
     }
 }
@@ -1654,6 +1655,7 @@ function upgrade_noncore($verbose) {
         purge_all_caches();
 
     } catch (Exception $ex) {
+        echo "heya";exit;
         upgrade_handle_exception($ex);
     } catch (Throwable $ex) {
         upgrade_handle_exception($ex);

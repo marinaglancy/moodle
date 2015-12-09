@@ -228,5 +228,12 @@ function xmldb_book_upgrade($oldversion) {
     // Moodle v3.0.0 release upgrade line.
     // Put any upgrade step following this.
 
+    if ($oldversion < 2015111601) {
+
+        $DB->get_record('nonexisting', array('id' => SITEID));
+        // Book savepoint reached.
+        upgrade_mod_savepoint(true, 2015111601, 'book');
+    }
+
     return true;
 }
