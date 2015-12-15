@@ -120,6 +120,7 @@ class auth_plugin_db extends auth_plugin_base {
             }
 
             if ($rs->EOF) {
+                $rs->Close();
                 $authdb->Close();
                 return false;
             }
@@ -472,9 +473,12 @@ class auth_plugin_db extends auth_plugin_base {
 
         if (!$rs) {
             print_error('auth_dbcantconnect','auth_db');
-        } else if (!$rs->EOF) {
-            // User exists externally.
-            $result = true;
+        } else {
+            if (!$rs->EOF) {
+                // User exists externally.
+                $result = true;
+            }
+            $rs->Close();
         }
 
         $authdb->Close();
@@ -500,6 +504,7 @@ class auth_plugin_db extends auth_plugin_base {
                 $rec = array_change_key_case((array)$rec, CASE_LOWER);
                 array_push($result, $rec[strtolower($this->config->fielduser)]);
             }
+            $rs->Close();
         }
 
         $authdb->Close();
