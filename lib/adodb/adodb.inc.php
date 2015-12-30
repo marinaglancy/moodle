@@ -14,7 +14,7 @@
 /**
 	\mainpage
 
-	@version   v5.20.1  06-Dec-2015
+	@version   v5.20.2  27-Dec-2015
 	@copyright (c) 2000-2013 John Lim (jlim#natsoft.com). All rights reserved.
 	@copyright (c) 2014      Damien Regad, Mark Newnham and the ADOdb community
 
@@ -218,7 +218,7 @@ if (!defined('_ADODB_LAYER')) {
 		/**
 		 * ADODB version as a string.
 		 */
-		$ADODB_vers = 'v5.20.1  06-Dec-2015';
+		$ADODB_vers = 'v5.20.2  27-Dec-2015';
 
 		/**
 		 * Determines whether recordset->RecordCount() is used.
@@ -3250,7 +3250,7 @@ http://www.stanford.edu/dept/itss/docs/oracle/10g/server.101/b10759/statements_1
 	}
 
 	function __destruct() {
-		@$this->Close();
+		$this->Close();
 	}
 
 	function getIterator() {
