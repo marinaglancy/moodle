@@ -660,6 +660,10 @@ $mform_post->set_data(array(        'attachments'=>$draftitemid,
 
                             (isset($discussion->id)?
                                     array('discussion'=>$discussion->id):
+                                    array())+
+
+                            ($postid ?
+                                    array('tags' => core_tag_tag::get_item_tags_array('mod_forum', 'forum_posts', $postid)) :
                                     array()));
 
 if ($mform_post->is_cancelled()) {

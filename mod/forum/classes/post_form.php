@@ -237,6 +237,10 @@ class mod_forum_post_form extends moodleform {
                 $mform->addElement('static', 'groupinfo', get_string('group'), $groupname);
             }
         }
+
+        $mform->addElement('tags', 'tags', get_string('tags'),
+                array('component' => 'mod_forum', 'itemtype' => 'forum_posts'));
+
         //-------------------------------------------------------------------------------
         // buttons
         if (isset($post->edit)) { // hack alert

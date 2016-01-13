@@ -3352,6 +3352,7 @@ function forum_print_post($post, $discussion, $forum, &$cm, $course, $ownpost=fa
                 array('class'=>'post-word-count'));
         }
         $postcontent .= html_writer::tag('div', $attachedimages, array('class'=>'attachedimages'));
+        $postcontent .= $OUTPUT->tag_list(core_tag_tag::get_item_tags('mod_forum', 'forum_posts', $post->id));
     }
 
     // Output the post content
@@ -4327,6 +4328,10 @@ function forum_add_new_post($post, $mform, $unused = null) {
     $DB->set_field("forum_discussions", "timemodified", $post->modified, array("id" => $post->discussion));
     $DB->set_field("forum_discussions", "usermodified", $post->userid, array("id" => $post->discussion));
 
+    if (isset($post->tags)) {
+        core_tag_tag::set_item_tags('mod_forum', 'forum_posts', $post->id, $context, $post->tags);
+    }
+
     if (forum_tp_can_track_forums($forum) && forum_tp_is_tracked($forum)) {
         forum_tp_mark_post_read($post->userid, $post, $post->forum);
     }
@@ -4379,6 +4384,10 @@ function forum_update_post($post, $mform, &$message) {
     $DB->update_record('forum_discussions', $discussion);
 
     forum_add_attachment($post, $forum, $cm, $mform, $message);
+
+    if (isset($post->tags)) {
+        core_tag_tag::set_item_tags('mod_forum', 'forum_posts', $post->id, $context, $post->tags);
+    }
 
     if (forum_tp_can_track_forums($forum) && forum_tp_is_tracked($forum)) {
         forum_tp_mark_post_read($post->userid, $post, $post->forum);
@@ -4439,6 +4448,11 @@ function forum_add_discussion($discussion, $mform=null, $unused=null, $userid=nu
         $text = file_save_draft_area_files($discussion->itemid, $context->id, 'mod_forum', 'post', $post->id,
                 mod_forum_post_form::editor_options($context, null), $post->message);
         $DB->set_field('forum_posts', 'message', $text, array('id'=>$post->id));
+    }
+
+    if (isset($discussion->tags)) {
+        core_tag_tag::set_item_tags('mod_forum', 'forum_posts', $post->id,
+                context_module::instance($cm->id), $discussion->tags);
     }
 
     // Now do the main entry for the discussion, linking to this first post
@@ -4573,6 +4587,9 @@ function forum_delete_post($post, $children, $course, $cm, $forum, $skipcompleti
         require_once($CFG->dirroot.'/mod/forum/rsslib.php');
         forum_rss_delete_file($forum);
     }
+
+    // Delete tags.
+    core_tag_tag::remove_all_item_tags('mod_forum', 'forum_posts', $post->id);
 
     if ($DB->delete_records("forum_posts", array("id" => $post->id))) {
 
@@ -7595,6 +7612,77 @@ function forum_get_posts_by_user($user, array $courses, $musthaveaccess = false,
     }
 
     return $return;
+}
+
+/**
+ * Returns posts tagged with a specified tag.
+ *
+ * @param core_tag_tag $tag
+ * @param bool $exclusivemode if set to true it means that no other entities tagged with this tag
+ *             are displayed on the page and the per-page limit may be bigger
+ * @param int $fromctx context id where the link was displayed, may be used by callbacks
+ *            to display items in the same context first
+ * @param int $ctx context id where to search for records
+ * @param bool $rec search in subcontexts as well
+ * @param int $page 0-based number of page being displayed
+ * @return \core_tag\output\tagindex
+ */
+function forum_get_posts_by_tag($tag, $exclusivemode = false, $fromctx = 0, $ctx = 0, $rec = true, $page = 0) {
+    global $DB, $OUTPUT;
+    $systemcontext = context_system::instance();
+    $perpage = 10;
+    $context = $ctx ? context::instance_by_id($ctx) : context_system::instance();
+    $params = array();
+    $subquery = '';
+    if ($context->contextlevel != CONTEXT_SYSTEM) {
+        if ($rec) {
+            $subquery = "tt.contextid IN (SELECT id from {context} WHERE path like :contextpath)";
+            $params['contextpath'] = $context->path . '%';
+        } else {
+            $subquery = "tt.contextid = :contextid";
+            $params['contextid'] = $context->id;
+        }
+    }
+
+    $postscount = $tag->count_tagged_items('mod_forum', 'forum_posts', $subquery, $params);
+
+    $perpage = $exclusivemode ? 30 : 10;
+    $content = '';
+    $totalpages = ceil($postscount / $perpage);
+
+    if ($postscount) {
+        $postslist = $tag->get_tagged_items('mod_forum', 'forum_posts', $page * $perpage, $perpage,
+            $subquery, $params);
+        if ($exclusivemode) {
+        foreach ($postslist as $post) {
+            $discussion = $DB->get_record('forum_discussions', array('id' => $post->discussion));
+            $forum = $DB->get_record('forum', array('id' => $discussion->forum));
+            list($course, $cm) = get_course_and_cm_from_instance($forum->id, 'forum');
+            if ($cm instanceof cm_info) {
+                $cm = $cm->get_course_module_record();
+            }
+            $post->replies = 0;
+            $content .= forum_print_post($post, $discussion, $forum, $cm, $course, /*$ownpost=*/false, /*$reply=*/false, /*$link=*/true,
+                "", "", /*$postisread=*/null, /*$dummyifcantsee=*/true, /*$istracked=*/null, true);
+        }
+        } else {
+            $tagfeed = new core_tag\output\tagfeed();
+            foreach ($postslist as $post) {
+                $user = $DB->get_record('user', array('id' => $post->userid));
+                $img = $OUTPUT->user_picture($user);
+                $fullname = fullname($user);
+                $details = $fullname . ', ' . userdate($post->created);
+                $discussionlink = new moodle_url('/mod/forum/discuss.php', array('d'=>$post->discussion), 'p'.$post->id);
+                $header = html_writer::link($discussionlink, format_string($post->subject));
+                $tagfeed->add($img, $header, $details);
+            }
+            $content = $OUTPUT->render_from_template('core_tag/tagfeed', $tagfeed->export_for_template($OUTPUT));
+        }
+    }
+
+    $rv = new core_tag\output\tagindex($tag, 'mod_forum', 'forum_posts',
+        $content, $exclusivemode, $fromctx, $ctx, $rec, $page, $totalpages);
+    return $rv;
 }
 
 /**
