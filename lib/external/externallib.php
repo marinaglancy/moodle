@@ -260,4 +260,62 @@ class core_external extends external_api {
                 'string' => new external_value(PARAM_RAW, 'translated string'))
             ));
     }
+
+    /**
+     * Parameters for function update_generic_title()
+     *
+     * @return external_function_parameters
+     */
+    public static function update_generic_title_parameters() {
+        return new external_function_parameters(
+            array(
+                'callback' => new external_value(PARAM_NOTAGS, 'callback for updating', VALUE_REQUIRED),
+                'value' => new external_value(PARAM_RAW, 'new value', VALUE_REQUIRED),
+                'identifier' => new external_value(PARAM_RAW, 'identifier of the updated instance', VALUE_REQUIRED),
+            )
+        );
+    }
+
+    /**
+     * Update generic title
+     *
+     * @param string $callback
+     * @param string $value
+     * @param string $identifier
+     */
+    public static function update_generic_title($callback, $value, $identifier) {
+        global $PAGE;
+        // Validate and normalize parameters.
+        $params = self::validate_parameters(self::update_generic_title_parameters(),
+                      array('callback' => $callback, 'value' => $value, 'identifier' => $identifier));
+        $callback = $params['callback'];
+        $value = $params['value'];
+        $identifier = $params['identifier'];
+        if (!class_exists($callback) || !is_subclass_of($callback, 'core\\output\\editabletitle')) {
+            throw new \coding_exception('Class ' . $callback . ' not found or is not allowed here');
+        }
+        $obj = new $callback($identifier);
+        $obj->update($value);
+        $renderer = $PAGE->get_renderer('core');
+        return $obj->export_for_template($renderer);
+    }
+
+    /**
+     * Return structure for update_generic_title()
+     *
+     * @return external_description
+     */
+    public static function update_generic_title_returns() {
+        return new external_single_structure(
+            array(
+                'displayvalue' => new external_value(PARAM_RAW, 'display value'),
+                'callback' => new external_value(PARAM_NOTAGS, 'class name responsible for the display and update'),
+                'value' => new external_value(PARAM_RAW, 'value'),
+                'identifier' => new external_value(PARAM_RAW, 'identifier of the instance'),
+                'edithint' => new external_value(PARAM_NOTAGS, 'hint for editing element'),
+                'hash' => new external_value(PARAM_NOTAGS, 'unique hash of component and identifier'),
+                'editlabel' => new external_value(PARAM_NOTAGS, 'label for editing element'),
+            )
+        );
+    }
 }

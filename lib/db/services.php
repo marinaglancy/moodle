@@ -1051,6 +1051,15 @@ $functions = array(
         'ajax'        => true,
     ),
 
+    'core_update_generic_title' => array(
+        'classname'   => 'core_external',
+        'methodname'  => 'update_generic_title',
+        'classpath'   => 'lib/external/externallib.php',
+        'description' => 'Generic service to update title',
+        'type'        => 'write',
+        'loginrequired' => true,
+        'ajax'        => true
+    ),
 
     // === Calendar related functions ===
 

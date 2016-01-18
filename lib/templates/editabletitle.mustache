@@ -1,0 +1,65 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template core/editabletitle
+
+    Displays the value that can be edited inline.
+
+    Classes required for JS:
+    * editabletitle
+    * quickeditlink
+
+    Data attributes required for JS:
+    * data-identifier
+    * data-callback
+
+    Context variables required for this template:
+    * none
+
+    Example context (json):
+    {
+        "displayvalue" : "<a href=\"#\">Moodle</a>",
+        "value" : "Moodle",
+        "identifier" : "1",
+        "callback" : "some_function_name",
+        "hash" : "abcdefgh",
+        "edithint" : "Edit this",
+        "editlabel" : "New name for this"
+    }
+}}
+{{#callback}}
+<span class="editabletitle" data-editabletitle="1" data-identifier="{{identifier}}" data-callback="{{callback}}">
+    <span class="quickeditdisplay">
+        {{{displayvalue}}}
+        <a href="#" class="quickeditlink visibleifjs" data-editabletitlelink="1" title="{{edithint}}">
+            {{#pix}}t/editstring,core,{{edithint}}{{/pix}}
+        </a>
+    </span>
+    <span class="quickeditedit">
+        <span class="editinstructions" id="id_editinstructions_{{hash}}">{{#str}}edittitleinstructions,core{{/str}}</span>
+        <label class="accesshide" for="quickvalue{{hash}}">{{editlabel}}</label>
+        <input id="quickvalue{{hash}}" type="text" value="{{value}}" aria-describedby="id_editinstructions_{{hash}}"/>
+    </span>
+</span>
+{{#js}}
+    require(['core/editabletitle']);
+{{/js}}
+{{/callback}}
+{{^callback}}
+    {{{displayvalue}}}
+{{/callback}}
+

@@ -826,27 +826,8 @@ tr.flagged-tag a {
     vertical-align: middle;
     padding: 4px;
 }
-.tag-management-table tr td.tageditingon .displaytagname,
-.tag-management-table td .edittagname {
-    display: none;
-}
-.tag-management-table tr td.tageditingon .edittagname {
-    display: inherit;
-    position: relative;
-}
-.tag-management-table tr td.tageditingon .edittagname .editinstructions {
-    margin-right: -300px;
-    margin-left: 0;
-}
-.tag-management-table tr td .tagnameedit img {
-    opacity: 0.2;
-}
-.tag-management-table tr:hover td .tagnameedit img,
-.tag-management-table tr td .tagnameedit:focus img {
-    opacity: 1;
-}
-.tag-management-table tr:hover td.tageditingon .tagnameedit img {
-    opacity: 0.2;
+.tag-management-table span.editabletitle.quickeditingon .quickeditedit input {
+    width: 150px;
 }
 .path-tag .tag-relatedtags {
     padding-top: 10px;
@@ -2443,4 +2424,42 @@ dd:after {
 .nav-tabs > .active > a[href]:hover,
 .nav-tabs > .active > a[href]:focus {
     cursor: pointer;
+}
+
+span.editabletitle.quickeditingon .quickeditdisplay,
+span.editabletitle .quickeditedit {
+    display: none;
+}
+span.editabletitle.quickeditingon .quickeditedit {
+    display: inherit;
+    position: relative;
+}
+span.editabletitle.quickeditingon .quickeditedit span.editinstructions {
+    margin-top: -30px;
+    font-weight: normal;
+    margin-right: -300px;
+    margin-left: 0;
+}
+.dir-rtl span.editabletitle.quickeditingon .quickeditedit span.editinstructions {
+    margin-left: -300px;
+    margin-right: 0;
+}
+span.editabletitle .quickeditlink img {
+    opacity: 0.2;
+}
+span.editabletitle:hover .quickeditlink img,
+span.editabletitle .quickeditlink:focus img {
+    opacity: 1;
+}
+span.editabletitle.quickeditingon:hover .quickeditlink img {
+    opacity: 0.2;
+}
+span.editabletitle.quickeditingon .quickeditedit input {
+    width: 330px;
+    height: 16px;
+    vertical-align: text-bottom;
+    margin-bottom: 0;
+}
+h3.sectionname span.editabletitle.quickeditingon .quickeditedit span.editinstructions {
+    margin-top: -20px;
 }
