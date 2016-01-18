@@ -163,7 +163,7 @@ Feature: Users can edit tags to add description or rename
     And I set the field "New name for tag Turtle" to "DOG"
     And I press key "13" in the field "New name for tag Turtle"
     And I should see "Tag names already being used"
-    And I press "Ok"
+    And I press "Close"
     And "New name for tag" "field" should not be visible
     And I should see "Turtle"
     And I should see "Dog"
