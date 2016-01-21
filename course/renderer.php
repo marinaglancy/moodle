@@ -1275,12 +1275,12 @@ class core_course_renderer extends plugin_renderer_base {
         $contentimages = $contentfiles = '';
         foreach ($course->get_course_overviewfiles() as $file) {
             $isimage = $file->is_valid_image();
-            $url = file_encode_url("$CFG->wwwroot/pluginfile.php",
-                    '/'. $file->get_contextid(). '/'. $file->get_component(). '/'.
-                    $file->get_filearea(). $file->get_filepath(). $file->get_filename(), !$isimage);
+            $url = moodle_url::make_pluginfile_url($file->get_contextid(), $file->get_component(),
+                $file->get_filearea(), $file->get_filepath(), $file->get_filename(), !$isimage);
             if ($isimage) {
+                $alttext = preg_replace('/_/', ' ', pathinfo($file->get_filename(), PATHINFO_FILENAME));
                 $contentimages .= html_writer::tag('div',
-                        html_writer::empty_tag('img', array('src' => $url)),
+                        html_writer::empty_tag('img', array('src' => $url, 'alt' => $alttext)),
                         array('class' => 'courseimage'));
             } else {
                 $image = $this->output->pix_icon(file_file_icon($file, 24), $file->get_filename(), 'moodle');
