@@ -51,6 +51,7 @@ class block_site_main_menu extends block_list {
         require_once($CFG->dirroot.'/course/lib.php');
         $context = context_course::instance($course->id);
         $isediting = $this->page->user_is_editing() && has_capability('moodle/course:manageactivities', $context);
+        $courserenderer = $this->page->get_renderer('core', 'course');
 
 /// extra fast view mode
         if (!$isediting) {
@@ -69,19 +70,7 @@ class block_site_main_menu extends block_list {
                     }
 
                     if (!empty($cm->url)) {
-                        $attrs = array();
-                        $attrs['title'] = $cm->modfullname;
-                        $attrs['class'] = $cm->extraclasses . ' activity-action';
-                        if ($cm->onclick) {
-                            // Get on-click attribute value if specified and decode the onclick - it
-                            // has already been encoded for display.
-                            $attrs['onclick'] = htmlspecialchars_decode($cm->onclick);
-                        }
-                        if (!$cm->visible) {
-                            $attrs['class'] .= ' dimmed';
-                        }
-                        $icon = '<img src="' . $cm->get_icon_url() . '" class="icon" alt="" />';
-                        $content = html_writer::link($cm->url, $icon . $cm->get_formatted_name(), $attrs);
+                        $content = html_writer::div($courserenderer->course_section_cm_name($cm), 'activity');
                     } else {
                         $content = $cm->get_formatted_content(array('overflowdiv' => true, 'noclean' => true));
                     }
@@ -94,7 +83,6 @@ class block_site_main_menu extends block_list {
 
         // Slow & hacky editing mode.
         /** @var core_course_renderer $courserenderer */
-        $courserenderer = $this->page->get_renderer('core', 'course');
         $ismoving = ismoving($course->id);
         course_create_sections_if_missing($course, 0);
         $modinfo = get_fast_modinfo($course);
@@ -153,25 +141,10 @@ class block_site_main_menu extends block_list {
                     } else {
                         $indent = '';
                     }
-                    $url = $mod->url;
-                    if (!$url) {
+                    if (!$mod->url) {
                         $content = $mod->get_formatted_content(array('overflowdiv' => true, 'noclean' => true));
                     } else {
-                        //Accessibility: incidental image - should be empty Alt text
-                        $attrs = array();
-                        $attrs['title'] = $mod->modfullname;
-                        $attrs['class'] = $mod->extraclasses . ' activity-action';
-                        if ($mod->onclick) {
-                            // Get on-click attribute value if specified and decode the onclick - it
-                            // has already been encoded for display.
-                            $attrs['onclick'] = htmlspecialchars_decode($mod->onclick);
-                        }
-                        if (!$mod->visible) {
-                            $attrs['class'] .= ' dimmed';
-                        }
-
-                        $icon = '<img src="' . $mod->get_icon_url() . '" class="icon" alt="" />';
-                        $content = html_writer::link($url, $icon . $mod->get_formatted_name(), $attrs);
+                        $content = html_writer::div($courserenderer->course_section_cm_name($mod), ' activity');
                     }
                     $this->content->items[] = $indent.html_writer::div($content . $editbuttons, 'main-menu-content');
                 }

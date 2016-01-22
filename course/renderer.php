@@ -744,6 +744,56 @@ class core_course_renderer extends plugin_renderer_base {
             return $output;
         }
 
+        $tmpl = $this->course_section_cm_name_tmpl($mod);
+        return $this->output->render($tmpl);
+    }
+
+    /**
+     * Returns an activity name as a mustasche template
+     *
+     * @param cm_info $cm
+     * @param null|bool $editable whether current user is able to edit this activity, if null it will be calculated
+     * @return array data context for a mustache template
+     */
+    public function course_section_cm_name_tmpl(cm_info $cm, $editable = null) {
+        global $USER;
+        $value = $cm->name;
+        $displayvalue = $this->course_section_cm_name_title($cm);
+        $edithint = new lang_string('edittitle');
+        $editlabel = new lang_string('newactivityname', '', $cm->get_formatted_name());
+        if ($editable === null) {
+            $editable = !empty($USER->editing) && has_capability('moodle/course:manageactivities',
+                    context_module::instance($cm->id));
+        }
+        return new \core\output\inplace_editable(
+            'core_course', 'activityname', $cm->id, $editable, $displayvalue, $value, $edithint, $editlabel);
+    }
+
+    /**
+     * Renders html to display a name with the link to the course module on a course page
+     *
+     * If module is unavailable for user but still needs to be displayed
+     * in the list, just the name is returned without a link
+     *
+     * Note, that for course modules that never have separate pages (i.e. labels)
+     * this function return an empty string
+     *
+     * @param cm_info $mod
+     * @param array $displayoptions
+     * @return string
+     */
+    public function course_section_cm_name_title(cm_info $mod, $displayoptions = array()) {
+        global $CFG;
+        $output = '';
+        if (!$mod->uservisible && empty($mod->availableinfo)) {
+            // Nothing to be displayed to the user.
+            return $output;
+        }
+        $url = $mod->url;
+        if (!$url) {
+            return $output;
+        }
+
         //Accessibility: for files get description via icon, this is very ugly hack!
         $instancename = $mod->get_formatted_name();
         $altname = $mod->modfullname;
@@ -795,15 +845,15 @@ class core_course_renderer extends plugin_renderer_base {
         // Display link itself.
         $activitylink = html_writer::empty_tag('img', array('src' => $mod->get_icon_url(),
                 'class' => 'iconlarge activityicon', 'alt' => ' ', 'role' => 'presentation')) . $accesstext .
-                html_writer::tag('span', $instancename . $altname, array('class' => 'instancename'));
+            html_writer::tag('span', $instancename . $altname, array('class' => 'instancename'));
         if ($mod->uservisible) {
             $output .= html_writer::link($url, $activitylink, array('class' => $linkclasses, 'onclick' => $onclick)) .
-                    $groupinglabel;
+                $groupinglabel;
         } else {
             // We may be displaying this just in order to show information
             // about visibility, without the actual link ($mod->uservisible)
             $output .= html_writer::tag('div', $activitylink, array('class' => $textclasses)) .
-                    $groupinglabel;
+                $groupinglabel;
         }
         return $output;
     }
@@ -984,10 +1034,6 @@ class core_course_renderer extends plugin_renderer_base {
             $output .= html_writer::start_tag('div', array('class' => 'activityinstance'));
             $output .= $cmname;
 
-
-            if ($this->page->user_is_editing()) {
-                $output .= ' ' . course_get_cm_rename_action($mod, $sectionreturn);
-            }
 
             // Module can put text after the link (e.g. forum unread)
             $output .= $mod->afterlink;
