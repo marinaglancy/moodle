@@ -383,3 +383,16 @@ class format_topics extends format_base {
         return true;
     }
 }
+
+/**
+ * Implements callback _inplace_editable() allowing to edit values in-place
+ *
+ * @param string $itemtype
+ * @param int $itemid
+ * @param mixed $newvalue
+ * @return \core\output\inplace_editable
+ */
+function format_topics_inplace_editable($itemtype, $itemid, $newvalue) {
+    $obj = new \format_topics\inplace_editable_saver();
+    return $obj->update_value($itemtype, $itemid, $newvalue);
+}

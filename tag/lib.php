@@ -40,3 +40,16 @@ function tag_page_type_list($pagetype, $parentcontext, $currentcontext) {
         'tag-manage'=>get_string('page-tag-manage', 'tag')
     );
 }
+
+/**
+ * Implements callback _inplace_editable() allowing to edit values in-place
+ *
+ * @param string $itemtype
+ * @param int $itemid
+ * @param mixed $newvalue
+ * @return \core\output\inplace_editable
+ */
+function core_tag_inplace_editable($itemtype, $itemid, $newvalue) {
+    $obj = new \core_tag\inplace_editable_saver();
+    return $obj->update_value($itemtype, $itemid, $newvalue);
+}

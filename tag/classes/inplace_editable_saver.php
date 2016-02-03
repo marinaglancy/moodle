@@ -38,7 +38,7 @@ use lang_string;
  * @copyright 2016 Marina Glancy
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class inplace_editable_saver implements \core\inplace_editable_saver_base {
+class inplace_editable_saver {
 
     /**
      * Returns the tag name ready for inline editing

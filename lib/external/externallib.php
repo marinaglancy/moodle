@@ -292,12 +292,14 @@ class core_external extends external_api {
         // Validate and normalize parameters.
         $params = self::validate_parameters(self::update_inplace_editable_parameters(),
                       array('component' => $component, 'itemtype' => $itemtype, 'itemid' => $itemid, 'value' => $value));
-        $classname = $params['component'] . '\inplace_editable_saver';
-        if (!class_exists($classname) || !is_subclass_of($classname, 'core\\inplace_editable_saver_base')) {
-            throw new \coding_exception('Class ' . $classname . ' not found or is not allowed here');
+        if (!$functionname = component_callback_exists($component, 'inplace_editable')) {
+            throw new \coding_exception('Component ' . $component . ' does not exist or is not allowed here');
         }
-        $obj = new $classname();
-        $tmpl = $obj->update_value($params['itemtype'], $params['itemid'], $params['value']);
+        $tmpl = component_callback($params['component'], 'inplace_editable',
+            array($params['itemtype'], $params['itemid'], $params['value']));
+        if (!$tmpl instanceof \core\output\inplace_editable) {
+            throw new \coding_exception('Function ' . $functionname . ' must return an instance of \core\output\inplace_editable');
+        }
         return $tmpl->export_for_template($PAGE->get_renderer('core'));
     }
 

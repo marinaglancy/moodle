@@ -433,3 +433,16 @@ class format_weeks extends format_base {
         return true;
     }
 }
+
+/**
+ * Implements callback _inplace_editable() allowing to edit values in-place
+ *
+ * @param string $itemtype
+ * @param int $itemid
+ * @param mixed $newvalue
+ * @return \core\output\inplace_editable
+ */
+function format_weeks_inplace_editable($itemtype, $itemid, $newvalue) {
+    $obj = new \format_weeks\inplace_editable_saver();
+    return $obj->update_value($itemtype, $itemid, $newvalue);
+}

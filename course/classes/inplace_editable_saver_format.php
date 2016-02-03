@@ -39,7 +39,7 @@ use coding_exception;
  * @copyright  2016 Marina Glancy
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-abstract class inplace_editable_saver_format implements \core\inplace_editable_saver_base {
+abstract class inplace_editable_saver_format {
 
     /** @var string */
     protected $component = null;
