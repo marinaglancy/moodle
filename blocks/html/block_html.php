@@ -36,6 +36,22 @@ class block_html extends block_base {
         return array('all' => true);
     }
 
+    function title_tmpl() {
+        global $USER, $PAGE;
+        // TODO: we do not check $PAGE->user_can_edit_blocks() here because we can not do it from the update function.
+        $editable = !empty($USER->editing) && ($this->user_can_edit()/* || !$PAGE->user_can_edit_blocks()*/);
+        return new \core\output\inplace_editable(
+            'block_html',
+            'blockname',
+            $this->instance->id,
+            $editable,
+            $this->title,
+            isset($this->config->title) ? $this->config->title : null,
+            'Edit hint', // TODO
+            'Edit label' // TODO
+        );
+    }
+
     function specialization() {
         $this->title = isset($this->config->title) ? format_string($this->config->title) : format_string(get_string('newhtmlblock', 'block_html'));
     }
@@ -82,19 +98,31 @@ class block_html extends block_base {
         return $this->content;
     }
 
+    function get_content_for_output($output) {
+        $bc = parent::get_content_for_output($output);
+        $bc->editabletitle = $this->title_tmpl();
+        return $bc;
+    }
 
     /**
      * Serialize and store config data
      */
     function instance_config_save($data, $nolongerused = false) {
-        global $DB;
+        if (empty($this->config)) {
+            $this->config = (object)array('title' => null, 'text' => null, 'format' => null);
+        }
 
-        $config = clone($data);
-        // Move embedded files into a proper filearea and adjust HTML links to match
-        $config->text = file_save_draft_area_files($data->text['itemid'], $this->context->id, 'block_html', 'content', 0, array('subdirs'=>true), $data->text['text']);
-        $config->format = $data->text['format'];
+        if (isset($data->text)) {
+            $this->config->text = file_save_draft_area_files($data->text['itemid'], $this->context->id,
+                'block_html', 'content', 0, array('subdirs'=>true), $data->text['text']);
+            $this->config->format = $data->text['format'];
+        }
+        if (isset($data->title)) {
+            $this->config->title = $data->title;
+        }
 
-        parent::instance_config_save($config, $nolongerused);
+        parent::instance_config_save($this->config, $nolongerused);
+        $this->specialization();
     }
 
     function instance_delete() {

@@ -2533,6 +2533,8 @@ class block_contents {
      */
     public $title = '';
 
+    public $editabletitle = null;
+
     /**
      * @var string The label to use when the block does not, or will not have a visible title.
      * You should never set this as well as title... it will just be ignored.

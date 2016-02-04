@@ -109,3 +109,28 @@ function block_html_global_db_replace($search, $replace) {
     }
     $instances->close();
 }
+
+function block_html_inplace_editable($itemtype, $itemid, $newvalue) {
+    global $DB, $CFG;
+    require_once($CFG->libdir.'/blocklib.php');
+    if ($itemtype === 'blockname') {
+        $newvalue = clean_param($newvalue, PARAM_TEXT);
+        $record = $DB->get_record_sql('SELECT * FROM {block_instances} WHERE id = ? AND blockname = ?',
+            array($itemid, 'html'), MUST_EXIST);
+        $context = context_block::instance($record->id);
+        $parentcontext = $context->get_parent_context();
+        if ($parentcontext->contextlevel == CONTEXT_MODULE) {
+            list($course, $cm) = get_course_and_cm_from_cmid($parentcontext->instanceid);
+            require_login($course, false, $cm, true, true);
+        } else if ($coursecontext = $context->get_course_context(false)) {
+            require_login($coursecontext->instanceid, false, null, true, true);
+        }
+        $block = block_instance($record->blockname, $record);
+        // TODO we do not know information about special capabilities allowed on block page.
+        if (!$block->user_can_edit()/* && !$PAGE->user_can_edit_blocks()*/) {
+            throw new moodle_exception('nopermissions', '', null, get_string('configureblock', 'block'));
+        }
+        $block->instance_config_save((object)array('title' => $newvalue));
+        return $block->title_tmpl();
+    }
+}
