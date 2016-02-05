@@ -253,7 +253,7 @@ class structure {
      * Get the quiz object.
      * @return \stdClass the quiz settings row from the database.
      */
-    public function get_quiz() {
+    public function  get_quiz() {
         return $this->quizobj->get_quiz();
     }
 
@@ -390,6 +390,25 @@ class structure {
     }
 
     /**
+     * Prepares template for inplace-editable section name
+     *
+     * @param \stdClass $section
+     * @return \core\output\inplace_editable
+     */
+    public function get_section_inplace_editable($section) {
+        return new \core\output\inplace_editable(
+            'mod_quiz',
+            'sectionname',
+            $section->id,
+            $this->can_be_edited(),
+            \html_writer::span($section->heading, 'instancesection'),
+            $section->heading,
+            new \lang_string('sectionheadingedit', 'quiz', $section->heading),
+            new \lang_string('sectionheadingedit', 'quiz', $section->heading) // TODO
+        );
+    }
+
+    /**
      * Get the final slot in the quiz.
      * @return \stdClass the quiz_slots for for the final slot in the quiz.
      */
@@ -485,6 +504,29 @@ class structure {
      */
     public function formatted_question_grade($slotnumber) {
         return quiz_format_question_grade($this->get_quiz(), $this->slotsinorder[$slotnumber]->maxmark);
+    }
+
+    /**
+     * Prepares templatable for inplace editable question slot mark
+     *
+     * @param \stdClass $slot
+     * @return \core\output\inplace_editable
+     * @throws \coding_exception
+     */
+    public function get_slot_inplace_editable($slot) {
+        $displaytitle = \html_writer::span($this->formatted_question_grade($slot),
+            'instancemaxmark decimalplaces_' . $this->get_decimal_places_for_question_marks(),
+            array('title' => get_string('maxmark', 'quiz')));
+        return new \core\output\inplace_editable(
+            'mod_quiz',
+            'instancemaxmark',
+            $slot,
+            true, // TODO: has_capability?
+            $displaytitle,
+            $this->formatted_question_grade($slot),
+            new \lang_string('editmaxmark', 'mod_quiz'),
+            'New mark for slot '.$slot // TODO string
+        );
     }
 
     /**
@@ -937,6 +979,8 @@ class structure {
         \question_engine::set_max_mark_in_attempts(new \qubaids_for_quiz($slot->quizid),
                 $slot->slot, $maxmark);
         $trans->allow_commit();
+
+        $this->slotsinorder[$slot->id]->maxmark = $maxmark;
 
         return true;
     }

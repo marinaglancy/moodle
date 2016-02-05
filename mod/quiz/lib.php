@@ -1881,3 +1881,52 @@ function quiz_get_completion_state($course, $cm, $userid, $type) {
     }
     return false;
 }
+
+/**
+ * Implementation of callback inplace_editable
+ *
+ * @param string $itemtype
+ * @param int $itemid
+ * @param string $newvalue
+ * @return \core\output\inplace_editable
+ */
+function mod_quiz_inplace_editable($itemtype, $itemid, $newvalue) {
+    global $DB, $CFG;
+    require_once($CFG->dirroot.'/mod/quiz/locallib.php');
+    if ($itemtype === 'instancemaxmark') {
+        $slot = $DB->get_record('quiz_slots', array('id' => $itemid), '*', MUST_EXIST);
+        list($course, $cm) = get_course_and_cm_from_instance($slot->quizid, 'quiz');
+        require_login($course, false, $cm);
+        $quiz = $DB->get_record('quiz', array('id' => $slot->quizid), '*', MUST_EXIST);
+        $quizobj = new quiz($quiz, $cm, $course);
+        $structure = $quizobj->get_structure();
+        $modcontext = context_module::instance($cm->id);
+        require_capability('mod/quiz:manage', $modcontext);
+        $slot = $structure->get_slot_by_id($itemid);
+        $maxmark = clean_param($newvalue, PARAM_FLOAT);
+        if ($structure->update_slot_maxmark($slot, $maxmark)) {
+            // Grade has really changed.
+            quiz_delete_previews($quiz);
+            quiz_update_sumgrades($quiz);
+            quiz_update_all_attempt_sumgrades($quiz);
+            quiz_update_all_final_grades($quiz);
+            quiz_update_grades($quiz, 0, true);
+        }
+        return $structure->get_slot_inplace_editable($itemid);
+    }
+    if ($itemtype === 'sectionname') {
+        $section = $DB->get_record('quiz_slots', array('id' => $itemid), '*', MUST_EXIST);
+        list($course, $cm) = get_course_and_cm_from_instance($section->quizid, 'quiz');
+        require_login($course, false, $cm);
+        $quiz = $DB->get_record('quiz', array('id' => $section->quizid), '*', MUST_EXIST);
+        $quizobj = new quiz($quiz, $cm, $course);
+        $structure = $quizobj->get_structure();
+        $modcontext = context_module::instance($cm->id);
+        require_capability('mod/quiz:manage', $modcontext);
+        $newheading = clean_param($newvalue, PARAM_TEXT);
+        $structure->set_section_heading($itemid, $newheading);
+        $section->heading = $newheading;
+        return $structure->get_section_inplace_editable($section);
+    }
+    throw new coding_exception('Unrecognised itemtype');
+}

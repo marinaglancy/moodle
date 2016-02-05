@@ -293,17 +293,8 @@ class edit_renderer extends \plugin_renderer_base {
         $output .= html_writer::start_div('section-heading');
 
         $headingtext = $this->heading(html_writer::span(
-                html_writer::span($section->heading, 'instancesection'), 'sectioninstance'), 3);
-
-        if (!$structure->can_be_edited()) {
-            $editsectionheadingicon = '';
-        } else {
-            $editsectionheadingicon = html_writer::link(new \moodle_url('#'),
-                $this->pix_icon('t/editstring', get_string('sectionheadingedit', 'quiz', $section->heading),
-                        'moodle', array('class' => 'editicon visibleifjs')),
-                        array('class' => 'editing_section', 'data-action' => 'edit_section_title'));
-        }
-        $output .= html_writer::div($headingtext . $editsectionheadingicon, 'instancesectioncontainer');
+            $this->render($structure->get_section_inplace_editable($section)), 'sectioninstance'), 3);
+        $output .= html_writer::div($headingtext, 'instancesectioncontainer');
 
         if (!$structure->is_first_section($section) && $structure->can_be_edited()) {
             $output .= $this->section_remove_icon($section);
@@ -898,31 +889,19 @@ class edit_renderer extends \plugin_renderer_base {
      * @return string HTML to output.
      */
     public function marked_out_of_field(structure $structure, $slot) {
+
         if (!$structure->is_real_question($slot)) {
             $output = html_writer::span('',
                     'instancemaxmark decimalplaces_' . $structure->get_decimal_places_for_question_marks());
 
             $output .= html_writer::span(
                     $this->pix_icon('spacer', '', 'moodle', array('class' => 'editicon visibleifjs', 'title' => '')),
-                    'editing_maxmark');
+                    'editing_spacer');
             return html_writer::span($output, 'instancemaxmarkcontainer infoitem');
         }
 
-        $output = html_writer::span($structure->formatted_question_grade($slot),
-                'instancemaxmark decimalplaces_' . $structure->get_decimal_places_for_question_marks(),
-                array('title' => get_string('maxmark', 'quiz')));
-
-        $output .= html_writer::span(
-            html_writer::link(
-                new \moodle_url('#'),
-                $this->pix_icon('t/editstring', '', 'moodle', array('class' => 'editicon visibleifjs', 'title' => '')),
-                array(
-                    'class' => 'editing_maxmark',
-                    'data-action' => 'editmaxmark',
-                    'title' => get_string('editmaxmark', 'quiz'),
-                )
-            )
-        );
+        $tmpl = $structure->get_slot_inplace_editable($slot);
+        $output = $this->render($tmpl);
         return html_writer::span($output, 'instancemaxmarkcontainer');
     }
 

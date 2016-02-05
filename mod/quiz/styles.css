@@ -641,28 +641,15 @@ table.quizreviewsummary td.cell {
     display: inline;
     color: #999;
 }
-#page-mod-quiz-edit .section-heading .editing_section,
 #page-mod-quiz-edit .section-heading .editing_delete {
     margin-left: 10px;
 }
-#page-mod-quiz-edit .section-heading .sectioninstance {
-    position: relative;
-}
-#page-mod-quiz-edit .section-heading form {
-    display: inline;
-    position: relative;
-    top: 3px;
-    left: -7px;
-}
-#page-mod-quiz-edit .section-heading form input {
-    font-size: 24px;
-    font-weight: bold;
-    width: 50%;
-}
-
 #page-mod-quiz-edit .section-heading .instanceshufflequestions {
     float: right;
     margin: 0.3em 20px 0 0;
+}
+#page-mod-quiz-edit .section-heading span.inplaceeditable.inplaceeditingon span.editinstructions {
+    margin-top: -20px;
 }
 
 #page-mod-quiz-edit ul.section {
@@ -703,19 +690,17 @@ table.quizreviewsummary td.cell {
     padding: 0.2em;
     margin: 0.4em;
 }
-#page-mod-quiz-edit ul.slots li.section li.activity .instancemaxmarkcontainer .editicon {
-    width: 13px;
+#page-mod-quiz-edit ul.slots li.section li.activity .instancemaxmarkcontainer .editing_spacer img {
+    width: 16px;
 }
 #page-mod-quiz-edit ul.slots li.section li.activity .instancemaxmarkcontainer.infoitem {
     background: transparent;
 }
-#page-mod-quiz-edit ul.slots li.section li.activity .instancemaxmarkcontainer form {
-    display: inline;
+#page-mod-quiz-edit ul.slots li.section li.activity .instancemaxmarkcontainer span.inplaceeditable.inplaceeditingon input {
+    width: 100px;
 }
-#page-mod-quiz-edit ul.slots li.section li.activity .instancemaxmarkcontainer form input {
-    margin: 0;
-    padding: 0.2em;
-    height: 1em;
+#page-mod-quiz-edit ul.slots li.section li.activity .instancemaxmarkcontainer span.inplaceeditable.inplaceeditingon span.editinstructions {
+    /* TODO: I don't know how to make it float properly! */
 }
 
 #page-mod-quiz-edit ul.slots li.section li.activity .instancemaxmark {
@@ -766,7 +751,7 @@ table.quizreviewsummary td.cell {
 #page-mod-quiz-edit ul.slots li.section li.activity .edit_icon,
 #page-mod-quiz-edit ul.slots li.section li.activity a.preview,
 #page-mod-quiz-edit ul.slots li.section li.activity .editing_delete,
-#page-mod-quiz-edit ul.slots li.section li.activity .editing_maxmark {
+#page-mod-quiz-edit ul.slots li.section li.activity .editing_spacer {
     margin: 0 2px;
 }
 #page-mod-quiz-edit ul.slots li.section.only-has-one-slot li.activity .editing_move,
@@ -822,13 +807,6 @@ table.quizreviewsummary td.cell {
 
 #page-mod-quiz-edit ul.slots .activityinstance form {
     display: inline;
-}
-#page-mod-quiz-edit span.editinstructions {
-    right: 0;
-}
-#page-mod-quiz-edit.dir-rtl span.editinstructions {
-    left: 0;
-    right: auto;
 }
 
 #page-mod-quiz-edit ul.slots .activityinstance span.instancename {
