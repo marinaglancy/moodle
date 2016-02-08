@@ -297,4 +297,16 @@ if ($perpage == SHOW_ALL_PAGE_SIZE) {
     echo html_writer::end_tag('div');
 }
 
+$PAGE->requires->js_amd_inline("
+require(['jquery', 'core/str', 'core/notification', 'core/log'], function(\$, str, notification, l) {
+    $('body').on('updatefailed', function(e) {
+        if (e.exception.errorcode === 'namesalreadybeeingused') {
+            e.preventDefault();
+            str.get_string('error').done(function(s) {
+                notification.alert(s, e.exception.message);
+            });
+        }
+    });
+});
+");
 echo $OUTPUT->footer();
