@@ -14,10 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace core\hook;
-
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Hook manager class.
  *
@@ -25,6 +21,10 @@ defined('MOODLE_INTERNAL') || die();
  * @copyright  2014 Petr Skoda {@link http://skodak.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
+namespace core\hook;
+
+defined('MOODLE_INTERNAL') || die();
 
 /**
  * Manager executing hook callbacks.
@@ -44,9 +44,12 @@ abstract class manager {
      * Execute all hook callbacks.
      *
      * @param base $hook
+     * @param string $componentname when specified the hook is executed only for specific component or plugin
+     * @param bool $throwexceptions if set to false (default) all exceptions during callbacks executions will be
+     *      converted to debugging messages and will not prevent further execution of other callbacks
      * @return base returns the hook instance to allow chaining
      */
-    public static function execute(base $hook) {
+    public static function execute(base $hook, $componentname = null, $throwexceptions = false) {
         global $CFG;
 
         if (during_initial_install()) {
@@ -59,19 +62,30 @@ abstract class manager {
             return $hook;
         }
 
+        if ($componentname !== null) {
+            $componentname = \core_component::normalize_componentname($componentname);
+        }
+
         foreach (self::$allcallbacks[$hookname] as $callback) {
+            if ($componentname !== null && $callback->component !== $componentname) {
+                continue;
+            }
             if (isset($callback->includefile) and file_exists($callback->includefile)) {
                 include_once($callback->includefile);
             }
             if (is_callable($callback->callable)) {
-                try {
+                if ($throwexceptions) {
                     call_user_func($callback->callable, $hook);
-                } catch (\Exception $e) {
-                    // Callbacks are executed before installation and upgrade, this may throw errors.
-                    if (empty($CFG->upgraderunning)) {
-                        // Ignore errors during upgrade, otherwise warn developers.
-                        debugging("Exception encountered in hook callback '$callback->callable': " .
-                            $e->getMessage(), DEBUG_DEVELOPER, $e->getTrace());
+                } else {
+                    try {
+                        call_user_func($callback->callable, $hook);
+                    } catch (\Exception $e) {
+                        // Callbacks are executed before installation and upgrade, this may throw errors.
+                        if (empty($CFG->upgraderunning)) {
+                            // Ignore errors during upgrade, otherwise warn developers.
+                            debugging("Exception encountered in hook callback '$callback->callable': " .
+                                $e->getMessage(), DEBUG_DEVELOPER, $e->getTrace());
+                        }
                     }
                 }
             } else {
@@ -105,26 +119,14 @@ abstract class manager {
         }
 
         self::$allcallbacks = array();
+        self::add_component_callbacks('core', $CFG->dirroot . '/lib');
 
         $plugintypes = \core_component::get_plugin_types();
-        $systemdone = false;
         foreach ($plugintypes as $plugintype => $ignored) {
             $plugins = \core_component::get_plugin_list($plugintype);
-            if (!$systemdone) {
-                $plugins[] = "$CFG->dirroot/lib";
-                $systemdone = true;
-            }
 
-            foreach ($plugins as $fulldir) {
-                if (!file_exists("$fulldir/db/hooks.php")) {
-                    continue;
-                }
-                $callbacks = null;
-                include("$fulldir/db/hooks.php");
-                if (!is_array($callbacks)) {
-                    continue;
-                }
-                self::add_callbacks($callbacks, "$fulldir/db/hooks.php");
+            foreach ($plugins as $pluginname => $fulldir) {
+                self::add_component_callbacks($plugintype . '_' . $pluginname, $fulldir);
             }
         }
 
@@ -137,20 +139,39 @@ abstract class manager {
     }
 
     /**
+     * Read callbacks from hooks.php file in the component and add them.
+     * @param string $componentname
+     * @param string $fulldir
+     */
+    protected static function add_component_callbacks($componentname, $fulldir) {
+        global $CFG;
+
+        $file = "$fulldir/db/hooks.php";
+        if (!file_exists($file)) {
+            return;
+        }
+        $callbacks = null;
+        include($file);
+
+        if (!is_array($callbacks)) {
+            return;
+        }
+
+        self::add_callbacks($callbacks, $file, $componentname);
+    }
+
+    /**
      * Add callbacks.
      * @param array $callbacks
      * @param string $file
+     * @param string $componentname
      */
-    protected static function add_callbacks(array $callbacks, $file) {
+    protected static function add_callbacks(array $callbacks, $file, $componentname) {
         global $CFG;
-
         foreach ($callbacks as $callback) {
             if (empty($callback['hookname']) or !is_string($callback['hookname'])) {
                 debugging("Invalid 'hookname' detected in $file callback definition", DEBUG_DEVELOPER);
                 continue;
-            }
-            if (strpos($callback['hookname'], '\\') !== 0) {
-                $callback['hookname'] = '\\' . $callback['hookname'];
             }
             if (empty($callback['callback'])) {
                 debugging("Invalid 'callback' detected in $file callback definition", DEBUG_DEVELOPER);
@@ -158,6 +179,11 @@ abstract class manager {
             }
             $o = new \stdClass();
             $o->callable = $callback['callback'];
+            if ($componentname === 'core' && !empty($callback['component'])) {
+                $o->component = $callback['component'];
+            } else {
+                $o->component = $componentname;
+            }
             if (!isset($callback['priority'])) {
                 $o->priority = 0;
             } else {
@@ -176,7 +202,7 @@ abstract class manager {
                 }
                 $o->includefile = $callback['includefile'];
             }
-            self::$allcallbacks[$callback['hookname']][] = $o;
+            self::$allcallbacks['\\' . ltrim($callback['hookname'], '\\')][] = $o;
         }
     }
 
@@ -195,7 +221,7 @@ abstract class manager {
      * @param array $callbacks
      * @return array
      *
-     * @throws \coding_Exception if used outside of unit tests.
+     * @throws \coding_exception if used outside of unit tests.
      */
     public static function phpunit_replace_callbacks(array $callbacks) {
         if (!PHPUNIT_TEST) {
@@ -206,7 +232,7 @@ abstract class manager {
         self::$allcallbacks = array();
         self::$reloadaftertest = true;
 
-        self::add_callbacks($callbacks, 'phpunit');
+        self::add_callbacks($callbacks, 'phpunit', 'core_phpunit');
         self::order_all_callbacks();
 
         return self::$allcallbacks;
@@ -214,7 +240,6 @@ abstract class manager {
 
     /**
      * Reset everything if necessary.
-     * @private
      *
      * @throws \coding_Exception if used outside of unit tests.
      */

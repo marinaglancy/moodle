@@ -14,10 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace core\hook;
-
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Base hook class.
  *
@@ -25,6 +21,10 @@ defined('MOODLE_INTERNAL') || die();
  * @copyright  2013 Petr Skoda {@link http://skodak.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
+namespace core\hook;
+
+defined('MOODLE_INTERNAL') || die();
 
 /**
  * All other hook classes must extend this class.
@@ -35,18 +35,30 @@ defined('MOODLE_INTERNAL') || die();
  */
 abstract class base {
     /** @var bool $executing Is the hook being executed? */
-    protected $executing = false;
+    protected static $executing = false;
 
     /**
      * Execute the callbacks.
      *
-     * @return base $this
+     * @param string $componentname when specified the hook is executed only for specific component or plugin
+     * @param bool $throwexceptions if set to false (default) all exceptions during callbacks executions will be
+     *      converted to debugging messages and will not prevent further execution of other callbacks
+     * @return self
      */
-    public function execute() {
-        if ($this->executing) {
+    public function execute($componentname = null, $throwexceptions = false) {
+        if (static::$executing) {
+            // Prevent recursion.
             debugging('hook is already being executed', DEBUG_DEVELOPER);
             return $this;
         }
-        return manager::execute($this);
+        static::$executing = true;
+        try {
+            manager::execute($this, $componentname, $throwexceptions);
+        } catch (\Exception $e) {
+            static::$executing = false;
+            throw $e;
+        }
+        static::$executing = false;
+        return $this;
     }
 }
