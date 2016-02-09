@@ -51,20 +51,23 @@ class cohortidnumber extends \core\output\inplace_editable {
     }
 
     /**
-     * Updates cohort name and returns instance of this object
+     * Implementation of \core\hook\inplace_editable hook
      *
-     * @param int $cohortid
-     * @param string $newvalue
+     * @param \core\hook\inplace_editable $hook
      * @return static
      */
-    public static function update($cohortid, $newvalue) {
+    public static function update(\core\hook\inplace_editable $hook) {
         global $DB;
-        $cohort = $DB->get_record('cohort', array('id'=>$cohortid), '*', MUST_EXIST);
-        $cohortcontext = \context::instance_by_id($cohort->contextid);
-        require_capability('moodle/cohort:manage', $cohortcontext);
-        $record = (object)array('id' => $cohort->id, 'idnumber' => $newvalue, 'contextid' => $cohort->contextid);
-        cohort_update_cohort($record);
-        $cohort->idnumber = $newvalue;
-        return new static($cohort);
+        if ($hook->get_itemname() === 'cohortidnumber') {
+            $cohortid = $hook->get_item_id();
+            $newvalue = $hook->get_new_value();
+            $cohort = $DB->get_record('cohort', array('id'=>$cohortid), '*', MUST_EXIST);
+            $cohortcontext = \context::instance_by_id($cohort->contextid);
+            require_capability('moodle/cohort:manage', $cohortcontext);
+            $record = (object)array('id' => $cohort->id, 'idnumber' => $newvalue, 'contextid' => $cohort->contextid);
+            cohort_update_cohort($record);
+            $cohort->idnumber = $newvalue;
+            $hook->set_output(new static($cohort));
+        }
     }
 }
