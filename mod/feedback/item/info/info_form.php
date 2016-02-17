@@ -20,6 +20,7 @@ class feedback_info_form extends feedback_item_form {
     protected $type = "info";
 
     public function definition() {
+        global $DB;
 
         $item = $this->_customdata['item'];
         $common = $this->_customdata['common'];
@@ -45,6 +46,11 @@ class feedback_info_form extends feedback_item_form {
         $options[1]  = get_string('responsetime', 'feedback');
         $options[2]  = get_string('course');
         $options[3]  = get_string('coursecategory');
+        $feedback = $DB->get_record('feedback', array('id' => $common['feedback']), 'id, anonymous');
+        if ($feedback->anonymous == FEEDBACK_ANONYMOUS_YES) {
+            unset($options[1]);
+        }
+
         $this->infotype = &$mform->addElement('select',
                                               'presentation',
                                               get_string('infotype', 'feedback'),

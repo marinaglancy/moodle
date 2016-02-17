@@ -116,15 +116,15 @@ class feedback_item_info extends feedback_item_base {
                 $datavalue = new stdClass();
 
                 switch($presentation) {
-                    case 1:
+                    case 1: // Responsetime.
                         $datavalue->value = $value->value;
                         $datavalue->show = userdate($datavalue->value);
                         break;
-                    case 2:
+                    case 2: // Course.
                         $datavalue->value = $value->value;
                         $datavalue->show = $datavalue->value;
                         break;
-                    case 3:
+                    case 3: // Course category.
                         $datavalue->value = $value->value;
                         $datavalue->show = $datavalue->value;
                         break;
@@ -146,6 +146,15 @@ class feedback_item_info extends feedback_item_base {
     }
 
     public function print_analysed($item, $itemnr = '', $groupid = false, $courseid = false) {
+        global $DB;
+        if ($item->presentation == 1) {
+            // Don not display "responsetime" in analysis for an anonymouse feedback.
+            $feedback = $DB->get_record('feedback', array('id' => $item->feedback), 'id, anonymous');
+            if ($feedback->anonymous == FEEDBACK_ANONYMOUS_YES) {
+                return '';
+            }
+        }
+
         $analysed_item = $this->get_analysed($item, $groupid, $courseid);
         $data = $analysed_item->data;
         if (is_array($data)) {
