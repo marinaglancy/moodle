@@ -240,6 +240,10 @@ class format_topics extends format_base {
                     'default' => $courseconfig->coursedisplay,
                     'type' => PARAM_INT,
                 ),
+                'stealthmodules' => array(
+                    'default' => 0,
+                    'type' => PARAM_INT,
+                ),
             );
         }
         if ($foreditform && !isset($courseformatoptions['coursedisplay']['label'])) {
@@ -280,6 +284,18 @@ class format_topics extends format_base {
                         )
                     ),
                     'help' => 'coursedisplay',
+                    'help_component' => 'moodle',
+                ),
+                'stealthmodules' => array(
+                    'label' => new lang_string('stealthmodules'),
+                    'element_type' => 'select',
+                    'element_attributes' => array(
+                        array(
+                            0 => new lang_string('no'),
+                            1 => new lang_string('yes')
+                        )
+                    ),
+                    'help' => 'stealthmodules',
                     'help_component' => 'moodle',
                 )
             );
@@ -415,6 +431,9 @@ class format_topics extends format_base {
      */
     public function allow_stealth_module_visibility($cm, $section) {
         // Allow the third visibility state inside visible sections or in section 0, not allow in orphaned sections.
+        if (!$this->get_course()->stealthmodules) {
+            return false;
+        }
         return !$section->section || ($section->visible && $section->section <= $this->get_course()->numsections);
     }
 }
