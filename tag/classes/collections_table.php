@@ -87,10 +87,13 @@ class core_tag_collections_table extends html_table {
                 $component = ($tagcoll->component === 'core' || preg_match('/^core_/', $tagcoll->component)) ?
                     get_string('coresystem') : get_string('pluginname', $tagcoll->component);
             }
+            $areanames = core_tag_collection::get_areas_names($tagcoll->id);
+            $areaslist = array_map(function($key) use ($areanames) {return "<li data-areaid=\"{$key}\">{$areanames[$key]}</li>";},
+                    array_keys($areanames));
             $this->data[] = array(
                 html_writer::link($manageurl, $name),
                 $component,
-                join(', ', core_tag_collection::get_areas_names($tagcoll->id)),
+                "<ul data-collectionid=\"{$tagcoll->id}\">" . join('', $areaslist) . '</ul>',
                 $tagcoll->searchable ? get_string('yes') : '-',
                 $actions);
             $idx++;

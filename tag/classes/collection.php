@@ -179,7 +179,7 @@ class core_tag_collection {
         $itemtypes = array();
         foreach ($allitemtypes as $itemtype => $it) {
             foreach ($it as $component => $v) {
-                $itemtypes[] = core_tag_area::display_name($component, $itemtype);
+                $itemtypes[$v->id] = core_tag_area::display_name($component, $itemtype);
             }
         }
         return $itemtypes;

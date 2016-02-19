@@ -138,39 +138,6 @@ switch($action) {
         redirect($manageurl);
         break;
 
-    case 'areaenable':
-    case 'areadisable':
-        if ($tagarea) {
-            require_sesskey();
-            $data = array('enabled' => ($action === 'areaenable') ? 1 : 0);
-            core_tag_area::update($tagarea, $data);
-            redirect(new moodle_url($manageurl, array('notice' => 'changessaved')));
-        }
-        redirect($manageurl);
-        break;
-
-    case 'areasetcoll':
-        if ($tagarea) {
-            require_sesskey();
-            if ($newtagcollid = optional_param('areacollid', null, PARAM_INT)) {
-                core_tag_area::update($tagarea, array('tagcollid' => $newtagcollid));
-                redirect(new moodle_url($manageurl, array('notice' => 'changessaved')));
-            }
-        }
-        redirect($manageurl);
-        break;
-
-    case 'areasetshowstandard':
-        if ($tagarea) {
-            require_sesskey();
-            if (($showstandard = optional_param('showstandard', null, PARAM_INT)) !== null) {
-                core_tag_area::update($tagarea, array('showstandard' => $showstandard));
-                redirect(new moodle_url($manageurl, array('notice' => 'changessaved')));
-            }
-        }
-        redirect($manageurl);
-        break;
-
     case 'delete':
         require_sesskey();
         if (!$tagschecked && $tagid) {
@@ -242,6 +209,25 @@ if (!$tagcoll) {
 
     echo $OUTPUT->heading(get_string('tagareas', 'core_tag'), 3);
     echo html_writer::table($tagareastable);
+
+    $PAGE->requires->js_amd_inline(<<<EOL
+    require(['jquery'], function(\$) {
+        $('body').on('updated', '[data-inplaceeditable]', function(e) {
+            var ajaxreturn = e.ajaxreturn;
+            var oldvalue = e.oldvalue;
+            if (ajaxreturn.component === 'core_tag' && ajaxreturn.itemtype === 'tagareaenable') {
+                if (ajaxreturn.value === '1') {
+                    $(this).closest('tr').removeClass('dimmed_text');
+                    //$(".tag-collections-table ul[data-collectionid] li[data-areaid="+ajaxreturn.itemid+"]").hide();
+                } else {
+                    $(this).closest('tr').addClass('dimmed_text');
+                    //$(".tag-collections-table ul[data-collectionid] li[data-areaid="+ajaxreturn.itemid+"]").remove();
+                }
+            }
+        });
+    });
+EOL
+    );
 
     echo $OUTPUT->footer();
     exit;
