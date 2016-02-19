@@ -23,6 +23,7 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+$string['hideoncoursepage'] = 'Hide from this block';
 $string['numberdiscussions'] = 'Number of discussions';
 $string['numberdiscussions_help'] = 'This setting specifies how many discussions should be displayed.';
 $string['pluginname'] = 'Social format';

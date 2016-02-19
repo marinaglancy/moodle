@@ -102,6 +102,10 @@
                 }
             }
         }
+
+        .stealth {
+            opacity: .5;
+        }
     }
     .label {
       .contentwithoutlink,
@@ -139,6 +143,22 @@
                 vertical-align: text-bottom;
             }
         }
+    }
+}
+.course-content ul li.section.hidden {
+    .contentwithoutlink,
+    .activityinstance {
+
+        .dimmed {
+            img.activityicon {
+                opacity: 1;
+                filter: alpha(opacity=100);
+            }
+        }
+    }
+
+    .stealth {
+        opacity: 1;
     }
 }
 

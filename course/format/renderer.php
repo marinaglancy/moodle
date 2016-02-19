@@ -127,7 +127,8 @@ abstract class format_section_renderer_base extends plugin_renderer_base {
                 $menu->add($al);
             }
 
-            $o .= html_writer::div($this->render($menu), 'section_action_menu');
+            $o .= html_writer::div($this->render($menu), 'section_action_menu',
+                array('data-sectionid' => $section->id));
         }
 
         return $o;
@@ -194,7 +195,8 @@ abstract class format_section_renderer_base extends plugin_renderer_base {
             // Only in the non-general sections.
             if (!$section->visible) {
                 $sectionstyle = ' hidden';
-            } else if (course_get_format($course)->is_section_current($section)) {
+            }
+            if (course_get_format($course)->is_section_current($section)) {
                 $sectionstyle = ' current';
             }
         }
@@ -305,14 +307,12 @@ abstract class format_section_renderer_base extends plugin_renderer_base {
             return array();
         }
 
+        $sectionreturn = $onsectionpage ? $section->section : null;
+
         $coursecontext = context_course::instance($course->id);
         $isstealth = isset($course->numsections) && ($section->section > $course->numsections);
 
-        if ($onsectionpage) {
-            $baseurl = course_get_url($course, $section->section);
-        } else {
-            $baseurl = course_get_url($course);
-        }
+        $baseurl = course_get_url($course, $sectionreturn);
         $baseurl->param('sesskey', sesskey());
 
         $controls = array();
@@ -325,7 +325,6 @@ abstract class format_section_renderer_base extends plugin_renderer_base {
                 $streditsection = get_string('editsection');
             }
 
-            $sectionreturn = $onsectionpage ? $section->section : 0;
             $controls['edit'] = array(
                 'url'   => new moodle_url('/course/editsection.php', array('id' => $section->id, 'sr' => $sectionreturn)),
                 'icon' => 'i/settings',
@@ -346,7 +345,7 @@ abstract class format_section_renderer_base extends plugin_renderer_base {
                             'icon' => 'i/hide',
                             'name' => $strhidefromothers,
                             'pixattr' => array('class' => '', 'alt' => $strhidefromothers),
-                            'attr' => array('class' => 'icon editing_showhide', 'title' => $strhidefromothers));
+                            'attr' => array('class' => 'icon editing_showhide', 'title' => $strhidefromothers, 'data-sr' => $sectionreturn));
                     } else {
                         $strshowfromothers = get_string('showfromothers', 'format_'.$course->format);
                         $url->param('show',  $section->section);
@@ -355,7 +354,7 @@ abstract class format_section_renderer_base extends plugin_renderer_base {
                             'icon' => 'i/show',
                             'name' => $strshowfromothers,
                             'pixattr' => array('class' => '', 'alt' => $strshowfromothers),
-                            'attr' => array('class' => 'icon editing_showhide', 'title' => $strshowfromothers));
+                            'attr' => array('class' => 'icon editing_showhide', 'title' => $strshowfromothers, 'data-sr' => $sectionreturn));
                     }
                 }
 
@@ -398,14 +397,14 @@ abstract class format_section_renderer_base extends plugin_renderer_base {
                 }
                 $url = new moodle_url('/course/editsection.php', array(
                     'id' => $section->id,
-                    'sr' => $onsectionpage ? $section->section : 0,
+                    'sr' => $sectionreturn,
                     'delete' => 1));
                 $controls['delete'] = array(
                     'url' => $url,
                     'icon' => 'i/delete',
                     'name' => $strdelete,
                     'pixattr' => array('class' => '', 'alt' => $strdelete),
-                    'attr' => array('class' => 'icon delete', 'title' => $strdelete));
+                    'attr' => array('class' => 'icon editing_delete', 'title' => $strdelete));
             }
         }
 
@@ -490,7 +489,7 @@ abstract class format_section_renderer_base extends plugin_renderer_base {
                 continue;
             }
 
-            if ($thismod->uservisible) {
+            if ($thismod->is_visible_on_course_page()) {
                 if (isset($sectionmods[$thismod->modname])) {
                     $sectionmods[$thismod->modname]['name'] = $thismod->modplural;
                     $sectionmods[$thismod->modname]['count']++;

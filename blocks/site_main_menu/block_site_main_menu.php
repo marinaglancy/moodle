@@ -59,7 +59,7 @@ class block_site_main_menu extends block_list {
             if (!empty($modinfo->sections[0])) {
                 foreach($modinfo->sections[0] as $cmid) {
                     $cm = $modinfo->cms[$cmid];
-                    if (!$cm->uservisible) {
+                    if (!$cm->is_visible_on_course_page()) {
                         continue;
                     }
 
@@ -107,7 +107,7 @@ class block_site_main_menu extends block_list {
             $options = array('overflowdiv'=>true);
             foreach ($modinfo->sections[0] as $modnumber) {
                 $mod = $modinfo->cms[$modnumber];
-                if (!$mod->uservisible) {
+                if (!$mod->is_visible_on_course_page()) {
                     continue;
                 }
                 if (!$ismoving) {

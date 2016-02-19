@@ -156,6 +156,9 @@
     display: inline-block;
 }
 
+.section .activity .stealth {
+    opacity: 0.5;
+}
 .section .activity .moodle-actionmenu .menu > li > *,
 .section .activity .moodle-actionmenu .menubar > li > * {
     display: inline-block;

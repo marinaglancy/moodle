@@ -60,6 +60,7 @@ function add_moduleinfo($moduleinfo, $course, $mform = null) {
     $newcm->module           = $moduleinfo->module;
     $newcm->instance         = 0; // Not known yet, will be updated later (this is similar to restore code).
     $newcm->visible          = $moduleinfo->visible;
+    $newcm->visibleoncoursepage = $moduleinfo->visibleoncoursepage;
     $newcm->visibleold       = $moduleinfo->visible;
     if (isset($moduleinfo->cmidnumber)) {
         $newcm->idnumber         = $moduleinfo->cmidnumber;
@@ -570,7 +571,7 @@ function update_moduleinfo($cm, $moduleinfo, $course, $mform = null) {
 
     // Make sure visibility is set correctly (in particular in calendar).
     if (has_capability('moodle/course:activityvisibility', $modcontext)) {
-        set_coursemodule_visible($moduleinfo->coursemodule, $moduleinfo->visible);
+        set_coursemodule_visible($moduleinfo->coursemodule, $moduleinfo->visible, $moduleinfo->visibleoncoursepage);
     }
 
     if (isset($moduleinfo->cmidnumber)) { // Label.

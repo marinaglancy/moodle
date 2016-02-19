@@ -699,6 +699,8 @@ class course_modinfo {
  * @property-read int $added Time that this course-module was added (unix time) - from course_modules table
  * @property-read int $visible Visible setting (0 or 1; if this is 0, students cannot see/access the activity) - from
  *    course_modules table
+ * @property-read int $visibleoncoursepage Visible on course page setting - from course_modules table, adjusted to
+ *    whether course format allows this module to have the "stealth" mode
  * @property-read int $visibleold Old visible setting (if the entire section is hidden, the previous value for
  *    visible is stored in this field) - from course_modules table
  * @property-read int $groupmode Group mode (one of the constants NOGROUPS, SEPARATEGROUPS, or VISIBLEGROUPS) - from
@@ -840,6 +842,12 @@ class cm_info implements IteratorAggregate {
      * @var int
      */
     private $visible;
+
+    /**
+     * Visible on course page setting - from course_modules table
+     * @var int
+     */
+    private $visibleoncoursepage;
 
     /**
      * Old visible setting (if the entire section is hidden, the previous value for
@@ -1007,6 +1015,12 @@ class cm_info implements IteratorAggregate {
     private $uservisible;
 
     /**
+     * True if this course-module is visible to the CURRENT user on the course page
+     * @var bool
+     */
+    private $uservisibleoncoursepage;
+
+    /**
      * @var moodle_url
      */
     private $url;
@@ -1096,6 +1110,7 @@ class cm_info implements IteratorAggregate {
         'showdescription' => false,
         'uservisible' => 'get_user_visible',
         'visible' => false,
+        'visibleoncoursepage' => false,
         'visibleold' => false,
     );
 
@@ -1397,7 +1412,8 @@ class cm_info implements IteratorAggregate {
      */
     public function get_grouping_label($textclasses = '') {
         $groupinglabel = '';
-        if (!empty($this->groupingid) && has_capability('moodle/course:managegroups', context_course::instance($this->course))) {
+        if ($this->effectivegroupmode != NOGROUPS && !empty($this->groupingid) &&
+                has_capability('moodle/course:managegroups', context_course::instance($this->course))) {
             $groupings = groups_get_all_groupings($this->course);
             $groupinglabel = html_writer::tag('span', '('.format_string($groupings[$this->groupingid]->name).')',
                 array('class' => 'groupinglabel '.$textclasses));
@@ -1434,6 +1450,15 @@ class cm_info implements IteratorAggregate {
      */
     public function get_modinfo() {
         return $this->modinfo;
+    }
+
+    /**
+     * Returns the section this module belongs to
+     *
+     * @return section_info
+     */
+    public function get_section_info() {
+        return $this->modinfo->get_section_info($this->sectionnum);
     }
 
     /**
@@ -1518,7 +1543,7 @@ class cm_info implements IteratorAggregate {
 
         // Standard fields from table course_modules.
         static $cmfields = array('id', 'course', 'module', 'instance', 'section', 'idnumber', 'added',
-            'score', 'indent', 'visible', 'visibleold', 'groupmode', 'groupingid',
+            'score', 'indent', 'visible', 'visibleoncoursepage', 'visibleold', 'groupmode', 'groupingid',
             'completion', 'completiongradeitemnumber', 'completionview', 'completionexpected',
             'showdescription', 'availability');
         foreach ($cmfields as $key) {
@@ -1694,6 +1719,7 @@ class cm_info implements IteratorAggregate {
         $this->idnumber         = isset($mod->idnumber) ? $mod->idnumber : '';
         $this->name             = $mod->name;
         $this->visible          = $mod->visible;
+        $this->visibleoncoursepage = $mod->visibleoncoursepage;
         $this->sectionnum       = $mod->section; // Note weirdness with name here
         $this->groupmode        = isset($mod->groupmode) ? $mod->groupmode : 0;
         $this->groupingid       = isset($mod->groupingid) ? $mod->groupingid : 0;
@@ -1832,6 +1858,31 @@ class cm_info implements IteratorAggregate {
     }
 
     /**
+     * Returns whether this module is visible to the current user on course page
+     *
+     * @return bool
+     */
+    public function is_visible_on_course_page() {
+        $this->obtain_dynamic_data();
+        return $this->uservisibleoncoursepage;
+    }
+
+    /**
+     * Wether this module is available but hidden from course page
+     *
+     * "Stealth" modules are the ones that are not shown on course page but available by following url.
+     * They are normally also displayed in grade reports and other reports.
+     * Module will be stealth either if visibleoncoursepage=0 or it is a visible modle inside the hidden
+     * section.
+     *
+     * @return bool
+     */
+    public function is_stealth() {
+        return !$this->visibleoncoursepage ||
+            ($this->visible && ($section = $this->get_section_info()) && !$section->visible);
+    }
+
+    /**
      * Getter method for property $available, ensures that dynamic data is retrieved
      * @return bool
      */
@@ -1894,6 +1945,11 @@ class cm_info implements IteratorAggregate {
             // Ensure activity is completely hidden from the user.
             $this->availableinfo = '';
         }
+
+        $this->uservisibleoncoursepage = $this->uservisible &&
+            ($this->visibleoncoursepage ||
+                has_capability('moodle/course:manageactivities', $this->get_context(), $userid) ||
+                has_capability('moodle/course:activityvisibility', $this->get_context(), $userid));
     }
 
     /**

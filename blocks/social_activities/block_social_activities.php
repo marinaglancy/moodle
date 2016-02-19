@@ -62,7 +62,7 @@ class block_social_activities extends block_list {
                 $options = array('overflowdiv'=>true);
                 foreach($modinfo->sections[0] as $cmid) {
                     $cm = $modinfo->cms[$cmid];
-                    if (!$cm->uservisible) {
+                    if (!$cm->is_visible_on_course_page()) {
                         continue;
                     }
 
@@ -102,7 +102,7 @@ class block_social_activities extends block_list {
             $options = array('overflowdiv'=>true);
             foreach ($modinfo->sections[0] as $modnumber) {
                 $mod = $modinfo->cms[$modnumber];
-                if (!$mod->uservisible) {
+                if (!$mod->is_visible_on_course_page()) {
                     continue;
                 }
                 if (!$ismoving) {

@@ -40,6 +40,8 @@ require_once "$CFG->libdir/form/select.php";
  */
 class MoodleQuickForm_modvisible extends MoodleQuickForm_select{
 
+    protected $hasstealth = false;
+
     /**
      * Class constructor
      *
@@ -49,8 +51,7 @@ class MoodleQuickForm_modvisible extends MoodleQuickForm_select{
      * @param array $options ignored
      */
     public function __construct($elementName=null, $elementLabel=null, $attributes=null, $options=null) {
-        // TODO MDL-52313 Replace with the call to parent::__construct().
-        HTML_QuickForm_element::__construct($elementName, $elementLabel, $attributes, null);
+        parent::__construct($elementName, $elementLabel, null, $attributes);
         $this->_type = 'modvisible';
     }
 
@@ -78,11 +79,50 @@ class MoodleQuickForm_modvisible extends MoodleQuickForm_select{
             case 'createElement':
                 $choices=array();
                 $choices[1] = get_string('show');
+                if (!empty($arg[2]['allowstealth'])) {
+                    $this->hasstealth = true;
+                    $choices[-1] = get_string('hideoncoursepage');
+                }
                 $choices[0] = get_string('hide');
+                unset($arg[2]['allowstealth']);
                 $this->load($choices);
                 break;
+            case 'updateValue':
+                $name = $this->getName();
+                $value = $this->_findValue($caller->_constantValues);
+                if (!empty($value) && isset($caller->_constantValues[$name.'oncoursepage']) && !$caller->_constantValues[$name.'oncoursepage']) {
+                    $value = -1;
+                }
+                if (null === $value) {
+                    if ($caller->isSubmitted()) {
+                        break;
+                    }
+                    $value = $this->_findValue($caller->_defaultValues);
+                    if (!empty($value) && isset($caller->_defaultValues[$name.'oncoursepage']) && !$caller->_defaultValues[$name.'oncoursepage']) {
+                        $value = -1;
+                    }
+                }
+                if ($value !== null) {
+                    $this->setSelected($value);
+                }
+                return true;
 
         }
         return parent::onQuickFormEvent($event, $arg, $caller);
+    }
+
+   /**
+    * As usual, to get the group's value we access its elements and call
+    * their exportValue() methods
+    */
+    function exportValue(&$submitValues, $assoc = false) {
+        if ($assoc) {
+            $value = parent::exportValue($submitValues, $assoc);
+            $key = key($value);
+            $v = $value[$key];
+            return array($key => $v==0 ? 0 : 1, $key.'oncoursepage' => $v<0 ? 0 : 1);
+        } else {
+            return parent::exportValue($submitValues, $assoc);
+        }
     }
 }

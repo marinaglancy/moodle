@@ -141,6 +141,7 @@ if (!empty($add)) {
     $data->coursemodule       = $cm->id;
     $data->section            = $cw->section;  // The section number itself - relative!!! (section column in course_sections)
     $data->visible            = $cm->visible; //??  $cw->visible ? $cm->visible : 0; // section hiding overrides
+    $data->visibleoncoursepage = $cm->visibleoncoursepage;
     $data->cmidnumber         = $cm->idnumber;          // The cm IDnumber
     $data->groupmode          = groups_get_activity_groupmode($cm); // locked later if forced
     $data->groupingid         = $cm->groupingid;

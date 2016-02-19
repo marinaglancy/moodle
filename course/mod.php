@@ -33,6 +33,7 @@ $indent        = optional_param('indent', 0, PARAM_INT);
 $update        = optional_param('update', 0, PARAM_INT);
 $duplicate     = optional_param('duplicate', 0, PARAM_INT);
 $hide          = optional_param('hide', 0, PARAM_INT);
+$hideoncoursepage = optional_param('hideoncoursepage', 0, PARAM_INT);
 $show          = optional_param('show', 0, PARAM_INT);
 $copy          = optional_param('copy', 0, PARAM_INT);
 $moveto        = optional_param('moveto', 0, PARAM_INT);
@@ -203,6 +204,19 @@ if ((!empty($movetosection) or !empty($moveto)) and confirm_sesskey()) {
     require_capability('moodle/course:activityvisibility', $modcontext);
 
     set_coursemodule_visible($cm->id, 0);
+    \core\event\course_module_updated::create_from_cm($cm, $modcontext)->trigger();
+    redirect(course_get_url($course, $cm->sectionnum, array('sr' => $sectionreturn)));
+
+} else if (!empty($hideoncoursepage) and confirm_sesskey()) {
+    $cm     = get_coursemodule_from_id('', $hideoncoursepage, 0, true, MUST_EXIST);
+    $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
+
+    require_login($course, false, $cm);
+    $coursecontext = context_course::instance($course->id);
+    $modcontext = context_module::instance($cm->id);
+    require_capability('moodle/course:activityvisibility', $modcontext);
+
+    set_coursemodule_visible($cm->id, 1, 0);
     \core\event\course_module_updated::create_from_cm($cm, $modcontext)->trigger();
     redirect(course_get_url($course, $cm->sectionnum, array('sr' => $sectionreturn)));
 

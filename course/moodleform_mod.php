@@ -21,7 +21,7 @@ abstract class moodleform_mod extends moodleform {
      * Section of course that module instance will be put in or is in.
      * This is always the section number itself (column 'section' from 'course_sections' table).
      *
-     * @var mixed
+     * @var int
      */
     protected $_section;
     /**
@@ -462,7 +462,9 @@ abstract class moodleform_mod extends moodleform {
 
         $mform->addElement('header', 'modstandardelshdr', get_string('modstandardels', 'form'));
 
-        $mform->addElement('modvisible', 'visible', get_string('visible'));
+        $mform->addElement('modvisible', 'visible', get_string('visible'),
+                array('allowstealth' => $this->courseformat->allow_stealth_module_visibility($this->_cm,
+                    get_fast_modinfo($COURSE)->get_section_info($this->_section))));
         if (!empty($this->_cm)) {
             $context = context_module::instance($this->_cm->id);
             if (!has_capability('moodle/course:activityvisibility', $context)) {

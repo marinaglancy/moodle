@@ -1100,6 +1100,18 @@ abstract class format_base {
             return $this->inplace_editable_render_section_name($section, ($itemtype === 'sectionname'), true);
         }
     }
+
+    /**
+     * Returns whether this course format allows the activity to
+     * have "triple visibility state" - visible always, visible except on course page, hidden.
+     *
+     * @param stdClass|cm_info $cm (may be null if we are displaying a form for adding a module)
+     * @param stdClass|section_info $section section where this module is located or will be added to
+     * @return bool
+     */
+    public function allow_stealth_module_visibility($cm, $section) {
+        return false;
+    }
 }
 
 /**
@@ -1160,5 +1172,17 @@ class format_site extends format_base {
             );
         }
         return $courseformatoptions;
+    }
+
+    /**
+     * Returns whether this course format allows the activity to
+     * have "triple visibility state" - visible always, visible except on course page, hidden.
+     *
+     * @param stdClass|cm_info $cm (may be null if we are displaying a form for adding a module)
+     * @param stdClass|section_info $section section where this module is located or will be added to
+     * @return bool
+     */
+    public function allow_stealth_module_visibility($cm, $section) {
+        return true;
     }
 }
