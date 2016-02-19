@@ -223,6 +223,22 @@ M.core_user.init_user_selector = function (Y, name, hash, extrafields, lastsearc
             if (this.get_option('preserveselected') && selectedusers) {
                 this.output_group(this.insert_search_into_str(M.util.get_string('previouslyselectedusers', 'moodle'), this.lastsearch), selectedusers, true, false);
             }
+
+            // Update global userSummaries with new group information
+            for (var i = 0; i < data.results[0].users.length; i++ ) {
+                var currUser = data.results[0].users[i];
+                if (currUser.grouptext != '') {
+                    var groups = currUser.grouptext.split(',');
+                    var groupHTML = '<ul>';
+                    for(var j = 0; j<groups.length; j++) {
+                        groupHTML = groupHTML.concat('<li>',groups[j],'</li>');
+                    }
+
+                    groupHTML = groupHTML.concat('</ul>');
+                    userSummaries[currUser.id] = groupHTML;
+                }
+            }
+
             this.handle_selection_change();
         },
         /**

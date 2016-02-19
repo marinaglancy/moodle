@@ -68,6 +68,7 @@ foreach ($results as $groupname => $users) {
         $output = new stdClass;
         $output->id = $user->id;
         $output->name = $userselector->output_user($user);
+        $output->grouptext = $user->grouptext;
         if (!empty($user->disabled)) {
             $output->disabled = true;
         }

@@ -835,7 +835,7 @@ class group_non_members_selector extends groups_user_selector_base {
                 } else {
                     $usergrouplist = '';
                 }
-                $usersummaries[] = $usergrouplist;
+                $usersummaries[$userid] = $usergrouplist;
             }
         }
 
@@ -874,12 +874,14 @@ class group_non_members_selector extends groups_user_selector_base {
                           (SELECT count(igm.groupid)
                              FROM {groups_members} igm
                              JOIN {groups} ig ON igm.groupid = ig.id
-                            WHERE igm.userid = u.id AND ig.courseid = :courseid) AS numgroups";
+                            WHERE igm.userid = u.id AND ig.courseid = :courseid) AS numgroups, g.name as grouptext, g.*";
         $sql = "   FROM {user} u
                    JOIN ($enrolsql) e ON e.id = u.id
               LEFT JOIN {role_assignments} ra ON (ra.userid = u.id AND ra.contextid $relatedctxsql AND ra.roleid $roleids)
               LEFT JOIN {role} r ON r.id = ra.roleid
               LEFT JOIN {groups_members} gm ON (gm.userid = u.id AND gm.groupid = :groupid)
+              LEFT JOIN {groups_members} gm2 ON u.id = gm2.userid
+              LEFT JOIN {groups} g ON gm2.groupid = g.id
                   WHERE u.deleted = 0
                         AND gm.id IS NULL
                         AND $searchcondition";

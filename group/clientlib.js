@@ -230,7 +230,7 @@ function updateUserSummary() {
     for (i = 0; i < length; i++) {
         if (selectEl.options[i].selected) {
             selectCnt++;
-            selectIdx = i;
+            selectIdx = selectEl.options[i].value;
         }
     }
 

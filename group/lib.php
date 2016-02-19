@@ -953,10 +953,13 @@ function groups_calculate_role_people($rs, $context) {
             unset($userdata->rolename);
             unset($userdata->userid);
             $userdata->id = $rec->userid;
+            $userdata->grouptext = htmlentities($userdata->grouptext);
 
             // Make an array to hold the list of roles for this user
             $userdata->roles = array();
             $users[$rec->userid] = $userdata;
+        } elseif($rec->grouptext != '') {
+            $users[$rec->userid]->grouptext .= ', ' . htmlentities($rec->grouptext);
         }
         // If user has a role...
         if (!is_null($rec->roleid)) {
