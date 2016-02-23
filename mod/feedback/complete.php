@@ -36,7 +36,6 @@ $gopage = optional_param('gopage', -1, PARAM_INT);
 $lastpage = optional_param('lastpage', false, PARAM_INT);
 $startitempos = optional_param('startitempos', 0, PARAM_INT);
 $lastitempos = optional_param('lastitempos', 0, PARAM_INT);
-$anonymous_response = optional_param('anonymous_response', 0, PARAM_INT); //arb
 
 $highlightrequired = false;
 
@@ -144,7 +143,9 @@ if (!$feedback_complete_cap) {
 
 // Mark activity viewed for completion-tracking
 $completion = new completion_info($course);
-$completion->set_module_viewed($cm);
+if (isloggedin() && !isguestuser()) {
+    $completion->set_module_viewed($cm);
+}
 
 /// Print the page header
 $strfeedbacks = get_string("modulenameplural", "feedback");
@@ -211,7 +212,12 @@ if ($feedback_can_submit) {
         // Check if all required items have a value.
         if (feedback_check_values($startitempos, $lastitempos)) {
             $userid = $USER->id; //arb
-            if ($completedid = feedback_save_values($USER->id, true)) {
+            if (isloggedin() && !isguestuser()) {
+                $completedid = feedback_save_values($USER->id, true);
+            } else {
+                $completedid = feedback_save_guest_values(sesskey());
+            }
+            if ($completedid) {
                 if (!$gonextpage AND !$gopreviouspage) {
                     $preservevalues = false;// It can be stored.
                 }
@@ -264,17 +270,19 @@ if ($feedback_can_submit) {
                 } else {
                     feedback_send_email_anonym($cm, $feedback, $course, $userid);
                 }
-                //tracking the submit
-                $tracking = new stdClass();
-                $tracking->userid = $USER->id;
-                $tracking->feedback = $feedback->id;
-                $tracking->completed = $new_completed_id;
-                $DB->insert_record('feedback_tracking', $tracking);
+                if (isloggedin() && !isguestuser()) {
+                    //tracking the submit
+                    $tracking = new stdClass();
+                    $tracking->userid = $USER->id;
+                    $tracking->feedback = $feedback->id;
+                    $tracking->completed = $new_completed_id;
+                    $DB->insert_record('feedback_tracking', $tracking);
+                }
                 unset($SESSION->feedback->is_started);
 
                 // Update completion state
                 $completion = new completion_info($course);
-                if ($completion->is_enabled($cm) && $feedback->completionsubmit) {
+                if (isloggedin() && !isguestuser() && $completion->is_enabled($cm) && $feedback->completionsubmit) {
                     $completion->update_state($cm, COMPLETION_COMPLETE);
                 }
 
@@ -331,7 +339,12 @@ if ($feedback_can_submit) {
             }
         }
     } else {
-        $feedbackcompletedtmp = feedback_get_current_completed($feedback->id, true, $courseid);
+        if (isloggedin() && !isguestuser()) {
+            $guestid = false;
+        } else {
+            $guestid = sesskey();
+        }
+        $feedbackcompletedtmp = feedback_get_current_completed($feedback->id, true, $courseid, $guestid);
     }
 
     /// Print the main part of the page
@@ -348,8 +361,13 @@ if ($feedback_can_submit) {
             ( has_capability('mod/feedback:viewanalysepage', $context)) AND
             !( has_capability('mod/feedback:viewreports', $context)) ) {
 
-        $params = array('userid' => $USER->id, 'feedback' => $feedback->id);
-        if ($multiple_count = $DB->count_records('feedback_tracking', $params)) {
+        if (!isloggedin() || isguestuser()) {
+            $showanalysis = true;
+        } else {
+            $params = array('userid' => $USER->id, 'feedback' => $feedback->id);
+            $showanalysis = $DB->count_records('feedback_tracking', $params) ? true : false;
+        }
+        if ($showanalysis) {
             echo $OUTPUT->box_start('mdl-align');
             echo '<a href="'.$analysisurl->out().'">';
             echo get_string('completed_feedbacks', 'feedback').'</a>';

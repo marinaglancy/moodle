@@ -296,12 +296,11 @@ if ($feedback_complete_cap) {
     if ($feedback_can_submit) {
         //if the user is not known so we cannot save the values temporarly
         if (!isloggedin() or isguestuser()) {
-            $completefile = 'complete_guest.php';
             $guestid = sesskey();
         } else {
-            $completefile = 'complete.php';
             $guestid = false;
         }
+        $completefile = 'complete.php';
         $url_params = array('id'=>$id, 'courseid'=>$courseid, 'gopage'=>0);
         $completeurl = new moodle_url('/mod/feedback/'.$completefile, $url_params);
 
