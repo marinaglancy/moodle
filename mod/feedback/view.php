@@ -62,16 +62,6 @@ if ($course->id == SITEID AND !$courseid) {
     $courseid = SITEID;
 }
 
-//check whether the feedback is mapped to the given courseid
-if ($course->id == SITEID AND !has_capability('mod/feedback:edititems', $context)) {
-    if ($DB->get_records('feedback_sitecourse_map', array('feedbackid'=>$feedback->id))) {
-        $params = array('feedbackid'=>$feedback->id, 'courseid'=>$courseid);
-        if (!$DB->get_record('feedback_sitecourse_map', $params)) {
-            print_error('invalidcoursemodule');
-        }
-    }
-}
-
 if ($feedback->anonymous != FEEDBACK_ANONYMOUS_YES) {
     if ($course->id == SITEID) {
         require_login($course, true);
@@ -83,6 +73,32 @@ if ($feedback->anonymous != FEEDBACK_ANONYMOUS_YES) {
         require_course_login($course, true);
     } else {
         require_course_login($course, true, $cm);
+    }
+}
+
+if ($course->id == SITEID) {
+    $PAGE->set_context($context);
+    $PAGE->set_cm($cm, $course);
+    $PAGE->set_pagelayout('incourse');
+}
+$PAGE->set_url('/mod/feedback/view.php', array('id'=>$cm->id, 'do_show'=>'view'));
+$PAGE->set_title($feedback->name);
+$PAGE->set_heading($course->fullname);
+
+// Check whether the feedback is mapped to the given courseid.
+if ($course->id == SITEID AND !has_capability('mod/feedback:edititems', $context)) {
+    if ($DB->get_records('feedback_sitecourse_map', array('feedbackid' => $feedback->id))) {
+        $params = array('feedbackid' => $feedback->id, 'courseid' => $courseid);
+        if (!$DB->get_record('feedback_sitecourse_map', $params)) {
+            if ($courseid == SITEID) {
+                echo $OUTPUT->header();
+                echo $OUTPUT->notification(get_string('cannotaccess', 'mod_feedback'));
+                echo $OUTPUT->footer();
+                exit;
+            } else {
+                print_error('invalidcoursemodule');
+            }
+        }
     }
 }
 
@@ -113,15 +129,6 @@ $event->trigger();
 /// Print the page header
 $strfeedbacks = get_string("modulenameplural", "feedback");
 $strfeedback  = get_string("modulename", "feedback");
-
-if ($course->id == SITEID) {
-    $PAGE->set_context($context);
-    $PAGE->set_cm($cm, $course); // set's up global $COURSE
-    $PAGE->set_pagelayout('incourse');
-}
-$PAGE->set_url('/mod/feedback/view.php', array('id'=>$cm->id, 'do_show'=>'view'));
-$PAGE->set_title($feedback->name);
-$PAGE->set_heading($course->fullname);
 echo $OUTPUT->header();
 
 //ishidden check.

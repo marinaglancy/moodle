@@ -93,6 +93,10 @@ $feedback_complete_cap = false;
 
 if (has_capability('mod/feedback:complete', $context)) {
     $feedback_complete_cap = true;
+} else if (!empty($CFG->feedback_allowfullanonymous)
+        AND $feedback->course == SITEID
+        AND $feedback->anonymous == FEEDBACK_ANONYMOUS_YES) {
+    $feedback_complete_cap = true;
 }
 
 //check whether the feedback is located and! started from the mainsite
