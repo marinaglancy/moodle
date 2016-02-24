@@ -36,39 +36,23 @@ if ($courseid !== false) {
 }
 $PAGE->set_url($url);
 
-if (! $cm = get_coursemodule_from_id('feedback', $id)) {
-    print_error('invalidcoursemodule');
-}
+list($course, $cm) = get_course_and_cm_from_cmid($id, 'feedback');
+require_course_login($course, true, $cm);
 
-if (! $course = $DB->get_record("course", array("id"=>$cm->course))) {
-    print_error('coursemisconf');
-}
-
-if (! $feedback = $DB->get_record("feedback", array("id"=>$cm->instance))) {
-    print_error('invalidcoursemodule');
-}
+$feedback = $PAGE->activityrecord;
 
 $context = context_module::instance($cm->id);
 
-if ($course->id == SITEID) {
-    require_login($course, true);
-} else {
-    require_login($course, true, $cm);
-}
-
 //check whether the given courseid exists
-if ($courseid AND $courseid != SITEID) {
-    if ($course2 = $DB->get_record('course', array('id'=>$courseid))) {
-        require_course_login($course2); //this overwrites the object $course :-(
-        $course = $DB->get_record("course", array("id"=>$cm->course)); // the workaround
-    } else {
-        print_error('invalidcourseid');
-    }
+if ($courseid && $courseid != SITEID && $course->id == SITEID &&
+        $DB->record_exists('feedback_sitecourse_map', array('feedbackid' => $feedback->id, 'courseid' => $courseid))) {
+    $course2 = get_course($courseid);
+    require_course_login($course2); // Validates access to the course and sets it as $COURSE.
+} else {
+    $courseid = false;
 }
 
-if ( !( ((intval($feedback->publish_stats) == 1) AND
-        has_capability('mod/feedback:viewanalysepage', $context)) OR
-        has_capability('mod/feedback:viewreports', $context))) {
+if (!feedback_can_view_analysis($feedback, $context, $courseid)) {
     print_error('error');
 }
 
