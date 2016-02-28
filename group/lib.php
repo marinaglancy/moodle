@@ -1142,36 +1142,35 @@ function group_get_groupings_list_for_overview($courseid) {
         'formattedname' => get_string('notingrouping', 'group'),
         'formatteddescription' => '',
     );
+
+    $groupings[OVERVIEW_GROUPING_NO_GROUP] = (object)array(
+        'id' => OVERVIEW_GROUPING_NO_GROUP,
+        'courseid' => $courseid,
+        'formattedname' => get_string('notingrouplist', 'group'),
+        'formatteddescription' => ''
+    );
     return $groupings;
 }
 
 function group_get_groups_members_for_overview($courseid, $groupings, $groupid = 0, $groupingid = 0) {
     global $DB;
-    $members = array();
-    foreach ($groupings as $grouping) {
-        $members[$grouping->id] = array();
-    }
-    // Groups not in a grouping.
-    $members[OVERVIEW_GROUPING_GROUP_NO_GROUPING] = array();
+    $members = array_fill_keys(array_keys($groupings), array());
     $context = context_course::instance($courseid);
 
     $params = array('courseid' => $courseid);
+    $groupwhere = '';
     if ($groupid) {
-        $groupwhere = "AND g.id = :groupid";
+        $groupwhere .= " AND g.id = :groupid";
         $params['groupid'] = $groupid;
-    } else {
-        $groupwhere = "";
     }
 
     if ($groupingid) {
         if ($groupingid < 0) { // No grouping filter.
-            $groupingwhere = "AND gg.groupingid IS NULL";
+            $groupwhere .= " AND gg.groupingid IS NULL";
         } else {
-            $groupingwhere = "AND gg.groupingid = :groupingid";
+            $groupwhere .= " AND gg.groupingid = :groupingid";
             $params['groupingid'] = $groupingid;
         }
-    } else {
-        $groupingwhere = "";
     }
 
     list($sort, $sortparams) = users_order_by_sql('u');
@@ -1182,7 +1181,7 @@ function group_get_groups_members_for_overview($courseid, $groupings, $groupid =
                    LEFT JOIN {groupings_groups} gg ON g.id = gg.groupid
                    LEFT JOIN {groups_members} gm ON g.id = gm.groupid
                    LEFT JOIN {user} u ON gm.userid = u.id
-             WHERE g.courseid = :courseid $groupwhere $groupingwhere
+             WHERE g.courseid = :courseid $groupwhere
           ORDER BY g.name, $sort";
 
     $rs = $DB->get_recordset_sql($sql, array_merge($params, $sortparams));
@@ -1225,6 +1224,14 @@ function group_get_groups_members_for_overview($courseid, $groupings, $groupid =
         if ($nogroupusers) {
             $members[OVERVIEW_GROUPING_NO_GROUP][OVERVIEW_NO_GROUP] = $nogroupusers;
         }
+    }
+
+    if (empty($members[OVERVIEW_GROUPING_GROUP_NO_GROUPING])) {
+        unset($members[OVERVIEW_GROUPING_GROUP_NO_GROUPING]);
+    }
+
+    if (empty($members[OVERVIEW_GROUPING_NO_GROUP])) {
+        unset($members[OVERVIEW_GROUPING_NO_GROUP]);
     }
 
     return $members;

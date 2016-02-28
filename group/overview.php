@@ -91,35 +91,25 @@ echo $OUTPUT->heading(format_string($course->shortname, true, array('context' =>
 echo $strfiltergroups;
 
 $options = array();
-$options[0] = get_string('all');
 foreach ($groupings as $grouping) {
     $options[$grouping->id] = $grouping->formattedname;
 }
+unset($options[OVERVIEW_GROUPING_NO_GROUP]);
 $popupurl = new moodle_url($rooturl.'&group='.$groupid);
-$select = new single_select($popupurl, 'grouping', $options, $groupingid, array());
+$select = new single_select($popupurl, 'grouping', $options, $groupingid, array(0 => get_string('all')));
 $select->label = $strgrouping;
 $select->formid = 'selectgrouping';
 echo $OUTPUT->render($select);
 
 $options = array();
-$options[0] = get_string('all');
 foreach ($groups as $group) {
     $options[$group->id] = $group->formattedname;
 }
 $popupurl = new moodle_url($rooturl.'&grouping='.$groupingid);
-$select = new single_select($popupurl, 'group', $options, $groupid, array());
+$select = new single_select($popupurl, 'group', $options, $groupid, array(0 => get_string('all')));
 $select->label = $strgroup;
 $select->formid = 'selectgroup';
 echo $OUTPUT->render($select);
-
-if (isset($members[OVERVIEW_GROUPING_NO_GROUP])) {
-    $groupings[OVERVIEW_GROUPING_NO_GROUP] = (object)array(
-        'id' => OVERVIEW_GROUPING_NO_GROUP,
-        'courseid' => $courseid,
-        'formattedname' => get_string('notingrouplist', 'group'),
-        'formatteddescription' => ''
-    );
-}
 
 foreach ($members as $gpgid=>$groupdata) {
     if ($groupingid and $groupingid != $gpgid) {
