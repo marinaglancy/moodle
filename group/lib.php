@@ -1096,3 +1096,135 @@ function groups_sync_with_enrolment($enrolname, $courseid = 0, $gidfield = 'cust
 
     return $affectedusers;
 }
+
+function group_get_groups_list_for_overview($courseid) {
+    global $DB;
+    $groups = $DB->get_records('groups', array('courseid' => $courseid), 'name');
+
+    $context = context_course::instance($courseid);
+    foreach ($groups as $gpid => $group) {
+        $groups[$gpid]->formattedname = format_string($group->name, true,
+                array('context' => $context));
+        $groups[$gpid]->picture = print_group_picture($group, $courseid, false, true, false);
+        $description = file_rewrite_pluginfile_urls($group->description, 'pluginfile.php', $context->id, 'group', 'description', $gpid);
+        $options = array('noclean' => true, 'overflowdiv' => true);
+        $groups[$gpid]->formatteddescription = trim(format_text($description, $groups[$gpid]->descriptionformat, $options));
+    }
+    core_collator::asort_objects_by_property($groups, 'formattedname');
+
+    $groups[OVERVIEW_NO_GROUP] = (object)array(
+        'id' => OVERVIEW_NO_GROUP,
+        'courseid' => $courseid,
+        'idnumber' => '',
+        'formattedname' => get_string('nogroup', 'group'),
+        'formatteddescription' => '',
+        'picture' => '',
+    );
+    return $groups;
+}
+
+function group_get_groupings_list_for_overview($courseid) {
+    global $DB;
+    $groupings = $DB->get_records('groupings', array('courseid' => $courseid), 'name');
+    $context = context_course::instance($courseid);
+    foreach ($groupings as $gpgid => $grouping) {
+        $groupings[$gpgid]->formattedname = format_string($grouping->name, true, array('context' => $context));
+        $description = file_rewrite_pluginfile_urls($grouping->description, 'pluginfile.php', $context->id, 'grouping', 'description', $gpgid);
+        $groupings[$gpgid]->formatteddescription = format_text($description, $grouping->descriptionformat,
+                array('overflowdiv' => true));
+    }
+
+    core_collator::asort_objects_by_property($groupings, 'formattedname');
+
+    $groupings[OVERVIEW_GROUPING_GROUP_NO_GROUPING] = (object)array(
+        'id' => OVERVIEW_GROUPING_GROUP_NO_GROUPING,
+        'formattedname' => get_string('nogrouping', 'group'),
+        'formatteddescription' => '',
+    );
+    return $groupings;
+}
+
+function group_get_groups_members_for_overview($courseid, $groupings, $groupid = 0, $groupingid = 0) {
+    global $DB;
+    $members = array();
+    foreach ($groupings as $grouping) {
+        $members[$grouping->id] = array();
+    }
+    // Groups not in a grouping.
+    $members[OVERVIEW_GROUPING_GROUP_NO_GROUPING] = array();
+    $context = context_course::instance($courseid);
+
+    $params = array('courseid' => $courseid);
+    if ($groupid) {
+        $groupwhere = "AND g.id = :groupid";
+        $params['groupid'] = $groupid;
+    } else {
+        $groupwhere = "";
+    }
+
+    if ($groupingid) {
+        if ($groupingid < 0) { // No grouping filter.
+            $groupingwhere = "AND gg.groupingid IS NULL";
+        } else {
+            $groupingwhere = "AND gg.groupingid = :groupingid";
+            $params['groupingid'] = $groupingid;
+        }
+    } else {
+        $groupingwhere = "";
+    }
+
+    list($sort, $sortparams) = users_order_by_sql('u');
+
+    $allnames = get_all_user_name_fields(true, 'u');
+    $sql = "SELECT g.id AS groupid, gg.groupingid, u.id AS userid, $allnames, u.idnumber, u.username
+              FROM {groups} g
+                   LEFT JOIN {groupings_groups} gg ON g.id = gg.groupid
+                   LEFT JOIN {groups_members} gm ON g.id = gm.groupid
+                   LEFT JOIN {user} u ON gm.userid = u.id
+             WHERE g.courseid = :courseid $groupwhere $groupingwhere
+          ORDER BY g.name, $sort";
+
+    $rs = $DB->get_recordset_sql($sql, array_merge($params, $sortparams));
+    foreach ($rs as $row) {
+        $user = new stdClass();
+        $user = username_load_fields_from_object($user, $row, null, array('id' => 'userid', 'username', 'idnumber'));
+        if (!$row->groupingid) {
+            $row->groupingid = OVERVIEW_GROUPING_GROUP_NO_GROUPING;
+        }
+        if (!array_key_exists($row->groupingid, $members)) {
+            $members[$row->groupingid] = array();
+        }
+        if (!array_key_exists($row->groupid, $members[$row->groupingid])) {
+            $members[$row->groupingid][$row->groupid] = array();
+        }
+        if (!empty($user->id)) {
+            $members[$row->groupingid][$row->groupid][] = $user;
+        }
+    }
+    $rs->close();
+
+
+    // Add users who are not in a group.
+    if ($groupid <= 0 && $groupingid <= 0) {
+        list($esql, $params) = get_enrolled_sql($context, null, 0, true);
+        $sql = "SELECT u.id, $allnames, u.idnumber, u.username
+                  FROM {user} u
+                  JOIN ($esql) e ON e.id = u.id
+             LEFT JOIN (
+                      SELECT gm.userid
+                        FROM {groups_members} gm
+                        JOIN {groups} g ON g.id = gm.groupid
+                       WHERE g.courseid = :courseid
+                       ) grouped ON grouped.userid = u.id
+                 WHERE grouped.userid IS NULL";
+        $params['courseid'] = $courseid;
+
+        $nogroupusers = $DB->get_records_sql($sql, $params);
+
+        if ($nogroupusers) {
+            $members[OVERVIEW_GROUPING_NO_GROUP][OVERVIEW_NO_GROUP] = $nogroupusers;
+        }
+    }
+
+    return $members;
+}
