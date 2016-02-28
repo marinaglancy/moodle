@@ -57,6 +57,10 @@ class groupingoverview implements \templatable {
         }
     }
 
+    public function contains_group($groupid) {
+        return array_key_exists($groupid, $this->groups);
+    }
+
     /**
      * Function to export the renderer data in a format that is suitable for a
      * mustache template. This means:
@@ -72,18 +76,11 @@ class groupingoverview implements \templatable {
             $groups[] = $group->export_for_template($output);
         }
         $context = context_course::instance($this->grouping->courseid);
-        $description = '';
-        if ($this->grouping->id > 0 && strval($this->grouping->description) !== '') {
-            $description = file_rewrite_pluginfile_urls($this->grouping->description, 'pluginfile.php',
-                    $context->id, 'grouping', 'description', $this->grouping->id);
-            $description = format_text($description, $this->grouping->descriptionformat,
-                    array('overflowdiv' => true));
-        }
         return array(
             'id' => $this->grouping->id,
             'idnumber' => $this->grouping->id, // TODO s()?
-            'name' => format_string($this->grouping->name, true, array('context' => $context)),
-            'description' => $description,
+            'name' => $this->grouping->formattedname,
+            'description' => $this->grouping->formatteddescription,
             'groups' => $groups,
             'groupscount' => count($groups)
         );

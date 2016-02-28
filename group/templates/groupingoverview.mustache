@@ -35,14 +35,17 @@
 }}
 <h3>{{{name}}}</h3>
 <div class="generalbox boxwidthnarrow boxaligncenter">{{{description}}}</div>
-<table width="90%">
+<table class="generaltable" width="90%">
+<thead>
     <tr>
-        <th width="20%">{{#str}}groupscount, group, {{groupscount}}{{/str}}</th>
-        <th width="70%">{{#str}}groupmembers, group{{/str}}</th>
-        <th width="10%">{{#str}}usercount, group{{/str}}</th>
+        <th class="header c0" width="20%">{{#str}}groupscount, group, {{groupscount}}{{/str}}</th>
+        <th class="header c1" width="70%">{{#str}}groupmembers, group{{/str}}</th>
+        <th class="header c2 lastcol" width="10%">{{#str}}usercount, group{{/str}}</th>
     </tr>
+</thead>
+<tbody>
     {{#groups}}
         {{> core_group/groupoverview }}
     {{/groups}}
-
+</tbody>
 </table>

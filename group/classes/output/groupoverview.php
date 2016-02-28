@@ -62,18 +62,6 @@ class groupoverview implements \templatable {
     public function export_for_template(renderer_base $output) {
         $context = context_course::instance($this->group->courseid);
         $description = $picture = '';
-        if ($this->group->id > 0) {
-            $name = format_string($this->group->name, true, array('context' => $context));
-            $picture = print_group_picture($this->group, $this->group->courseid, false, true, false);
-            if (strval($this->group->description) !== '') {
-                $description = file_rewrite_pluginfile_urls($this->group->description, 'pluginfile.php',
-                        $context->id, 'group', 'description', $this->group->id);
-                $description = trim(format_text($description, $this->group->descriptionformat,
-                        array('noclean' => true, 'overflowdiv' => true)));
-            }
-        } else {
-            $name = get_string('nogroup', 'group');
-        }
         $members = array();
         foreach ($this->groupmembers as $user) {
             $url = new moodle_url('/user/view.php', array('id' => $user->id, 'course' => $this->group->courseid));
@@ -82,9 +70,9 @@ class groupoverview implements \templatable {
         return array(
             'id' => $this->group->id,
             'idnumber' => isset($this->group->idnumber) ? $this->group->idnumber : '', // TODO s()?
-            'name' => $name,
-            'picture' => $picture,
-            'description' => $description,
+            'name' => $this->group->formattedname,
+            'picture' => $this->group->picture,
+            'description' => $this->group->formatteddescription,
             'members' => implode(', ', $members),
             'memberscount' => count($members),
         );

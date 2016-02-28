@@ -69,13 +69,7 @@ $strnogroup          = get_string('nogroup', 'group');
 $strnogrouping       = get_string('nogrouping', 'group');
 
 $groups = group_get_groups_list_for_overview($courseid);
-//$groupings = group_get_groupings_list_for_overview($courseid);
-$groupings = $DB->get_records('groupings', array('courseid' => $courseid), 'name');
-$groupings[OVERVIEW_GROUPING_GROUP_NO_GROUPING] = (object)array(
-    'id' => OVERVIEW_GROUPING_GROUP_NO_GROUPING,
-    'courseid' => $courseid,
-    'name' => get_string('nogrouping', 'group'),
-);
+$groupings = group_get_groupings_list_for_overview($courseid);
 $members = group_get_groups_members_for_overview($courseid, $groupings, $groupid, $groupingid);
 
 navigation_node::override_active_url(new moodle_url('/group/index.php', array('id'=>$courseid)));
@@ -99,7 +93,7 @@ echo $strfiltergroups;
 $options = array();
 $options[0] = get_string('all');
 foreach ($groupings as $grouping) {
-    $options[$grouping->id] = format_string($grouping->name);
+    $options[$grouping->id] = $grouping->formattedname;
 }
 $popupurl = new moodle_url($rooturl.'&group='.$groupid);
 $select = new single_select($popupurl, 'grouping', $options, $groupingid, array());
@@ -125,7 +119,9 @@ foreach ($members as $gpgid=>$groupdata) {
         }
     }
     $tmpl = new \core_group\output\groupingoverview($groupings[$gpgid], $groups, $members);
-    echo $tmpl->render($OUTPUT);
+    if ($groupid <= 0 || $tmpl->contains_group($groupid)) {
+        echo $tmpl->render($OUTPUT);
+    }
 }
 
 /*

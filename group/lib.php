@@ -1138,6 +1138,7 @@ function group_get_groupings_list_for_overview($courseid) {
 
     $groupings[OVERVIEW_GROUPING_GROUP_NO_GROUPING] = (object)array(
         'id' => OVERVIEW_GROUPING_GROUP_NO_GROUPING,
+        'courseid' => $courseid,
         'formattedname' => get_string('nogrouping', 'group'),
         'formatteddescription' => '',
     );
