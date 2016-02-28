@@ -1152,26 +1152,12 @@ function group_get_groupings_list_for_overview($courseid) {
     return $groupings;
 }
 
-function group_get_groups_members_for_overview($courseid, $groupings, $groupid = 0, $groupingid = 0) {
+function group_get_groups_members_for_overview($courseid) {
     global $DB;
-    $members = array_fill_keys(array_keys($groupings), array());
+    $members = array();
     $context = context_course::instance($courseid);
 
     $params = array('courseid' => $courseid);
-    $groupwhere = '';
-    if ($groupid) {
-        $groupwhere .= " AND g.id = :groupid";
-        $params['groupid'] = $groupid;
-    }
-
-    if ($groupingid) {
-        if ($groupingid < 0) { // No grouping filter.
-            $groupwhere .= " AND gg.groupingid IS NULL";
-        } else {
-            $groupwhere .= " AND gg.groupingid = :groupingid";
-            $params['groupingid'] = $groupingid;
-        }
-    }
 
     list($sort, $sortparams) = users_order_by_sql('u');
 
@@ -1181,7 +1167,7 @@ function group_get_groups_members_for_overview($courseid, $groupings, $groupid =
                    LEFT JOIN {groupings_groups} gg ON g.id = gg.groupid
                    LEFT JOIN {groups_members} gm ON g.id = gm.groupid
                    LEFT JOIN {user} u ON gm.userid = u.id
-             WHERE g.courseid = :courseid $groupwhere
+             WHERE g.courseid = :courseid
           ORDER BY g.name, $sort";
 
     $rs = $DB->get_recordset_sql($sql, array_merge($params, $sortparams));
@@ -1203,35 +1189,24 @@ function group_get_groups_members_for_overview($courseid, $groupings, $groupid =
     }
     $rs->close();
 
-
     // Add users who are not in a group.
-    if ($groupid <= 0 && $groupingid <= 0) {
-        list($esql, $params) = get_enrolled_sql($context, null, 0, true);
-        $sql = "SELECT u.id, $allnames, u.idnumber, u.username
-                  FROM {user} u
-                  JOIN ($esql) e ON e.id = u.id
-             LEFT JOIN (
-                      SELECT gm.userid
-                        FROM {groups_members} gm
-                        JOIN {groups} g ON g.id = gm.groupid
-                       WHERE g.courseid = :courseid
-                       ) grouped ON grouped.userid = u.id
-                 WHERE grouped.userid IS NULL";
-        $params['courseid'] = $courseid;
+    list($esql, $params) = get_enrolled_sql($context, null, 0, true);
+    $sql = "SELECT u.id, $allnames, u.idnumber, u.username
+              FROM {user} u
+              JOIN ($esql) e ON e.id = u.id
+         LEFT JOIN (
+                  SELECT gm.userid
+                    FROM {groups_members} gm
+                    JOIN {groups} g ON g.id = gm.groupid
+                   WHERE g.courseid = :courseid
+                   ) grouped ON grouped.userid = u.id
+             WHERE grouped.userid IS NULL
+             ORDER BY $sort";
+    $params['courseid'] = $courseid;
 
-        $nogroupusers = $DB->get_records_sql($sql, $params);
-
-        if ($nogroupusers) {
-            $members[OVERVIEW_GROUPING_NO_GROUP][OVERVIEW_NO_GROUP] = $nogroupusers;
-        }
-    }
-
-    if (empty($members[OVERVIEW_GROUPING_GROUP_NO_GROUPING])) {
-        unset($members[OVERVIEW_GROUPING_GROUP_NO_GROUPING]);
-    }
-
-    if (empty($members[OVERVIEW_GROUPING_NO_GROUP])) {
-        unset($members[OVERVIEW_GROUPING_NO_GROUP]);
+    $nogroupusers = $DB->get_records_sql($sql, array_merge($params, $sortparams));
+    if ($nogroupusers) {
+        $members[OVERVIEW_GROUPING_NO_GROUP] = array(OVERVIEW_NO_GROUP => $nogroupusers);
     }
 
     return $members;

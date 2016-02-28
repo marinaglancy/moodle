@@ -79,6 +79,6 @@ class groupoverview implements \templatable {
     }
 
     public function render(renderer_base $output) {
-        return $output->render_from_template('core_group/groupverview', $this->export_for_template($output));
+        return $output->render_from_template('core_group/groupoverview', $this->export_for_template($output));
     }
 }

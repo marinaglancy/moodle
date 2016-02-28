@@ -70,7 +70,7 @@ $strnogrouping       = get_string('nogrouping', 'group');
 
 $groups = group_get_groups_list_for_overview($courseid);
 $groupings = group_get_groupings_list_for_overview($courseid);
-$members = group_get_groups_members_for_overview($courseid, $groupings, $groupid, $groupingid);
+$members = group_get_groups_members_for_overview($courseid, $groupings);
 
 navigation_node::override_active_url(new moodle_url('/group/index.php', array('id'=>$courseid)));
 $PAGE->navbar->add(get_string('overview', 'group'));
@@ -111,17 +111,8 @@ $select->label = $strgroup;
 $select->formid = 'selectgroup';
 echo $OUTPUT->render($select);
 
-foreach ($members as $gpgid=>$groupdata) {
-    if ($groupingid and $groupingid != $gpgid) {
-        if ($groupingid > 0 || $gpgid > 0) { // Still show 'not in group' when 'no grouping' selected.
-            continue; // Do not show.
-        }
-    }
-    $tmpl = new \core_group\output\groupingoverview($groupings[$gpgid], $groups, $members);
-    if ($groupid <= 0 || $tmpl->contains_group($groupid)) {
-        echo $tmpl->render($OUTPUT);
-    }
-}
+$tmpl = new \core_group\output\groupsoverview($courseid, $groups, $groupings, $members);
+echo $tmpl->render($OUTPUT);
 
 /*
 

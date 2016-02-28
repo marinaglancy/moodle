@@ -92,6 +92,7 @@ $string['groupinfopeople'] = 'Info about selected people';
 $string['grouping'] = 'Grouping';
 $string['groupingaddedsuccesfully'] = 'Grouping {$a} added successfully';
 $string['grouping_help'] = 'A grouping is a collection of groups within a course. If a grouping is selected, students assigned to groups within the grouping will be able to work together.';
+$string['groupingempty'] = 'This grouping does not have any groups';
 $string['groupingsection'] = 'Grouping access';
 $string['groupingsection_help'] = 'A grouping is a collection of groups within a course. If a grouping is selected here, only students assigned to groups within this grouping will have access to the section.';
 $string['groupingdescription'] = 'Grouping description';
