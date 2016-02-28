@@ -112,6 +112,15 @@ $select->label = $strgroup;
 $select->formid = 'selectgroup';
 echo $OUTPUT->render($select);
 
+if (isset($members[OVERVIEW_GROUPING_NO_GROUP])) {
+    $groupings[OVERVIEW_GROUPING_NO_GROUP] = (object)array(
+        'id' => OVERVIEW_GROUPING_NO_GROUP,
+        'courseid' => $courseid,
+        'formattedname' => get_string('notingrouplist', 'group'),
+        'formatteddescription' => ''
+    );
+}
+
 foreach ($members as $gpgid=>$groupdata) {
     if ($groupingid and $groupingid != $gpgid) {
         if ($groupingid > 0 || $gpgid > 0) { // Still show 'not in group' when 'no grouping' selected.

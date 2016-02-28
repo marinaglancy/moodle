@@ -118,7 +118,7 @@ Feature: Group overview
     And I should not see "Student 7"
 
     # No grouping and Group All filter
-    And I select "No grouping" from the "Grouping" singleselect
+    And I select "[Not in a grouping]" from the "Grouping" singleselect
     And I select "All" from the "group" singleselect
     # Following groups should exist in groupings.
     And the group overview should include groups "Group 4" in grouping "[Not in a grouping]"
