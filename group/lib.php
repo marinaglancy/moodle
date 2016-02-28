@@ -1097,61 +1097,6 @@ function groups_sync_with_enrolment($enrolname, $courseid = 0, $gidfield = 'cust
     return $affectedusers;
 }
 
-function group_get_groups_list_for_overview($courseid) {
-    global $DB;
-    $groups = $DB->get_records('groups', array('courseid' => $courseid), 'name');
-
-    $context = context_course::instance($courseid);
-    foreach ($groups as $gpid => $group) {
-        $groups[$gpid]->formattedname = format_string($group->name, true,
-                array('context' => $context));
-        $groups[$gpid]->picture = print_group_picture($group, $courseid, false, true, false);
-        $description = file_rewrite_pluginfile_urls($group->description, 'pluginfile.php', $context->id, 'group', 'description', $gpid);
-        $options = array('noclean' => true, 'overflowdiv' => true);
-        $groups[$gpid]->formatteddescription = trim(format_text($description, $groups[$gpid]->descriptionformat, $options));
-    }
-    core_collator::asort_objects_by_property($groups, 'formattedname');
-
-    $groups[OVERVIEW_NO_GROUP] = (object)array(
-        'id' => OVERVIEW_NO_GROUP,
-        'courseid' => $courseid,
-        'idnumber' => '',
-        'formattedname' => get_string('nogroup', 'group'),
-        'formatteddescription' => '',
-        'picture' => '',
-    );
-    return $groups;
-}
-
-function group_get_groupings_list_for_overview($courseid) {
-    global $DB;
-    $groupings = $DB->get_records('groupings', array('courseid' => $courseid), 'name');
-    $context = context_course::instance($courseid);
-    foreach ($groupings as $gpgid => $grouping) {
-        $groupings[$gpgid]->formattedname = format_string($grouping->name, true, array('context' => $context));
-        $description = file_rewrite_pluginfile_urls($grouping->description, 'pluginfile.php', $context->id, 'grouping', 'description', $gpgid);
-        $groupings[$gpgid]->formatteddescription = format_text($description, $grouping->descriptionformat,
-                array('overflowdiv' => true));
-    }
-
-    core_collator::asort_objects_by_property($groupings, 'formattedname');
-
-    $groupings[OVERVIEW_GROUPING_GROUP_NO_GROUPING] = (object)array(
-        'id' => OVERVIEW_GROUPING_GROUP_NO_GROUPING,
-        'courseid' => $courseid,
-        'formattedname' => get_string('notingrouping', 'group'),
-        'formatteddescription' => '',
-    );
-
-    $groupings[OVERVIEW_GROUPING_NO_GROUP] = (object)array(
-        'id' => OVERVIEW_GROUPING_NO_GROUP,
-        'courseid' => $courseid,
-        'formattedname' => get_string('notingrouplist', 'group'),
-        'formatteddescription' => ''
-    );
-    return $groupings;
-}
-
 function group_get_groups_members_for_overview($courseid) {
     global $DB;
     $members = array();
@@ -1189,7 +1134,14 @@ function group_get_groups_members_for_overview($courseid) {
     }
     $rs->close();
 
-    // Add users who are not in a group.
+    return $members;
+}
+
+function groups_get_users_without_groups($courseid) {
+    global $DB;
+    $context = context_course::instance($courseid);
+    $allnames = get_all_user_name_fields(true, 'u');
+    list($sort, $sortparams) = users_order_by_sql('u');
     list($esql, $params) = get_enrolled_sql($context, null, 0, true);
     $sql = "SELECT u.id, $allnames, u.idnumber, u.username
               FROM {user} u
@@ -1204,10 +1156,5 @@ function group_get_groups_members_for_overview($courseid) {
              ORDER BY $sort";
     $params['courseid'] = $courseid;
 
-    $nogroupusers = $DB->get_records_sql($sql, array_merge($params, $sortparams));
-    if ($nogroupusers) {
-        $members[OVERVIEW_GROUPING_NO_GROUP] = array(OVERVIEW_NO_GROUP => $nogroupusers);
-    }
-
-    return $members;
+    return $DB->get_records_sql($sql, array_merge($params, $sortparams));
 }

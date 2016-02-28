@@ -59,23 +59,11 @@ require_capability('moodle/course:managegroups', $context);
 
 $strgroups           = get_string('groups');
 $stroverview         = get_string('overview', 'group');
-$strgrouping         = get_string('grouping', 'group');
-$strgroup            = get_string('group', 'group');
-$strnotingrouping    = get_string('notingrouping', 'group');
-$strfiltergroups     = get_string('filtergroups', 'group');
-$strdescription      = get_string('description');
-$strnotingroup       = get_string('notingrouplist', 'group');
-$strnogroup          = get_string('nogroup', 'group');
-$strnogrouping       = get_string('nogrouping', 'group');
-
-$groups = group_get_groups_list_for_overview($courseid);
-$groupings = group_get_groupings_list_for_overview($courseid);
-$members = group_get_groups_members_for_overview($courseid, $groupings);
 
 navigation_node::override_active_url(new moodle_url('/group/index.php', array('id'=>$courseid)));
 $PAGE->navbar->add(get_string('overview', 'group'));
 
-/// Print header
+// Print header
 $PAGE->set_title($strgroups);
 $PAGE->set_heading($course->fullname);
 $PAGE->set_pagelayout('standard');
@@ -88,91 +76,7 @@ require('tabs.php');
 /// Print overview
 echo $OUTPUT->heading(format_string($course->shortname, true, array('context' => $context)) .' '.$stroverview, 3);
 
-echo $strfiltergroups;
-
-$options = array();
-foreach ($groupings as $grouping) {
-    $options[$grouping->id] = $grouping->formattedname;
-}
-unset($options[OVERVIEW_GROUPING_NO_GROUP]);
-$popupurl = new moodle_url($rooturl.'&group='.$groupid);
-$select = new single_select($popupurl, 'grouping', $options, $groupingid, array(0 => get_string('all')));
-$select->label = $strgrouping;
-$select->formid = 'selectgrouping';
-echo $OUTPUT->render($select);
-
-$options = array();
-foreach ($groups as $group) {
-    $options[$group->id] = $group->formattedname;
-}
-$popupurl = new moodle_url($rooturl.'&grouping='.$groupingid);
-$select = new single_select($popupurl, 'group', $options, $groupid, array(0 => get_string('all')));
-$select->label = $strgroup;
-$select->formid = 'selectgroup';
-echo $OUTPUT->render($select);
-
-$tmpl = new \core_group\output\groupsoverview($courseid, $groups, $groupings, $members);
+$tmpl = new \core_group\output\groupsoverview($courseid);
 echo $tmpl->render($OUTPUT);
 
-/*
-
-/// Print table
-$printed = false;
-$hoverevents = array();
-foreach ($members as $gpgid=>$groupdata) {
-    if ($groupingid and $groupingid != $gpgid) {
-        if ($groupingid > 0 || $gpgid > 0) { // Still show 'not in group' when 'no grouping' selected.
-            continue; // Do not show.
-        }
-    }
-    $table = new html_table();
-    $table->head  = array(get_string('groupscount', 'group', count($groupdata)), get_string('groupmembers', 'group'), get_string('usercount', 'group'));
-    $table->size  = array('20%', '70%', '10%');
-    $table->align = array('left', 'left', 'center');
-    $table->width = '90%';
-    $table->data  = array();
-    foreach ($groupdata as $gpid=>$users) {
-        if ($groupid and $groupid != $gpid) {
-            continue;
-        }
-        $line = array();
-        $name = $groups[$gpid]->picture . $groups[$gpid]->formattedname;
-        $jsdescription = $groups[$gpid]->formatteddescription;
-        if (empty($jsdescription)) {
-            $line[] = $name;
-        } else {
-            $line[] = html_writer::tag('span', $name, array('class' => 'group_hoverdescription', 'data-groupid' => $gpid));
-            $hoverevents[$gpid] = $jsdescription;
-        }
-        $fullnames = array();
-        foreach ($users as $user) {
-            $fullnames[] = '<a href="'.$CFG->wwwroot.'/user/view.php?id='.$user->id.'&amp;course='.$course->id.'">'.fullname($user, true).'</a>';
-        }
-        $line[] = implode(', ', $fullnames);
-        $line[] = count($users);
-        $table->data[] = $line;
-    }
-    if ($groupid and empty($table->data)) {
-        continue;
-    }
-    if ($gpgid < 0) {
-        // Display 'not in group' for grouping id == OVERVIEW_GROUPING_NO_GROUP.
-        if ($gpgid == OVERVIEW_GROUPING_NO_GROUP) {
-            echo $OUTPUT->heading($strnotingroup, 3);
-        } else {
-            echo $OUTPUT->heading($strnotingrouping, 3);
-        }
-    } else {
-        echo $OUTPUT->heading($groupings[$gpgid]->formattedname, 3);
-        echo $OUTPUT->box($groupings[$gpgid]->formatteddescription, 'generalbox boxwidthnarrow boxaligncenter');
-    }
-    echo html_writer::table($table);
-    $printed = true;
-}
-
-if (count($hoverevents)>0) {
-    $PAGE->requires->string_for_js('description', 'moodle');
-    $PAGE->requires->js_init_call('M.core_group.init_hover_events', array($hoverevents));
-}
-*/
 echo $OUTPUT->footer();

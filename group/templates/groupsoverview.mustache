@@ -33,7 +33,38 @@
     }
 
 }}
+
+<div class="groupsfilter">
+
+{{#str}} filtergroups, group {{/str}}
+
+<span class="singleselect">
+<label for="groupingselect">{{#str}} grouping, group {{/str}}</label>
+<select id="groupingselect">
+    <option value="0">{{#str}} all {{/str}}</option>
+    {{#groupings}}
+    <option value="{{id}}">{{{name}}}</option>
+    {{/groupings}}
+</select>
+</span>
+
+<span class="singleselect">
+<label for="groupselect">{{#str}} group, group {{/str}}</label>
+<select id="groupselect" name="group">
+    <option value="0">{{#str}} all {{/str}}</option>
+    {{#groups}}
+    <option value="{{id}}">{{{name}}}</option>
+    {{/groups}}
+    {{#notingroupsmemberscount}}
+    <option value="{{id}}">{{#str}} nogroup, group {{/str}}</option>
+    {{/notingroupsmemberscount}}
+</select>
+</span>
+
+</div>
+
 {{#groupings}}
+<div class="overviewgrouping" data-groupingid="{{id}}">
     <h3>{{{name}}}</h3>
     <div class="generalbox">{{{description}}}</div>
     {{#groupscount}}
@@ -47,7 +78,7 @@
     </thead>
     <tbody>
         {{#groups}}
-            <tr>
+            <tr class="overviewgroup" data-groupid="{{id}}">
                 <td class="cell c0" width="20%">{{{picture}}}{{{name}}}</td>
                 <td class="cell c1" width="70%">{{{members}}}</td>
                 <td class="cell c2 lastcol" width="10%">{{{memberscount}}}</td>
@@ -59,8 +90,10 @@
     {{^groupscount}}
     <p class="groupingempty">{{#str}} groupingempty, group {{/str}}</p>
     {{/groupscount}}
+</div>
 {{/groupings}}
-{{#notingroupsmemberscount}}
+{{#notingroupsuserscount}}
+<div class="overviewgrouping notingroupsusers" data-groupingid="-2">
     <h3>{{#str}}notingrouplist, group{{/str}}</h3>
     <div class="generalbox boxwidthnarrow boxaligncenter">{{{description}}}</div>
     <table class="generaltable" width="90%">
@@ -72,9 +105,37 @@
         </tr>
     </thead>
     <tbody>
-        <td class="cell c0" width="20%"></td>
-        <td class="cell c1" width="70%">{{{notingroupsmembers}}}</td>
-        <td class="cell c2 lastcol" width="10%">{{{notingroupsmemberscount}}}</td>
+        <tr class="overviewgroup" data-groupid="-1">
+            <td class="cell c0" width="20%">No group</td>
+            <td class="cell c1" width="70%">{{{notingroupsusers}}}</td>
+            <td class="cell c2 lastcol" width="10%">{{{notingroupsuserscount}}}</td>
+        </tr>
     </tbody>
     </table>
-{{/notingroupsmemberscount}}
+</div>
+{{/notingroupsuserscount}}
+
+
+{{#js}}
+require(['jquery', 'core/log'], function($, l) {
+    $('.groupsfilter select').on('change click', function(e) {
+        var groupingid = parseInt($('#groupingselect').val());
+        var groupid = parseInt($('#groupselect').val());
+        $('.overviewgrouping').removeClass('hidden');
+        if (groupingid !== 0) {
+            $('.overviewgrouping:not([data-groupingid='+groupingid+'])').addClass('hidden');
+        }
+        $('.overviewgroup').removeClass('hidden');
+        if (groupid !== 0) {
+            $('.overviewgroup:not([data-groupid='+groupid+'])').addClass('hidden');
+            $('.overviewgrouping').each(function() {
+l.debug('checking ');
+l.debug($(this));
+                if ($(this).find('.overviewgroup[data-groupid='+groupid+']').length == 0) {
+                    $(this).addClass('hidden');
+                }
+            });
+        }
+    });
+});
+{{/js}}

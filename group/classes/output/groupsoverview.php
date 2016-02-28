@@ -30,6 +30,7 @@ use renderer_base;
 use context_course;
 use moodle_url;
 use html_writer;
+use core_collator;
 
 /**
  *
@@ -43,15 +44,69 @@ class groupsoverview implements \templatable {
     protected $allgroups;
     protected $allgroupings;
     protected $allmembers;
+    protected $notingroupsmembers;
 
     /**
      * Constructor
      */
-    public function __construct($courseid, $allgroups, $allgroupings, $allmembers) {
+    public function __construct($courseid) {
+        global $DB;
         $this->courseid = $courseid;
-        $this->allgroups = $allgroups;
-        $this->allgroupings = $allgroupings;
-        $this->allmembers = $allmembers;
+        $this->allgroups = $DB->get_records('groups', array('courseid' => $courseid), 'name');
+        $this->allgroupings = $DB->get_records('groupings', array('courseid' => $courseid), 'name');
+        $this->allmembers = group_get_groups_members_for_overview($courseid);
+        $this->notingroupsmembers = groups_get_users_without_groups($courseid);
+        $context = context_course::instance($courseid);
+
+        foreach ($this->allgroups as $gpid => $group) {
+            $this->allgroups[$gpid]->formattedname = format_string($group->name, true,
+                    array('context' => $context));
+            $this->allgroups[$gpid]->picture = print_group_picture($group, $courseid, false, true, false);
+            $description = file_rewrite_pluginfile_urls($group->description,
+                    'pluginfile.php', $context->id, 'group', 'description', $gpid);
+            $options = array('noclean' => true, 'overflowdiv' => true);
+            $this->allgroups[$gpid]->formatteddescription = format_text($description,
+                    $group->descriptionformat, $options);
+        }
+        core_collator::asort_objects_by_property($this->allgroups, 'formattedname');
+
+        foreach ($this->allgroupings as $gpgid => $grouping) {
+            $this->allgroupings[$gpgid]->formattedname = format_string($grouping->name, true,
+                    array('context' => $context));
+            $description = file_rewrite_pluginfile_urls($grouping->description,
+                    'pluginfile.php', $context->id, 'grouping', 'description', $gpgid);
+            $this->allgroupings[$gpgid]->formatteddescription = format_text($description, $grouping->descriptionformat,
+                    array('overflowdiv' => true));
+        }
+        core_collator::asort_objects_by_property($this->allgroupings, 'formattedname', core_collator::SORT_NATURAL);
+
+        if (!empty($this->allmembers[OVERVIEW_GROUPING_GROUP_NO_GROUPING])) {
+            $this->allgroupings[OVERVIEW_GROUPING_GROUP_NO_GROUPING] = (object)array(
+                'id' => OVERVIEW_GROUPING_GROUP_NO_GROUPING,
+                'idnumber' => '',
+                'formattedname' => get_string('notingrouping', 'group'),
+                'formatteddescription' => '',
+            );
+        }
+
+        if (!empty($this->notingroupsmembers)) {
+            $this->allgroups[OVERVIEW_NO_GROUP] = (object)array(
+                'id' => OVERVIEW_NO_GROUP,
+                'idnumber' => '',
+                'formattedname' => get_string('nogroup', 'group'),
+                'formatteddescription' => '',
+                'picture' => '',
+            );
+        }
+    }
+
+    protected function get_members($userslist) {
+        $members = array();
+        foreach ($userslist as $user) {
+            $url = new moodle_url('/user/view.php', array('id' => $user->id, 'course' => $this->courseid));
+            $members[] = html_writer::link($url, fullname($user, true)); // TODO capabilities!
+        }
+        return $members;
     }
 
     /**
@@ -65,7 +120,6 @@ class groupsoverview implements \templatable {
      */
     public function export_for_template(renderer_base $output) {
         $groupings = array();
-        $notingroupsmembers = array();
         foreach ($this->allgroupings as $grouping) {
             if ($grouping->id < 0 && empty($this->allmembers[$grouping->id])) {
                 continue;
@@ -73,15 +127,7 @@ class groupsoverview implements \templatable {
             $groups = array();
             if (!empty($this->allmembers[$grouping->id])) {
                 foreach ($this->allmembers[$grouping->id] as $gid => $groupmembers) {
-                    $members = array();
-                    foreach ($groupmembers as $user) {
-                        $url = new moodle_url('/user/view.php', array('id' => $user->id, 'course' => $this->courseid));
-                        $members[] = html_writer::link($url, fullname($user, true)); // TODO capabilities!
-                    }
-                    if ($grouping->id == OVERVIEW_GROUPING_NO_GROUP) {
-                        $notingroupsmembers = $members; // TODO bit stupid
-                        continue 2;
-                    }
+                    $members = $this->get_members($groupmembers);
                     $group = $this->allgroups[$gid];
                     $groups[] = array(
                         'id' => $group->id,
@@ -92,20 +138,31 @@ class groupsoverview implements \templatable {
                         'memberscount' => count($members)
                     );
                 }
+                \core_collator::asort_array_of_arrays_by_key($groups, 'name', core_collator::SORT_NATURAL);
             }
             $groupings[] = array(
                 'id' => $grouping->id,
-                'idnumber' => '',//$grouping->idnumber,
+                'idnumber' => $grouping->idnumber,
                 'name' => $grouping->formattedname, // TODO
                 'description' => $grouping->formatteddescription, // TODO
-                'groups' => $groups,
+                'groups' => array_values($groups),
                 'groupscount' => count($groups)
             );
         }
+        $groups = array();
+        foreach ($this->allgroups as $group) {
+            $groups[] = array(
+                'id' => $group->id,
+                'name' => $group->formattedname,
+            );
+        }
+        \core_collator::asort_array_of_arrays_by_key($groups, 'name', core_collator::SORT_NATURAL);
+        $members = $this->get_members($this->notingroupsmembers);
         return array(
-            'groupings' => $groupings,
-            'notingroupsmembers' => join(', ', $notingroupsmembers),
-            'notingroupsmemberscount' => count($notingroupsmembers)
+            'groups' => array_values($groups),
+            'groupings' => array_values($groupings),
+            'notingroupsusers' => join(', ', $members),
+            'notingroupsuserscount' => count($members)
         );
     }
 

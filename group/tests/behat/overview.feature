@@ -55,6 +55,7 @@ Feature: Group overview
       | GG2      | G2    |
       | GG2      | G3    |
 
+  @javascript
   Scenario: Filter the overview in various different ways
     Given I log in as "teacher1"
     And I follow "Course 1"
@@ -85,8 +86,8 @@ Feature: Group overview
     # Following groups should exist in groupings.
     And the group overview should include groups "Group 1, Group 2" in grouping "Grouping 1"
     # Following groups should not exits
-    And "Group 3" "table_row" should not exist
-    And "No group" "table_row" should not exist
+    And "Group 3" "table_row" should not be visible
+    And "No group" "table_row" should not be visible
     # Following members should exit in group.
     And "Student 0" "text" should exist in the "Group 1" "table_row"
     And "Student 1" "text" should exist in the "Group 1" "table_row"
@@ -104,12 +105,12 @@ Feature: Group overview
     # Following groups should exist in groupings.
     And the group overview should include groups "Group 2, Group 3" in grouping "Grouping 2"
     # Following groups should not exits
-    And "Group 1" "table_row" should not exist
-    And "No group" "table_row" should not exist
+    And "Group 1" "table_row" should not be visible
+    And "No group" "table_row" should not be visible
     # Following members should exit in group.
-    And "Student 2" "text" should exist in the "Group 2" "table_row"
-    And "Student 3" "text" should exist in the "Group 3" "table_row"
-    And "Student 4" "text" should exist in the "Group 3" "table_row"
+    And "Student 2" "text" in the "Group 2" "table_row" should be visible
+    And "Student 3" "text" in the "Group 3" "table_row" should be visible
+    And "Student 4" "text" in the "Group 3" "table_row" should be visible
     # Following members should not exit in group.
     And I should not see "Student 0"
     And I should not see "Student 1"
@@ -124,9 +125,9 @@ Feature: Group overview
     And the group overview should include groups "Group 4" in grouping "[Not in a grouping]"
     And the group overview should include groups "No group" in grouping "[Not in a group]"
     # Following groups should not exits
-    And "Group 1" "table_row" should not exist
-    And "Group 2" "table_row" should not exist
-    And "Group 3" "table_row" should not exist
+    And "Group 1" "table_row" should not be visible
+    And "Group 2" "table_row" should not be visible
+    And "Group 3" "table_row" should not be visible
     # Following members should exit in group.
     And "Student 5" "text" should exist in the "Group 4" "table_row"
     And "Student 6" "text" should exist in the "No group" "table_row"
@@ -149,8 +150,8 @@ Feature: Group overview
     And "Group 4" "table_row" should not exist
     And "No group" "table_row" should not exist
     # Following members should exit in group.
-    And "Student 0" "text" should exist in the "Group 1" "table_row"
-    And "Student 1" "text" should exist in the "Group 1" "table_row"
+    And "Student 0" "text" in the "Group 1" "table_row" should be visible
+    And "Student 1" "text" in the "Group 1" "table_row" should be visible
     # Following members should not exit in group.
     And I should not see "Student 2"
     And I should not see "Student 3"
