@@ -754,4 +754,31 @@ class core_coursecatlib_testcase extends advanced_testcase {
         }
         return $draftid;
     }
+
+    /**
+     * Test hook \core\hook\pre_course_category_delete
+     */
+    public function test_hook_pre_course_category_delete() {
+        global $CFG;
+        require_once($CFG->dirroot.'/lib/tests/fixtures/hook_fixtures.php');
+        $this->resetAfterTest();
+        $callbacks = array(
+            array(
+                'hookname'    => '\core\hook\pre_course_category_delete',
+                'callback'    => '\core_tests\hook\unittest_callback::generic_callback',
+                'includefile' => 'lib/tests/fixtures/hook_fixtures.php',
+            ),
+        );
+        \core\hook\manager::phpunit_replace_callbacks($callbacks);
+        \core_tests\hook\unittest_callback::reset();
+
+        $coursecat = $this->getDataGenerator()->create_category();
+        coursecat::get($coursecat->id)->delete_full(false);
+
+        $hook = \core_tests\hook\unittest_callback::$hook[0];
+        $this->assertInstanceOf('\core\hook\pre_course_category_delete', $hook);
+        $this->assertEquals($coursecat->id, $hook->get_coursecat_id());
+        $this->assertInstanceOf('coursecat', $hook->get_coursecat());
+        $this->assertEquals($coursecat->name, $hook->get_coursecat()->name);
+    }
 }

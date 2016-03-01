@@ -2041,6 +2041,9 @@ function blocks_name_allowed_in_format($name, $pageformat) {
 function blocks_delete_instance($instance, $nolongerused = false, $skipblockstables = false) {
     global $DB;
 
+    // Notify interested plugins that the block instance is about to be deleted.
+    \core\hook\pre_block_instance_delete::create($instance)->execute();
+
     if ($block = block_instance($instance->blockname, $instance)) {
         $block->instance_delete();
     }

@@ -1652,6 +1652,9 @@ function course_delete_module($cmid) {
             "Cannot delete this module as the function {$modulename}_delete_instance is missing in mod/$modulename/lib.php.");
     }
 
+    // Notify interested plugins that the course module is about to be deleted.
+    \core\hook\pre_course_module_delete::create($cm)->execute();
+
     // Delete activity context questions and question categories.
     question_delete_activity($cm);
 

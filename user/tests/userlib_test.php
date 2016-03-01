@@ -488,4 +488,30 @@ class core_userliblib_testcase extends advanced_testcase {
 
         $CFG->coursecontact = null;
     }
+
+    /**
+     * Test hook \core\hook\pre_user_delete
+     */
+    public function test_hook_pre_user_delete() {
+        global $CFG;
+        require_once($CFG->dirroot.'/lib/tests/fixtures/hook_fixtures.php');
+        $this->resetAfterTest();
+        $callbacks = array(
+            array(
+                'hookname'    => '\core\hook\pre_user_delete',
+                'callback'    => '\core_tests\hook\unittest_callback::generic_callback',
+                'includefile' => 'lib/tests/fixtures/hook_fixtures.php',
+            ),
+        );
+        \core\hook\manager::phpunit_replace_callbacks($callbacks);
+        \core_tests\hook\unittest_callback::reset();
+
+        $user = $this->getDataGenerator()->create_user();
+        user_delete_user($user);
+
+        $hook = \core_tests\hook\unittest_callback::$hook[0];
+        $this->assertInstanceOf('\core\hook\pre_user_delete', $hook);
+        $this->assertEquals($user->id, $hook->get_user_id());
+        $this->assertEquals($user->firstname, $hook->get_user()->firstname);
+    }
 }

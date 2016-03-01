@@ -1670,6 +1670,9 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
         // Make sure we won't timeout when deleting a lot of courses.
         $settimeout = core_php_time_limit::raise();
 
+        // Notify interested plugins that the category is about to be deleted.
+        \core\hook\pre_course_category_delete::create($this)->execute();
+
         $deletedcourses = array();
 
         // Get children. Note, we don't want to use cache here because it would be rebuilt too often.

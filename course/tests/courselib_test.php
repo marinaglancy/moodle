@@ -2779,4 +2779,57 @@ class core_course_courselib_testcase extends advanced_testcase {
         $this->assertNull($DB->get_field('course_modules', 'availability',
                 array('id' => $label->cmid)));
     }
+
+    /**
+     * Test hook \core\hook\pre_course_delete
+     */
+    public function test_hook_pre_course_delete() {
+        global $CFG;
+        require_once($CFG->dirroot.'/lib/tests/fixtures/hook_fixtures.php');
+        $this->resetAfterTest();
+        $callbacks = array(
+            array(
+                'hookname'    => '\core\hook\pre_course_delete',
+                'callback'    => '\core_tests\hook\unittest_callback::generic_callback',
+                'includefile' => 'lib/tests/fixtures/hook_fixtures.php',
+            ),
+        );
+        \core\hook\manager::phpunit_replace_callbacks($callbacks);
+        \core_tests\hook\unittest_callback::reset();
+
+        $course = $this->getDataGenerator()->create_course();
+        delete_course($course, false);
+
+        $hook = \core_tests\hook\unittest_callback::$hook[0];
+        $this->assertInstanceOf('\core\hook\pre_course_delete', $hook);
+        $this->assertEquals($course->id, $hook->get_course_id());
+        $this->assertEquals($course->shortname, $hook->get_course()->shortname);
+    }
+
+    /**
+     * Test hook \core\hook\pre_course_module_delete
+     */
+    public function test_hook_pre_course_module_delete() {
+        global $CFG;
+        require_once($CFG->dirroot.'/lib/tests/fixtures/hook_fixtures.php');
+        $this->resetAfterTest();
+        $callbacks = array(
+            array(
+                'hookname'    => '\core\hook\pre_course_module_delete',
+                'callback'    => '\core_tests\hook\unittest_callback::generic_callback',
+                'includefile' => 'lib/tests/fixtures/hook_fixtures.php',
+            ),
+        );
+        \core\hook\manager::phpunit_replace_callbacks($callbacks);
+        \core_tests\hook\unittest_callback::reset();
+
+        $course = $this->getDataGenerator()->create_course();
+        $instance = $this->getDataGenerator()->get_plugin_generator('mod_assign')->create_instance(array('course' => $course->id));
+        course_delete_module($instance->cmid);
+
+        $hook = \core_tests\hook\unittest_callback::$hook[0];
+        $this->assertInstanceOf('\core\hook\pre_course_module_delete', $hook);
+        $this->assertEquals($instance->cmid, $hook->get_cm_id());
+        $this->assertEquals($course->id, $hook->get_cm()->course);
+    }
 }

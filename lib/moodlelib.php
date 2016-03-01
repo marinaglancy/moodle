@@ -3928,6 +3928,9 @@ function delete_user(stdClass $user) {
         return false;
     }
 
+    // Notify interested plugins that the user is about to be deleted.
+    \core\hook\pre_user_delete::create($user)->execute();
+
     // Keep user record before updating it, as we have to pass this to user_deleted event.
     $olduser = clone $user;
 
@@ -4676,6 +4679,9 @@ function delete_course($courseorid, $showfeedback = true) {
     if ($courseid == SITEID) {
         return false;
     }
+
+    // Notify interested plugins that the course is about to be deleted.
+    \core\hook\pre_course_delete::create($course)->execute();
 
     // Make the course completely empty.
     remove_course_contents($courseid, $showfeedback);

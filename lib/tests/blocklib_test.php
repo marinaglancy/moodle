@@ -542,6 +542,45 @@ class core_blocklib_testcase extends advanced_testcase {
         context_block::instance($tokeep);   // Would throw an exception if it was deleted.
     }
 
+    /**
+     * Test hook \core\hook\pre_block_instance_delete
+     */
+    public function test_hook_pre_block_instance_delete() {
+        global $CFG;
+        require_once($CFG->dirroot.'/lib/tests/fixtures/hook_fixtures.php');
+        $this->resetAfterTest();
+        $callbacks = array(
+            array(
+                'hookname'    => '\core\hook\pre_block_instance_delete',
+                'callback'    => '\core_tests\hook\unittest_callback::generic_callback',
+                'includefile' => 'lib/tests/fixtures/hook_fixtures.php',
+            ),
+        );
+        \core\hook\manager::phpunit_replace_callbacks($callbacks);
+
+        // Create a block instance.
+        $this->purge_blocks();
+        $regionname = 'a-region';
+        $blockname = $this->get_a_known_block_type();
+        $context = context_system::instance();
+
+        list($page, $blockmanager) = $this->get_a_page_and_block_manager(array($regionname),
+            $context, 'page-type');
+
+        $blockmanager->add_block($blockname, $regionname, 0, false);
+        $blockmanager->load_blocks();
+        $blocks = $blockmanager->get_blocks_for_region($regionname);
+
+        // Delete instance and validate the hook.
+        \core_tests\hook\unittest_callback::reset();
+        blocks_delete_instances(array($blocks[0]->instance->id));
+
+        $hook = \core_tests\hook\unittest_callback::$hook[0];
+        $this->assertInstanceOf('\core\hook\pre_block_instance_delete', $hook);
+        $this->assertEquals($blocks[0]->instance->id, $hook->get_block_instance_id());
+        $this->assertEquals($blocks[0]->instance->blockname, $hook->get_block_instance()->blockname);
+    }
+
 }
 
 /**
