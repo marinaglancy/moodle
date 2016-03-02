@@ -44,6 +44,7 @@ defined('MOODLE_INTERNAL') || die();
 
 // Hooks that exist in Moodle core.
 $hooks = array(
+    '\core\hook\inplace_editable',           // Allows components/plugins to edit values in-place.
     '\core\hook\pre_block_instance_delete',  // Executed right before block instance is deleted.
     '\core\hook\pre_course_category_delete', // Executed right before course category is deleted.
     '\core\hook\pre_course_delete',          // Executed right before course is deleted.
@@ -53,6 +54,10 @@ $hooks = array(
 
 // Callbacks implemented by Moodle core.
 $callbacks = array(
-
+    array(
+        'hookname' => '\core\hook\inplace_editable',
+        'callback' => '\core_tag\output\tagname::update',
+        'component' => 'core_tag',
+    )
 );
 

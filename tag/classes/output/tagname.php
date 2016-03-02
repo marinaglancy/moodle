@@ -52,4 +52,18 @@ class tagname extends \core\output\inplace_editable {
             core_tag_tag::make_display_name($tag));
         parent::__construct('core_tag', 'tagname', $tag->id, $editable, $displayvalue, $value, $edithint, $editlabel);
     }
+
+    /**
+     * Implementaion of callback for the hook \core\hook\inplace_editable
+     *
+     * @param \core\hook\inplace_editable $hook
+     */
+    public static function update(\core\hook\inplace_editable $hook) {
+        if ($hook->get_item_type() === 'tagname') {
+            require_capability('moodle/tag:manage', context_system::instance());
+            $tag = core_tag_tag::get($hook->get_item_id(), '*', MUST_EXIST);
+            $tag->update(array('rawname' => $hook->get_value(PARAM_TAG)));
+            $hook->set_output(new static($tag));
+        }
+    }
 }

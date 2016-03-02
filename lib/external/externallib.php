@@ -377,16 +377,10 @@ class core_external extends external_api {
         // Validate and normalize parameters.
         $params = self::validate_parameters(self::update_inplace_editable_parameters(),
                       array('component' => $component, 'itemtype' => $itemtype, 'itemid' => $itemid, 'value' => $value));
-        if (!$functionname = component_callback_exists($component, 'inplace_editable')) {
-            throw new \moodle_exception('inplaceeditableerror');
-        }
-        $tmpl = component_callback($params['component'], 'inplace_editable',
-            array($params['itemtype'], $params['itemid'], $params['value']));
-        if (!$tmpl || !($tmpl instanceof \core\output\inplace_editable)) {
-            throw new \moodle_exception('inplaceeditableerror');
-        }
+        $hook = \core\hook\inplace_editable::create($params['itemtype'], $params['itemid'], $params['value'])
+            ->execute($params['component'], true);
         $PAGE->set_context(null); // To prevent warning if context was not set in the callback.
-        return $tmpl->export_for_template($PAGE->get_renderer('core'));
+        return $hook->get_output()->export_for_template($PAGE->get_renderer('core'));
     }
 
     /**
