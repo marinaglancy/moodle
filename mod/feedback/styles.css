@@ -120,3 +120,5 @@ div img.feedback_bar_image {
 .path-mod-feedback .uneditable-input {
     width: auto;
 }
+
+.path-mod-feedback #analysis-form label { display: inline; }

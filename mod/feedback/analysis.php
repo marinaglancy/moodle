@@ -60,7 +60,6 @@ if (!feedback_can_view_analysis($feedback, $context, $courseid)) {
 $strfeedbacks = get_string("modulenameplural", "feedback");
 $strfeedback  = get_string("modulename", "feedback");
 
-$PAGE->navbar->add(get_string('analysis', 'feedback'));
 $PAGE->set_heading($course->fullname);
 $PAGE->set_title($feedback->name);
 echo $OUTPUT->header();
@@ -70,9 +69,6 @@ echo $OUTPUT->heading(format_string($feedback->name));
 require('tabs.php');
 
 
-//print analysed items
-echo $OUTPUT->box_start('generalbox boxaligncenter boxwidthwide');
-
 //get the groupid
 $myurl = $CFG->wwwroot.'/mod/feedback/analysis.php?id='.$cm->id.'&do_show=analysis';
 $groupselect = groups_print_activity_menu($cm, $myurl, true);
@@ -80,8 +76,10 @@ $mygroupid = groups_get_activity_group($cm);
 
 if ( has_capability('mod/feedback:viewreports', $context) ) {
 
-    echo isset($groupselect) ? $groupselect : '';
-    echo '<div class="clearer"></div>';
+    if (!empty($groupselect)) {
+        echo $groupselect;
+        echo '<div class="clearer"></div>';
+    }
 
     //button "export to excel"
     echo $OUTPUT->container_start('form-buttons');
@@ -145,7 +143,6 @@ if ($check_anonymously) {
                                     'feedback', '', '', 3);
 }
 echo '</div>';
-echo $OUTPUT->box_end();
 
 echo $OUTPUT->footer();
 
