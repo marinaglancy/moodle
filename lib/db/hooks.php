@@ -42,6 +42,16 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+// Hooks that exist in Moodle core.
+$hooks = array(
+    '\core\hook\pre_block_instance_delete',  // Executed right before block instance is deleted.
+    '\core\hook\pre_course_category_delete', // Executed right before course category is deleted.
+    '\core\hook\pre_course_delete',          // Executed right before course is deleted.
+    '\core\hook\pre_course_module_delete',   // Executed right before course module is deleted.
+    '\core\hook\pre_user_delete',            // Executed right before user is deleted.
+);
+
+// Callbacks implemented by Moodle core.
 $callbacks = array(
 
 );

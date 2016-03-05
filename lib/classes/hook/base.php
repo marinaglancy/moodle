@@ -61,4 +61,21 @@ abstract class base {
         static::$executing = false;
         return $this;
     }
+
+    /**
+     * Returns the component (core component or full plugin name) that defines this hook.
+     */
+    public final function get_component() {
+        $classname = get_called_class();
+        $parts = explode('\\', $classname);
+        if (count($parts) > 1) {
+            return $parts[0];
+        } else {
+            $parts = explode('_', $classname);
+            if (count($parts) > 2) {
+                return $parts[0] . '_' . $parts[1];
+            }
+        }
+        return null;
+    }
 }

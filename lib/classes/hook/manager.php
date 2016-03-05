@@ -55,6 +55,9 @@ abstract class manager {
         if (during_initial_install()) {
             return $hook;
         }
+        if ($CFG->debugdeveloper) {
+            self::validate_hook($hook);
+        }
         self::init_all_callbacks();
 
         $hookname = '\\' . get_class($hook);
@@ -144,8 +147,6 @@ abstract class manager {
      * @param string $fulldir
      */
     protected static function add_component_callbacks($componentname, $fulldir) {
-        global $CFG;
-
         $file = "$fulldir/db/hooks.php";
         if (!file_exists($file)) {
             return;
@@ -213,6 +214,44 @@ abstract class manager {
         foreach (self::$allcallbacks as $classname => $callbacks) {
             \core_collator::asort_objects_by_property($callbacks, 'priority', \core_collator::SORT_NUMERIC);
             self::$allcallbacks[$classname] = array_reverse($callbacks);
+        }
+    }
+
+    /**
+     * Checks that hook classname is listed in the lib/db/hooks.php of the respective component (or core).
+     * This function is only executed in the debugging mode.
+     * @param \core\hook\base $hook
+     */
+    protected static function validate_hook(base $hook) {
+        global $CFG;
+        $hookname = get_class($hook);
+        $component = $hook->get_component();
+        if (PHPUNIT_TEST && $component === 'core_tests') {
+            // Ignore hooks defined in phpunit fixtures.
+            return;
+        }
+        list($type, $plugin) = \core_component::normalize_component($component);
+        if ($type === 'core') {
+            $file = $CFG->dirroot . '/lib/db/hooks.php';
+        } else {
+            $dir = \core_component::get_plugin_directory($type, $plugin);
+            $file = $dir.'/lib/db/hooks.php';
+            if (!$dir) {
+                debugging("Could not determine component that defines hook [$component] \\" . $hookname
+                        . ", make sure that class name starts with a full frankenstyle name of plugin"
+                        . " or is located in an appropriate namespace.",
+                        DEBUG_DEVELOPER);
+                return;
+            }
+        }
+        $hooks = null;
+        if (file_exists($file)) {
+            include($file);
+        }
+        if (is_array($hooks) && !in_array($hookname, $hooks) && !in_array('\\' . $hookname, $hooks)) {
+            debugging('Component ' . $component . ' must list \\' . $hookname .
+                    ' in the $hooks array in lib/db/hooks.php',
+                    DEBUG_DEVELOPER);
         }
     }
 
