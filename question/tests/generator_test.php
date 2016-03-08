@@ -33,7 +33,7 @@ defined('MOODLE_INTERNAL') || die();
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class core_question_generator_testcase extends advanced_testcase {
-    public function test_create() {
+    public function test_create_question_category() {
         global $DB;
 
         $this->resetAfterTest();
@@ -48,5 +48,26 @@ class core_question_generator_testcase extends advanced_testcase {
                 'name' => 'My category', 'sortorder' => 1));
         $this->assertSame('My category', $cat->name);
         $this->assertSame(1, $cat->sortorder);
+    }
+
+    public function test_create_question() {
+        $this->resetAfterTest();
+        $generator = $this->getDataGenerator()->get_plugin_generator('core_question');
+
+        $course = $this->getDataGenerator()->create_course();
+        $context = context_course::instance($course->id);
+        $cat = $generator->create_question_category(array('contextid' => $context->id));
+
+        $question1 = $generator->create_question('shortanswer', null,
+                array('category' => $cat->id));
+        $question2 = $generator->create_question('shortanswer', null,
+                array('category' => $cat->id, 'tags' => array('Cats', 'dogs')));
+        $question3 = $generator->create_question('shortanswer', null,
+                array('category' => $cat->id, 'tags' => 'mice, Cats'));
+
+        $tags = array_values(core_tag_tag::get_item_tags_array('core_question', 'question', $question2->id));
+        $this->assertEquals(array('Cats', 'dogs'), $tags);
+        $tags = array_values(core_tag_tag::get_item_tags_array('core_question', 'question', $question3->id));
+        $this->assertEquals(array('mice', 'Cats'), $tags);
     }
 }
