@@ -71,7 +71,7 @@ class core_question_generator extends component_generator_base {
      * @param array|stdClass $overrides any fields that should be different from the base example.
      */
     public function create_question($qtype, $which = null, $overrides = null) {
-        global $CFG;
+        global $CFG, $DB;
         require_once($CFG->dirroot . '/question/engine/tests/helpers.php');
 
         $fromform = test_question_maker::get_question_form_data($qtype, $which);
@@ -82,6 +82,13 @@ class core_question_generator extends component_generator_base {
         $question->category  = $fromform->category;
         $question->qtype     = $qtype;
         $question->createdby = 0;
-        return question_bank::get_qtype($qtype)->save_question($question, $fromform);
+        $q = question_bank::get_qtype($qtype)->save_question($question, $fromform);
+        if (isset($fromform->tags)) {
+            $tags = is_array($fromform->tags) ? $fromform->tags : preg_split('/,/', $fromform->tags);
+            $contextid = $DB->get_field('question_categories', 'contextid', array('id' => $question->category));
+            $context = context::instance_by_id($contextid);
+            core_tag_tag::set_item_tags('core_question', 'question', $q->id, $context, $tags);
+        }
+        return $q;
     }
 }

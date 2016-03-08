@@ -69,6 +69,8 @@ $tagareas = array(
     array(
         'itemtype' => 'question', // Questions.
         'component' => 'core_question',
+        'callback' => 'question_get_tagged_questions',
+        'callbackfile' => '/question/editlib.php',
     ),
     array(
         'itemtype' => 'post', // Blog posts.

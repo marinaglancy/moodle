@@ -483,4 +483,106 @@ function create_new_question_button($categoryid, $params, $caption, $tooltip = '
     }
 }
 
+/**
+ * Returns questions tagged with a specified tag.
+ *
+ * This is a callback used by the tag area core_question/question to search for questions
+ * tagged with a specific tag.
+ *
+ * @param core_tag_tag $tag
+ * @param bool $exclusivemode if set to true it means that no other entities tagged with this tag
+ *             are displayed on the page and the per-page limit may be bigger
+ * @param int $fromctx context id where the link was displayed, may be used by callbacks
+ *            to display items in the same context first
+ * @param int $ctx context id where to search for records
+ * @param bool $rec search in subcontexts as well
+ * @param int $page 0-based number of page being displayed
+ * @return \core_tag\output\tagindex
+ */
+function question_get_tagged_questions($tag, $exclusivemode = false, $fromctx = 0, $ctx = 0, $rec = 1, $page = 0) {
+    global $OUTPUT, $DB;
+    $perpage = $exclusivemode ? 20 : 5;
 
+    // Build select query.
+    $ctxselect = context_helper::get_preload_record_columns_sql('ctx');
+    $query = "SELECT q.id, q.name, cctx.instanceid AS courseid, ctx.id AS contextid, $ctxselect
+                FROM {question} q
+                JOIN {question_categories} qc ON qc.id = q.category
+                JOIN {tag_instance} tt ON q.id = tt.itemid
+                JOIN {context} ctx ON ctx.id = qc.contextid
+                LEFT JOIN {context} cctx ON (ctx.contextlevel = :coursecontext AND ctx.id = cctx.id) OR
+                  (ctx.contextlevel = :modulecontext AND ctx.path = ".$DB->sql_concat('cctx.path', ":contextseparator", 'ctx.id').")
+               WHERE tt.itemtype = :itemtype AND tt.tagid = :tagid AND tt.component = :component
+                 AND q.id %ITEMFILTER% AND (cctx.id IS NULL OR cctx.instanceid %COURSEFILTER%)";
+
+    $params = array('itemtype' => 'question', 'tagid' => $tag->id, 'component' => 'core_question',
+        'modulecontext' => CONTEXT_MODULE, 'coursecontext' => CONTEXT_COURSE, 'contextseparator' => '/');
+
+    if ($ctx) {
+        $context = context::instance_by_id($ctx);
+        $query .= $rec ? ' AND (ctx.id = :contextid OR ctx.path LIKE :path)' : ' AND ctx.id = :contextid';
+        $params['contextid'] = $context->id;
+        $params['path'] = $context->path.'/%';
+    }
+
+    $query .= ' ORDER BY';
+    if ($fromctx) {
+        // In order-clause specify that questions from inside "fromctx" context should be returned first.
+        $fromcontext = context::instance_by_id($fromctx);
+        $query .= ' (CASE WHEN ctx.id = :fromcontextid OR ctx.path LIKE :frompath THEN 0 ELSE 1 END),';
+        $params['fromcontextid'] = $fromcontext->id;
+        $params['frompath'] = $fromcontext->path.'/%';
+    }
+    $query .= ' ctx.path, q.name, q.id';
+
+    $totalpages = $page + 1;
+
+    // Use core_tag_index_builder to build and filter the list of items.
+    $builder = new core_tag_index_builder('core_question', 'question', $query, $params, $page * $perpage, $perpage + 1);
+    while ($item = $builder->has_item_that_needs_access_check()) {
+        context_helper::preload_from_record($item);
+        $courseid = $item->courseid;
+        if ($item->courseid && !$builder->can_access_course($courseid)) {
+            continue;
+        }
+        $qctx = new question_edit_contexts(context::instance_by_id($item->contextid));
+        $builder->set_accessible($item, $qctx->have_one_edit_tab_cap('questions'));
+    }
+
+    $items = $builder->get_items();
+    if (count($items) > $perpage) {
+        $totalpages = $page + 2; // We don't need exact page count, just indicate that the next page exists.
+        array_pop($items);
+    }
+
+    // Build the display contents.
+    if ($items) {
+        $tagfeed = new core_tag\output\tagfeed();
+        foreach ($items as $item) {
+            context_helper::preload_from_record($item);
+            $context = context::instance_by_id($item->contextid);
+            $questionname = format_string($item->name, true, array('context' => $context));
+            $url = new moodle_url('/question/question.php', array('id' => $item->id));
+            $details = html_writer::link($context->get_url(), $context->get_context_name());
+            $icon = $OUTPUT->pix_icon('e/question', '');
+            if ($context->contextlevel == CONTEXT_MODULE) {
+                $url->param('cmid', $context->instanceid);
+            } else if ($context->contextlevel == CONTEXT_COURSE) {
+                $url->param('courseid', $context->instanceid);
+            } else {
+                $url = null;
+            }
+            if ($url) {
+                $questionname = html_writer::link($url, $questionname);
+                $icon = html_writer::link($url, $icon);
+            }
+            $tagfeed->add($icon, $questionname, $details);
+        }
+        
+        $content = $OUTPUT->render_from_template('core_tag/tagfeed',
+                $tagfeed->export_for_template($OUTPUT));
+
+        return new core_tag\output\tagindex($tag, 'core_question', 'question', $content,
+                $exclusivemode, $fromctx, $ctx, $rec, $page, $totalpages);
+    }
+}
