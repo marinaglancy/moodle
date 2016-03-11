@@ -152,3 +152,8 @@ div img.feedback_bar_image {
 .path-mod-feedback .response_navigation .prev_response {
     float: left;
 }
+
+.path-mod-feedback .templateslist td.cell.action,
+.path-mod-feedback .templateslist th.header.action {
+    width: 10%;
+}
