@@ -826,11 +826,14 @@ function feedback_delete_course_module($id) {
 /**
  * returns the context-id related to the given coursemodule-id
  *
+ * @deprecated since 3.1
  * @staticvar object $context
  * @param int $cmid the coursemodule-id
  * @return object $context
  */
 function feedback_get_context($cmid) {
+    debugging('Function feedback_get_context() is deprecated because it was not used.',
+            DEBUG_DEVELOPER);
     static $context;
 
     if (isset($context)) {
@@ -1486,11 +1489,13 @@ function feedback_get_depend_candidates_for_item($feedback, $item) {
 /**
  * creates a new item-record
  *
- * @global object
+ * @deprecated since 3.1
  * @param object $data the data from edit_item_form
  * @return int the new itemid
  */
 function feedback_create_item($data) {
+    debugging('Function feedback_create_item() is deprecated because it was not used.',
+            DEBUG_DEVELOPER);
     global $DB;
 
     $item = new stdClass();
@@ -2766,12 +2771,14 @@ function feedback_delete_completed($completedid) {
 /**
  * checks if the course and the feedback is in the table feedback_sitecourse_map.
  *
- * @global object
+ * @deprecated since 3.1
  * @param int $feedbackid
  * @param int $courseid
  * @return int the count of records
  */
 function feedback_is_course_in_sitecourse_map($feedbackid, $courseid) {
+    debugging('Function feedback_is_course_in_sitecourse_map() is deprecated because it was not used.',
+            DEBUG_DEVELOPER);
     global $DB;
     $params = array('feedbackid'=>$feedbackid, 'courseid'=>$courseid);
     return $DB->count_records('feedback_sitecourse_map', $params);
@@ -2780,11 +2787,13 @@ function feedback_is_course_in_sitecourse_map($feedbackid, $courseid) {
 /**
  * checks if the feedback is in the table feedback_sitecourse_map.
  *
- * @global object
+ * @deprecated since 3.1
  * @param int $feedbackid
  * @return boolean
  */
 function feedback_is_feedback_in_sitecourse_map($feedbackid) {
+    debugging('Function feedback_is_feedback_in_sitecourse_map() is deprecated because it was not used.',
+            DEBUG_DEVELOPER);
     global $DB;
     return $DB->record_exists('feedback_sitecourse_map', array('feedbackid'=>$feedbackid));
 }
@@ -2896,11 +2905,14 @@ function feedback_update_sitecourse_map($feedback, $courses) {
  * it shouldn't be called all too often
  * a good place for it could be the mapcourse.php or unmapcourse.php
  *
+ * @deprecated since 3.1
  * @global object
  * @return void
  */
 function feedback_clean_up_sitecourse_map() {
     global $DB;
+    debugging('Function feedback_clean_up_sitecourse_map() is deprecated because it was not used.',
+            DEBUG_DEVELOPER);
 
     $maps = $DB->get_records('feedback_sitecourse_map');
     foreach ($maps as $map) {
@@ -2926,6 +2938,7 @@ function feedback_clean_up_sitecourse_map() {
 
 /**
  * prints the option items of a selection-input item (dropdownlist).
+ * @deprecated since 3.1
  * @param int $startval the first value of the list
  * @param int $endval the last value of the list
  * @param int $selectval which item should be selected
@@ -2933,6 +2946,8 @@ function feedback_clean_up_sitecourse_map() {
  * @return void
  */
 function feedback_print_numeric_option_list($startval, $endval, $selectval = '', $interval = 1) {
+    debugging('Function feedback_print_numeric_option_list() is deprecated because it was not used.',
+            DEBUG_DEVELOPER);
     for ($i = $startval; $i <= $endval; $i += $interval) {
         if ($selectval == ($i)) {
             $selected = 'selected="selected"';
