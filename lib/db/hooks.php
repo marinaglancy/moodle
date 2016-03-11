@@ -50,6 +50,7 @@ $hooks = array(
     '\core\hook\pre_course_delete',          // Executed right before course is deleted.
     '\core\hook\pre_course_module_delete',   // Executed right before course module is deleted.
     '\core\hook\pre_user_delete',            // Executed right before user is deleted.
+    '\core\hook\scale_used',                 // Checks if scale is used anywhere.
 );
 
 // Callbacks implemented by Moodle core.
