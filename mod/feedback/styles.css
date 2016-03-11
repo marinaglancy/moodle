@@ -122,3 +122,8 @@ div img.feedback_bar_image {
 }
 
 .path-mod-feedback #analysis-form label { display: inline; }
+
+.path-mod-feedback .templateslist td.cell.action,
+.path-mod-feedback .templateslist th.header.action {
+    width: 10%;
+}
