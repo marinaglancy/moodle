@@ -83,10 +83,10 @@ class response_submitted extends \core\event\base {
     public function get_url() {
         if ($this->other['anonymous'] == FEEDBACK_ANONYMOUS_YES) {
             return new \moodle_url('/mod/feedback/show_entries.php' , array('id' => $this->other['cmid'],
-                    'do_show' => 'showoneentry' , 'userid' => $this->relateduserid));
+                    'userid' => $this->relateduserid));
         } else {
-            return new \moodle_url('/mod/feedback/show_entries_anonym.php', array('id' => $this->other['cmid'],
-                    'do_show' => 'showoneentry', 'showall' => 1, 'showcompleted' => $this->objectid));
+            return new \moodle_url('/mod/feedback/show_entries.php', array('id' => $this->other['cmid'],
+                    'showall' => 1, 'showcompleted' => $this->objectid));
         }
     }
 
