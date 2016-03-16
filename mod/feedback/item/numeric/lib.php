@@ -173,7 +173,7 @@ class feedback_item_numeric extends feedback_item_base {
 
         if (isset($values->data) AND is_array($values->data)) {
             echo '<tr><th colspan="2" align="left">';
-            echo $itemnr.'&nbsp;('.$item->label.') '.$item->name;
+            echo $itemnr . ' ' . $this->item_label($item) . $this->item_formatted_name($item);
             echo '</th></tr>';
 
             foreach ($values->data as $value) {
@@ -228,11 +228,7 @@ class feedback_item_numeric extends feedback_item_base {
      * @return void
      */
     public function print_item_preview($item) {
-        global $OUTPUT, $DB;
-
         $align = right_to_left() ? 'right' : 'left';
-        $strrequiredmark = '<img class="req" title="'.get_string('requiredelement', 'form').'" alt="'.
-            get_string('requiredelement', 'form').'" src="'.$OUTPUT->pix_url('req') .'" />';
 
         //get the range
         $range_from_to = explode('|', $item->presentation);
@@ -251,21 +247,11 @@ class feedback_item_numeric extends feedback_item_base {
             $range_to = 0;
         }
 
-        $requiredmark = ($item->required == 1) ? $strrequiredmark : '';
         //print the question and label
         $inputname = $item->typ . '_' . $item->id;
         echo '<div class="feedback_item_label_'.$align.'">';
         echo '<label for="'. $inputname .'">';
-        echo '('.$item->label.') ';
-        echo format_text($item->name . $requiredmark, true, false, false);
-        if ($item->dependitem) {
-            $params = array('id'=>$item->dependitem);
-            if ($dependitem = $DB->get_record('feedback_item', $params)) {
-                echo ' <span class="feedback_depend">';
-                echo '('.$dependitem->label.'-&gt;'.$item->dependvalue.')';
-                echo '</span>';
-            }
-        }
+        echo $this->item_label($item) . $this->item_formatted_name($item) . $this->item_depend_value($item);
         echo '<span class="feedback_item_numinfo">';
         switch(true) {
             case ($range_from === '-' AND is_numeric($range_to)):
@@ -311,10 +297,7 @@ class feedback_item_numeric extends feedback_item_base {
      * @return void
      */
     public function print_item_complete($item, $value = '', $highlightrequire = false) {
-        global $OUTPUT;
         $align = right_to_left() ? 'right' : 'left';
-        $strrequiredmark = '<img class="req" title="'.get_string('requiredelement', 'form').'" alt="'.
-            get_string('requiredelement', 'form').'" src="'.$OUTPUT->pix_url('req') .'" />';
 
         //get the range
         $range_from_to = explode('|', $item->presentation);
@@ -333,13 +316,11 @@ class feedback_item_numeric extends feedback_item_base {
             $range_to = 0;
         }
 
-        $requiredmark = ($item->required == 1) ? $strrequiredmark : '';
-
         //print the question and label
         $inputname = $item->typ . '_' . $item->id;
         echo '<div class="feedback_item_label_'.$align.'">';
         echo '<label for="'. $inputname .'">';
-        echo format_text($item->name . $requiredmark, true, false, false);
+        echo $this->item_formatted_name($item);
         echo '<span class="feedback_item_numinfo">';
         switch(true) {
             case ($range_from === '-' AND is_numeric($range_to)):
@@ -390,8 +371,6 @@ class feedback_item_numeric extends feedback_item_base {
     public function print_item_show_value($item, $value = '') {
         global $OUTPUT;
         $align = right_to_left() ? 'right' : 'left';
-        $strrequiredmark = '<img class="req" title="'.get_string('requiredelement', 'form').'" alt="'.
-            get_string('requiredelement', 'form').'" src="'.$OUTPUT->pix_url('req') .'" />';
 
         //get the range
         $range_from_to = explode('|', $item->presentation);
@@ -407,12 +386,10 @@ class feedback_item_numeric extends feedback_item_base {
         } else {
             $range_to = 0;
         }
-        $requiredmark = ($item->required == 1) ? $strrequiredmark : '';
 
         //print the question and label
         echo '<div class="feedback_item_label_'.$align.'">';
-        echo '('.$item->label.') ';
-        echo format_text($item->name . $requiredmark, true, false, false);
+        echo $this->item_label($item) . $this->item_formatted_name($item);
         switch(true) {
             case ($range_from === '-' AND is_numeric($range_to)):
                 echo ' ('.get_string('maximal', 'feedback').

@@ -151,7 +151,7 @@ class feedback_item_textarea extends feedback_item_base {
         $values = feedback_get_group_values($item, $groupid, $courseid);
         if ($values) {
             echo '<tr><th colspan="2" align="left">';
-            echo $itemnr.'&nbsp;('.$item->label.') '.$item->name;
+            echo $itemnr . ' ' . $this->item_label($item) . $this->item_formatted_name($item);
             echo '</th></tr>';
             foreach ($values as $value) {
                 echo '<tr>';
@@ -196,27 +196,14 @@ class feedback_item_textarea extends feedback_item_base {
      * @return void
      */
     public function print_item_preview($item) {
-        global $OUTPUT, $DB;
-
         $align = right_to_left() ? 'right' : 'left';
-        $strrequiredmark = '<img class="req" title="'.get_string('requiredelement', 'form').'" alt="'.
-            get_string('requiredelement', 'form').'" src="'.$OUTPUT->pix_url('req') .'" />';
 
         $presentation = explode ("|", $item->presentation);
-        $requiredmark = ($item->required == 1) ? $strrequiredmark : '';
         //print the question and label
         $inputname = $item->typ . '_' . $item->id;
         echo '<div class="feedback_item_label_'.$align.'">';
         echo '<label for="'. $inputname .'">';
-        echo '('.$item->label.') ';
-        echo format_text($item->name.$requiredmark, true, false, false);
-        if ($item->dependitem) {
-            if ($dependitem = $DB->get_record('feedback_item', array('id'=>$item->dependitem))) {
-                echo ' <span class="feedback_depend">';
-                echo '('.$dependitem->label.'-&gt;'.$item->dependvalue.')';
-                echo '</span>';
-            }
-        }
+        echo $this->item_label($item) . $this->item_formatted_name($item) . $this->item_depend_value($item);
         echo '</label>';
         echo '</div>';
 
@@ -242,19 +229,15 @@ class feedback_item_textarea extends feedback_item_base {
      * @return void
      */
     public function print_item_complete($item, $value = '', $highlightrequire = false) {
-        global $OUTPUT;
         $align = right_to_left() ? 'right' : 'left';
-        $strrequiredmark = '<img class="req" title="'.get_string('requiredelement', 'form').'" alt="'.
-            get_string('requiredelement', 'form').'" src="'.$OUTPUT->pix_url('req') .'" />';
 
         $presentation = explode ("|", $item->presentation);
-        $requiredmark = ($item->required == 1) ? $strrequiredmark :'';
 
         //print the question and label
         $inputname = $item->typ . '_' . $item->id;
         echo '<div class="feedback_item_label_'.$align.'">';
         echo '<label for="'. $inputname .'">';
-            echo format_text($item->name . $requiredmark, true, false, false);
+        echo $this->item_formatted_name($item);
         if ($highlightrequire AND $item->required AND strval($value) == '') {
             echo '<br class="error"><span id="id_error_'.$inputname.'" class="error"> '.get_string('err_required', 'form').
                 '</span><br id="id_error_break_'.$inputname.'" class="error" >';
@@ -294,8 +277,7 @@ class feedback_item_textarea extends feedback_item_base {
 
         //print the question and label
         echo '<div class="feedback_item_label_'.$align.'">';
-            echo '('.$item->label.') ';
-            echo format_text($item->name . $requiredmark, true, false, false);
+        echo $this->item_label($item) . $this->item_formatted_name($item);
         echo '</div>';
 
         //print the presentation

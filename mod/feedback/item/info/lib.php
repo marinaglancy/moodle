@@ -150,7 +150,7 @@ class feedback_item_info extends feedback_item_base {
         $data = $analysed_item->data;
         if (is_array($data)) {
             echo '<tr><th colspan="2" align="left">';
-            echo $itemnr.'&nbsp;('.$item->label.') '.$item->name;
+            echo $itemnr . ' ' . $this->item_label($item) . $this->item_formatted_name($item);
             echo '</th></tr>';
             $sizeofdata = count($data);
             for ($i = 0; $i < $sizeofdata; $i++) {
@@ -190,12 +190,10 @@ class feedback_item_info extends feedback_item_base {
      * @return void
      */
     public function print_item_preview($item) {
-        global $USER, $DB, $OUTPUT;
+        global $DB;
 
         $align = right_to_left() ? 'right' : 'left';
         $presentation = $item->presentation;
-        $requiredmark = ($item->required == 1)?'<img class="req" title="'.get_string('requiredelement', 'form').'" alt="'.
-            get_string('requiredelement', 'form').'" src="'.$OUTPUT->pix_url('req') .'" />':'';
 
         if ($item->feedback) {
             $courseid = $DB->get_field('feedback', 'course', array('id'=>$item->feedback));
@@ -241,15 +239,7 @@ class feedback_item_info extends feedback_item_base {
 
         //print the question and label
         echo '<div class="feedback_item_label_'.$align.'">';
-        echo '('.$item->label.') ';
-        echo format_text($item->name.$requiredmark, true, false, false);
-        if ($item->dependitem) {
-            if ($dependitem = $DB->get_record('feedback_item', array('id'=>$item->dependitem))) {
-                echo ' <span class="feedback_depend">';
-                echo '('.$dependitem->label.'-&gt;'.$item->dependvalue.')';
-                echo '</span>';
-            }
-        }
+        echo $this->item_label($item) . $this->item_formatted_name($item) . $this->item_depend_value($item);
         echo '</div>';
         //print the presentation
         echo '<div class="feedback_item_presentation_'.$align.'">';
@@ -277,8 +267,6 @@ class feedback_item_info extends feedback_item_base {
         } else {
             $highlight = '';
         }
-        $requiredmark = ($item->required == 1)?'<img class="req" title="'.get_string('requiredelement', 'form').'" alt="'.
-            get_string('requiredelement', 'form').'" src="'.$OUTPUT->pix_url('req') .'" />':'';
 
         $feedback = $DB->get_record('feedback', array('id'=>$item->feedback));
 
@@ -330,7 +318,7 @@ class feedback_item_info extends feedback_item_base {
         //print the question and label
         echo '<div class="feedback_item_label_'.$align.'">';
         echo '<span class="'.$highlight.'">';
-            echo format_text($item->name.$requiredmark, true, false, false);
+        echo $this->item_formatted_name($item);
         echo '</span>';
         echo '</div>';
 
@@ -350,12 +338,10 @@ class feedback_item_info extends feedback_item_base {
      * @return void
      */
     public function print_item_show_value($item, $value = '') {
-        global $USER, $DB, $OUTPUT;
+        global $OUTPUT;
         $align = right_to_left() ? 'right' : 'left';
 
         $presentation = $item->presentation;
-        $requiredmark = ($item->required == 1)?'<img class="req" title="'.get_string('requiredelement', 'form').'" alt="'.
-            get_string('requiredelement', 'form').'" src="'.$OUTPUT->pix_url('req') .'" />':'';
 
         if ($presentation == 1) {
             $value = $value ? userdate($value) : '&nbsp;';
@@ -363,8 +349,7 @@ class feedback_item_info extends feedback_item_base {
 
         //print the question and label
         echo '<div class="feedback_item_label_'.$align.'">';
-            echo '('.$item->label.') ';
-            echo format_text($item->name . $requiredmark, true, false, false);
+        echo $this->item-header($item);
         echo '</div>';
 
         //print the presentation

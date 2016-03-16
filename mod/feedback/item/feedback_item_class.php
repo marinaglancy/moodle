@@ -136,6 +136,56 @@ abstract class feedback_item_base {
      */
     abstract public function clean_input_value($value);
 
+    /**
+     * Returns item name ready for display on pages such as complete form or preview
+     *
+     * @param stdClass $item
+     * @param string $itemname optional name of the item to use instead of $item->name
+     * @return string
+     */
+    protected function item_formatted_name($item, $itemname = null) {
+        global $OUTPUT;
+        if ($itemname === null) {
+            $itemname = format_text($item->name, FORMAT_HTML, array('noclean' => true, 'para' => false));
+        }
+        $requiredmark = '';
+        if ($item->required == 1) {
+            $requiredmark = '<img class="req" title="'.get_string('requiredelement', 'form').'" alt="'.
+                get_string('requiredelement', 'form').'" src="'.$OUTPUT->pix_url('req') .'" />';
+        }
+        return $itemname . $requiredmark;
+    }
+
+    /**
+     * Returns item label and item name ready for display on pages such as Edit, Analysis and Response
+     *
+     * @param stdClass $item
+     * @param string $itemname optional name of the item to use instead of $item->name
+     * @return string
+     */
+    protected function item_label($item, $itemname = null) {
+        if (strval($item->label) !== '') {
+            return '('. format_string($item->label).') ';
+        }
+        return '';
+    }
+
+    /**
+     * Returns the item dependency ready for display on pages such as Edit, Analysis, view response
+     *
+     * @param stdClass $item
+     * @return string
+     */
+    protected function item_depend_value($item) {
+        global $DB;
+        $rv = '';
+        if ($item->dependitem && ($dependitem = $DB->get_record('feedback_item', array('id' => $item->dependitem)))) {
+            $rv .= ' <span class="feedback_depend">';
+            $rv .= '('.format_string($dependitem->label).'-&gt;'.$item->dependvalue.')';
+            $rv .= '</span>';
+        }
+        return $rv;
+    }
 }
 
 //a dummy class to realize pagebreaks

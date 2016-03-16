@@ -179,15 +179,7 @@ class feedback_item_label extends feedback_item_base {
      * @return void
      */
     public function print_item_preview($item) {
-        global $OUTPUT, $DB;
-
-        if ($item->dependitem) {
-            if ($dependitem = $DB->get_record('feedback_item', array('id'=>$item->dependitem))) {
-                echo ' <span class="feedback_depend">';
-                echo '('.$dependitem->label.'-&gt;'.$item->dependvalue.')';
-                echo '</span>';
-            }
-        }
+        echo $this->item_depend_value($item);
         $this->print_item($item);
     }
 
