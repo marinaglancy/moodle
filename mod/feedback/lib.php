@@ -1480,7 +1480,9 @@ function feedback_get_depend_candidates_for_item($feedback, $item) {
     }
     //adding the choose-option
     foreach ($feedbackitems as $key => $val) {
-        $dependitems[$key] = $val;
+        if (trim(strval($val)) !== '') {
+            $dependitems[$key] = format_string($val);
+        }
     }
     return $dependitems;
 }
