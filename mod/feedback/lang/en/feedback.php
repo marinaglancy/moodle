@@ -154,7 +154,8 @@ and will appear in all courses using the feedback block. You can force the feedb
 $string['mapcourses'] = 'Map feedback to courses';
 $string['mappedcourses'] = 'Mapped courses';
 $string['max_args_exceeded'] = 'Max 6 arguments can be handled, too many arguments for';
-$string['maximal'] = 'maximal';
+$string['minimal'] = 'minimum';
+$string['maximal'] = 'maximum';
 $string['messageprovider:message'] = 'Feedback reminder';
 $string['messageprovider:submission'] = 'Feedback notifications';
 $string['mode'] = 'Mode';
