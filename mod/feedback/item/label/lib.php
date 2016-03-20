@@ -205,6 +205,24 @@ class feedback_item_label extends feedback_item_base {
     }
 
     /**
+     * Adds an input element to the complete form
+     *
+     * @param stdClass $item
+     * @param mod_feedback_complete_form $form
+     */
+    public function complete_form_element($item, $form) {
+
+        $context = $form->get_cm()->context;
+        $output = file_rewrite_pluginfile_urls($item->presentation, 'pluginfile.php',
+                $context->id, 'mod_feedback', 'item', $item->id);
+
+        $formatoptions = array('overflowdiv' => true, 'noclean' => true);
+        $output = format_text($output, FORMAT_HTML, $formatoptions);
+        $inputname = $item->typ . '_' . $item->id;
+        $form->addElement('static', $inputname, '', $output);
+    }
+
+    /**
      * print the item at the complete-page of feedback
      *
      * @global object

@@ -24,6 +24,7 @@
 
 require_once("../../config.php");
 require_once("lib.php");
+require_once("locallib.php");
 require_once($CFG->libdir . '/completionlib.php');
 
 feedback_init_feedback_session();
@@ -31,12 +32,11 @@ feedback_init_feedback_session();
 $id = required_param('id', PARAM_INT);
 $completedid = optional_param('completedid', false, PARAM_INT);
 $preservevalues  = optional_param('preservevalues', 0,  PARAM_INT);
-$courseid = optional_param('courseid', false, PARAM_INT);
-$gopage = optional_param('gopage', -1, PARAM_INT);
+$courseid = optional_param('courseid', null, PARAM_INT);
+$gopage = optional_param('gopage', 0, PARAM_INT);
 $lastpage = optional_param('lastpage', false, PARAM_INT);
 $startitempos = optional_param('startitempos', 0, PARAM_INT);
 $lastitempos = optional_param('lastitempos', 0, PARAM_INT);
-$anonymous_response = optional_param('anonymous_response', 0, PARAM_INT); //arb
 
 $highlightrequired = false;
 
@@ -45,7 +45,7 @@ if (($formdata = data_submitted()) AND !confirm_sesskey()) {
 }
 
 //if the use hit enter into a textfield so the form should not submit
-if (isset($formdata->sesskey) AND
+/*if (isset($formdata->sesskey) AND
     !isset($formdata->savevalues) AND
     !isset($formdata->gonextpage) AND
     !isset($formdata->gopreviouspage)) {
@@ -73,7 +73,7 @@ if ($gopage < 0 AND !$savevalues) {
     }
 } else {
     $gonextpage = $gopreviouspage = false;
-}
+}*/
 
 list($course, $cm) = get_course_and_cm_from_cmid($id, 'feedback');
 $feedback = $DB->get_record("feedback", array("id" => $cm->instance), '*', MUST_EXIST);
@@ -95,7 +95,10 @@ if (!empty($CFG->feedback_allowfullanonymous)
 }
 
 //check whether the feedback is located and! started from the mainsite
-if ($course->id == SITEID AND !$courseid) {
+if ($course->id != SITEID) {
+    // Feedbacks that are not on front page do not allow to specify courseid.
+    $courseid = null;
+} else if (!$courseid) {
     $courseid = SITEID;
 }
 
@@ -108,6 +111,9 @@ if ($course->id == SITEID AND !has_capability('mod/feedback:edititems', $context
         }
     }
 }
+
+$urlparams = array('id' => $cm->id, 'gopage' => $gopage, 'courseid' => $courseid);
+$PAGE->set_url('/mod/feedback/complete.php', $urlparams);
 
 require_course_login($course, true, $cm);
 $PAGE->set_activity_record($feedback);
@@ -126,35 +132,22 @@ if (!$feedback_complete_cap) {
     print_error('error');
 }
 
-// Mark activity viewed for completion-tracking
-$completion = new completion_info($course);
-if (isloggedin() && !isguestuser()) {
-    $completion->set_module_viewed($cm);
-}
-
-/// Print the page header
-$strfeedbacks = get_string("modulenameplural", "feedback");
-$strfeedback  = get_string("modulename", "feedback");
+$PAGE->navbar->add(get_string('feedback:complete', 'feedback'));
+$PAGE->set_heading($course->fullname);
+$PAGE->set_title($feedback->name);
 
 if ($course->id == SITEID) {
     $PAGE->set_cm($cm, $course); // set's up global $COURSE
     $PAGE->set_pagelayout('incourse');
 }
 
-$PAGE->navbar->add(get_string('feedback:complete', 'feedback'));
-$urlparams = array('id'=>$cm->id, 'gopage'=>$gopage, 'courseid'=>$course->id);
-$PAGE->set_url('/mod/feedback/complete.php', $urlparams);
-$PAGE->set_heading($course->fullname);
-$PAGE->set_title($feedback->name);
-echo $OUTPUT->header();
-
 //check, if the feedback is open (timeopen, timeclose)
 $checktime = time();
 $feedback_is_closed = ($feedback->timeopen > $checktime) ||
                       ($feedback->timeclose < $checktime &&
                             $feedback->timeclose > 0);
-
 if ($feedback_is_closed) {
+    echo $OUTPUT->header();
     echo $OUTPUT->heading(format_string($feedback->name));
     echo $OUTPUT->box_start('generalbox boxaligncenter');
     echo $OUTPUT->notification(get_string('feedback_is_not_open', 'feedback'));
@@ -162,6 +155,12 @@ if ($feedback_is_closed) {
     echo $OUTPUT->box_end();
     echo $OUTPUT->footer();
     exit;
+}
+
+// Mark activity viewed for completion-tracking
+$completion = new completion_info($course);
+if (isloggedin() && !isguestuser()) {
+    $completion->set_module_viewed($cm);
 }
 
 //additional check for multiple-submit (prevent browsers back-button).
@@ -172,9 +171,47 @@ if ($feedback->multiple_submit == 0 ) {
         $feedback_can_submit = false;
     }
 }
+
+// Initialise the form processing feedback completion.
+if ($feedback_can_submit) {
+    $form = new mod_feedback_complete_form('',
+            array('feedback' => $feedback, 'cm' => $cm, 'courseid' => $courseid, 'gopage' => $gopage),
+            'post', '', array('id' => 'feedback_complete_form'));
+    if ($form->is_cancelled()) {
+        // Form was cancelled - return to the course page.
+        redirect(course_get_url($courseid ?: $course));
+    } else if ($form->is_submitted() &&
+            ($form->is_validated() || optional_param('gopreviouspage', null, PARAM_RAW))) {
+        // Form was submitted (skip validation for "Previous page" button).
+        $data = $form->get_submitted_data();
+        //echo "<pre>";print_r($data);echo "</pre>";
+        if (!isset($SESSION->feedback->is_started) OR !$SESSION->feedback->is_started == true) {
+            print_error('error', '', $CFG->wwwroot.'/course/view.php?id='.$course->id);
+        }
+        $completedid = feedback_save_response_tmp($feedback);
+        if (!empty($data->savevalues)) {
+            $savereturn = feedback_save_response($course, $cm, $feedback, $courseid, $completedid);
+            //echo "savereturn = $savereturn<br>";
+            //$savevalues = true;
+        } else if (!empty($data->gonextpage)) {
+            // TODO(later) smart calc next page
+            redirect(new moodle_url($PAGE->url, array('gopage' => $gopage + 1)));
+        } else if (!empty($data->gopreviouspage)) {
+            // TODO(later) smart calc next page
+            redirect(new moodle_url($PAGE->url, array('gopage' => $gopage - 1)));
+        }
+    }
+}
+
+/// Print the page header
+$strfeedbacks = get_string("modulenameplural", "feedback");
+$strfeedback  = get_string("modulename", "feedback");
+
+echo $OUTPUT->header();
+
 if ($feedback_can_submit) {
     //preserving the items
-    if ($preservevalues == 1) {
+    /*if ($preservevalues == 1) {
         if (!isset($SESSION->feedback->is_started) OR !$SESSION->feedback->is_started == true) {
             print_error('error', '', $CFG->wwwroot.'/course/view.php?id='.$course->id);
         }
@@ -209,10 +246,10 @@ if ($feedback_can_submit) {
             }
 
         }
-    }
+    }*/
 
     //saving the items
-    if ($savevalues AND !$preservevalues) {
+    /*if ($savevalues AND !$preservevalues) {
         //exists there any pagebreak, so there are values in the feedback_valuetmp
         $userid = $USER->id; //arb
 
@@ -260,10 +297,10 @@ if ($feedback_can_submit) {
             }
         }
 
-    }
+    }*/
 
 
-    if ($allbreaks = feedback_get_all_break_positions($feedback->id)) {
+    /*if ($allbreaks = feedback_get_all_break_positions($feedback->id)) {
         if ($gopage <= 0) {
             $startposition = 0;
         } else {
@@ -275,7 +312,7 @@ if ($feedback_can_submit) {
         $ispagebreak = true;
     } else {
         $startposition = 0;
-        $newpage = 0;
+        //$newpage = 0;
         $ispagebreak = false;
     }
 
@@ -291,11 +328,12 @@ if ($feedback_can_submit) {
         $firstpagebreak = $pagebreaks[0];
     } else {
         $firstpagebreak = false;
-    }
-    $maxitemcount = $DB->count_records('feedback_item', array('feedback'=>$feedback->id));
+    }*/
+    //list($startposition, $firstpagebreak, $ispagebreak, $feedbackitems) = feedback_get_page_boundaries($feedback, $gopage);
+    //$maxitemcount = $DB->count_records('feedback_item', array('feedback'=>$feedback->id));
 
     //get the values of completeds before done. Anonymous user can not get these values.
-    if ((!isset($SESSION->feedback->is_started)) AND
+    /*if ((!isset($SESSION->feedback->is_started)) AND
                           (!isset($savereturn)) AND
                           ($feedback->anonymous == FEEDBACK_ANONYMOUS_NO)) {
 
@@ -311,7 +349,8 @@ if ($feedback_can_submit) {
         $feedbackcompletedtmp = feedback_get_current_completed($feedback->id, true, $courseid);
     } else {
         $feedbackcompletedtmp = feedback_get_current_completed($feedback->id, true, $courseid, sesskey());
-    }
+    }*/
+    //$feedbackcompletedtmp = feedback_retrieve_response_tmp($feedback, $courseid);
 
     /// Print the main part of the page
     ///////////////////////////////////////////////////////////////////////////
@@ -356,19 +395,7 @@ if ($feedback_can_submit) {
         if ($feedback->site_after_submit) {
             $url = feedback_encode_target_url($feedback->site_after_submit);
         } else {
-            if ($courseid) {
-                if ($courseid == SITEID) {
-                    $url = $CFG->wwwroot;
-                } else {
-                    $url = $CFG->wwwroot.'/course/view.php?id='.$courseid;
-                }
-            } else {
-                if ($course->id == SITEID) {
-                    $url = $CFG->wwwroot;
-                } else {
-                    $url = $CFG->wwwroot.'/course/view.php?id='.$course->id;
-                }
-            }
+            $url = course_get_url($courseid ? $courseid : $course->id);
         }
         echo $OUTPUT->continue_button($url);
     } else {
@@ -378,14 +405,17 @@ if ($feedback_can_submit) {
             echo $OUTPUT->box_end();
         }
 
-        if (isset($savereturn) && $savereturn == 'missing') {
+        /*if (isset($savereturn) && $savereturn == 'missing') {
             echo $OUTPUT->box_start('mform');
             echo '<span class="error">'.get_string('saving_failed_because_missing_or_false_values', 'feedback').'</span>';
             echo $OUTPUT->box_end();
-        }
+        }*/
 
         //print the items
-        if (is_array($feedbackitems)) {
+        // TODO: die if feedback has no items
+        $SESSION->feedback->is_started = true;
+        $form->display();
+        /*if (is_array($feedbackitems)) {
             echo $OUTPUT->box_start('feedback_form');
             echo '<form action="complete.php" class="feedback_complete" method="post">';
             echo '<input type="hidden" name="sesskey" value="'.sesskey().'" />';
@@ -538,7 +568,7 @@ if ($feedback_can_submit) {
             echo '</form>';
             echo $OUTPUT->box_end();
             $SESSION->feedback->is_started = true;
-        }
+        }*/
     }
 } else {
     echo $OUTPUT->heading(format_string($feedback->name));

@@ -255,6 +255,18 @@ class feedback_item_captcha extends feedback_item_base {
     }
 
     /**
+     * Adds an input element to the complete form
+     *
+     * @param stdClass $item
+     * @param mod_feedback_complete_form $form
+     */
+    public function complete_form_element($item, $form) {
+        $name = get_string('captcha', 'feedback');
+        $inputname = $item->typ . '_' . $item->id;
+        $form->addElement('recaptcha', $inputname, $name);
+    }
+
+    /**
      * print the item at the complete-page of feedback
      *
      * @global object
