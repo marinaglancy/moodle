@@ -394,21 +394,34 @@ class feedback_item_numeric extends feedback_item_base {
      * @param mod_feedback_complete_form $form
      */
     public function complete_form_element($item, $form) {
-        global $CFG;
-        require_once($CFG->dirroot.'/mod/feedback/item/numeric/numeric_field.php');
-        
         $name = format_text($item->name, FORMAT_HTML, array('noclean' => true, 'para' => false)) .
                 $this->get_boundaries_for_display($item);
         $inputname = $item->typ . '_' . $item->id;
-        $form->addElement('feedbacknumeric', $inputname, $name);
+        $mform = $form->get_quick_form();
+        $mform->addElement('text', $inputname, $name);
         if ($item->required == 1) {
-            $form->addRule($inputname, get_string('required'), 'required');
+            $mform->addRule($inputname, get_string('required'), 'required');
         }
-        $tmpvalue = $form->get_item_value($item);
-        if ($tmpvalue !== null) {
-            $form->setDefault($inputname, $this->format_float($tmpvalue));
+        if (($tmpvalue = $form->get_item_value($item)) !== null) {
+            $mform->setDefault($inputname, $this->format_float($tmpvalue));
         }
-        // TODO min/max
+        // Add form validation rule to check for boundaries.
+        $mform->addFormRule(function($values, $files) use ($item) {
+            $inputname = $item->typ . '_' . $item->id;
+            list($rangefrom, $rangeto) = explode('|', $item->presentation);
+            if (trim($values[$inputname]) === '') {
+                return $item->required ? array($inputname => get_string('required')) : true;
+            }
+            $value = unformat_float($values[$inputname], true);
+            if ($value === false) {
+                return array($inputname => get_string('invalidnum', 'error'));
+            }
+            if ((is_numeric($rangefrom) && $value < floatval($rangefrom)) ||
+                    (is_numeric($rangeto) && $value > floatval($rangeto))) {
+                return array($inputname => get_string('numberoutofrange', 'feedback'));
+            }
+            return true;
+        });
     }
 
     /**

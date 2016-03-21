@@ -44,17 +44,18 @@ class feedback_multichoice_form extends feedback_item_form {
                                   'maxlength' => 255));
 
         $mform->addElement('select',
-                            'horizontal',
-                            get_string('adjustment', 'feedback').'&nbsp;',
-                            array(0 => get_string('vertical', 'feedback'),
-                                  1 => get_string('horizontal', 'feedback')));
-
-        $mform->addElement('select',
                             'subtype',
                             get_string('multichoicetype', 'feedback').'&nbsp;',
                             array('r'=>get_string('radio', 'feedback'),
                                   'c'=>get_string('check', 'feedback'),
                                   'd'=>get_string('dropdown', 'feedback')));
+
+        $mform->addElement('select',
+                            'horizontal',
+                            get_string('adjustment', 'feedback').'&nbsp;',
+                            array(0 => get_string('vertical', 'feedback'),
+                                  1 => get_string('horizontal', 'feedback')));
+        $mform->disabledIf('horizontal', 'subtype', 'eq', 'd');
 
         $mform->addElement('selectyesno',
                            'ignoreempty',

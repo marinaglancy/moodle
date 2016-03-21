@@ -64,12 +64,9 @@ class mod_feedback_complete_form extends moodleform {
         } else if ($this->feedback->anonymous == FEEDBACK_ANONYMOUS_NO) {
             $anonymousmodeinfo = get_string('non_anonymous', 'feedback');
         }
-        /*
         if (isloggedin() && !isguestuser()) {
-            echo $OUTPUT->box(get_string('mode', 'feedback') . ': ' . $anonymousmodeinfo, 'feedback_anonymousinfo');
+            $mform->addElement('static', 'anonymousmode', '', get_string('mode', 'feedback') . ': ' . $anonymousmodeinfo);
         }
-        $mform->addElement('static', 'anonymousmode', '', $anonymousmodeinfo);
-         */
 
         $buttonarray = array();
         $buttonarray[] = &$mform->createElement('submit', 'gopreviouspage', get_string('previous_page', 'feedback'));
@@ -85,9 +82,11 @@ class mod_feedback_complete_form extends moodleform {
         $this->set_data(array('gopage' => $this->_customdata['gopage']));
     }
 
-    public function set_data($defaultvalues) {
+    /*
+    public function set_defaults() {
         // TODO this is dodgy
         global  $DB;
+        $defaultvalues = array();
         if ($this->completedtmp) {
             $sql = "SELECT fi.id, fi.typ, fv.value
                        FROM {feedback_valuetmp} fv, {feedback_item} fi
@@ -104,9 +103,8 @@ class mod_feedback_complete_form extends moodleform {
             }
             $rs->close();
         }
-
-        parent::set_data($defaultvalues);
     }
+     */
 
     //public function get_completedtmp_id() {
     //    return isset($this->completedtmp->id) ? $this->completedtmp->id : null;
@@ -122,55 +120,45 @@ class mod_feedback_complete_form extends moodleform {
         parent::definition_after_data();
         list($startposition, $firstpagebreak, $ispagebreak, $feedbackitems) =
                 feedback_get_page_boundaries($this->feedback, $this->gopage);
-        $maxitemcount = $DB->count_records('feedback_item', array('feedback'=>$this->feedback->id));
 
-
-            unset($startitem);
-            $select = 'feedback = ? AND hasvalue = 1 AND position < ?';
-            $params = array($this->feedback->id, $startposition);
-            $itemnr = $DB->count_records_select('feedback_item', $select, $params);
-            $lastbreakposition = 0;
-            $align = right_to_left() ? 'right' : 'left';
-
-            foreach ($feedbackitems as $feedbackitem) {
-                if (!isset($startitem)) {
-                    //avoid showing double pagebreaks
-                    if ($feedbackitem->typ == 'pagebreak') {
-                        continue;
-                    }
-                    $startitem = $feedbackitem;
-                }
-
-                if ($feedbackitem->dependitem > 0) {
-                    //chech if the conditions are ok
-                    if (!isset($this->completedtmp->id) OR 
-                            !feedback_compare_item_value($this->completedtmp->id,
-                                $feedbackitem->dependitem, $feedbackitem->dependvalue, true)) {
-                        $lastitem = $feedbackitem;
-                        $lastbreakposition = $feedbackitem->position;
-                        continue;
-                    }
-                }
-
-                $value = '';//$this->get_item_value($feedbackitem, $feedbackcompletedtmp);
-                if ($feedbackitem->typ != 'pagebreak') {
-                    //echo $OUTPUT->box_start('box generalbox boxalign_'.$align);
-                    //feedback_print_item_complete($feedbackitem, $value/*, $highlightrequired*/);
-                    //echo $OUTPUT->box_end();
-                    $itemobj = feedback_get_item_class($feedbackitem->typ);
-                    $itemobj->complete_form_element($feedbackitem, $this);
-                    //$this->_form->insertElementBefore($el, 'buttonar'); // TODO move buttons to the end
-                }
-
-                $lastbreakposition = $feedbackitem->position; //last item-pos (item or pagebreak)
+        // Add elements.
+        $startitem = null;
+        $lastbreakposition = 0;
+        foreach ($feedbackitems as $feedbackitem) {
+            if (!isset($startitem)) {
+                // Avoid showing double pagebreaks.
                 if ($feedbackitem->typ == 'pagebreak') {
-                    break;
-                } else {
+                    continue;
+                }
+                $startitem = $feedbackitem;
+            }
+
+            if ($feedbackitem->dependitem > 0) {
+                // Check if the conditions are ok.
+                if (!isset($this->completedtmp->id) OR 
+                        !feedback_compare_item_value($this->completedtmp->id,
+                            $feedbackitem->dependitem, $feedbackitem->dependvalue, true)) {
                     $lastitem = $feedbackitem;
+                    $lastbreakposition = $feedbackitem->position;
+                    continue;
                 }
             }
 
-        // Adjust buttons.
+            if ($feedbackitem->typ != 'pagebreak') {
+                $itemobj = feedback_get_item_class($feedbackitem->typ);
+                $itemobj->complete_form_element($feedbackitem, $this);
+            }
+
+            $lastbreakposition = $feedbackitem->position; // Last item-pos (item or pagebreak).
+            if ($feedbackitem->typ == 'pagebreak') {
+                break;
+            } else {
+                $lastitem = $feedbackitem;
+            }
+        }
+
+        // Remove invalid buttons (for example, no "previous page" if we are on the first page).
+        $maxitemcount = $DB->count_records('feedback_item', array('feedback' => $this->feedback->id));
         if (!$ispagebreak || $lastbreakposition <= $firstpagebreak->position) {
             $this->remove_button('gopreviouspage');
         }
@@ -186,7 +174,6 @@ class mod_feedback_complete_form extends moodleform {
         $buttons = $mform->removeElement('buttonar', false);
         $mform->insertElementBefore($buttons, '__dummyelement');
         $mform->removeElement('__dummyelement');
-        //echo "<pre>";print_r($this->_form->_elements);echo "</pre>";
     }
 
     private function remove_button($buttonname) {
@@ -223,88 +210,12 @@ class mod_feedback_complete_form extends moodleform {
         return $value;
     }
 
-
-    protected $validationcallbacks = array();
-    public function set_validation_callback($callback, $options = null) {
-        if (is_callable($callback)) {
-            $this->validationcallbacks[] = array($callback, $options);
-        } else {
-            throw new coding_exception('Argument to set_validation_callback() is not callable');
-        }
-    }
-
-    /**
-     * Form validation
-     *
-     * @param array $data array of ("fieldname"=>value) of submitted data
-     * @param array $files array of uploaded files "element_name"=>tmp_file_path
-     * @return array of "element_name"=>"error_description" if there are errors,
-     *         or an empty array if everything is OK (true allowed for backwards compatibility too).
-     */
-    public function validation($data, $files) {
-        $errors = parent::validation($data, $files);
-
-        foreach ($this->validationcallbacks as $callback) {
-            if ($cberrors = call_user_func_array($callback[0], $callback[1])) {
-                $errors = array_merge($errors, $cberrors);
-            }
-        }
-
-        // Special validation for recaptcha.
-        if ($elementname = $this->find_recaptcha()) {
-            $recaptchaelement = $this->_form->getElement($elementname);
-            if (!empty($this->_form->_submitValues['recaptcha_challenge_field'])) {
-                $challengefield = $this->_form->_submitValues['recaptcha_challenge_field'];
-                $responsefield = $this->_form->_submitValues['recaptcha_response_field'];
-                if (true !== ($result = $recaptchaelement->verify($challengefield, $responsefield))) {
-                    $errors[$elementname] = $result;
-                }
-            } else {
-                $errors[$elementname] = get_string('missingrecaptchachallengefield');
-            }
-        }
-
-        return $errors;
-    }
-
-    protected function find_recaptcha() {
-        foreach ($this->_form->_elements as $el) {
-            if ($el->getType() === 'recaptcha') {
-                return $el->getName();
-            }
-        }
-        return null;
-    }
-
     /**
      *
      * @return MoodleQuickForm
      */
-    public function get_moodleform() {
+    public function get_quick_form() {
         return $this->_form;
-    }
-
-    /**
-     *
-     * @return HTML_QuickForm_element
-     */
-    public function addElement() {
-        return call_user_func_array(array($this->_form, 'addElement'), func_get_args());
-    }
-    public function addRule() {
-        return call_user_func_array(array($this->_form, 'addRule'), func_get_args());
-    }
-    public function setType() {
-        return call_user_func_array(array($this->_form, 'setType'), func_get_args());
-    }
-    public function setDefault() {
-        return call_user_func_array(array($this->_form, 'setDefault'), func_get_args());
-    }
-    public function setConstant() {
-        return call_user_func_array(array($this->_form, 'setConstant'), func_get_args());
-    }
-    public function applyFilter() {
-        return call_user_func_array(array($this->_form, 'applyFilter'), func_get_args());
     }
 
     public function get_course_id() {

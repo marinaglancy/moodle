@@ -26,7 +26,7 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once("lib.php");
 
-function feedback_save_response_tmp($feedback) {
+function feedback_save_response_tmp($feedback, $data) {
     global $USER;
     if (isloggedin() && !isguestuser()) {
         $completedid = feedback_save_values($USER->id, true);

@@ -281,14 +281,15 @@ class feedback_item_textfield extends feedback_item_base {
     public function complete_form_element($item, $form) {
         $name = format_text($item->name, FORMAT_HTML, array('noclean' => true, 'para' => false));
         $inputname = $item->typ . '_' . $item->id;
-        $form->addElement('text', $inputname, $name);
-        $form->setType($inputname, PARAM_NOTAGS);
+        $mform = $form->get_quick_form();
+        $mform->addElement('text', $inputname, $name);
+        $mform->setType($inputname, PARAM_NOTAGS);
         if ($item->required == 1) {
-            $form->addRule($inputname, get_string('required'), 'required');
+            $mform->addRule($inputname, get_string('required'), 'required');
         }
         $tmpvalue = $form->get_item_value($item);
         if ($tmpvalue !== null) {
-            $form->setDefault($inputname, $tmpvalue);
+            $mform->setDefault($inputname, $tmpvalue);
         }
         // TODO size, maxlength
     }

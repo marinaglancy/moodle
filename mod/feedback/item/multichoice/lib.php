@@ -507,6 +507,61 @@ class feedback_item_multichoice extends feedback_item_base {
     }
 
     /**
+     * Adds an input element to the complete form
+     *
+     * @param stdClass $item
+     * @param mod_feedback_complete_form $form
+     */
+    public function complete_form_element($item, $form) {
+        $info = $this->get_info($item);
+        $presentation = explode (FEEDBACK_MULTICHOICE_LINE_SEP, $info->presentation);
+        $name = format_text($item->name, FORMAT_HTML, array('noclean' => true, 'para' => false));
+        $inputname = $item->typ . '_' . $item->id ;
+        $mform = $form->get_quick_form();
+        $options = array();
+        foreach ($presentation as $idx => $optiontext) {
+            $options[$idx+1] = format_text($optiontext, FORMAT_HTML, array('noclean' => true, 'para' => false));
+        }
+        if ($info->subtype === 'd') {
+            $el = $mform->addElement('select', $inputname.'[0]', $name, array('' => '') + $options);
+        } else {
+            $objs = array();
+            if ($info->subtype === 'r' && !$this->hidenoselect($item)) {
+                $options = array(0 => get_string('not_selected', 'feedback')) + $options;
+            }
+            foreach ($options as $idx => $label) {
+                if ($info->subtype === 'r') {
+                    $objs[] =& $mform->createElement('radio', $inputname.'[0]', '', $label, $idx);
+                } else {
+                    $objs[] =& $mform->createElement('advcheckbox', $inputname.'['.$idx.']', '', $label, null, array(0, $idx));
+                }
+            }
+            $separator = $info->horizontal ? ' ' : '<br>';
+            $el = $mform->addElement('group', 'group_'.$inputname, $name, $objs, $separator, false);
+        }
+        if ($item->required == 1) {
+            $mform->addRule($el->getName(), get_string('required'), 'required');
+        }
+        // Set previously input values.
+        if ($tmpvalue = $form->get_item_value($item)) {
+            if ($info->subtype === 'c') {
+                foreach (explode(FEEDBACK_MULTICHOICE_LINE_SEP, $tmpvalue) as $v) {
+                    $mform->setDefault($inputname.'['.$v.']', $v);
+                }
+            } else {
+                $mform->setDefault($inputname.'[0]', $tmpvalue);
+            }
+        }
+        // Special case if the radio with "Not selected" option is required the option "Not selected" should show error.
+        if ($info->subtype === 'r' && !$this->hidenoselect($item) && $item->required) {
+            $mform->addFormRule(function($values, $files) use ($item) {
+                $inputname = $item->typ . '_' . $item->id;
+                return empty($values[$inputname][0]) ? array('group_'.$inputname => get_string('required')) : true;
+            });
+        }
+    }
+
+    /**
      * print the item at the complete-page of feedback
      *
      * @global object
@@ -596,7 +651,7 @@ class feedback_item_multichoice extends feedback_item_base {
     public function create_value($data) {
         $vallist = $data;
         if (is_array($vallist)) {
-            $vallist = array_unique($vallist);
+            $vallist = array_unique(array_filter($vallist));
         }
         return trim($this->item_array_to_string($vallist));
     }
@@ -678,12 +733,7 @@ class feedback_item_multichoice extends feedback_item_base {
         $retval = '';
         $arrvals = array_values($value);
         $arrvals = clean_param_array($arrvals, PARAM_INT);  //prevent sql-injection
-        $retval = $arrvals[0];
-        $sizeofarrvals = count($arrvals);
-        for ($i = 1; $i < $sizeofarrvals; $i++) {
-            $retval .= FEEDBACK_MULTICHOICE_LINE_SEP.$arrvals[$i];
-        }
-        return $retval;
+        return join(FEEDBACK_MULTICHOICE_LINE_SEP, $arrvals);
     }
 
     private function print_item_radio($presentation, $item, $value, $info, $align) {

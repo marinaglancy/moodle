@@ -387,8 +387,9 @@ class feedback_item_info extends feedback_item_base {
 
         $name = format_text($item->name, FORMAT_HTML, array('noclean' => true, 'para' => false));
         $inputname = $item->typ . '_' . $item->id;
-        $el = $form->addElement('select', $inputname, $name, $options);
-        $form->setConstant($inputname, key($options));
+        $mform = $form->get_quick_form();
+        $el = $mform->addElement('select', $inputname, $name, $options);
+        $mform->setConstant($inputname, key($options));
         $el->freeze();
         $el->setPersistantFreeze(true);
     }

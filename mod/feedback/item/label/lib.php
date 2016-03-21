@@ -219,7 +219,8 @@ class feedback_item_label extends feedback_item_base {
         $formatoptions = array('overflowdiv' => true, 'noclean' => true);
         $output = format_text($output, FORMAT_HTML, $formatoptions);
         $inputname = $item->typ . '_' . $item->id;
-        $form->addElement('static', $inputname, '', $output);
+        $mform = $form->get_quick_form();
+        $mform->addElement('static', $inputname, '', $output);
     }
 
     /**
