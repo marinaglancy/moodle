@@ -2826,9 +2826,8 @@ function feedback_get_feedbacks_from_sitecourse_map($courseid) {
 }
 
 /**
- * gets the courses from table feedback_sitecourse_map.
+ * Gets the courses from table feedback_sitecourse_map
  *
- * @global object
  * @param int $feedbackid
  * @return array the course-records
  */

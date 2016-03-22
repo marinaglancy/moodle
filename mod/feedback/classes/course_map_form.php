@@ -45,17 +45,6 @@ class mod_feedback_course_map_form extends moodleform {
         $mform->addElement('course', 'mappedcourses', get_string('courses'), $options);
 
         // Automatically submit form in AJAX request every time 'mappedcourses' is modified.
-        $PAGE->requires->js_amd_inline( <<<EOF
-        require(['jquery'], function($) {
-            $('body').on('change', '#id_mappedcourses', function(e) {
-                var form = $(e.target).closest('form');
-                $.ajax(form.attr('action'), {
-                        type: 'POST',
-                        data: form.serialize()
-                    });
-            });
-        });
-EOF
-        );
+        $PAGE->requires->js_call_amd('mod_feedback/feedback', 'initCourseMapping', array('#id_mappedcourses'));
     }
 }

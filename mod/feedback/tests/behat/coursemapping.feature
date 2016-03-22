@@ -35,10 +35,6 @@ Feature: Anonymous feedback
     And I click on "Show" "link" in the "Feedback" "table_row"
     And I navigate to "Manage blocks" node in "Site administration > Plugins > Blocks"
     And I click on "Show" "link" in the "Feedback" "table_row"
-    And I set the following system permissions of "Authenticated user on frontpage" role:
-      | capability                   | permission |
-      | mod/feedback:view            | Allow      |
-      | mod/feedback:complete        | Allow      |
     And I log out
     And the following "activities" exist:
       | activity   | name             | course               | idnumber  | anonymous | publish_stats |

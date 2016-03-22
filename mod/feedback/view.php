@@ -228,7 +228,6 @@ if (!has_capability('mod/feedback:viewreports', $context) &&
 if (has_capability('mod/feedback:mapcourse', $context) && $feedback->course == SITEID) {
     echo $OUTPUT->box_start('generalbox feedback_mapped_courses');
     echo $OUTPUT->heading(get_string("mappedcourses", "feedback"), 3);
-    $mappedcourses = feedback_get_courses_from_sitecourse_map($feedback->id);
     echo '<p>' . get_string('mapcourse_help', 'feedback') . '</p>';
     $mapurl = new moodle_url('/mod/feedback/mapcourse.php', array('id' => $id));
     echo '<p class="mdl-align">' . html_writer::link($mapurl, get_string('mapcourses', 'feedback')) . '</p>';
