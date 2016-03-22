@@ -529,6 +529,9 @@ class feedback_item_multichoice extends feedback_item_base {
             if ($info->subtype === 'r' && !$this->hidenoselect($item)) {
                 $options = array(0 => get_string('not_selected', 'feedback')) + $options;
             }
+            if ($info->subtype === 'c') {
+                $objs[] = $mform->createElement('hidden', $inputname.'[0]', 0);
+            }
             foreach ($options as $idx => $label) {
                 if ($info->subtype === 'r') {
                     $objs[] =& $mform->createElement('radio', $inputname.'[0]', '', $label, $idx);
@@ -557,6 +560,14 @@ class feedback_item_multichoice extends feedback_item_base {
             $mform->addFormRule(function($values, $files) use ($item) {
                 $inputname = $item->typ . '_' . $item->id;
                 return empty($values[$inputname][0]) ? array('group_'.$inputname => get_string('required')) : true;
+            });
+        }
+        // Similar for the checkboxes.
+        if ($info->subtype === 'c' && $item->required) {
+            $mform->addFormRule(function($values, $files) use ($item) {
+                $inputname = $item->typ . '_' . $item->id;
+                return empty($values[$inputname]) || !array_filter($values[$inputname]) ?
+                    array('group_'.$inputname => get_string('required')) : true;
             });
         }
     }
