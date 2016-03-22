@@ -1921,7 +1921,7 @@ function feedback_save_tmp_values($feedbackcompletedtmp, $feedbackcompleted, $us
     //get all values of tmp-completed
     $params = array('completed'=>$feedbackcompletedtmp->id);
     if (!$values = $DB->get_records('feedback_valuetmp', $params)) {
-        return false;
+        //return false;
     }
     foreach ($values as $value) {
         //check if there are depend items
@@ -2068,7 +2068,7 @@ function feedback_get_page_to_continue($feedbackid, $courseid = false, $guestid 
     //is there any break?
 
     if (!$allbreaks = feedback_get_all_break_positions($feedbackid)) {
-        return false;
+        return 0;
     }
 
     $params = array();
@@ -2139,10 +2139,9 @@ function feedback_clean_input_value($item, $value) {
  * @return mixed false on error or the completeid
  */
 function feedback_save_values($usrid, $tmp = false) {
-    global $DB;
+    global $DB, $PAGE;
 
-    $completedid = optional_param('completedid', 0, PARAM_INT);
-
+    $feedback = $PAGE->activityrecord; // TODO param?
     $tmpstr = $tmp ? 'tmp' : '';
     $time = time();
     $timemodified = mktime(0, 0, 0, date('m', $time), date('d', $time), date('Y', $time));
@@ -2150,7 +2149,8 @@ function feedback_save_values($usrid, $tmp = false) {
     if ($usrid == 0) {
         return feedback_create_values($usrid, $timemodified, $tmp);
     }
-    $completed = $DB->get_record('feedback_completed'.$tmpstr, array('id'=>$completedid));
+    $completed = $DB->get_record('feedback_completed'.$tmpstr, 
+            array('userid' => $usrid, 'feedback' => $feedback->id));
     if (!$completed) {
         return feedback_create_values($usrid, $timemodified, $tmp);
     } else {
@@ -2167,12 +2167,13 @@ function feedback_save_values($usrid, $tmp = false) {
  * @return mixed false on error or the completeid
  */
 function feedback_save_guest_values($guestid) {
-    global $DB;
+    global $DB, $PAGE;
 
-    $completedid = optional_param('completedid', false, PARAM_INT);
+    $feedback = $PAGE->activityrecord;
 
+    $params = array('userid' => 0, 'feedback' => $feedback->id, 'guestid' => $guestid);
     $timemodified = time();
-    if (!$completed = $DB->get_record('feedback_completedtmp', array('id'=>$completedid))) {
+    if (!$completed = $DB->get_record('feedback_completedtmp', $params)) {
         return feedback_create_values(0, $timemodified, true, $guestid);
     } else {
         $completed->timemodified = $timemodified;
@@ -2311,20 +2312,19 @@ function feedback_check_values($firstitem, $lastitem) {
  * @return mixed false on error or the completedid
  */
 function feedback_create_values($usrid, $timemodified, $tmp = false, $guestid = false) {
-    global $DB;
+    global $DB, $PAGE;
 
-    $feedbackid = optional_param('feedbackid', false, PARAM_INT);
-    $anonymous_response = optional_param('anonymous_response', false, PARAM_INT);
-    $courseid = optional_param('courseid', false, PARAM_INT);
+    $feedback = $PAGE->activityrecord; // TODO from param?
+    $courseid = optional_param('courseid', false, PARAM_INT);  // TODO from param?
 
     $tmpstr = $tmp ? 'tmp' : '';
     //first we create a new completed record
     $completed = new stdClass();
-    $completed->feedback           = $feedbackid;
+    $completed->feedback           = $feedback->id;
     $completed->userid             = $usrid;
     $completed->guestid            = $guestid;
     $completed->timemodified       = $timemodified;
-    $completed->anonymous_response = $anonymous_response;
+    $completed->anonymous_response = $feedback->anonymous;
 
     $completedid = $DB->insert_record('feedback_completed'.$tmpstr, $completed);
 
@@ -2381,7 +2381,7 @@ function feedback_create_values($usrid, $timemodified, $tmp = false, $guestid = 
 function feedback_update_values($completed, $tmp = false) {
     global $DB;
 
-    $courseid = optional_param('courseid', false, PARAM_INT);
+    $courseid = optional_param('courseid', false, PARAM_INT); // TODO from param
     $tmpstr = $tmp ? 'tmp' : '';
 
     $DB->update_record('feedback_completed'.$tmpstr, $completed);
@@ -2402,9 +2402,9 @@ function feedback_update_values($completed, $tmp = false) {
         $keyname = $item->typ.'_'.$item->id;
 
         if ($itemobj->value_is_array()) {
-            $itemvalue = optional_param_array($keyname, null, $itemobj->value_type());
+            $itemvalue = optional_param_array($keyname, null, $itemobj->value_type()); // TODO yuk!
         } else {
-            $itemvalue = optional_param($keyname, null, $itemobj->value_type());
+            $itemvalue = optional_param($keyname, null, $itemobj->value_type()); // TODO yuk!
         }
 
         //is the itemvalue set (could be a subset of items because pagebreak)?

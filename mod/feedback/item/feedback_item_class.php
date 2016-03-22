@@ -136,6 +136,9 @@ abstract class feedback_item_base {
      */
     abstract public function clean_input_value($value);
 
+    public function complete_form_element($item, $form) {
+
+    }
 }
 
 //a dummy class to realize pagebreaks

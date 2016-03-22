@@ -255,6 +255,43 @@ class feedback_item_captcha extends feedback_item_base {
     }
 
     /**
+     * Adds an input element to the complete form
+     *
+     * @param stdClass $item
+     * @param mod_feedback_complete_form $form
+     */
+    public function complete_form_element($item, $form) {
+        global $OUTPUT;
+        // If 'required' is added as rule for the recaptcha element it looks at the wrong field,
+        // we add the red "*" manually to the element label.
+        $required = '<img class="req" title="'.get_string('requiredelement', 'form').'" alt="'.
+                get_string('requiredelement', 'form').'" src="'.$OUTPUT->pix_url('req') .'" />';
+        $name = get_string('captcha', 'feedback') . $required;
+        $inputname = $item->typ . '_' . $item->id;
+        $mform = $form->get_quick_form();
+        $mform->addElement('recaptcha', $inputname, $name);
+
+        // Add recaptcha validation to the form.
+        $mform->addFormRule(function($values, $files) use ($item, $mform) {
+            $elementname = $item->typ . '_' . $item->id;
+            $recaptchaelement = $mform->getElement($elementname);
+            if (empty($values['recaptcha_response_field'])) {
+                return array($elementname => get_string('required'));
+            } else if (!empty($values['recaptcha_challenge_field'])) {
+                $challengefield = $values['recaptcha_challenge_field'];
+                $responsefield = $values['recaptcha_response_field'];
+                if (true !== ($result = $recaptchaelement->verify($challengefield, $responsefield))) {
+                    return array($elementname => $result);
+                }
+            } else {
+                return array($elementname => get_string('missingrecaptchachallengefield'));
+            }
+            return true;
+        });
+
+    }
+
+    /**
      * print the item at the complete-page of feedback
      *
      * @global object

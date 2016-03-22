@@ -197,6 +197,7 @@ $string['not_completed_yet'] = 'Not completed yet';
 $string['not_started'] = 'not started';
 $string['no_templates_available_yet'] = 'No templates available yet';
 $string['not_selected'] = 'Not selected';
+$string['numberoutofrange'] = 'Number out of range';
 $string['numeric'] = 'Numeric answer';
 $string['numeric_range_from'] = 'Range from';
 $string['numeric_range_to'] = 'Range to';

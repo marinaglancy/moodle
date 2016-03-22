@@ -273,6 +273,28 @@ class feedback_item_textfield extends feedback_item_base {
     }
 
     /**
+     * Adds an input element to the complete form
+     *
+     * @param stdClass $item
+     * @param mod_feedback_complete_form $form
+     */
+    public function complete_form_element($item, $form) {
+        $name = format_text($item->name, FORMAT_HTML, array('noclean' => true, 'para' => false));
+        $inputname = $item->typ . '_' . $item->id;
+        $mform = $form->get_quick_form();
+        $mform->addElement('text', $inputname, $name);
+        $mform->setType($inputname, PARAM_NOTAGS);
+        if ($item->required == 1) {
+            $mform->addRule($inputname, get_string('required'), 'required');
+        }
+        $tmpvalue = $form->get_item_value($item);
+        if ($tmpvalue !== null) {
+            $mform->setDefault($inputname, $tmpvalue);
+        }
+        // TODO size, maxlength
+    }
+
+    /**
      * print the item at the complete-page of feedback
      *
      * @global object

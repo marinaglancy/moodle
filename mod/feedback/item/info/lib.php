@@ -348,6 +348,53 @@ class feedback_item_info extends feedback_item_base {
     }
 
     /**
+     * Adds an input element to the complete form
+     *
+     * @param stdClass $item
+     * @param mod_feedback_complete_form $form
+     */
+    public function complete_form_element($item, $form) {
+        global $DB;
+        $presentation = $item->presentation;
+        $courseid = $form->get_current_course_id();
+        $options = array('' => '');
+        switch ($presentation) {
+            case 1:
+                $feedback = $form->get_feedback();
+                if ($feedback->anonymous == FEEDBACK_ANONYMOUS_YES) {
+                    $options = array(0 => '-');
+                } else {
+                    $v = time();
+                    $options = array($v => userdate($v));
+                }
+                break;
+            case 2:
+                $course = get_course($courseid);
+                $v = format_string($course->shortname, true,
+                        array('context' => context_course::instance($course->id)));
+                $options = array($v => $v);
+                break;
+            case 3:
+                if ($courseid !== SITEID) {
+                    $coursecategory = $DB->get_record_sql('SELECT cc.id, cc.name FROM {course_categories} cc, {course} c '
+                            . 'WHERE c.category = cc.id AND c.id = ?', array($courseid));
+                    $v = format_string($coursecategory->name, true,
+                            array('context' => context_coursecat::instance($coursecategory->id)));
+                    $options = array($v => $v);
+                }
+                break;
+        }
+
+        $name = format_text($item->name, FORMAT_HTML, array('noclean' => true, 'para' => false));
+        $inputname = $item->typ . '_' . $item->id;
+        $mform = $form->get_quick_form();
+        $el = $mform->addElement('select', $inputname, $name, $options);
+        $mform->setConstant($inputname, key($options));
+        $el->freeze();
+        $el->setPersistantFreeze(true);
+    }
+
+    /**
      * print the item at the complete-page of feedback
      *
      * @global object

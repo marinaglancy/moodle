@@ -232,23 +232,6 @@ class feedback_item_numeric extends feedback_item_base {
         $strrequiredmark = '<img class="req" title="'.get_string('requiredelement', 'form').'" alt="'.
             get_string('requiredelement', 'form').'" src="'.$OUTPUT->pix_url('req') .'" />';
 
-        //get the range
-        $range_from_to = explode('|', $item->presentation);
-
-        //get the min-value
-        if (isset($range_from_to[0]) AND is_numeric($range_from_to[0])) {
-            $range_from = floatval($range_from_to[0]);
-        } else {
-            $range_from = '-';
-        }
-
-        //get the max-value
-        if (isset($range_from_to[1]) AND is_numeric($range_from_to[1])) {
-            $range_to = floatval($range_from_to[1]);
-        } else {
-            $range_to = '-';
-        }
-
         $requiredmark = ($item->required == 1) ? $strrequiredmark : '';
         //print the question and label
         $inputname = $item->typ . '_' . $item->id;
@@ -267,22 +250,7 @@ class feedback_item_numeric extends feedback_item_base {
             }
         }
         echo '<span class="feedback_item_numinfo">';
-        switch(true) {
-            case ($range_from === '-' AND is_numeric($range_to)):
-                echo ' ('.get_string('maximal', 'feedback').
-                        ': '.$this->format_float($range_to).')';
-                break;
-            case (is_numeric($range_from) AND $range_to === '-'):
-                echo ' ('.get_string('minimal', 'feedback').
-                        ': '.$this->format_float($range_from).')';
-                break;
-            case ($range_from === '-' AND $range_to === '-'):
-                break;
-            default:
-                echo ' ('.$this->format_float($range_from).
-                        ' - '.$this->format_float($range_to).')';
-                break;
-        }
+        echo $this->get_boundaries_for_display($item);
         echo '</span>';
         echo '</label>';
         echo '</div>';
@@ -315,6 +283,30 @@ class feedback_item_numeric extends feedback_item_base {
         }
         $decimal = is_int($value) ? 0 : strlen(substr(strrchr($value, '.'), 1));
         return format_float($value, $decimal);
+    }
+
+    protected function get_boundaries_for_display($item) {
+        list($rangefrom, $rangeto) = explode('|', $item->presentation);
+        if (!isset($rangefrom) || !is_numeric($rangefrom)) {
+            $rangefrom = null;
+        }
+        if (!isset($rangeto) || !is_numeric($rangeto)) {
+            $rangeto = null;
+        }
+
+        if (is_null($rangefrom) && is_numeric($rangeto)) {
+            return ' (' . get_string('maximal', 'feedback') .
+                        ': ' . $this->format_float($rangeto) . ')';
+        }
+        if (is_numeric($rangefrom) && is_null($rangeto)) {
+            return ' (' . get_string('minimal', 'feedback') .
+                        ': ' . $this->format_float($rangefrom) . ')';
+        }
+        if (is_null($rangefrom) && is_null($rangeto)) {
+            return '';
+        }
+        return ' (' . $this->format_float($rangefrom) .
+                ' - ' . $this->format_float($rangeto) . ')';
     }
 
     /**
@@ -396,6 +388,43 @@ class feedback_item_numeric extends feedback_item_base {
     }
 
     /**
+     * Adds an input element to the complete form
+     *
+     * @param stdClass $item
+     * @param mod_feedback_complete_form $form
+     */
+    public function complete_form_element($item, $form) {
+        $name = format_text($item->name, FORMAT_HTML, array('noclean' => true, 'para' => false)) .
+                $this->get_boundaries_for_display($item);
+        $inputname = $item->typ . '_' . $item->id;
+        $mform = $form->get_quick_form();
+        $mform->addElement('text', $inputname, $name);
+        if ($item->required == 1) {
+            $mform->addRule($inputname, get_string('required'), 'required');
+        }
+        if (($tmpvalue = $form->get_item_value($item)) !== null) {
+            $mform->setDefault($inputname, $this->format_float($tmpvalue));
+        }
+        // Add form validation rule to check for boundaries.
+        $mform->addFormRule(function($values, $files) use ($item) {
+            $inputname = $item->typ . '_' . $item->id;
+            list($rangefrom, $rangeto) = explode('|', $item->presentation);
+            if (trim($values[$inputname]) === '') {
+                return $item->required ? array($inputname => get_string('required')) : true;
+            }
+            $value = unformat_float($values[$inputname], true);
+            if ($value === false) {
+                return array($inputname => get_string('invalidnum', 'error'));
+            }
+            if ((is_numeric($rangefrom) && $value < floatval($rangefrom)) ||
+                    (is_numeric($rangeto) && $value > floatval($rangeto))) {
+                return array($inputname => get_string('numberoutofrange', 'feedback'));
+            }
+            return true;
+        });
+    }
+
+    /**
      * print the item at the complete-page of feedback
      *
      * @global object
@@ -409,20 +438,6 @@ class feedback_item_numeric extends feedback_item_base {
         $strrequiredmark = '<img class="req" title="'.get_string('requiredelement', 'form').'" alt="'.
             get_string('requiredelement', 'form').'" src="'.$OUTPUT->pix_url('req') .'" />';
 
-        //get the range
-        $range_from_to = explode('|', $item->presentation);
-        //get the min-value
-        if (isset($range_from_to[0]) AND is_numeric($range_from_to[0])) {
-            $range_from = floatval($range_from_to[0]);
-        } else {
-            $range_from = '-';
-        }
-        //get the max-value
-        if (isset($range_from_to[1]) AND is_numeric($range_from_to[1])) {
-            $range_to = floatval($range_from_to[1]);
-        } else {
-            $range_to = '-';
-        }
         $requiredmark = ($item->required == 1) ? $strrequiredmark : '';
 
         //print the question and label
@@ -431,22 +446,7 @@ class feedback_item_numeric extends feedback_item_base {
             echo '('. format_string($item->label).') ';
         }
         echo format_text($item->name . $requiredmark, FORMAT_HTML, array('noclean' => true, 'para' => false));
-        switch(true) {
-            case ($range_from === '-' AND is_numeric($range_to)):
-                echo ' ('.get_string('maximal', 'feedback').
-                    ': '.$this->format_float($range_to).')';
-                break;
-            case (is_numeric($range_from) AND $range_to === '-'):
-                echo ' ('.get_string('minimal', 'feedback').
-                    ': '.$this->format_float($range_from).')';
-                break;
-            case ($range_from === '-' AND $range_to === '-'):
-                break;
-            default:
-                echo ' ('.$this->format_float($range_from).
-                    ' - '.$this->format_float($range_to).')';
-                break;
-        }
+        echo $this->get_boundaries_for_display($item);
         echo '</div>';
 
         //print the presentation
