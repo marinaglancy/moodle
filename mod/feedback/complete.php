@@ -174,9 +174,8 @@ if ($feedback->multiple_submit == 0 ) {
 
 // Initialise the form processing feedback completion.
 if ($feedback_can_submit) {
-    $form = new mod_feedback_complete_form('',
-            array('feedback' => $feedback, 'cm' => $cm, 'courseid' => $courseid, 'gopage' => $gopage),
-            'post', '', array('id' => 'feedback_complete_form'));
+    $form = new mod_feedback_complete_form(mod_feedback_complete_form::MODE_COMPLETE, 'feedback_complete_form',
+            array('feedback' => $feedback, 'cm' => $cm, 'courseid' => $courseid, 'gopage' => $gopage));
     if ($form->is_cancelled()) {
         // Form was cancelled - return to the course page.
         redirect(course_get_url($courseid ?: $course));

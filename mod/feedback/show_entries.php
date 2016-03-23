@@ -126,8 +126,21 @@ if ($userid || $showcompleted) {
 
     echo $OUTPUT->heading($responsetitle, 4);
 
+    //$params = array('completed'=>$feedbackcompleted->id);
+    //$completeddata = $DB->get_records('feedback_value', $params);
+    //print_r($completeddata);
+    $form = new mod_feedback_complete_form(mod_feedback_complete_form::MODE_VIEW_RESPONSE,
+            'feedback_viewresponse_form', array(
+                'feedback' => $feedback,
+                'cm' => $cm,
+                'courseid' => $courseid,
+                'completed' => $feedbackcompleted
+            ));
+    $form->display();
+
+
     // Print the items.
-    if (is_array($feedbackitems)) {
+    /*if (is_array($feedbackitems)) {
         $align = right_to_left() ? 'right' : 'left';
 
         echo $OUTPUT->box_start('feedback_items');
@@ -156,7 +169,7 @@ if ($userid || $showcompleted) {
             echo $OUTPUT->box_end();
         }
         echo $OUTPUT->box_end();
-    }
+    }*/
     echo $OUTPUT->continue_button($baseurl);
 }
 

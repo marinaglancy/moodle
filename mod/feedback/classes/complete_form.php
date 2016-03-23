@@ -33,17 +33,30 @@ defined('MOODLE_INTERNAL') || die();
  */
 class mod_feedback_complete_form extends moodleform {
 
+    const MODE_COMPLETE = 1;
+    const MODE_PRINT = 2;
+    const MODE_EDIT = 3;
+    const MODE_VIEW_RESPONSE = 4;
+
+    protected $mode;
     protected $feedback;
     protected $cm;
     protected $courseid;
     protected $gopage;
     protected $completedtmp;
+    protected $completed;
+
+    public function __construct($mode, $id, $customdata = null) {
+        $this->mode = $mode;
+        parent::__construct(null, $customdata, 'POST', '',
+                array('id' => $id, 'class' => 'feedback-form'), true);
+    }
 
     public function definition() {
         $this->feedback = $this->_customdata['feedback'];
         $this->cm = $this->_customdata['cm'];
         $this->courseid = $this->_customdata['courseid'];
-        $this->gopage = $this->_customdata['gopage'];
+        $this->gopage = isset($this->_customdata['gopage']) ? $this->_customdata['gopage'] : 0;
 
         $mform = $this->_form;
         $mform->addElement('hidden', 'id', $this->cm->id);
@@ -68,20 +81,27 @@ class mod_feedback_complete_form extends moodleform {
             $mform->addElement('static', 'anonymousmode', '', get_string('mode', 'feedback') . ': ' . $anonymousmodeinfo);
         }
 
-        $buttonarray = array();
-        $buttonarray[] = &$mform->createElement('submit', 'gopreviouspage', get_string('previous_page', 'feedback'));
-        $buttonarray[] = &$mform->createElement('submit', 'gonextpage', get_string('next_page', 'feedback'),
-                array('class' => 'form-submit'));
-        $buttonarray[] = &$mform->createElement('submit', 'savevalues', get_string('save_entries', 'feedback'),
-                array('class' => 'form-submit'));
-        $buttonarray[] = &$mform->createElement('static', 'buttonsseparator', '', '<br>');
-        $buttonarray[] = &$mform->createElement('cancel');
-        $mform->addGroup($buttonarray, 'buttonar', '', array(' '), false);
-        $mform->closeHeaderBefore('buttonar');
+        if ($this->mode == self::MODE_COMPLETE) {
+            $buttonarray = array();
+            $buttonarray[] = &$mform->createElement('submit', 'gopreviouspage', get_string('previous_page', 'feedback'));
+            $buttonarray[] = &$mform->createElement('submit', 'gonextpage', get_string('next_page', 'feedback'),
+                    array('class' => 'form-submit'));
+            $buttonarray[] = &$mform->createElement('submit', 'savevalues', get_string('save_entries', 'feedback'),
+                    array('class' => 'form-submit'));
+            $buttonarray[] = &$mform->createElement('static', 'buttonsseparator', '', '<br>');
+            $buttonarray[] = &$mform->createElement('cancel');
+            $mform->addGroup($buttonarray, 'buttonar', '', array(' '), false);
+            $mform->closeHeaderBefore('buttonar');
+        }
 
-        $this->completedtmp = feedback_retrieve_response_tmp($this->feedback, $this->courseid);
+        if ($this->mode == self::MODE_COMPLETE) {
+            $this->completedtmp = feedback_retrieve_response_tmp($this->feedback, $this->courseid);
+        } else {
+            $this->completed = isset($this->_customdata['completed']) ?
+                    $this->_customdata['completed'] : array();
+        }
 
-        $this->set_data(array('gopage' => $this->_customdata['gopage']));
+        $this->set_data(array('gopage' => $this->gopage));
     }
 
     /*
@@ -117,9 +137,18 @@ class mod_feedback_complete_form extends moodleform {
      * All form setup that is dependent on form values should go in here.
      */
     public function definition_after_data() {
+        parent::definition_after_data();
+
+        if ($this->mode == self::MODE_COMPLETE) {
+            $this->definition_after_data_complete();
+        } else {
+            $this->definition_after_data_preview();
+        }
+    }
+
+    protected function definition_after_data_complete() {
         global $DB, $OUTPUT;
         $mform = $this->_form;
-        parent::definition_after_data();
         list($startposition, $firstpagebreak, $ispagebreak, $feedbackitems) =
                 feedback_get_page_boundaries($this->feedback, $this->gopage);
 
@@ -137,7 +166,7 @@ class mod_feedback_complete_form extends moodleform {
 
             if ($feedbackitem->dependitem > 0) {
                 // Check if the conditions are ok.
-                if (!isset($this->completedtmp->id) OR 
+                if (!isset($this->completedtmp->id) OR
                         !feedback_compare_item_value($this->completedtmp->id,
                             $feedbackitem->dependitem, $feedbackitem->dependvalue, true)) {
                     $lastitem = $feedbackitem;
@@ -178,6 +207,32 @@ class mod_feedback_complete_form extends moodleform {
         $mform->removeElement('__dummyelement');
     }
 
+    protected function definition_after_data_preview() {
+        global $DB;
+        $mform = $this->_form;
+        $feedbackitems = $DB->get_records('feedback_item', array('feedback'=>$this->feedback->id), 'position');
+        $pageidx = 1;
+        foreach ($feedbackitems as $feedbackitem) {
+            if ($feedbackitem->typ === 'pagebreak') {
+                $mform->addElement('header', 'page'.$pageidx, 'PAGE '.$pageidx); // TODO string
+                $mform->setExpanded('page'.$pageidx);
+                $pageidx++;
+                break;
+            }
+        }
+        foreach ($feedbackitems as $feedbackitem) {
+            if ($feedbackitem->typ != 'pagebreak') {
+                $itemobj = feedback_get_item_class($feedbackitem->typ);
+                $itemobj->complete_form_element($feedbackitem, $this);
+            } else {
+                $mform->addElement('header', 'page'.$pageidx, 'PAGE '.$pageidx); // TODO string
+                $mform->setExpanded('page'.$pageidx);
+                $pageidx++;
+            }
+
+        }
+    }
+
     private function remove_button($buttonname) {
         $el = $this->_form->getElement('buttonar');
         foreach ($el->_elements as $idx => $button) {
@@ -207,6 +262,10 @@ class mod_feedback_complete_form extends moodleform {
                         $value = feedback_get_item_value($this->completedtmp->id,
                                                          $feedbackitem->id,
                                                          true);
+                    } else if (isset($this->completed->id)) {
+                        $value = feedback_get_item_value($this->completed->id,
+                                                         $feedbackitem->id,
+                                                         false);
                     }
                 //}
         return $value;
@@ -226,6 +285,14 @@ class mod_feedback_complete_form extends moodleform {
 
     public function get_feedback() {
         return $this->feedback;
+    }
+
+    public function get_mode() {
+        return $this->mode;
+    }
+
+    public function is_frozen() {
+        return $this->mode == self::MODE_VIEW_RESPONSE;
     }
 
     public function get_suggested_name($item) {

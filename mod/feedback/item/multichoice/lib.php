@@ -523,9 +523,13 @@ class feedback_item_multichoice extends feedback_item_base {
         foreach ($presentation as $idx => $optiontext) {
             $options[$idx+1] = format_text($optiontext, FORMAT_HTML, array('noclean' => true, 'para' => false));
         }
-        if ($info->subtype === 'd') {
+
+        if ($info->subtype === 'd' || $form->is_frozen()) {
             $el = $mform->addElement('select', $inputname.'[0]', $name, array('' => '') + $options,
                     array('class' => $class));
+            if ($form->is_frozen()) {
+                $el->freeze();
+            }
         } else {
             $objs = array();
             if ($info->subtype === 'r' && !$this->hidenoselect($item)) {

@@ -398,19 +398,22 @@ class feedback_item_numeric extends feedback_item_base {
                 html_writer::span($this->get_boundaries_for_display($item), 'range');
         $inputname = $item->typ . '_' . $item->id;
         $mform = $form->get_quick_form();
-        $mform->addElement('text', $inputname, $name,
-            array('class' => $form->get_suggested_class($item)));
+        $tmpvalue = $this->format_float($form->get_item_value($item));
+        if ($form->is_frozen()) {
+            $el = $mform->addElement('static', $inputname, $name, $tmpvalue);
+            $el->setAttributes(array('class' => $form->get_suggested_class($item)));
+        } else {
+            $el = $mform->addElement('text', $inputname, $name, array('class' => $form->get_suggested_class($item)));
+            $mform->setDefault($inputname, $tmpvalue);
+        }
         if ($item->required == 1) {
             $mform->addRule($inputname, get_string('required'), 'required');
-        }
-        if (($tmpvalue = $form->get_item_value($item)) !== null) {
-            $mform->setDefault($inputname, $this->format_float($tmpvalue));
         }
         // Add form validation rule to check for boundaries.
         $mform->addFormRule(function($values, $files) use ($item) {
             $inputname = $item->typ . '_' . $item->id;
             list($rangefrom, $rangeto) = explode('|', $item->presentation);
-            if (trim($values[$inputname]) === '') {
+            if (!isset($values[$inputname]) || trim($values[$inputname]) === '') {
                 return $item->required ? array($inputname => get_string('required')) : true;
             }
             $value = unformat_float($values[$inputname], true);

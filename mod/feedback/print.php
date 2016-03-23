@@ -35,7 +35,7 @@ require_course_login($course, true, $cm);
 
 $feedback = $PAGE->activityrecord;
 
-$PAGE->set_pagelayout('embedded');
+$PAGE->set_pagelayout('popup');
 
 /// Print the page header
 $strfeedbacks = get_string("modulenameplural", "feedback");
@@ -53,15 +53,22 @@ echo $OUTPUT->header();
 ///////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////
-echo $OUTPUT->heading(format_text($feedback->name));
+echo $OUTPUT->heading(format_string($feedback->name));
 
 $continueurl = new moodle_url('/mod/feedback/view.php', array('id' => $id));
 if ($courseid) {
     $continueurl->param('courseid', $courseid);
 }
 
-$feedbackitems = $DB->get_records('feedback_item', array('feedback'=>$feedback->id), 'position');
-echo $OUTPUT->box_start('generalbox boxaligncenter boxwidthwide');
+$form = new mod_feedback_complete_form(mod_feedback_complete_form::MODE_PRINT, 'feedback_print_form', array(
+    'feedback' => $feedback, 'cm' => $cm, 'courseid' => $courseid
+));
+echo $OUTPUT->continue_button($continueurl);
+$form->display();
+echo $OUTPUT->continue_button($continueurl);
+
+
+/*$feedbackitems = $DB->get_records('feedback_item', array('feedback'=>$feedback->id), 'position');
 echo $OUTPUT->continue_button($continueurl);
 if (is_array($feedbackitems)) {
     $itemnr = 0;
@@ -105,8 +112,7 @@ if (is_array($feedbackitems)) {
     echo $OUTPUT->box(get_string('no_items_available_yet', 'feedback'),
                     'generalbox boxaligncenter boxwidthwide');
 }
-echo $OUTPUT->continue_button($continueurl);
-echo $OUTPUT->box_end();
+echo $OUTPUT->continue_button($continueurl);*/
 /// Finish the page
 ///////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////

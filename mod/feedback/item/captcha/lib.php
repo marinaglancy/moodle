@@ -269,6 +269,13 @@ class feedback_item_captcha extends feedback_item_base {
         $name = get_string('captcha', 'feedback') . $required;
         $inputname = $item->typ . '_' . $item->id;
         $mform = $form->get_quick_form();
+
+        if ($form->get_mode() != mod_feedback_complete_form::MODE_COMPLETE) {
+            $el = $mform->addElement('static', $inputname, $name);
+            $el->setAttributes(array('class' => $form->get_suggested_class($item)));
+            return;
+        }
+
         $mform->addElement('recaptcha', $inputname, $name,
                 array('class' => $form->get_suggested_class($item)));
 

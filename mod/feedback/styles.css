@@ -129,7 +129,7 @@ div img.feedback_bar_image {
 }
 
 
-.path-mod-feedback .mform#feedback_complete_form .fitem .fitemtitle {
+.path-mod-feedback .mform.feedback-form .fitem .fitemtitle {
     display: block;
     margin-top: 4px;
     margin-bottom: 4px;
@@ -137,7 +137,7 @@ div img.feedback_bar_image {
     width: 100%;
 }
 
-.path-mod-feedback .mform#feedback_complete_form .fitem .felement {
+.path-mod-feedback .mform.feedback-form .fitem .felement {
                 margin-left: 0;
                 width: 100%;
                 float: left;
@@ -145,49 +145,49 @@ div img.feedback_bar_image {
                 padding-right: 0;
             }
 
-.path-mod-feedback .mform#feedback_complete_form .fitem .fstatic:empty {
+.path-mod-feedback .mform.feedback-form .fitem .fstatic:empty {
                 display: none;
             }
-.path-mod-feedback .mform#feedback_complete_form .fitem .fcheckbox > span,
-.path-mod-feedback .mform#feedback_complete_form .fitem .fradio > span,
-.path-mod-feedback .mform#feedback_complete_form .fitem .fgroup > span {
+.path-mod-feedback .mform.feedback-form .fitem .fcheckbox > span,
+.path-mod-feedback .mform.feedback-form .fitem .fradio > span,
+.path-mod-feedback .mform.feedback-form .fitem .fgroup > span {
                 margin-top: 4px;
             }
-.path-mod-feedback .mform#feedback_complete_form .femptylabel .fitemtitle {
+.path-mod-feedback .mform.feedback-form .femptylabel .fitemtitle {
                 display: inline-block;
                 width: auto;
                 /* margin-right: 8px;*/
             }
-.path-mod-feedback .mform#feedback_complete_form .femptylabel .felement {
+.path-mod-feedback .mform.feedback-form .femptylabel .felement {
                 display: inline-block;
                 margin-top: 4px;
                 padding-top: 5px;
                 width: auto;
             }
-.path-mod-feedback .mform#feedback_complete_form .fitem_fcheckbox .fitemtitle,
-.path-mod-feedback .mform#feedback_complete_form .fitem_fcheckbox .felement {
+.path-mod-feedback .mform.feedback-form .fitem_fcheckbox .fitemtitle,
+.path-mod-feedback .mform.feedback-form .fitem_fcheckbox .felement {
                 display: inline-block;
                 width: auto;
             }
-.path-mod-feedback .mform#feedback_complete_form .fitem_fcheckbox .felement {
+.path-mod-feedback .mform.feedback-form .fitem_fcheckbox .felement {
                 padding: 6px;
             }
 
-/*.dir-rtl.path-mod-feedback .mform#feedback_complete_form .femptylabel .fitemtitle {
+/*.dir-rtl.path-mod-feedback .mform.feedback-form .femptylabel .fitemtitle {
             margin-right: 0px;
             margin-left: 8px;
         }*/
-.dir-rtl.path-mod-feedback .mform#feedback_complete_form .fitem .fitemtitle {
+.dir-rtl.path-mod-feedback .mform.feedback-form .fitem .fitemtitle {
                 text-align: right;
             }
-.dir-rtl.path-mod-feedback .mform#feedback_complete_form .fitem .felement {
+.dir-rtl.path-mod-feedback .mform.feedback-form .fitem .felement {
                 margin-right: 0;
                 float: right;
                 padding-right: 0;
                 padding-left: 0;
             }
 
-.dir-rtl.path-mod-feedback .mform#feedback_complete_form .fitem_fcheckbox .felement {
+.dir-rtl.path-mod-feedback .mform.feedback-form .fitem_fcheckbox .felement {
             float: right;
         }
         

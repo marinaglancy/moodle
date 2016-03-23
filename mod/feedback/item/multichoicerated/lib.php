@@ -409,9 +409,12 @@ class feedback_item_multichoicerated extends feedback_item_base {
             $options[$idx+1] = format_text("<span class=\"weight\">($weight) </span>".$optiontext,
                     FORMAT_HTML, array('noclean' => true, 'para' => false));
         }
-        if ($info->subtype === 'd') {
+        if ($info->subtype === 'd' || $form->is_frozen()) {
             $el = $mform->addElement('select', $inputname, $name, array('' => '') + $options,
                     array('class' => $class));
+            if ($form->is_frozen()) {
+                $el->freeze();
+            }
         } else {
             $objs = array();
             if ($info->subtype === 'r' && !$this->hidenoselect($item)) {

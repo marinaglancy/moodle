@@ -292,9 +292,12 @@ class feedback_item_textarea extends feedback_item_base {
         $inputname = $item->typ . '_' . $item->id;
         list($cols, $rows) = explode ("|", $item->presentation);
         $mform = $form->get_quick_form();
-        $mform->addElement('textarea', $inputname, $name, array('rows' => $rows, 'cols' => $cols,
+        $el = $mform->addElement('textarea', $inputname, $name, array('rows' => $rows, 'cols' => $cols,
             'class' => $form->get_suggested_class($item)));
         $mform->setType($inputname, PARAM_NOTAGS);
+        if ($form->is_frozen()) {
+            $el->freeze();
+        }
         if ($item->required == 1) {
             $mform->addRule($inputname, get_string('required'), 'required');
         }
