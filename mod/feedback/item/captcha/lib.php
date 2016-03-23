@@ -269,7 +269,8 @@ class feedback_item_captcha extends feedback_item_base {
         $name = get_string('captcha', 'feedback') . $required;
         $inputname = $item->typ . '_' . $item->id;
         $mform = $form->get_quick_form();
-        $mform->addElement('recaptcha', $inputname, $name);
+        $mform->addElement('recaptcha', $inputname, $name,
+                array('class' => $form->get_suggested_class($item)));
 
         // Add recaptcha validation to the form.
         $mform->addFormRule(function($values, $files) use ($item, $mform) {

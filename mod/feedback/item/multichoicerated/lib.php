@@ -399,16 +399,19 @@ class feedback_item_multichoicerated extends feedback_item_base {
     public function complete_form_element($item, $form) {
         $info = $this->get_info($item);
         $lines = explode(FEEDBACK_MULTICHOICERATED_LINE_SEP, $info->presentation);
-        $name = format_text($item->name, FORMAT_HTML, array('noclean' => true, 'para' => false));
+        $name = $form->get_suggested_name($item);
+        $class = $form->get_suggested_class($item) . ' multichoicerated-' . $info->subtype;
         $inputname = $item->typ . '_' . $item->id ;
         $mform = $form->get_quick_form();
         $options = array();
         foreach ($lines as $idx => $line) {
             list($weight, $optiontext) = explode(FEEDBACK_MULTICHOICERATED_VALUE_SEP, $line);
-            $options[$idx+1] = format_text("($weight) ".$optiontext, FORMAT_HTML, array('noclean' => true, 'para' => false));
+            $options[$idx+1] = format_text("<span class=\"weight\">($weight) </span>".$optiontext,
+                    FORMAT_HTML, array('noclean' => true, 'para' => false));
         }
         if ($info->subtype === 'd') {
-            $el = $mform->addElement('select', $inputname, $name, array('' => '') + $options);
+            $el = $mform->addElement('select', $inputname, $name, array('' => '') + $options,
+                    array('class' => $class));
         } else {
             $objs = array();
             if ($info->subtype === 'r' && !$this->hidenoselect($item)) {
@@ -418,7 +421,9 @@ class feedback_item_multichoicerated extends feedback_item_base {
                 $objs[] =& $mform->createElement('radio', $inputname, '', $label, $idx);
             }
             $separator = $info->horizontal ? ' ' : '<br>';
+            $class .= ' multichoicerated-' . ($info->horizontal ? 'horizontal' : 'vertical');
             $el = $mform->addElement('group', 'group_'.$inputname, $name, $objs, $separator, false);
+            $el->setAttributes(array('class' => $class));
         }
         if ($item->required == 1) {
             $mform->addRule($el->getName(), get_string('required'), 'required');

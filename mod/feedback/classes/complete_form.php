@@ -70,9 +70,11 @@ class mod_feedback_complete_form extends moodleform {
 
         $buttonarray = array();
         $buttonarray[] = &$mform->createElement('submit', 'gopreviouspage', get_string('previous_page', 'feedback'));
-        $buttonarray[] = &$mform->createElement('submit', 'gonextpage', get_string('next_page', 'feedback'));
+        $buttonarray[] = &$mform->createElement('submit', 'gonextpage', get_string('next_page', 'feedback'),
+                array('class' => 'form-submit'));
         $buttonarray[] = &$mform->createElement('submit', 'savevalues', get_string('save_entries', 'feedback'),
                 array('class' => 'form-submit'));
+        $buttonarray[] = &$mform->createElement('static', 'buttonsseparator', '', '<br>');
         $buttonarray[] = &$mform->createElement('cancel');
         $mform->addGroup($buttonarray, 'buttonar', '', array(' '), false);
         $mform->closeHeaderBefore('buttonar');
@@ -224,6 +226,18 @@ class mod_feedback_complete_form extends moodleform {
 
     public function get_feedback() {
         return $this->feedback;
+    }
+
+    public function get_suggested_name($item) {
+        return format_text($item->name, FORMAT_HTML, array('noclean' => true, 'para' => false));
+    }
+
+    public function get_suggested_class($item) {
+        $class = "feedback-item-{$item->typ}";
+        if ($item->dependitem) {
+            $class .= " has-dependency";
+        }
+        return $class;
     }
 
     /**

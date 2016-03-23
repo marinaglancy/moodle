@@ -394,11 +394,12 @@ class feedback_item_numeric extends feedback_item_base {
      * @param mod_feedback_complete_form $form
      */
     public function complete_form_element($item, $form) {
-        $name = format_text($item->name, FORMAT_HTML, array('noclean' => true, 'para' => false)) .
-                $this->get_boundaries_for_display($item);
+        $name = $form->get_suggested_name($item) .
+                html_writer::span($this->get_boundaries_for_display($item), 'range');
         $inputname = $item->typ . '_' . $item->id;
         $mform = $form->get_quick_form();
-        $mform->addElement('text', $inputname, $name);
+        $mform->addElement('text', $inputname, $name,
+            array('class' => $form->get_suggested_class($item)));
         if ($item->required == 1) {
             $mform->addRule($inputname, get_string('required'), 'required');
         }

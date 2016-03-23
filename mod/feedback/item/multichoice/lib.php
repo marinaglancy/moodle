@@ -515,7 +515,8 @@ class feedback_item_multichoice extends feedback_item_base {
     public function complete_form_element($item, $form) {
         $info = $this->get_info($item);
         $presentation = explode (FEEDBACK_MULTICHOICE_LINE_SEP, $info->presentation);
-        $name = format_text($item->name, FORMAT_HTML, array('noclean' => true, 'para' => false));
+        $name = $form->get_suggested_name($item);
+        $class = $form->get_suggested_class($item) . ' multichoice-' . $info->subtype;
         $inputname = $item->typ . '_' . $item->id ;
         $mform = $form->get_quick_form();
         $options = array();
@@ -523,7 +524,8 @@ class feedback_item_multichoice extends feedback_item_base {
             $options[$idx+1] = format_text($optiontext, FORMAT_HTML, array('noclean' => true, 'para' => false));
         }
         if ($info->subtype === 'd') {
-            $el = $mform->addElement('select', $inputname.'[0]', $name, array('' => '') + $options);
+            $el = $mform->addElement('select', $inputname.'[0]', $name, array('' => '') + $options,
+                    array('class' => $class));
         } else {
             $objs = array();
             if ($info->subtype === 'r' && !$this->hidenoselect($item)) {
@@ -540,7 +542,9 @@ class feedback_item_multichoice extends feedback_item_base {
                 }
             }
             $separator = $info->horizontal ? ' ' : '<br>';
+            $class .= ' multichoice-' . ($info->horizontal ? 'horizontal' : 'vertical');
             $el = $mform->addElement('group', 'group_'.$inputname, $name, $objs, $separator, false);
+            $el->setAttributes(array('class' => $class));
         }
         if ($item->required == 1) {
             $mform->addRule($el->getName(), get_string('required'), 'required');

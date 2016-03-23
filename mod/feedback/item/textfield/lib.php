@@ -279,10 +279,11 @@ class feedback_item_textfield extends feedback_item_base {
      * @param mod_feedback_complete_form $form
      */
     public function complete_form_element($item, $form) {
-        $name = format_text($item->name, FORMAT_HTML, array('noclean' => true, 'para' => false));
+        $name = $form->get_suggested_name($item);
         $inputname = $item->typ . '_' . $item->id;
         $mform = $form->get_quick_form();
-        $mform->addElement('text', $inputname, $name);
+        $mform->addElement('text', $inputname, $name,
+                array('class' => $form->get_suggested_class($item)));
         $mform->setType($inputname, PARAM_NOTAGS);
         if ($item->required == 1) {
             $mform->addRule($inputname, get_string('required'), 'required');

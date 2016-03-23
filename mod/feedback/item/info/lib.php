@@ -358,6 +358,7 @@ class feedback_item_info extends feedback_item_base {
         $presentation = $item->presentation;
         $courseid = $form->get_current_course_id();
         $options = array('' => '');
+        $class = '';
         switch ($presentation) {
             case 1:
                 $feedback = $form->get_feedback();
@@ -367,12 +368,14 @@ class feedback_item_info extends feedback_item_base {
                     $v = time();
                     $options = array($v => userdate($v));
                 }
+                $class = 'feedback-item-info-responsetime';
                 break;
             case 2:
                 $course = get_course($courseid);
                 $v = format_string($course->shortname, true,
                         array('context' => context_course::instance($course->id)));
                 $options = array($v => $v);
+                $class = 'feedback-item-info-course';
                 break;
             case 3:
                 if ($courseid !== SITEID) {
@@ -381,14 +384,16 @@ class feedback_item_info extends feedback_item_base {
                     $v = format_string($coursecategory->name, true,
                             array('context' => context_coursecat::instance($coursecategory->id)));
                     $options = array($v => $v);
+                    $class = 'feedback-item-info-category';
                 }
                 break;
         }
 
-        $name = format_text($item->name, FORMAT_HTML, array('noclean' => true, 'para' => false));
+        $name = $form->get_suggested_name($item);
         $inputname = $item->typ . '_' . $item->id;
         $mform = $form->get_quick_form();
-        $el = $mform->addElement('select', $inputname, $name, $options);
+        $el = $mform->addElement('select', $inputname, $name, $options,
+                array('class' => $form->get_suggested_class($item) . ' ' . $class));
         $mform->setConstant($inputname, key($options));
         $el->freeze();
         $el->setPersistantFreeze(true);
