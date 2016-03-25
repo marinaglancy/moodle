@@ -223,12 +223,14 @@ class mod_feedback_complete_form extends moodleform {
             }
         }*/
         foreach ($feedbackitems as $feedbackitem) {
-            if ($feedbackitem->typ != 'pagebreak') {
+            if ($feedbackitem->typ !== 'pagebreak') {
                 $itemobj = feedback_get_item_class($feedbackitem->typ);
                 $itemobj->complete_form_element($feedbackitem, $this);
             } else {
-                $element = $mform->addElement('static', 'page'.$pageidx, '', '<hr class="feedback_pagebreak">');
-                $element->setAttributes($element->getAttributes() + array('class' => 'feedback-item-pagebreak'));
+                $this->add_form_element($feedbackitem,
+                        ['static', 'page'.$pageidx, '', '<hr class="feedback_pagebreak">']);
+                //$element = $mform->addElement('static', 'page'.$pageidx, '', '<hr class="feedback_pagebreak">');
+                //$element->setAttributes($element->getAttributes() + array('class' => 'feedback-item-pagebreak'));
                 //$mform->addElement('header', 'page'.$pageidx, 'PAGE '.$pageidx); // TODO string
                 //$mform->setExpanded('page'.$pageidx);
                 $pageidx++;
@@ -296,9 +298,11 @@ class mod_feedback_complete_form extends moodleform {
         if ($item->dependitem) {
             $class .= " feedback_depend";
         }
-        $itemobj = feedback_get_item_class($item->typ);
-        if ($itemobj->get_hasvalue()) {
-            $class .= " feedback_hasvalue";
+        if ($item->typ !== 'pagebreak') {
+            $itemobj = feedback_get_item_class($item->typ);
+            if ($itemobj->get_hasvalue()) {
+                $class .= " feedback_hasvalue";
+            }
         }
         return $class;
     }
@@ -352,12 +356,63 @@ class mod_feedback_complete_form extends moodleform {
         }
 
         if ($this->mode == self::MODE_EDIT) {
-            $name = $element->getLabel();
-            $name .= ' editlink';
-            $element->setLabel($name);
+            $this->enhance_name_for_edit($item, $element);
         }
 
         return $element;
+    }
+
+    /**
+     *
+     * @param HTML_QuickForm_element $element
+     */
+    protected function guess_element_id($element) {
+        $element->_generateId();
+        if ($element->getType() === 'group') {
+            return 'fgroup_' . $element->getAttribute('id');
+        }
+        return 'fitem_' . $element->getAttribute('id');
+    }
+
+    protected function pagebreak_actions($item) {
+        $actions = array();
+        $strdelete = get_string('delete_pagebreak', 'feedback');
+        $actions['delete'] = new action_menu_link_secondary(
+            new moodle_url('/mod/feedback/delete_item.php', array('deleteitem' => $item->id)),
+            new pix_icon('t/delete', $strdelete, 'moodle', array('class' => 'iconsmall', 'title' => '')),
+            $strdelete,
+            array('class' => 'editing_delete', 'data-action' => 'delete')
+        );
+        return $actions;
+    }
+
+    protected function enhance_name_for_edit($item, $element) {
+        global $OUTPUT;
+        $menu = new action_menu();
+        $menu->set_owner_selector('#' . $this->guess_element_id($element));
+        $menu->set_constraint('.course-content');
+        $menu->set_alignment(action_menu::TR, action_menu::BR);
+        $menu->set_menu_trigger(get_string('edit'));
+        $menu->do_not_enhance(); // TODO remove?
+        //$menu->attributes['class'] .= ' section-cm-edit-actions commands';
+        $menu->prioritise = true;
+
+        if ($item->typ === 'pagebreak') {
+            $menu->do_not_enhance();
+            $actions = $this->pagebreak_actions($item);
+        } else {
+            $itemobj = feedback_get_item_class($item->typ);
+            $actions = $itemobj->edit_actions($item, $this->feedback, $this->cm);
+        }
+        foreach ($actions as $action) {
+            $menu->add($action);
+        }
+        $editmenu = $OUTPUT->render($menu);
+
+        $name = $element->getLabel();
+        $name = html_writer::span($name, 'itemname') .
+                html_writer::span($editmenu, 'itemactions');
+        $element->setLabel(html_writer::span($name, 'itemtitle'));
     }
 
     public function add_form_group_element($item, $groupinputname, $name, $elements, $separator,

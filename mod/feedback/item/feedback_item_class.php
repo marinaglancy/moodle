@@ -148,6 +148,45 @@ abstract class feedback_item_base {
     public function complete_form_element($item, $form) {
 
     }
+
+    public function edit_actions($item, $feedback, $cm) {
+        $actions = array();
+
+        $strupdate = get_string('edit_item', 'feedback');
+        $actions['update'] = new action_menu_link_secondary(
+            new moodle_url('/mod/feedback/edit_item.php', array('id' => $item->id)),
+            new pix_icon('t/edit', $strupdate, 'moodle', array('class' => 'iconsmall', 'title' => '')),
+            $strupdate,
+            array('class' => 'editing_update', 'data-action' => 'update')
+        );
+
+        if ($this->get_hasvalue()) {
+            if ($item->required == 1) {
+                $buttontitle = get_string('switch_item_to_not_required', 'feedback');
+                $buttonimg = 'required';
+            } else {
+                $buttontitle = get_string('switch_item_to_required', 'feedback');
+                $buttonimg = 'notrequired';
+            }
+            $url = new moodle_url('/mod/feedback/edit.php', array('id' => $cm->id, 'do_show' => 'edit'));
+            $actions['required'] = new action_menu_link_secondary(
+                new moodle_url($url, array('switchitemrequired' => $item->id)),
+                new pix_icon($buttonimg, $buttontitle, 'feedback', array('class' => 'iconsmall', 'title' => '')),
+                $buttontitle,
+                array('class' => 'editing_togglerequired', 'data-action' => 'togglerequired')
+            );
+        }
+
+        $strdelete = get_string('delete_item', 'feedback');
+        $actions['delete'] = new action_menu_link_secondary(
+            new moodle_url('/mod/feedback/delete_item.php', array('deleteitem' => $item->id)),
+            new pix_icon('t/delete', $strdelete, 'moodle', array('class' => 'iconsmall', 'title' => '')),
+            $strdelete,
+            array('class' => 'editing_delete', 'data-action' => 'delete')
+        );
+
+        return $actions;
+    }
 }
 
 //a dummy class to realize pagebreaks

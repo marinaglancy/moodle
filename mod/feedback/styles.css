@@ -205,3 +205,24 @@ body.dir-rtl.path-mod-feedback #region-main .mform.feedback-form .femptylabel .f
 .path-mod-feedback .mform.feedback-form .fitem.feedback_hasvalue .fstatic:empty {
     display: inherit;
 }
+
+.path-mod-feedback .mform.feedback-form#feedback_edit_form .fitem:hover {
+    background: #f5f5f5;
+}
+
+.path-mod-feedback .mform.feedback-form#feedback_edit_form .fitem .fitemtitle label {
+    width: 100%;
+}
+
+.path-mod-feedback .mform.feedback-form#feedback_edit_form .fitem .fitemtitle .itemtitle {
+    position: relative;
+    width: 100%;
+}
+
+.path-mod-feedback .mform.feedback-form#feedback_edit_form .fitem .fitemtitle .itemtitle .itemname {
+    float: left;
+}
+
+.path-mod-feedback .mform.feedback-form#feedback_edit_form .fitem .fitemtitle .itemtitle .itemactions {
+    float: right;
+}

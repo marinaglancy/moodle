@@ -45,23 +45,12 @@ $current_tab = $do_show;
 
 $url = new moodle_url('/mod/feedback/edit.php', array('id'=>$id, 'do_show'=>$do_show));
 
-if (! $cm = get_coursemodule_from_id('feedback', $id)) {
-    print_error('invalidcoursemodule');
-}
-
-if (! $course = $DB->get_record('course', array('id'=>$cm->course))) {
-    print_error('coursemisconf');
-}
-
-if (! $feedback = $DB->get_record('feedback', array('id'=>$cm->instance))) {
-    print_error('invalidcoursemodule');
-}
+list($course, $cm) = get_course_and_cm_from_cmid($id, 'feedback');
 
 $context = context_module::instance($cm->id);
-
-require_login($course, true, $cm);
-
+require_login($course, false, $cm);
 require_capability('mod/feedback:edititems', $context);
+$feedback = $PAGE->activityrecord;
 
 //Move up/down items
 if ($moveupitem) {
@@ -138,7 +127,7 @@ $PAGE->set_heading($course->fullname);
 $PAGE->set_title($feedback->name);
 
 //Adding the javascript module for the items dragdrop.
-if (count($feedbackitems) > 1) {
+/*if (count($feedbackitems) > 1) {
     if ($do_show == 'edit') {
         $PAGE->requires->strings_for_js(array(
                'pluginname',
@@ -148,7 +137,7 @@ if (count($feedbackitems) > 1) {
         $PAGE->requires->yui_module('moodle-mod_feedback-dragdrop', 'M.mod_feedback.init_dragdrop',
                 array(array('cmid' => $cm->id)));
     }
-}
+}*/
 
 echo $OUTPUT->header();
 echo $OUTPUT->heading(format_string($feedback->name));
@@ -192,12 +181,19 @@ if ($do_show == 'templates') {
 ///////////////////////////////////////////////////////////////////////////
 if ($do_show == 'edit') {
 
-    $select = new single_select(new moodle_url('/mod/feedback/edit_item.php', array('cmid' => $id, 'position' => $lastposition)),
+    $select = new single_select(new moodle_url('/mod/feedback/edit_item.php',
+            array('cmid' => $id, 'position' => $lastposition, 'sesskey' => sesskey())),
         'typ', feedback_load_feedback_items_options());
     $select->label = get_string('add_item', 'mod_feedback');
     echo $OUTPUT->render($select);
 
-    if (is_array($feedbackitems)) {
+
+    $form = new mod_feedback_complete_form(mod_feedback_complete_form::MODE_EDIT, 'feedback_edit_form', array(
+        'feedback' => $feedback, 'cm' => $cm, 'courseid' => $course->id
+    ));
+    $form->display();
+
+    /*if (is_array($feedbackitems)) {
         $itemnr = 0;
 
         $align = right_to_left() ? 'right' : 'left';
@@ -394,7 +390,7 @@ if ($do_show == 'edit') {
     } else {
         echo $OUTPUT->box(get_string('no_items_available_yet', 'feedback'),
                          'generalbox boxaligncenter');
-    }
+    }*/
 }
 /// Finish the page
 ///////////////////////////////////////////////////////////////////////////
