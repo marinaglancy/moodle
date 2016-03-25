@@ -37,16 +37,19 @@ class mod_feedback_complete_form extends moodleform {
     const MODE_PRINT = 2;
     const MODE_EDIT = 3;
     const MODE_VIEW_RESPONSE = 4;
+    const MODE_VIEW_TEMPLATE = 5;
 
     protected $mode;
     protected $feedback;
     /** @var cm_info */
     protected $cm;
     protected $courseid;
+    protected $templateid;
     protected $gopage;
     protected $completedtmp;
     protected $completed;
     protected $hasrequired = false;
+    protected $isempty = true;
 
     public function __construct($mode, $id, $customdata = null) {
         $this->mode = $mode;
@@ -61,6 +64,8 @@ class mod_feedback_complete_form extends moodleform {
         $this->cm = $this->_customdata['cm'];
         $this->courseid = !empty($this->_customdata['courseid']) ?
                 $this->_customdata['courseid'] : $this->cm->course;
+        $this->templateid = !empty($this->_customdata['templateid']) ?
+                $this->_customdata['templateid'] : null;
         $this->gopage = isset($this->_customdata['gopage']) ?
                 $this->_customdata['gopage'] : 0;
 
@@ -83,7 +88,7 @@ class mod_feedback_complete_form extends moodleform {
         } else if ($this->feedback->anonymous == FEEDBACK_ANONYMOUS_NO) {
             $anonymousmodeinfo = get_string('non_anonymous', 'feedback');
         }
-        if (isloggedin() && !isguestuser() && $this->mode != self::MODE_EDIT) {
+        if (isloggedin() && !isguestuser() && $this->mode != self::MODE_EDIT && $this->mode != self::MODE_VIEW_TEMPLATE) {
             $element = $mform->addElement('static', 'anonymousmode', '',
                     get_string('mode', 'feedback') . ': ' . $anonymousmodeinfo);
             $element->setAttributes($element->getAttributes() + ['class' => 'feedback_mode']);
@@ -159,6 +164,11 @@ class mod_feedback_complete_form extends moodleform {
         $mform = $this->_form;
         list($startposition, $firstpagebreak, $ispagebreak, $feedbackitems) =
                 feedback_get_page_boundaries($this->feedback, $this->gopage);
+        if (!$feedbackitems) {
+            $isempty = $DB->count_records('feedback_item', array('feedback' => $this->feedback->id)) ? false : true;
+        } else {
+            $isempty = false;
+        }
 
         // Add elements.
         $startitem = null;
@@ -211,8 +221,12 @@ class mod_feedback_complete_form extends moodleform {
 
     protected function definition_after_data_preview() {
         global $DB;
-        $mform = $this->_form;
-        $feedbackitems = $DB->get_records('feedback_item', array('feedback'=>$this->feedback->id), 'position');
+        if ($this->templateid) {
+            $feedbackitems = $DB->get_records('feedback_item', array('template' => $this->templateid), 'position');
+        } else {
+            $feedbackitems = $DB->get_records('feedback_item', array('feedback' => $this->feedback->id), 'position');
+        }
+        $this->isempty = $feedbackitems ? false : true;
         $pageidx = 1;
         /*foreach ($feedbackitems as $feedbackitem) {
             if ($feedbackitem->typ === 'pagebreak') {
@@ -355,11 +369,45 @@ class mod_feedback_complete_form extends moodleform {
             $this->hasrequired = true;
         }
 
+        // Add different useful stuff to the question name.
+        $this->add_item_label($item, $element);
+        $this->add_item_dependencies($item, $element);
+        $this->add_item_number($item, $element);
+
         if ($this->mode == self::MODE_EDIT) {
             $this->enhance_name_for_edit($item, $element);
         }
 
         return $element;
+    }
+
+    protected function add_item_number($item, $element) {
+        static $itemnr = 0; // TODO this is incorrect for complete!
+        if ($item->hasvalue == 1 AND $this->feedback->autonumbering) {
+            $itemnr++;
+            $name = $element->getLabel();
+            $element->setLabel(html_writer::span($itemnr. '.', 'itemnr') . ' ' . $name);
+        }
+    }
+
+    protected function add_item_label($item, $element) {
+        if (strlen($item->label) && ($this->mode == self::MODE_EDIT || $this->mode == self::MODE_VIEW_TEMPLATE)) {
+            $name = $element->getLabel();
+            $name = '('.format_string($item->label).') '.$name;
+            $element->setLabel($name);
+        }
+    }
+
+    protected function add_item_dependencies($item, $element) {
+        global $DB;
+        if ($item->dependitem && ($this->mode == self::MODE_EDIT || $this->mode == self::MODE_VIEW_TEMPLATE)) {
+            if ($dependitem = $DB->get_record('feedback_item', array('id' => $item->dependitem))) {
+                $name = $element->getLabel();
+                $name .= html_writer::span(' ('.format_string($dependitem->label).'-&gt;'.$item->dependvalue.')',
+                        'feedback_depend');
+                $element->setLabel($name);
+            }
+        }
     }
 
     /**
@@ -414,17 +462,6 @@ class mod_feedback_complete_form extends moodleform {
         $editmenu = $OUTPUT->render($menu);
 
         $name = $element->getLabel();
-
-        if (strlen($item->label)) {
-            $name = '('.format_string($item->label).') '.$name;
-        }
-
-        if ($item->dependitem) {
-            if ($dependitem = $DB->get_record('feedback_item', array('id'=>$item->dependitem))) {
-                $name .= html_writer::span(' ('.format_string($dependitem->label).'-&gt;'.$item->dependvalue.')',
-                        'feedback_depend');
-            }
-        }
 
         $name = html_writer::span('', 'itemdd', array('id' => 'feedback_item_box_' . $item->id)) .
                 html_writer::span($name, 'itemname') .
@@ -520,6 +557,15 @@ class mod_feedback_complete_form extends moodleform {
         return $this->feedback->course;
     }
 
+    public function is_empty() {
+        // Finalize the form definition if not yet done.
+        if (!$this->_definition_finalized) {
+            $this->_definition_finalized = true;
+            $this->definition_after_data();
+        }
+        return $this->isempty;
+    }
+
     public function display() {
         global $OUTPUT;
         // Finalize the form definition if not yet done.
@@ -532,7 +578,7 @@ class mod_feedback_complete_form extends moodleform {
 
         // Add "has required fields" note.
         if (($mform->_required || $this->hasrequired) &&
-                ($this->mode == self::MODE_COMPLETE || $this->mode == self::MODE_PRINT)) {
+                ($this->mode == self::MODE_COMPLETE || $this->mode == self::MODE_PRINT || $this->mode == self::MODE_VIEW_TEMPLATE)) {
             $element = $mform->addElement('static', 'requiredfields', '',
                     get_string('somefieldsrequired', 'form',
                             '<img alt="'.get_string('requiredelement', 'form').'" src="'.$OUTPUT->pix_url('req') .'" />'));
