@@ -545,7 +545,7 @@ class feedback_item_multichoice extends feedback_item_base {
             // Display list of checkbox values in the response view.
             $objs = [];
             foreach (explode(FEEDBACK_MULTICHOICE_LINE_SEP, $form->get_item_value($item)) as $v) {
-                $objs[] = ['static', $inputname."[$v]", '', $options[$v]];
+                $objs[] = ['static', $inputname."[$v]", '', isset($options[$v]) ? $options[$v] : ''];
             }
             $el = $form->add_form_group_element($item, 'group_'.$inputname, $name, $objs, $separator, $class);
         } else {

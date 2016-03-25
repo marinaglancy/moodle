@@ -387,7 +387,7 @@ class mod_feedback_complete_form extends moodleform {
     }
 
     protected function enhance_name_for_edit($item, $element) {
-        global $OUTPUT;
+        global $OUTPUT, $DB;
         $menu = new action_menu();
         $menu->set_owner_selector('#' . $this->guess_element_id($element));
         $menu->set_constraint('.course-content');
@@ -410,6 +410,18 @@ class mod_feedback_complete_form extends moodleform {
         $editmenu = $OUTPUT->render($menu);
 
         $name = $element->getLabel();
+
+        if (strlen($item->label)) {
+            $name = '('.format_string($item->label).') '.$name;
+        }
+
+        if ($item->dependitem) {
+            if ($dependitem = $DB->get_record('feedback_item', array('id'=>$item->dependitem))) {
+                $name .= html_writer::span(' ('.format_string($dependitem->label).'-&gt;'.$item->dependvalue.')',
+                        'feedback_depend');
+            }
+        }
+
         $name = html_writer::span($name, 'itemname') .
                 html_writer::span($editmenu, 'itemactions');
         $element->setLabel(html_writer::span($name, 'itemtitle'));
