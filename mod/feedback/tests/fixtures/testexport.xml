@@ -196,7 +196,7 @@
                     <![CDATA[numeric]]>
                </ITEMLABEL>
                <PRESENTATION>
-                    <![CDATA[0|100]]>
+                    <![CDATA[-|100]]>
                </PRESENTATION>
                <OPTIONS>
                     <![CDATA[]]>
