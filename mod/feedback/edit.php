@@ -127,7 +127,7 @@ $PAGE->set_heading($course->fullname);
 $PAGE->set_title($feedback->name);
 
 //Adding the javascript module for the items dragdrop.
-/*if (count($feedbackitems) > 1) {
+if (count($feedbackitems) > 1) {
     if ($do_show == 'edit') {
         $PAGE->requires->strings_for_js(array(
                'pluginname',
@@ -137,7 +137,7 @@ $PAGE->set_title($feedback->name);
         $PAGE->requires->yui_module('moodle-mod_feedback-dragdrop', 'M.mod_feedback.init_dragdrop',
                 array(array('cmid' => $cm->id)));
     }
-}*/
+}
 
 echo $OUTPUT->header();
 echo $OUTPUT->heading(format_string($feedback->name));
@@ -191,7 +191,9 @@ if ($do_show == 'edit') {
     $form = new mod_feedback_complete_form(mod_feedback_complete_form::MODE_EDIT, 'feedback_edit_form', array(
         'feedback' => $feedback, 'cm' => $cm, 'courseid' => $course->id
     ));
+    echo '<div id="feedback_dragarea">'; //The container for the dragging area
     $form->display();
+    echo '</div>';
 
     /*if (is_array($feedbackitems)) {
         $itemnr = 0;

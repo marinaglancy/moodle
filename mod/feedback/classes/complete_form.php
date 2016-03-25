@@ -294,7 +294,7 @@ class mod_feedback_complete_form extends moodleform {
     }
 
     public function get_suggested_class($item) {
-        $class = "feedback-item-{$item->typ}";
+        $class = "feedback_itemlist feedback-item-{$item->typ}";
         if ($item->dependitem) {
             $class .= " feedback_depend";
         }
@@ -366,12 +366,16 @@ class mod_feedback_complete_form extends moodleform {
      *
      * @param HTML_QuickForm_element $element
      */
-    protected function guess_element_id($element) {
-        $element->_generateId();
-        if ($element->getType() === 'group') {
-            return 'fgroup_' . $element->getAttribute('id');
+    protected function guess_element_id($item, $element) {
+        if (!$id = $element->getAttribute('id')) {
+            $attributes = $element->getAttributes();
+            $id = $attributes['id'] = 'feedback_item_' . $item->id;
+            $element->setAttributes($attributes);
         }
-        return 'fitem_' . $element->getAttribute('id');
+        if ($element->getType() === 'group') {
+            return 'fgroup_' . $id;
+        }
+        return 'fitem_' . $id;
     }
 
     protected function pagebreak_actions($item) {
@@ -389,7 +393,7 @@ class mod_feedback_complete_form extends moodleform {
     protected function enhance_name_for_edit($item, $element) {
         global $OUTPUT, $DB;
         $menu = new action_menu();
-        $menu->set_owner_selector('#' . $this->guess_element_id($element));
+        $menu->set_owner_selector('#' . $this->guess_element_id($item, $element));
         $menu->set_constraint('.course-content');
         $menu->set_alignment(action_menu::TR, action_menu::BR);
         $menu->set_menu_trigger(get_string('edit'));
@@ -422,7 +426,8 @@ class mod_feedback_complete_form extends moodleform {
             }
         }
 
-        $name = html_writer::span($name, 'itemname') .
+        $name = html_writer::span('', 'itemdd', array('id' => 'feedback_item_box_' . $item->id)) .
+                html_writer::span($name, 'itemname') .
                 html_writer::span($editmenu, 'itemactions');
         $element->setLabel(html_writer::span($name, 'itemtitle'));
     }
@@ -431,7 +436,9 @@ class mod_feedback_complete_form extends moodleform {
             $class = '') {
         $objects = array();
         foreach ($elements as $element) {
-            $objects[] = call_user_func_array(array($this->_form, 'createElement'), $element);
+            $object = call_user_func_array(array($this->_form, 'createElement'), $element);
+            //$object->setAttributes($object->getAttributes() + array('class' => 'subitem'));
+            $objects[] = $object;
         }
         $element = $this->add_form_element($item,
                 ['group', $groupinputname, $name, $objects, $separator, false],

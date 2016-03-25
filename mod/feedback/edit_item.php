@@ -27,16 +27,16 @@ require_once("lib.php");
 
 feedback_init_feedback_session();
 
-$id = optional_param('id', false, PARAM_INT);
-if (!$id) {
+$itemid = optional_param('id', false, PARAM_INT);
+if (!$itemid) {
     $cmid = required_param('cmid', PARAM_INT);
     $typ = required_param('typ', PARAM_ALPHA);
 }
 
-if ($id) {
-    $item = $DB->get_record('feedback_item', array('id' => $id), '*', MUST_EXIST);
+if ($itemid) {
+    $item = $DB->get_record('feedback_item', array('id' => $itemid), '*', MUST_EXIST);
     list($course, $cm) = get_course_and_cm_from_instance($item->feedback, 'feedback');
-    $url = new moodle_url('/mod/feedback/edit_item.php', array('id' => $id));
+    $url = new moodle_url('/mod/feedback/edit_item.php', array('id' => $itemid));
     $typ = $item->typ;
 } else {
     $item = null;
@@ -55,7 +55,7 @@ $editurl = new moodle_url('/mod/feedback/edit.php', array('id' => $cm->id));
 $PAGE->set_url($url);
 
 // If the typ is pagebreak so the item will be saved directly.
-if (!$id && $typ == 'pagebreak') {
+if (!$item->id && $typ === 'pagebreak') {
     require_sesskey();
     feedback_create_pagebreak($feedback->id);
     redirect($editurl->out(false));
@@ -90,6 +90,8 @@ if ($itemobj->get_data()) {
 $strfeedbacks = get_string("modulenameplural", "feedback");
 $strfeedback  = get_string("modulename", "feedback");
 
+navigation_node::override_active_url(new moodle_url('/mod/feedback/edit.php',
+        array('id' => $cm->id, 'do_show' => 'edit')));
 if ($item->id) {
     $PAGE->navbar->add(get_string('edit_item', 'feedback'));
 } else {
@@ -103,6 +105,8 @@ echo $OUTPUT->header();
 echo $OUTPUT->heading(format_string($feedback->name));
 
 /// print the tabs
+$current_tab = 'edit';
+$id = $cm->id;
 require('tabs.php');
 
 //print errormsg

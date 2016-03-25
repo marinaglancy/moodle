@@ -219,6 +219,7 @@ body.dir-rtl.path-mod-feedback #region-main .mform.feedback-form .femptylabel .f
     width: 100%;
 }
 
+.path-mod-feedback .mform.feedback-form#feedback_edit_form .fitem .fitemtitle .itemtitle .itemdd,
 .path-mod-feedback .mform.feedback-form#feedback_edit_form .fitem .fitemtitle .itemtitle .itemname {
     float: left;
 }

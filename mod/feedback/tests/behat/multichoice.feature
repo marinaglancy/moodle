@@ -159,7 +159,7 @@ Feature: Testing multichoice questions in feedback
     And I should see "1 (100.00 %)" in the "option i:" "table_row"
     # Change the settings so we don't analyse empty submits
     And I follow "Edit questions"
-    And I click on "Edit question" "link" in the "//li[contains(@class, 'feedback_itemlist') and contains(.,'multichoice1')]" "xpath_element"
+    And I click on "Edit question" "link" in the "//div[contains(@class, 'feedback_itemlist') and contains(.,'multichoice1')]" "xpath_element"
     And I set the field "Do not analyse empty submits" to "Yes"
     And I press "Save changes to question"
     And I follow "Analysis"
@@ -297,7 +297,7 @@ Feature: Testing multichoice questions in feedback
     And I should see "1 (100.00 %)" in the "option i:" "table_row"
     # Change the settings so we don't analyse empty submits
     And I follow "Edit questions"
-    And I click on "Edit question" "link" in the "//li[contains(@class, 'feedback_itemlist') and contains(.,'multichoice1')]" "xpath_element"
+    And I click on "Edit question" "link" in the "//div[contains(@class, 'feedback_itemlist') and contains(.,'multichoice1')]" "xpath_element"
     And I set the field "Do not analyse empty submits" to "Yes"
     And I press "Save changes to question"
     And I follow "Analysis"
