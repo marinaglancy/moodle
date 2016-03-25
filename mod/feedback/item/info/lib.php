@@ -417,7 +417,9 @@ class feedback_item_info extends feedback_item_base {
                 false);
         $form->set_element_default($inputname, $value);
         $element->freeze();
-        $element->setPersistantFreeze(true);
+        if ($form->get_mode() == mod_feedback_complete_form::MODE_COMPLETE) {
+            $element->setPersistantFreeze(true);
+        }
     }
 
     /**

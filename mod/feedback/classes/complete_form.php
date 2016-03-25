@@ -294,6 +294,10 @@ class mod_feedback_complete_form extends moodleform {
         if ($item->dependitem) {
             $class .= " feedback_depend";
         }
+        $itemobj = feedback_get_item_class($item->typ);
+        if ($itemobj->get_hasvalue()) {
+            $class .= " feedback_hasvalue";
+        }
         return $class;
     }
 
@@ -307,7 +311,7 @@ class mod_feedback_complete_form extends moodleform {
         if (is_array($element)) {
             if ($this->is_frozen() && $element[0] === 'text') {
                 // Convert 'text' element to 'static' when freezing for better display.
-                $element[0] = 'static';
+                $element = ['static', $element[1], $element[2]];
             }
             $element = call_user_func_array(array($this->_form, 'createElement'), $element);
         }
@@ -331,6 +335,7 @@ class mod_feedback_complete_form extends moodleform {
 
         // Freeze if needed.
         if ($this->is_frozen()) {
+            // TODO this removes red asterisk from required fields!!!
             $element->freeze();
         }
 

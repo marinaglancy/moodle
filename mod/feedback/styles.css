@@ -195,3 +195,10 @@ body.dir-rtl.path-mod-feedback #region-main .mform.feedback-form .femptylabel .f
             float: right;
         }
 
+.path-mod-feedback .mform.feedback-form#feedback_viewresponse_form .fitem.feedback_hasvalue:not(.feedback-item-captcha) .felement {
+            background: #FBFBF1;
+            min-height: 1em;
+            box-sizing: border-box;
+            padding: 3px;
+            border: 1px solid #ddd
+}
