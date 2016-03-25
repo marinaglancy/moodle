@@ -287,7 +287,7 @@ class feedback_item_textfield extends feedback_item_base {
         if ($form->is_frozen()) {
             $el = $mform->addElement('static', $inputname, $name,
                     format_string($tmpvalue));
-            $el->setAttributes(array('class' => $class));
+            $el->setAttributes($el->getAttributes() + array('class' => $class));
         } else {
             $el = $mform->addElement('text', $inputname, $name,
                     array('class' => $class));

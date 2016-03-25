@@ -1391,9 +1391,8 @@ function feedback_get_template_list($course, $onlyownorpublic = '') {
 /**
  * load the lib.php from item-plugin-dir and returns the instance of the itemclass
  *
- * @global object
- * @param object $item
- * @return object the instanz of itemclass
+ * @param string $typ
+ * @return feedback_item_base the instance of itemclass
  */
 function feedback_get_item_class($typ) {
     global $CFG;

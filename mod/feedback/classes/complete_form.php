@@ -212,21 +212,23 @@ class mod_feedback_complete_form extends moodleform {
         $mform = $this->_form;
         $feedbackitems = $DB->get_records('feedback_item', array('feedback'=>$this->feedback->id), 'position');
         $pageidx = 1;
-        foreach ($feedbackitems as $feedbackitem) {
+        /*foreach ($feedbackitems as $feedbackitem) {
             if ($feedbackitem->typ === 'pagebreak') {
                 $mform->addElement('header', 'page'.$pageidx, 'PAGE '.$pageidx); // TODO string
                 $mform->setExpanded('page'.$pageidx);
                 $pageidx++;
                 break;
             }
-        }
+        }*/
         foreach ($feedbackitems as $feedbackitem) {
             if ($feedbackitem->typ != 'pagebreak') {
                 $itemobj = feedback_get_item_class($feedbackitem->typ);
                 $itemobj->complete_form_element($feedbackitem, $this);
             } else {
-                $mform->addElement('header', 'page'.$pageidx, 'PAGE '.$pageidx); // TODO string
-                $mform->setExpanded('page'.$pageidx);
+                $element = $mform->addElement('static', 'page'.$pageidx, '', '<hr class="feedback_pagebreak">');
+                $element->setAttributes($element->getAttributes() + array('class' => 'feedback-item-pagebreak'));
+                //$mform->addElement('header', 'page'.$pageidx, 'PAGE '.$pageidx); // TODO string
+                //$mform->setExpanded('page'.$pageidx);
                 $pageidx++;
             }
 
@@ -302,7 +304,7 @@ class mod_feedback_complete_form extends moodleform {
     public function get_suggested_class($item) {
         $class = "feedback-item-{$item->typ}";
         if ($item->dependitem) {
-            $class .= " has-dependency";
+            $class .= " feedback_depend";
         }
         return $class;
     }

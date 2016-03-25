@@ -426,7 +426,7 @@ class feedback_item_multichoicerated extends feedback_item_base {
             $separator = $info->horizontal ? ' ' : '<br>';
             $class .= ' multichoicerated-' . ($info->horizontal ? 'horizontal' : 'vertical');
             $el = $mform->addElement('group', 'group_'.$inputname, $name, $objs, $separator, false);
-            $el->setAttributes(array('class' => $class));
+            $el->setAttributes(($el->getAttributes() ?: array()) + array('class' => $class));
         }
         if ($item->required == 1) {
             $mform->addRule($el->getName(), get_string('required'), 'required');

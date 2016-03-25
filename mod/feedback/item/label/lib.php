@@ -221,7 +221,7 @@ class feedback_item_label extends feedback_item_base {
         $inputname = $item->typ . '_' . $item->id;
         $mform = $form->get_quick_form();
         $element = $mform->addElement('static', $inputname, '', $output);
-        $element->setAttributes(array('class' => $form->get_suggested_class($item)));
+        $element->setAttributes($element->getAttributes() + array('class' => $form->get_suggested_class($item)));
     }
 
     /**

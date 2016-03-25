@@ -401,7 +401,7 @@ class feedback_item_numeric extends feedback_item_base {
         $tmpvalue = $this->format_float($form->get_item_value($item));
         if ($form->is_frozen()) {
             $el = $mform->addElement('static', $inputname, $name, $tmpvalue);
-            $el->setAttributes(array('class' => $form->get_suggested_class($item)));
+            $el->setAttributes($el->getAttributes() + array('class' => $form->get_suggested_class($item)));
         } else {
             $el = $mform->addElement('text', $inputname, $name, array('class' => $form->get_suggested_class($item)));
             $mform->setDefault($inputname, $tmpvalue);
