@@ -40,23 +40,29 @@ class mod_feedback_complete_form extends moodleform {
 
     protected $mode;
     protected $feedback;
+    /** @var cm_info */
     protected $cm;
     protected $courseid;
     protected $gopage;
     protected $completedtmp;
     protected $completed;
+    protected $hasrequired = false;
 
     public function __construct($mode, $id, $customdata = null) {
         $this->mode = $mode;
+        $isanonymous = $customdata['feedback']->anonymous == FEEDBACK_ANONYMOUS_YES ?
+                ' ianonymous' : '';
         parent::__construct(null, $customdata, 'POST', '',
-                array('id' => $id, 'class' => 'feedback-form'), true);
+                array('id' => $id, 'class' => 'feedback-form' . $isanonymous), true);
     }
 
     public function definition() {
         $this->feedback = $this->_customdata['feedback'];
         $this->cm = $this->_customdata['cm'];
-        $this->courseid = $this->_customdata['courseid'];
-        $this->gopage = isset($this->_customdata['gopage']) ? $this->_customdata['gopage'] : 0;
+        $this->courseid = !empty($this->_customdata['courseid']) ?
+                $this->_customdata['courseid'] : $this->cm->course;
+        $this->gopage = isset($this->_customdata['gopage']) ?
+                $this->_customdata['gopage'] : 0;
 
         $mform = $this->_form;
         $mform->addElement('hidden', 'id', $this->cm->id);
@@ -77,8 +83,10 @@ class mod_feedback_complete_form extends moodleform {
         } else if ($this->feedback->anonymous == FEEDBACK_ANONYMOUS_NO) {
             $anonymousmodeinfo = get_string('non_anonymous', 'feedback');
         }
-        if (isloggedin() && !isguestuser()) {
-            $mform->addElement('static', 'anonymousmode', '', get_string('mode', 'feedback') . ': ' . $anonymousmodeinfo);
+        if (isloggedin() && !isguestuser() && $this->mode != self::MODE_EDIT) {
+            $element = $mform->addElement('static', 'anonymousmode', '',
+                    get_string('mode', 'feedback') . ': ' . $anonymousmodeinfo);
+            $element->setAttributes($element->getAttributes() + ['class' => 'feedback_mode']);
         }
 
         if ($this->mode == self::MODE_COMPLETE) {
@@ -199,12 +207,6 @@ class mod_feedback_complete_form extends moodleform {
         if ($lastbreakposition < $maxitemcount) {
             $this->remove_button('savevalues');
         }
-
-        // Move buttons to the end of the form.
-        $mform->addElement('hidden', '__dummyelement');
-        $buttons = $mform->removeElement('buttonar', false);
-        $mform->insertElementBefore($buttons, '__dummyelement');
-        $mform->removeElement('__dummyelement');
     }
 
     protected function definition_after_data_preview() {
@@ -307,6 +309,7 @@ class mod_feedback_complete_form extends moodleform {
      * @return HTML_QuickForm_element
      */
     public function add_form_element($item, $element, $addrequiredrule = true, $setdefaultvalue = true) {
+        global $OUTPUT;
         // Add element to the form.
         if (is_array($element)) {
             if ($this->is_frozen() && $element[0] === 'text') {
@@ -325,7 +328,7 @@ class mod_feedback_complete_form extends moodleform {
 
         // Add required rule.
         if ($item->required && $addrequiredrule) {
-            $this->_form->addRule($element->getName(), get_string('required'), 'required');
+            $this->_form->addRule($element->getName(), get_string('required'), 'required', null, 'client');
         }
 
         // Set default value.
@@ -335,24 +338,37 @@ class mod_feedback_complete_form extends moodleform {
 
         // Freeze if needed.
         if ($this->is_frozen()) {
-            // TODO this removes red asterisk from required fields!!!
             $element->freeze();
         }
 
         //$element->setLabel($itemclass->get_display_name()); // TODO do I want it?
 
+        // Add red asterisks on required fields.
+        if ($item->required) {
+            $required = '<img class="req" title="'.get_string('requiredelement', 'form').'" alt="'.
+                    get_string('requiredelement', 'form').'" src="'.$OUTPUT->pix_url('req') .'" />';
+            $element->setLabel($element->getLabel() . $required);
+            $this->hasrequired = true;
+        }
+
+        if ($this->mode == self::MODE_EDIT) {
+            $name = $element->getLabel();
+            $name .= ' editlink';
+            $element->setLabel($name);
+        }
+
         return $element;
     }
 
     public function add_form_group_element($item, $groupinputname, $name, $elements, $separator,
-            $class = '', $addrequiredrule = true) {
+            $class = '') {
         $objects = array();
         foreach ($elements as $element) {
             $objects[] = call_user_func_array(array($this->_form, 'createElement'), $element);
         }
         $element = $this->add_form_element($item,
                 ['group', $groupinputname, $name, $objects, $separator, false],
-                $addrequiredrule,
+                false,
                 false);
         if ($class !== '') {
             $attributes = $element->getAttributes();
@@ -428,5 +444,38 @@ class mod_feedback_complete_form extends moodleform {
             return $this->courseid;
         }
         return $this->feedback->course;
+    }
+
+    public function display() {
+        global $OUTPUT;
+        // Finalize the form definition if not yet done.
+        if (!$this->_definition_finalized) {
+            $this->_definition_finalized = true;
+            $this->definition_after_data();
+        }
+
+        $mform = $this->_form;
+
+        // Add "has required fields" note.
+        if (($mform->_required || $this->hasrequired) &&
+                ($this->mode == self::MODE_COMPLETE || $this->mode == self::MODE_PRINT)) {
+            $element = $mform->addElement('static', 'requiredfields', '',
+                    get_string('somefieldsrequired', 'form',
+                            '<img alt="'.get_string('requiredelement', 'form').'" src="'.$OUTPUT->pix_url('req') .'" />'));
+            $element->setAttributes($element->getAttributes() + ['class' => 'requirednote']);
+        }
+
+        // Reset _required array so the default red * are not displayed.
+        $mform->_required = array();
+
+        // Move buttons to the end of the form.
+        if ($this->mode == self::MODE_COMPLETE) {
+            $mform->addElement('hidden', '__dummyelement');
+            $buttons = $mform->removeElement('buttonar', false);
+            $mform->insertElementBefore($buttons, '__dummyelement');
+            $mform->removeElement('__dummyelement');
+        }
+
+        $this->_form->display();
     }
 }

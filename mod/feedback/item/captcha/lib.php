@@ -266,15 +266,7 @@ class feedback_item_captcha extends feedback_item_base {
      */
     public function complete_form_element($item, $form) {
         global $OUTPUT;
-        /*
-        // If 'required' is added as rule for the recaptcha element it looks at the wrong field,
-        // we add the red "*" manually to the element label.
-        $required = '<img class="req" title="'.get_string('requiredelement', 'form').'" alt="'.
-                get_string('requiredelement', 'form').'" src="'.$OUTPUT->pix_url('req') .'" />';
-        $name = $this->get_display_name($item) . $required; */
-
         $name = $this->get_display_name($item);
-
         $inputname = $item->typ . '_' . $item->id;
 
         if ($form->get_mode() != mod_feedback_complete_form::MODE_COMPLETE) {

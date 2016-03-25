@@ -429,18 +429,17 @@ class feedback_item_multichoicerated extends feedback_item_base {
             $separator = $info->horizontal ? ' ' : '<br>';
             $class .= ' multichoicerated-' . ($info->horizontal ? 'horizontal' : 'vertical');
             $el = $form->add_form_group_element($item, 'group_'.$inputname, $name, $objs, $separator, $class);
-        }
 
-        // Set previously input values.
-        if ($tmpvalue = $form->get_item_value($item)) {
-            $form->set_element_default($inputname, $tmpvalue);
-        }
-        // Special case if the radio with "Not selected" option is required the option "Not selected" should show error.
-        if ($info->subtype === 'r' && !$this->hidenoselect($item) && $item->required) {
-            $form->add_validation_rule(function($values, $files) use ($item) {
-                $inputname = $item->typ . '_' . $item->id;
-                return empty($values[$inputname]) ? array('group_' . $inputname => get_string('required')) : true;
-            });
+            // Set previously input values.
+            $form->set_element_default($inputname, $form->get_item_value($item));
+
+            // Process "required" rule.
+            if ($item->required) {
+                $form->add_validation_rule(function($values, $files) use ($item) {
+                    $inputname = $item->typ . '_' . $item->id;
+                    return empty($values[$inputname]) ? array('group_' . $inputname => get_string('required')) : true;
+                });
+            }
         }
     }
 

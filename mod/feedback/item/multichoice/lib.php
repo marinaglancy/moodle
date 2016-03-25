@@ -523,6 +523,9 @@ class feedback_item_multichoice extends feedback_item_base {
     /**
      * Adds an input element to the complete form
      *
+     * This element has many options - it can be displayed as group or radio elements,
+     * group of checkboxes or a dropdown list.
+     *
      * @param stdClass $item
      * @param mod_feedback_complete_form $form
      */
@@ -532,54 +535,55 @@ class feedback_item_multichoice extends feedback_item_base {
         $class = 'multichoice-' . $info->subtype;
         $inputname = $item->typ . '_' . $item->id ;
         $options = $this->get_options($item);
+        $separator = !empty($info->horizontal) ? ' ' : '<br>';
 
-        if ($info->subtype === 'd' || $form->is_frozen()) {
+        if ($info->subtype === 'd' || ($info->subtype === 'r' && $form->is_frozen())) {
+            // Display as a dropdown in the complete form or a single value in the response view.
             $el = $form->add_form_element($item,
-                    ['select', $inputname.'[0]', $name, array('' => '') + $options, array('class' => $class)],
-                    true,
-                    false);
-        } else {
-            $objs = array();
-            if ($info->subtype === 'c') {
-                // In case no checkbox items are checked we still need to have the element in form get_data().
-                $objs[] = ['hidden', $inputname.'[0]', 0];
+                    ['select', $inputname.'[0]', $name, array('' => '') + $options, array('class' => $class)]);
+        } else if ($info->subtype === 'c' && $form->is_frozen()) {
+            // Display list of checkbox values in the response view.
+            $objs = [];
+            foreach (explode(FEEDBACK_MULTICHOICE_LINE_SEP, $form->get_item_value($item)) as $v) {
+                $objs[] = ['static', $inputname."[$v]", '', $options[$v]];
             }
-            foreach ($options as $idx => $label) {
-                if ($info->subtype === 'r') {
-                    $objs[] = ['radio', $inputname.'[0]', '', $label, $idx];
-                } else {
+            $el = $form->add_form_group_element($item, 'group_'.$inputname, $name, $objs, $separator, $class);
+        } else {
+            // Display group or radio or checkbox elements.
+            $tmpvalue = $form->get_item_value($item);
+            $class .= ' multichoice-' . ($info->horizontal ? 'horizontal' : 'vertical');
+            $objs = [];
+            if ($info->subtype === 'c') {
+                // Checkboxes.
+                $objs[] = ['hidden', $inputname.'[0]', 0];
+                foreach ($options as $idx => $label) {
                     $objs[] = ['advcheckbox', $inputname.'['.$idx.']', '', $label, null, array(0, $idx)];
                 }
-            }
-            $separator = $info->horizontal ? ' ' : '<br>';
-            $class .= ' multichoice-' . ($info->horizontal ? 'horizontal' : 'vertical');
-            $el = $form->add_form_group_element($item, 'group_'.$inputname, $name, $objs, $separator, $class);
-        }
-
-        // Set previously input values.
-        if ($tmpvalue = $form->get_item_value($item)) {
-            if ($info->subtype === 'c') {
-                foreach (explode(FEEDBACK_MULTICHOICE_LINE_SEP, $tmpvalue) as $v) {
-                    $form->set_element_default($inputname.'['.$v.']', $v);
+                $el = $form->add_form_group_element($item, 'group_'.$inputname, $name, $objs, $separator, $class);
+                if ($tmpvalue) {
+                    foreach (explode(FEEDBACK_MULTICHOICE_LINE_SEP, $tmpvalue) as $v) {
+                        $form->set_element_default($inputname.'['.$v.']', $v);
+                    }
                 }
             } else {
-                $form->set_element_default($inputname.'[0]', $tmpvalue);
+                // Radio.
+                foreach ($options as $idx => $label) {
+                    $objs[] = ['radio', $inputname.'[0]', '', $label, $idx];
+                }
+                $el = $form->add_form_group_element($item, 'group_'.$inputname, $name, $objs, $separator, $class);
+                if ($tmpvalue) {
+                    $form->set_element_default($inputname.'[0]', $tmpvalue);
+                }
             }
-        }
-        // Special case if the radio with "Not selected" option is required the option "Not selected" should show error.
-        if ($info->subtype === 'r' && !$this->hidenoselect($item) && $item->required) {
-            $form->add_validation_rule(function($values, $files) use ($item) {
-                $inputname = $item->typ . '_' . $item->id;
-                return empty($values[$inputname][0]) ? array('group_'.$inputname => get_string('required')) : true;
-            });
-        }
-        // Similar for the checkboxes.
-        if ($info->subtype === 'c' && $item->required) {
-            $form->add_validation_rule(function($values, $files) use ($item) {
-                $inputname = $item->typ . '_' . $item->id;
-                return empty($values[$inputname]) || !array_filter($values[$inputname]) ?
-                    array('group_'.$inputname => get_string('required')) : true;
-            });
+
+            // Process 'required' rule.
+            if ($item->required) {
+                $form->add_validation_rule(function($values, $files) use ($item) {
+                    $inputname = $item->typ . '_' . $item->id;
+                    return empty($values[$inputname]) || !array_filter($values[$inputname]) ?
+                        array('group_' . $inputname => get_string('required')) : true;
+                });
+            }
         }
     }
 
