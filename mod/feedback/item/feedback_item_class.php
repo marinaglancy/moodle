@@ -52,7 +52,6 @@ abstract class feedback_item_base {
     abstract public function init();
     abstract public function build_editform($item, $feedback, $cm);
     abstract public function save_item();
-    abstract public function check_value($value, $item);
     abstract public function create_value($data);
     abstract public function compare_value($item, $dbvalue, $dependvalue);
     abstract public function get_presentation($data);
@@ -97,36 +96,6 @@ abstract class feedback_item_base {
      * @return array
      */
     abstract public function get_analysed($item, $groupid = false, $courseid = false);
-
-    /**
-     * print the item at the edit-page of feedback
-     *
-     * @global object
-     * @param object $item
-     * @return void
-     */
-    abstract public function print_item_preview($item);
-
-    /**
-     * print the item at the complete-page of feedback
-     *
-     * @global object
-     * @param object $item
-     * @param string $value
-     * @param bool $highlightrequire
-     * @return void
-     */
-    abstract public function print_item_complete($item, $value = '', $highlightrequire = false);
-
-    /**
-     * print the item at the complete-page of feedback
-     *
-     * @global object
-     * @param object $item
-     * @param string $value
-     * @return void
-     */
-    abstract public function print_item_show_value($item, $value = '');
 
     /**
      * cleans the userinput while submitting the form
@@ -205,8 +174,6 @@ class feedback_item_pagebreak extends feedback_item_base {
     }
     public function save_item() {
     }
-    public function check_value($value, $item) {
-    }
     public function create_value($data) {
     }
     public function compare_value($item, $dbvalue, $dependvalue) {
@@ -225,12 +192,6 @@ class feedback_item_pagebreak extends feedback_item_base {
     public function get_printval($item, $value) {
     }
     public function get_analysed($item, $groupid = false, $courseid = false) {
-    }
-    public function print_item_preview($item) {
-    }
-    public function print_item_complete($item, $value = '', $highlightrequire = false) {
-    }
-    public function print_item_show_value($item, $value = '') {
     }
     public function can_switch_require() {
     }

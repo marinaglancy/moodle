@@ -1,3 +1,15 @@
+=== 3.1 ===
+
+* The following functions have been removed because API has changed:
+  * feedback_print_item_preview()
+  * feedback_item_base::print_item_preview()
+  * feedback_print_item_complete()
+  * feedback_item_base::print_item_complete()
+  * feedback_print_item_show_value
+  * feedback_item_base::print_item_show_value()
+  * feedback_check_values()
+  * feedback_item_base::check_values()
+
 === 2.7 ===
 
 * The validation of the following events is now stricter (see MDL-45445):

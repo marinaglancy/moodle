@@ -137,7 +137,7 @@ class feedback_item_label extends feedback_item_base {
         return $DB->get_record('feedback_item', array('id'=>$item->id));
     }
 
-    public function print_item($item) {
+    private function print_item($item) {
         global $DB, $CFG;
 
         require_once($CFG->libdir . '/filelib.php');
@@ -171,39 +171,6 @@ class feedback_item_label extends feedback_item_base {
         echo format_text($output, FORMAT_HTML, $formatoptions);
     }
 
-    /**
-     * print the item at the edit-page of feedback
-     *
-     * @global object
-     * @param object $item
-     * @return void
-     */
-    public function print_item_preview($item) {
-        global $OUTPUT, $DB;
-
-        if ($item->dependitem) {
-            if ($dependitem = $DB->get_record('feedback_item', array('id'=>$item->dependitem))) {
-                echo ' <span class="feedback_depend">';
-                echo '('.format_string($dependitem->label).'-&gt;'.$item->dependvalue.')';
-                echo '</span>';
-            }
-        }
-        $this->print_item($item);
-    }
-
-    /**
-     * print the item at the complete-page of feedback
-     *
-     * @global object
-     * @param object $item
-     * @param string $value
-     * @param bool $highlightrequire
-     * @return void
-     */
-    public function print_item_complete($item, $value = '', $highlightrequire = false) {
-        $this->print_item($item);
-    }
-
     public function get_display_name($item, $withpostfix = true) {
         return '';
     }
@@ -216,6 +183,7 @@ class feedback_item_label extends feedback_item_base {
      */
     public function complete_form_element($item, $form) {
         $context = $form->get_cm()->context;
+        // TODO this may be a template! See print_item()
         $output = file_rewrite_pluginfile_urls($item->presentation, 'pluginfile.php',
                 $context->id, 'mod_feedback', 'item', $item->id);
         $formatoptions = array('overflowdiv' => true, 'noclean' => true);
@@ -225,18 +193,6 @@ class feedback_item_label extends feedback_item_base {
 
         $name = $this->get_display_name($item);
         $form->add_form_element($item, ['static', $inputname, $name, $output], false, false);
-    }
-
-    /**
-     * print the item at the complete-page of feedback
-     *
-     * @global object
-     * @param object $item
-     * @param string $value
-     * @return void
-     */
-    public function print_item_show_value($item, $value = '') {
-        $this->print_item($item);
     }
 
     public function create_value($data) {
@@ -274,9 +230,6 @@ class feedback_item_label extends feedback_item_base {
 
     public function can_switch_require() {
         return false;
-    }
-
-    public function check_value($value, $item) {
     }
 
     public function excelprint_item(&$worksheet,
