@@ -89,7 +89,7 @@ Feature: Anonymous feedback
     And I am on site homepage
     And I follow "Course feedback"
     And I follow "Answer the questions..."
-    And I should see "Acceptance test site" in the ".feedback_items" "css_element"
+    And I should see "Acceptance test site" in the ".feedback-form" "css_element"
     And I set the following fields to these values:
       | option a                         | 1        |
       | this is a simple multiple choice | option d |
@@ -98,8 +98,8 @@ Feature: Anonymous feedback
     And I follow "Course 1"
     And I click on "Course feedback" "link" in the "Feedback" "block"
     And I follow "Answer the questions..."
-    And I should not see "Acceptance test site" in the ".feedback_items" "css_element"
-    And I should see "C1" in the ".feedback_items" "css_element"
+    And I should not see "Acceptance test site" in the ".feedback-form" "css_element"
+    And I should see "C1" in the ".feedback-form" "css_element"
     And I set the following fields to these values:
       | option b                         | 1        |
       | this is a simple multiple choice | option e |
@@ -112,8 +112,8 @@ Feature: Anonymous feedback
     And I follow "Course 1"
     And I click on "Course feedback" "link" in the "Feedback" "block"
     And I follow "Answer the questions..."
-    And I should not see "Acceptance test site" in the ".feedback_items" "css_element"
-    And I should see "C1" in the ".feedback_items" "css_element"
+    And I should not see "Acceptance test site" in the ".feedback-form" "css_element"
+    And I should see "C1" in the ".feedback-form" "css_element"
     And I set the following fields to these values:
       | option c                         | 1        |
       | this is a simple multiple choice | option e |
@@ -167,8 +167,8 @@ Feature: Anonymous feedback
     And I follow "Course 2"
     And I click on "Course feedback" "link" in the "Feedback" "block"
     And I follow "Answer the questions..."
-    And I should not see "Acceptance test site" in the ".feedback_items" "css_element"
-    And I should see "C2" in the ".feedback_items" "css_element"
+    And I should not see "Acceptance test site" in the ".feedback-form" "css_element"
+    And I should see "C2" in the ".feedback-form" "css_element"
     And I set the following fields to these values:
       | option b                         | 1        |
       | this is a simple multiple choice | option e |
@@ -181,8 +181,8 @@ Feature: Anonymous feedback
     And I follow "Course 2"
     And I click on "Course feedback" "link" in the "Feedback" "block"
     And I follow "Answer the questions..."
-    And I should not see "Acceptance test site" in the ".feedback_items" "css_element"
-    And I should see "C2" in the ".feedback_items" "css_element"
+    And I should not see "Acceptance test site" in the ".feedback-form" "css_element"
+    And I should see "C2" in the ".feedback-form" "css_element"
     And I set the following fields to these values:
       | option c                         | 1        |
       | this is a simple multiple choice | option e |
@@ -193,8 +193,8 @@ Feature: Anonymous feedback
     And I follow "Course 3"
     And I click on "Course feedback" "link" in the "Feedback" "block"
     And I follow "Answer the questions..."
-    And I should not see "Acceptance test site" in the ".feedback_items" "css_element"
-    And I should see "C3" in the ".feedback_items" "css_element"
+    And I should not see "Acceptance test site" in the ".feedback-form" "css_element"
+    And I should see "C3" in the ".feedback-form" "css_element"
     And I set the following fields to these values:
       | option c                         | 1        |
       | this is a simple multiple choice | option d |
