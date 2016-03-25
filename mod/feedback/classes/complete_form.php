@@ -273,14 +273,6 @@ class mod_feedback_complete_form extends moodleform {
         return $value;
     }
 
-    /**
-     *
-     * @return MoodleQuickForm
-     */
-    public function get_quick_form() {
-        return $this->_form;
-    }
-
     public function get_course_id() {
         return $this->courseid;
     }
@@ -297,16 +289,125 @@ class mod_feedback_complete_form extends moodleform {
         return $this->mode == self::MODE_VIEW_RESPONSE;
     }
 
-    public function get_suggested_name($item) {
-        return format_text($item->name, FORMAT_HTML, array('noclean' => true, 'para' => false));
-    }
-
     public function get_suggested_class($item) {
         $class = "feedback-item-{$item->typ}";
         if ($item->dependitem) {
             $class .= " feedback_depend";
         }
         return $class;
+    }
+
+    /**
+     * @param stdClass $item
+     * @param HTML_QuickForm_element|array $element
+     * @return HTML_QuickForm_element
+     */
+    public function add_form_element($item, $element, $addrequiredrule = true, $setdefaultvalue = true) {
+        // Add element to the form.
+        if (is_array($element)) {
+            if ($this->is_frozen() && $element[0] === 'text') {
+                // Convert 'text' element to 'static' when freezing for better display.
+                $element[0] = 'static';
+            }
+            $element = call_user_func_array(array($this->_form, 'createElement'), $element);
+        }
+        $element = $this->_form->addElement($element);
+
+        // Prepend standard CSS classes to the element classes.
+        $attributes = $element->getAttributes();
+        $class = !empty($attributes['class']) ? ' ' . $attributes['class'] : '';
+        $attributes['class'] = $this->get_suggested_class($item) . $class;
+        $element->setAttributes($attributes);
+
+        // Add required rule.
+        if ($item->required && $addrequiredrule) {
+            $this->_form->addRule($element->getName(), get_string('required'), 'required');
+        }
+
+        // Set default value.
+        if ($setdefaultvalue && ($tmpvalue = $this->get_item_value($item))) {
+            $this->_form->setDefault($element->getName(), $tmpvalue);
+        }
+
+        // Freeze if needed.
+        if ($this->is_frozen()) {
+            $element->freeze();
+        }
+
+        //$element->setLabel($itemclass->get_display_name()); // TODO do I want it?
+
+        return $element;
+    }
+
+    public function add_form_group_element($item, $groupinputname, $name, $elements, $separator,
+            $class = '', $addrequiredrule = true) {
+        $objects = array();
+        foreach ($elements as $element) {
+            $objects[] = call_user_func_array(array($this->_form, 'createElement'), $element);
+        }
+        $element = $this->add_form_element($item,
+                ['group', $groupinputname, $name, $objects, $separator, false],
+                $addrequiredrule,
+                false);
+        if ($class !== '') {
+            $attributes = $element->getAttributes();
+            $attributes['class'] .= ' ' . $class;
+            $element->setAttributes($attributes);
+        }
+        return $element;
+    }
+
+    public function set_element_default($elementname, $defaultvalue) {
+        if ($elementname instanceof HTML_QuickForm_element) {
+            $elementname = $elementname->getName();
+        }
+        $this->_form->setDefault($elementname, $defaultvalue);
+    }
+
+    public function set_element_type($elementname, $type) {
+        if ($elementname instanceof HTML_QuickForm_element) {
+            $elementname = $elementname->getName();
+        }
+        $this->_form->setType($elementname, $type);
+    }
+
+    /**
+     * Adds a validation rule for the given field
+     *
+     * Wrapper for $this->_form->addRule()
+     *
+     * @param string $element Form element name
+     * @param string $message Message to display for invalid data
+     * @param string $type Rule type, use getRegisteredRules() to get types
+     * @param string $format (optional)Required for extra rule data
+     * @param string $validation (optional)Where to perform validation: "server", "client"
+     * @param bool $reset Client-side validation: reset the form element to its original value if there is an error?
+     * @param bool $force Force the rule to be applied, even if the target form element does not exist
+     */
+    public function add_element_rule($element, $message, $type, $format = null, $validation = 'server',
+            $reset = false, $force = false) {
+        if ($element instanceof HTML_QuickForm_element) {
+            $element = $element->getName();
+        }
+        $this->_form->addRule($element, $message, $type, $format, $validation, $reset, $force);
+    }
+
+    public function add_validation_rule(callable $callback) {
+        if ($this->mode == self::MODE_COMPLETE) {
+            $this->_form->addFormRule($callback);
+        }
+    }
+
+    /**
+     * Returns a reference to the element
+     *
+     * Wrapper for funciton $this->_form->getElement()
+     *
+     * @param string $elementname Element name
+     * @return HTML_QuickForm_element reference to element
+     */
+    public function get_form_element($elementname) {
+        return $this->_form->getElement($elementname);
     }
 
     /**

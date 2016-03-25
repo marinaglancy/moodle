@@ -254,6 +254,10 @@ class feedback_item_captcha extends feedback_item_base {
         }
     }
 
+    public function get_display_name($item, $withpostfix = true) {
+        return get_string('captcha', 'feedback');
+    }
+
     /**
      * Adds an input element to the complete form
      *
@@ -262,27 +266,33 @@ class feedback_item_captcha extends feedback_item_base {
      */
     public function complete_form_element($item, $form) {
         global $OUTPUT;
+        /*
         // If 'required' is added as rule for the recaptcha element it looks at the wrong field,
         // we add the red "*" manually to the element label.
         $required = '<img class="req" title="'.get_string('requiredelement', 'form').'" alt="'.
                 get_string('requiredelement', 'form').'" src="'.$OUTPUT->pix_url('req') .'" />';
-        $name = get_string('captcha', 'feedback') . $required;
+        $name = $this->get_display_name($item) . $required; */
+
+        $name = $this->get_display_name($item);
+
         $inputname = $item->typ . '_' . $item->id;
-        $mform = $form->get_quick_form();
 
         if ($form->get_mode() != mod_feedback_complete_form::MODE_COMPLETE) {
-            $el = $mform->addElement('static', $inputname, $name);
-            $el->setAttributes($el->getAttributes() + array('class' => $form->get_suggested_class($item)));
-            return;
+            $form->add_form_element($item,
+                    ['static', $inputname, $name],
+                    false,
+                    false);
+        } else {
+            $form->add_form_element($item,
+                    ['recaptcha', $inputname, $name],
+                    false,
+                    false);
         }
 
-        $mform->addElement('recaptcha', $inputname, $name,
-                array('class' => $form->get_suggested_class($item)));
-
         // Add recaptcha validation to the form.
-        $mform->addFormRule(function($values, $files) use ($item, $mform) {
+        $form->add_validation_rule(function($values, $files) use ($item, $form) {
             $elementname = $item->typ . '_' . $item->id;
-            $recaptchaelement = $mform->getElement($elementname);
+            $recaptchaelement = $form->get_form_element($elementname);
             if (empty($values['recaptcha_response_field'])) {
                 return array($elementname => get_string('required'));
             } else if (!empty($values['recaptcha_challenge_field'])) {

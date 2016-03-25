@@ -136,6 +136,15 @@ abstract class feedback_item_base {
      */
     abstract public function clean_input_value($value);
 
+    public function get_display_name($item, $withpostfix = true) {
+        return format_text($item->name, FORMAT_HTML, array('noclean' => true, 'para' => false)) .
+                ($withpostfix ? $this->get_display_name_postfix($item) : '');
+    }
+
+    public function get_display_name_postfix($item) {
+        return '';
+    }
+
     public function complete_form_element($item, $form) {
 
     }

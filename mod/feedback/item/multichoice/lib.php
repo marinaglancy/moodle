@@ -506,6 +506,20 @@ class feedback_item_multichoice extends feedback_item_base {
         echo '</div>';
     }
 
+    protected function get_options($item) {
+        $info = $this->get_info($item);
+        $presentation = explode (FEEDBACK_MULTICHOICE_LINE_SEP, $info->presentation);
+        $options = array();
+        foreach ($presentation as $idx => $optiontext) {
+            $options[$idx+1] = format_text($optiontext, FORMAT_HTML, array('noclean' => true, 'para' => false));
+        }
+        if ($info->subtype === 'r' && !$this->hidenoselect($item)) {
+            $options = array(0 => get_string('not_selected', 'feedback')) + $options;
+        }
+
+        return $options;
+    }
+
     /**
      * Adds an input element to the complete form
      *
@@ -514,65 +528,54 @@ class feedback_item_multichoice extends feedback_item_base {
      */
     public function complete_form_element($item, $form) {
         $info = $this->get_info($item);
-        $presentation = explode (FEEDBACK_MULTICHOICE_LINE_SEP, $info->presentation);
-        $name = $form->get_suggested_name($item);
-        $class = $form->get_suggested_class($item) . ' multichoice-' . $info->subtype;
+        $name = $this->get_display_name($item);
+        $class = 'multichoice-' . $info->subtype;
         $inputname = $item->typ . '_' . $item->id ;
-        $mform = $form->get_quick_form();
-        $options = array();
-        foreach ($presentation as $idx => $optiontext) {
-            $options[$idx+1] = format_text($optiontext, FORMAT_HTML, array('noclean' => true, 'para' => false));
-        }
+        $options = $this->get_options($item);
 
         if ($info->subtype === 'd' || $form->is_frozen()) {
-            $el = $mform->addElement('select', $inputname.'[0]', $name, array('' => '') + $options,
-                    array('class' => $class));
-            if ($form->is_frozen()) {
-                $el->freeze();
-            }
+            $el = $form->add_form_element($item,
+                    ['select', $inputname.'[0]', $name, array('' => '') + $options, array('class' => $class)],
+                    true,
+                    false);
         } else {
             $objs = array();
-            if ($info->subtype === 'r' && !$this->hidenoselect($item)) {
-                $options = array(0 => get_string('not_selected', 'feedback')) + $options;
-            }
             if ($info->subtype === 'c') {
-                $objs[] = $mform->createElement('hidden', $inputname.'[0]', 0);
+                // In case no checkbox items are checked we still need to have the element in form get_data().
+                $objs[] = ['hidden', $inputname.'[0]', 0];
             }
             foreach ($options as $idx => $label) {
                 if ($info->subtype === 'r') {
-                    $objs[] =& $mform->createElement('radio', $inputname.'[0]', '', $label, $idx);
+                    $objs[] = ['radio', $inputname.'[0]', '', $label, $idx];
                 } else {
-                    $objs[] =& $mform->createElement('advcheckbox', $inputname.'['.$idx.']', '', $label, null, array(0, $idx));
+                    $objs[] = ['advcheckbox', $inputname.'['.$idx.']', '', $label, null, array(0, $idx)];
                 }
             }
             $separator = $info->horizontal ? ' ' : '<br>';
             $class .= ' multichoice-' . ($info->horizontal ? 'horizontal' : 'vertical');
-            $el = $mform->addElement('group', 'group_'.$inputname, $name, $objs, $separator, false);
-            $el->setAttributes(($el->getAttributes() ?: array()) + array('class' => $class));
+            $el = $form->add_form_group_element($item, 'group_'.$inputname, $name, $objs, $separator, $class);
         }
-        if ($item->required == 1) {
-            $mform->addRule($el->getName(), get_string('required'), 'required');
-        }
+
         // Set previously input values.
         if ($tmpvalue = $form->get_item_value($item)) {
             if ($info->subtype === 'c') {
                 foreach (explode(FEEDBACK_MULTICHOICE_LINE_SEP, $tmpvalue) as $v) {
-                    $mform->setDefault($inputname.'['.$v.']', $v);
+                    $form->set_element_default($inputname.'['.$v.']', $v);
                 }
             } else {
-                $mform->setDefault($inputname.'[0]', $tmpvalue);
+                $form->set_element_default($inputname.'[0]', $tmpvalue);
             }
         }
         // Special case if the radio with "Not selected" option is required the option "Not selected" should show error.
         if ($info->subtype === 'r' && !$this->hidenoselect($item) && $item->required) {
-            $mform->addFormRule(function($values, $files) use ($item) {
+            $form->add_validation_rule(function($values, $files) use ($item) {
                 $inputname = $item->typ . '_' . $item->id;
                 return empty($values[$inputname][0]) ? array('group_'.$inputname => get_string('required')) : true;
             });
         }
         // Similar for the checkboxes.
         if ($info->subtype === 'c' && $item->required) {
-            $mform->addFormRule(function($values, $files) use ($item) {
+            $form->add_validation_rule(function($values, $files) use ($item) {
                 $inputname = $item->typ . '_' . $item->id;
                 return empty($values[$inputname]) || !array_filter($values[$inputname]) ?
                     array('group_'.$inputname => get_string('required')) : true;

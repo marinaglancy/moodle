@@ -387,6 +387,10 @@ class feedback_item_numeric extends feedback_item_base {
         echo '</div>';
     }
 
+    public function get_display_name_postfix($item) {
+        return html_writer::span($this->get_boundaries_for_display($item), 'boundaries');
+    }
+
     /**
      * Adds an input element to the complete form
      *
@@ -394,23 +398,18 @@ class feedback_item_numeric extends feedback_item_base {
      * @param mod_feedback_complete_form $form
      */
     public function complete_form_element($item, $form) {
-        $name = $form->get_suggested_name($item) .
-                html_writer::span($this->get_boundaries_for_display($item), 'range');
+        $name = $this->get_display_name($item);
         $inputname = $item->typ . '_' . $item->id;
-        $mform = $form->get_quick_form();
+        $form->add_form_element($item,
+                ['text', $inputname, $name],
+                true,
+                false
+                );
         $tmpvalue = $this->format_float($form->get_item_value($item));
-        if ($form->is_frozen()) {
-            $el = $mform->addElement('static', $inputname, $name, $tmpvalue);
-            $el->setAttributes($el->getAttributes() + array('class' => $form->get_suggested_class($item)));
-        } else {
-            $el = $mform->addElement('text', $inputname, $name, array('class' => $form->get_suggested_class($item)));
-            $mform->setDefault($inputname, $tmpvalue);
-        }
-        if ($item->required == 1) {
-            $mform->addRule($inputname, get_string('required'), 'required');
-        }
+        $form->set_element_default($inputname, $tmpvalue);
+
         // Add form validation rule to check for boundaries.
-        $mform->addFormRule(function($values, $files) use ($item) {
+        $form->add_validation_rule(function($values, $files) use ($item) {
             $inputname = $item->typ . '_' . $item->id;
             list($rangefrom, $rangeto) = explode('|', $item->presentation);
             if (!isset($values[$inputname]) || trim($values[$inputname]) === '') {

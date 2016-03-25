@@ -23,6 +23,10 @@ class feedback_item_info extends feedback_item_base {
     private $item_form;
     private $item;
 
+    const MODE_RESPONSETIME = 1;
+    const MODE_COURSE = 2;
+    const MODE_CATEGORY = 3;
+
     public function init() {
 
     }
@@ -116,15 +120,15 @@ class feedback_item_info extends feedback_item_base {
                 $datavalue = new stdClass();
 
                 switch($presentation) {
-                    case 1:
+                    case self::MODE_RESPONSETIME:
                         $datavalue->value = $value->value;
                         $datavalue->show = userdate($datavalue->value);
                         break;
-                    case 2:
+                    case self::MODE_COURSE:
                         $datavalue->value = $value->value;
                         $datavalue->show = $datavalue->value;
                         break;
-                    case 3:
+                    case self::MODE_CATEGORY:
                         $datavalue->value = $value->value;
                         $datavalue->show = $datavalue->value;
                         break;
@@ -142,7 +146,8 @@ class feedback_item_info extends feedback_item_base {
         if (!isset($value->value)) {
             return '';
         }
-        return $item->presentation == 1 ? userdate($value->value) : $value->value;
+        return $item->presentation == self::MODE_RESPONSETIME ?
+                userdate($value->value) : $value->value;
     }
 
     public function print_analysed($item, $itemnr = '', $groupid = false, $courseid = false) {
@@ -347,6 +352,32 @@ class feedback_item_info extends feedback_item_base {
         echo '</div>';
     }
 
+    protected function get_current_value($item, $feedback, $courseid) {
+        global $DB;
+        switch ($item->presentation) {
+            case self::MODE_RESPONSETIME:
+                if ($feedback->anonymous != FEEDBACK_ANONYMOUS_YES) {
+                    // Response time is not allowed in anonymous feedbacks.
+                    return time();
+                }
+                break;
+            case self::MODE_COURSE:
+                $course = get_course($courseid);
+                return format_string($course->shortname, true,
+                        array('context' => context_course::instance($course->id)));
+                break;
+            case self::MODE_CATEGORY:
+                if ($courseid !== SITEID) {
+                    $coursecategory = $DB->get_record_sql('SELECT cc.id, cc.name FROM {course_categories} cc, {course} c '
+                            . 'WHERE c.category = cc.id AND c.id = ?', array($courseid));
+                    return format_string($coursecategory->name, true,
+                            array('context' => context_coursecat::instance($coursecategory->id)));
+                }
+                break;
+        }
+        return '';
+    }
+
     /**
      * Adds an input element to the complete form
      *
@@ -354,49 +385,39 @@ class feedback_item_info extends feedback_item_base {
      * @param mod_feedback_complete_form $form
      */
     public function complete_form_element($item, $form) {
-        global $DB;
-        $presentation = $item->presentation;
-        $courseid = $form->get_current_course_id();
-        $options = array('' => '');
+        if ($form->get_mode() == mod_feedback_complete_form::MODE_VIEW_RESPONSE) {
+            $value = strval($form->get_item_value($item));
+        } else {
+            $value = $this->get_current_value($item,
+                    $form->get_feedback(), $form->get_current_course_id());
+        }
+        $printval = $this->get_printval($item, (object)['value' => $value]);
+
         $class = '';
-        switch ($presentation) {
-            case 1:
-                $feedback = $form->get_feedback();
-                if ($feedback->anonymous == FEEDBACK_ANONYMOUS_YES) {
-                    $options = array(0 => '-');
-                } else {
-                    $v = time();
-                    $options = array($v => userdate($v));
-                }
-                $class = 'feedback-item-info-responsetime';
+        switch ($item->presentation) {
+            case self::MODE_RESPONSETIME:
+                $class = 'info-responsetime';
                 break;
-            case 2:
-                $course = get_course($courseid);
-                $v = format_string($course->shortname, true,
-                        array('context' => context_course::instance($course->id)));
-                $options = array($v => $v);
-                $class = 'feedback-item-info-course';
+            case self::MODE_COURSE:
+                $class = 'info-course';
                 break;
-            case 3:
-                if ($courseid !== SITEID) {
-                    $coursecategory = $DB->get_record_sql('SELECT cc.id, cc.name FROM {course_categories} cc, {course} c '
-                            . 'WHERE c.category = cc.id AND c.id = ?', array($courseid));
-                    $v = format_string($coursecategory->name, true,
-                            array('context' => context_coursecat::instance($coursecategory->id)));
-                    $options = array($v => $v);
-                    $class = 'feedback-item-info-category';
-                }
+            case self::MODE_CATEGORY:
+                $class = 'info-category';
                 break;
         }
 
-        $name = $form->get_suggested_name($item);
+        $name = $this->get_display_name($item);
         $inputname = $item->typ . '_' . $item->id;
-        $mform = $form->get_quick_form();
-        $el = $mform->addElement('select', $inputname, $name, $options,
-                array('class' => $form->get_suggested_class($item) . ' ' . $class));
-        $mform->setConstant($inputname, key($options));
-        $el->freeze();
-        $el->setPersistantFreeze(true);
+
+        $element = $form->add_form_element($item,
+                ['select', $inputname, $name,
+                    array($value => $printval),
+                    array('class' => $class)],
+                false,
+                false);
+        $form->set_element_default($inputname, $value);
+        $element->freeze();
+        $element->setPersistantFreeze(true);
     }
 
     /**

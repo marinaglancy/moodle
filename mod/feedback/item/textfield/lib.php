@@ -279,25 +279,14 @@ class feedback_item_textfield extends feedback_item_base {
      * @param mod_feedback_complete_form $form
      */
     public function complete_form_element($item, $form) {
-        $name = $form->get_suggested_name($item);
+        $name = $this->get_display_name($item);
         $inputname = $item->typ . '_' . $item->id;
-        $class = $form->get_suggested_class($item);
-        $mform = $form->get_quick_form();
-        $tmpvalue = $form->get_item_value($item);
-        if ($form->is_frozen()) {
-            $el = $mform->addElement('static', $inputname, $name,
-                    format_string($tmpvalue));
-            $el->setAttributes($el->getAttributes() + array('class' => $class));
-        } else {
-            $el = $mform->addElement('text', $inputname, $name,
-                    array('class' => $class));
-            $mform->setDefault($inputname, $tmpvalue);
-        }
-        $mform->setType($inputname, PARAM_NOTAGS);
-        if ($item->required == 1) {
-            $mform->addRule($inputname, get_string('required'), 'required');
-        }
-        // TODO size, maxlength
+        list($size, $maxlength) = explode ("|", $item->presentation);
+        $form->add_form_element($item,
+            ['text', $inputname, $name, ['maxlength' => $maxlength, 'size' => $size]]);
+        $form->set_element_type($inputname, PARAM_NOTAGS);
+
+        $form->add_element_rule($inputname, get_string('maximumchars', '', $maxlength), 'maxlength', $maxlength, 'client');
     }
 
     /**

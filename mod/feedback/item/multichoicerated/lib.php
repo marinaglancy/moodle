@@ -390,6 +390,22 @@ class feedback_item_multichoicerated extends feedback_item_base {
         echo '</div>';
     }
 
+    protected function get_options($item) {
+        $info = $this->get_info($item);
+        $lines = explode(FEEDBACK_MULTICHOICERATED_LINE_SEP, $info->presentation);
+        $options = array();
+        foreach ($lines as $idx => $line) {
+            list($weight, $optiontext) = explode(FEEDBACK_MULTICHOICERATED_VALUE_SEP, $line);
+            $options[$idx+1] = format_text("<span class=\"weight\">($weight) </span>".$optiontext,
+                    FORMAT_HTML, array('noclean' => true, 'para' => false));
+        }
+        if ($info->subtype === 'r' && !$this->hidenoselect($item)) {
+            $options = array(0 => get_string('not_selected', 'feedback')) + $options;
+        }
+
+        return $options;
+    }
+
     /**
      * Adds an input element to the complete form
      *
@@ -398,46 +414,30 @@ class feedback_item_multichoicerated extends feedback_item_base {
      */
     public function complete_form_element($item, $form) {
         $info = $this->get_info($item);
-        $lines = explode(FEEDBACK_MULTICHOICERATED_LINE_SEP, $info->presentation);
-        $name = $form->get_suggested_name($item);
-        $class = $form->get_suggested_class($item) . ' multichoicerated-' . $info->subtype;
+        $name = $this->get_display_name($item);
+        $class = 'multichoicerated-' . $info->subtype;
         $inputname = $item->typ . '_' . $item->id ;
-        $mform = $form->get_quick_form();
-        $options = array();
-        foreach ($lines as $idx => $line) {
-            list($weight, $optiontext) = explode(FEEDBACK_MULTICHOICERATED_VALUE_SEP, $line);
-            $options[$idx+1] = format_text("<span class=\"weight\">($weight) </span>".$optiontext,
-                    FORMAT_HTML, array('noclean' => true, 'para' => false));
-        }
+        $options = $this->get_options($item);
         if ($info->subtype === 'd' || $form->is_frozen()) {
-            $el = $mform->addElement('select', $inputname, $name, array('' => '') + $options,
-                    array('class' => $class));
-            if ($form->is_frozen()) {
-                $el->freeze();
-            }
+            $el = $form->add_form_element($item,
+                    ['select', $inputname, $name, array('' => '') + $options, array('class' => $class)]);
         } else {
             $objs = array();
-            if ($info->subtype === 'r' && !$this->hidenoselect($item)) {
-                $options = array(0 => get_string('not_selected', 'feedback')) + $options;
-            }
             foreach ($options as $idx => $label) {
-                $objs[] =& $mform->createElement('radio', $inputname, '', $label, $idx);
+                $objs[] = ['radio', $inputname, '', $label, $idx];
             }
             $separator = $info->horizontal ? ' ' : '<br>';
             $class .= ' multichoicerated-' . ($info->horizontal ? 'horizontal' : 'vertical');
-            $el = $mform->addElement('group', 'group_'.$inputname, $name, $objs, $separator, false);
-            $el->setAttributes(($el->getAttributes() ?: array()) + array('class' => $class));
+            $el = $form->add_form_group_element($item, 'group_'.$inputname, $name, $objs, $separator, $class);
         }
-        if ($item->required == 1) {
-            $mform->addRule($el->getName(), get_string('required'), 'required');
-        }
+
         // Set previously input values.
         if ($tmpvalue = $form->get_item_value($item)) {
-            $mform->setDefault($inputname, $tmpvalue);
+            $form->set_element_default($inputname, $tmpvalue);
         }
         // Special case if the radio with "Not selected" option is required the option "Not selected" should show error.
         if ($info->subtype === 'r' && !$this->hidenoselect($item) && $item->required) {
-            $mform->addFormRule(function($values, $files) use ($item) {
+            $form->add_validation_rule(function($values, $files) use ($item) {
                 $inputname = $item->typ . '_' . $item->id;
                 return empty($values[$inputname]) ? array('group_' . $inputname => get_string('required')) : true;
             });
