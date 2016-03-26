@@ -24,7 +24,6 @@
 
 require_once("../../config.php");
 require_once("lib.php");
-require_once('delete_item_form.php');
 
 $deleteitem = required_param('deleteitem', PARAM_INT);
 $item = $DB->get_record('feedback_item', array('id' => $deleteitem), '*', MUST_EXIST);

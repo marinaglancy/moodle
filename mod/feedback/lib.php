@@ -1858,6 +1858,8 @@ function feedback_save_tmp_values($feedbackcompletedtmp, $feedbackcompleted) {
         $feedbackcompleted->id = $DB->insert_record('feedback_completed', $feedbackcompleted);
     }
 
+    $allitems = $DB->get_records('feedback_item', array('feedback' => $feedbackcompleted->feedback));
+
     //save all the new values from feedback_valuetmp
     //get all values of tmp-completed
     $params = array('completed'=>$feedbackcompletedtmp->id);
@@ -1865,9 +1867,9 @@ function feedback_save_tmp_values($feedbackcompletedtmp, $feedbackcompleted) {
     foreach ($values as $value) {
         //check if there are depend items
         $item = $DB->get_record('feedback_item', array('id'=>$value->item));
-        if ($item->dependitem > 0) {
+        if ($item->dependitem > 0 && isset($allitems[$item->dependitem])) {
             $check = feedback_compare_item_value($tmpcplid,
-                                        $item->dependitem,
+                                        $allitems[$item->dependitem],
                                         $item->dependvalue,
                                         true);
         } else {
@@ -2056,17 +2058,6 @@ function feedback_get_page_to_continue($feedbackid, $courseid = false, $guestid 
 ////////////////////////////////////////////////
 
 /**
- * cleans the userinput while submitting the form.
- *
- * @param mixed $value
- * @return mixed
- */
-function feedback_clean_input_value($item, $value) {
-    $itemobj = feedback_get_item_class($item->typ);
-    return $itemobj->clean_input_value($value);
-}
-
-/**
  * this saves the values of an completed.
  * if the param $tmp is set true so the values are saved temporary in table feedback_valuetmp.
  * if there is already a completed and the userid is set so the values are updated.
@@ -2155,21 +2146,21 @@ function feedback_get_item_value($completedid, $itemid, $tmp = false) {
  *
  * @global object
  * @global object
- * @param int $completeid
- * @param int $itemid
+ * @param int $completedid
+ * @param stdClass|int $item
  * @param mixed $dependvalue
  * @param boolean $tmp
  * @return bool
  */
-function feedback_compare_item_value($completedid, $itemid, $dependvalue, $tmp = false) {
-    global $DB, $CFG;
+function feedback_compare_item_value($completedid, $item, $dependvalue, $tmp = false) {
+    global $DB;
 
-    $dbvalue = feedback_get_item_value($completedid, $itemid, $tmp);
+    if (is_int($item)) {
+        $item = $DB->get_record('feedback_item', array('id' => $item));
+    }
 
-    //get the class of the given item-typ
-    $item = $DB->get_record('feedback_item', array('id'=>$itemid));
+    $dbvalue = feedback_get_item_value($completedid, $item->id, $tmp);
 
-    //get the instance of the item-class
     $itemobj = feedback_get_item_class($item->typ);
     return $itemobj->compare_value($item, $dbvalue, $dependvalue); //true or false
 }
@@ -2226,10 +2217,10 @@ function feedback_create_values($usrid, $timemodified, $tmp = false, $guestid = 
 
         $keyname = $item->typ.'_'.$item->id;
 
-        if ($itemobj->value_is_array()) {
-            $itemvalue = optional_param_array($keyname, null, $itemobj->value_type());
+        if ($item->typ === 'multichoice') {
+            $itemvalue = optional_param_array($keyname, null, PARAM_INT);
         } else {
-            $itemvalue = optional_param($keyname, null, $itemobj->value_type());
+            $itemvalue = optional_param($keyname, null, PARAM_NOTAGS);
         }
 
         if (is_null($itemvalue)) {
@@ -2285,10 +2276,10 @@ function feedback_update_values($completed, $tmp = false) {
 
         $keyname = $item->typ.'_'.$item->id;
 
-        if ($itemobj->value_is_array()) {
-            $itemvalue = optional_param_array($keyname, null, $itemobj->value_type()); // TODO yuk!
+        if ($item->typ === 'multichoice') {
+            $itemvalue = optional_param_array($keyname, null, PARAM_INT);
         } else {
-            $itemvalue = optional_param($keyname, null, $itemobj->value_type()); // TODO yuk!
+            $itemvalue = optional_param($keyname, null, PARAM_NOTAGS);
         }
 
         //is the itemvalue set (could be a subset of items because pagebreak)?

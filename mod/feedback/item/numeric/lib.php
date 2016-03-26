@@ -19,13 +19,6 @@ require_once($CFG->dirroot.'/mod/feedback/item/feedback_item_class.php');
 
 class feedback_item_numeric extends feedback_item_base {
     protected $type = "numeric";
-    private $commonparams;
-    private $item_form;
-    private $item;
-
-    public function init() {
-
-    }
 
     public function build_editform($item, $feedback, $cm) {
         global $DB, $CFG;
@@ -80,22 +73,6 @@ class feedback_item_numeric extends feedback_item_base {
         $this->item_form = new feedback_numeric_form('edit_item.php', $customdata);
     }
 
-    //this function only can used after the call of build_editform()
-    public function show_editform() {
-        $this->item_form->display();
-    }
-
-    public function is_cancelled() {
-        return $this->item_form->is_cancelled();
-    }
-
-    public function get_data() {
-        if ($this->item = $this->item_form->get_data()) {
-            return true;
-        }
-        return false;
-    }
-
     public function save_item() {
         global $DB;
 
@@ -118,9 +95,15 @@ class feedback_item_numeric extends feedback_item_base {
         return $DB->get_record('feedback_item', array('id'=>$item->id));
     }
 
-
-    //liefert eine Struktur ->name, ->data = array(mit Antworten)
-    public function get_analysed($item, $groupid = false, $courseid = false) {
+    /**
+     * Helper function for collected data, both for analysis page and export to excel
+     *
+     * @param $item the db-object from feedback_item
+     * @param $groupid
+     * @param $courseid
+     * @return stdClass
+     */
+    protected function get_analysed($item, $groupid = false, $courseid = false) {
         global $DB;
 
         $analysed = new stdClass();
@@ -276,6 +259,7 @@ class feedback_item_numeric extends feedback_item_base {
                 true,
                 false
                 );
+        $form->set_element_type($inputname, PARAM_NOTAGS);
         $tmpvalue = $this->format_float($form->get_item_value($item));
         $form->set_element_default($inputname, $tmpvalue);
 
@@ -307,65 +291,5 @@ class feedback_item_numeric extends feedback_item_base {
             $data = '';
         }
         return $data;
-    }
-
-    //compares the dbvalue with the dependvalue
-    //dbvalue is the number put in by the user
-    //dependvalue is the value that is compared
-    public function compare_value($item, $dbvalue, $dependvalue) {
-        if ($dbvalue == $dependvalue) {
-            return true;
-        }
-        return false;
-    }
-
-    public function get_presentation($data) {
-        $num1 = unformat_float($data->numericrangefrom, true);
-        if (is_numeric($num1)) {
-            $num1 = floatval($num1);
-        } else {
-            $num1 = '-';
-        }
-
-        $num2 = unformat_float($data->numericrangeto, true);
-        if (is_numeric($num2)) {
-            $num2 = floatval($num2);
-        } else {
-            $num2 = '-';
-        }
-
-        if ($num1 === '-' OR $num2 === '-') {
-            return $num1 . '|'. $num2;
-        }
-
-        if ($num1 > $num2) {
-            return $num2 . '|'. $num1;
-        } else {
-            return $num1 . '|'. $num2;
-        }
-    }
-
-    public function get_hasvalue() {
-        return 1;
-    }
-
-    public function can_switch_require() {
-        return true;
-    }
-
-    public function value_type() {
-        return PARAM_TEXT;
-    }
-
-    public function clean_input_value($value) {
-        $value = unformat_float($value, true);
-        if (!is_numeric($value)) {
-            if ($value == '') {
-                return null; //an empty string should be null
-            } else {
-                return clean_param($value, PARAM_TEXT); //we have to know the value if it is wrong
-            }
-        }
-        return clean_param($value, PARAM_FLOAT);
     }
 }

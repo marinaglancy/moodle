@@ -19,17 +19,10 @@ require_once($CFG->dirroot.'/mod/feedback/item/feedback_item_class.php');
 
 class feedback_item_info extends feedback_item_base {
     protected $type = "info";
-    private $commonparams;
-    private $item_form;
-    private $item;
 
     const MODE_RESPONSETIME = 1;
     const MODE_COURSE = 2;
     const MODE_CATEGORY = 3;
-
-    public function init() {
-
-    }
 
     public function build_editform($item, $feedback, $cm) {
         global $DB, $CFG;
@@ -68,22 +61,6 @@ class feedback_item_info extends feedback_item_base {
                                                   'position' => $position));
     }
 
-    //this function only can used after the call of build_editform()
-    public function show_editform() {
-        $this->item_form->display();
-    }
-
-    public function is_cancelled() {
-        return $this->item_form->is_cancelled();
-    }
-
-    public function get_data() {
-        if ($this->item = $this->item_form->get_data()) {
-            return true;
-        }
-        return false;
-    }
-
     public function save_item() {
         global $DB;
 
@@ -106,8 +83,15 @@ class feedback_item_info extends feedback_item_base {
         return $DB->get_record('feedback_item', array('id'=>$item->id));
     }
 
-    //liefert eine Struktur ->name, ->data = array(mit Antworten)
-    public function get_analysed($item, $groupid = false, $courseid = false) {
+    /**
+     * Helper function for collected data, both for analysis page and export to excel
+     *
+     * @param $item the db-object from feedback_item
+     * @param $groupid
+     * @param $courseid
+     * @return stdClass
+     */
+    protected function get_analysed($item, $groupid = false, $courseid = false) {
 
         $presentation = $item->presentation;
         $analysed_val = new stdClass();
@@ -261,38 +245,7 @@ class feedback_item_info extends feedback_item_base {
         }
     }
 
-    public function create_value($data) {
-        $data = clean_text($data);
-        return $data;
-    }
-
-    //compares the dbvalue with the dependvalue
-    //the values can be the shortname of a course or the category name
-    //the date is not compareable :(.
-    public function compare_value($item, $dbvalue, $dependvalue) {
-        if ($dbvalue == $dependvalue) {
-            return true;
-        }
-        return false;
-    }
-
-    public function get_presentation($data) {
-        return $data->infotype;
-    }
-
-    public function get_hasvalue() {
-        return 1;
-    }
-
     public function can_switch_require() {
         return false;
-    }
-
-    public function value_type() {
-        return PARAM_TEXT;
-    }
-
-    public function clean_input_value($value) {
-        return clean_param($value, $this->value_type());
     }
 }

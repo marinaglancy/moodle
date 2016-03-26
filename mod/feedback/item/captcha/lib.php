@@ -19,14 +19,8 @@ require_once($CFG->dirroot.'/mod/feedback/item/feedback_item_class.php');
 
 class feedback_item_captcha extends feedback_item_base {
     protected $type = "captcha";
-    private $commonparams;
-    private $item_form = false;
-    private $item = false;
+    protected $item = false;
     private $feedback = false;
-
-    public function init() {
-
-    }
 
     public function build_editform($item, $feedback, $cm) {
         global $DB;
@@ -91,11 +85,6 @@ class feedback_item_captcha extends feedback_item_base {
         }
 
         return $DB->get_record('feedback_item', array('id'=>$this->item->id));
-    }
-
-    //liefert eine Struktur ->name, ->data = array(mit Antworten)
-    public function get_analysed($item, $groupid = false, $courseid = false) {
-        return null;
     }
 
     public function get_printval($item, $value) {
@@ -164,20 +153,6 @@ class feedback_item_captcha extends feedback_item_base {
         return $USER->sesskey;
     }
 
-    //compares the dbvalue with the dependvalue
-    //dbvalue is value stored in the db
-    //dependvalue is the value to check
-    public function compare_value($item, $dbvalue, $dependvalue) {
-        if ($dbvalue == $dependvalue) {
-            return true;
-        }
-        return false;
-    }
-
-    public function get_presentation($data) {
-        return '';
-    }
-
     public function get_hasvalue() {
         global $CFG;
 
@@ -190,14 +165,6 @@ class feedback_item_captcha extends feedback_item_base {
 
     public function can_switch_require() {
         return false;
-    }
-
-    public function value_type() {
-        return PARAM_RAW;
-    }
-
-    public function clean_input_value($value) {
-        return clean_param($value, $this->value_type());
     }
 
     public function edit_actions($item, $feedback, $cm) {

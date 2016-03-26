@@ -19,13 +19,6 @@ require_once($CFG->dirroot.'/mod/feedback/item/feedback_item_class.php');
 
 class feedback_item_textfield extends feedback_item_base {
     protected $type = "textfield";
-    private $commonparams;
-    private $item_form;
-    private $item;
-
-    public function init() {
-
-    }
 
     public function build_editform($item, $feedback, $cm) {
         global $DB, $CFG;
@@ -77,22 +70,6 @@ class feedback_item_textfield extends feedback_item_base {
         $this->item_form = new feedback_textfield_form('edit_item.php', $customdata);
     }
 
-    //this function only can used after the call of build_editform()
-    public function show_editform() {
-        $this->item_form->display();
-    }
-
-    public function is_cancelled() {
-        return $this->item_form->is_cancelled();
-    }
-
-    public function get_data() {
-        if ($this->item = $this->item_form->get_data()) {
-            return true;
-        }
-        return false;
-    }
-
     public function save_item() {
         global $DB;
 
@@ -116,8 +93,15 @@ class feedback_item_textfield extends feedback_item_base {
     }
 
 
-    //liefert eine Struktur ->name, ->data = array(mit Antworten)
-    public function get_analysed($item, $groupid = false, $courseid = false) {
+    /**
+     * Helper function for collected data for exporting to excel
+     *
+     * @param $item the db-object from feedback_item
+     * @param $groupid
+     * @param $courseid
+     * @return stdClass
+     */
+    protected function get_analysed($item, $groupid = false, $courseid = false) {
         global $DB;
 
         $analysed_val = new stdClass();
@@ -151,7 +135,7 @@ class feedback_item_textfield extends feedback_item_base {
             if (strval($item->label) !== '') {
                 echo '('. format_string($item->label).') ';
             }
-            echo format_text($item->name, FORMAT_HTML, array('noclean' => true, 'para' => false));
+            echo $this->get_display_name($item);
             echo '</th></tr>';
             foreach ($values as $value) {
                 echo '<tr><td colspan="2" valign="top" align="left">';
@@ -194,44 +178,13 @@ class feedback_item_textfield extends feedback_item_base {
         $inputname = $item->typ . '_' . $item->id;
         list($size, $maxlength) = explode ("|", $item->presentation);
         $form->add_form_element($item,
-            ['text', $inputname, $name, ['maxlength' => $maxlength, 'size' => $size]]);
+                ['text', $inputname, $name, ['maxlength' => $maxlength, 'size' => $size]]);
         $form->set_element_type($inputname, PARAM_NOTAGS);
 
         $form->add_element_rule($inputname, get_string('maximumchars', '', $maxlength), 'maxlength', $maxlength, 'client');
     }
 
-    public function create_value($data) {
-        $data = s($data);
-        return $data;
-    }
-
-    //compares the dbvalue with the dependvalue
-    //dbvalue is the value put in by the user
-    //dependvalue is the value that is compared
-    public function compare_value($item, $dbvalue, $dependvalue) {
-        if ($dbvalue == $dependvalue) {
-            return true;
-        }
-        return false;
-    }
-
-    public function get_presentation($data) {
-        return $data->itemsize . '|'. $data->itemmaxlength;
-    }
-
-    public function get_hasvalue() {
-        return 1;
-    }
-
-    public function can_switch_require() {
-        return true;
-    }
-
-    public function value_type() {
-        return PARAM_RAW;
-    }
-
-    public function clean_input_value($value) {
+    public function create_value($value) {
         return s($value);
     }
 }

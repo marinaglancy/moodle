@@ -9,6 +9,9 @@
   * feedback_item_base::print_item_show_value()
   * feedback_check_values()
   * feedback_item_base::check_values()
+  * feedback_clean_input_value()
+  * feedback_item_base::clean_input_value()
+  * feedback_item_base::value_is_array()
 
 === 2.7 ===
 

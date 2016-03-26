@@ -21,12 +21,9 @@ require_once($CFG->libdir.'/formslib.php');
 class feedback_item_label extends feedback_item_base {
     protected $type = "label";
     private $presentationoptions = null;
-    private $commonparams;
-    private $item_form;
     private $context;
-    private $item;
 
-    public function init() {
+    public function __construct() {
         global $CFG;
         $this->presentationoptions = array('maxfiles' => EDITOR_UNLIMITED_FILES,
                                            'trusttext'=>true);
@@ -85,22 +82,6 @@ class feedback_item_label extends feedback_item_base {
                             'presentationoptions' => $this->presentationoptions);
 
         $this->item_form = new feedback_label_form('edit_item.php', $customdata);
-    }
-
-    //this function only can used after the call of build_editform()
-    public function show_editform() {
-        $this->item_form->display();
-    }
-
-    public function is_cancelled() {
-        return $this->item_form->is_cancelled();
-    }
-
-    public function get_data() {
-        if ($this->item = $this->item_form->get_data()) {
-            return true;
-        }
-        return false;
     }
 
     public function save_item() {
@@ -195,17 +176,8 @@ class feedback_item_label extends feedback_item_base {
         $form->add_form_element($item, ['static', $inputname, $name, $output], false, false);
     }
 
-    public function create_value($data) {
-        return false;
-    }
-
     public function compare_value($item, $dbvalue, $dependvalue) {
         return false;
-    }
-
-    //used by create_item and update_item functions,
-    //when provided $data submitted from feedback_show_edit
-    public function get_presentation($data) {
     }
 
     public function postupdate($item) {
@@ -243,13 +215,5 @@ class feedback_item_label extends feedback_item_base {
     public function print_analysed($item, $itemnr = '', $groupid = false, $courseid = false) {
     }
     public function get_printval($item, $value) {
-    }
-    public function get_analysed($item, $groupid = false, $courseid = false) {
-    }
-    public function value_type() {
-        return PARAM_BOOL;
-    }
-    public function clean_input_value($value) {
-        return '';
     }
 }

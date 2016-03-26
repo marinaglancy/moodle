@@ -50,6 +50,7 @@ class mod_feedback_complete_form extends moodleform {
     protected $completed;
     protected $hasrequired = false;
     protected $isempty = true;
+    protected $allitems = null;
 
     public function __construct($mode, $id, $customdata = null) {
         $this->mode = $mode;
@@ -60,6 +61,7 @@ class mod_feedback_complete_form extends moodleform {
     }
 
     public function definition() {
+        global $DB;
         $this->feedback = $this->_customdata['feedback'];
         $this->cm = $this->_customdata['cm'];
         $this->courseid = !empty($this->_customdata['courseid']) ?
@@ -114,6 +116,12 @@ class mod_feedback_complete_form extends moodleform {
                     $this->_customdata['completed'] : array();
         }
 
+        if ($this->templateid) {
+            $this->allitems = $DB->get_records('feedback_item', array('template' => $this->templateid), 'position');
+        } else {
+            $this->allitems = $DB->get_records('feedback_item', array('feedback' => $this->feedback->id), 'position');
+        }
+
         $this->set_data(array('gopage' => $this->gopage));
     }
 
@@ -164,11 +172,6 @@ class mod_feedback_complete_form extends moodleform {
         $mform = $this->_form;
         list($startposition, $firstpagebreak, $ispagebreak, $feedbackitems) =
                 feedback_get_page_boundaries($this->feedback, $this->gopage);
-        if (!$feedbackitems) {
-            $isempty = $DB->count_records('feedback_item', array('feedback' => $this->feedback->id)) ? false : true;
-        } else {
-            $isempty = false;
-        }
 
         // Add elements.
         $startitem = null;
@@ -182,11 +185,11 @@ class mod_feedback_complete_form extends moodleform {
                 $startitem = $feedbackitem;
             }
 
-            if ($feedbackitem->dependitem > 0) {
+            if ($feedbackitem->dependitem > 0 && isset($this->allitems[$feedbackitem->dependitem])) {
                 // Check if the conditions are ok.
                 if (!isset($this->completedtmp->id) OR
                         !feedback_compare_item_value($this->completedtmp->id,
-                            $feedbackitem->dependitem, $feedbackitem->dependvalue, true)) {
+                            $this->allitems[$feedbackitem->dependitem], $feedbackitem->dependvalue, true)) {
                     $lastitem = $feedbackitem;
                     $lastbreakposition = $feedbackitem->position;
                     continue;
@@ -207,7 +210,7 @@ class mod_feedback_complete_form extends moodleform {
         }
 
         // Remove invalid buttons (for example, no "previous page" if we are on the first page).
-        $maxitemcount = $DB->count_records('feedback_item', array('feedback' => $this->feedback->id));
+        $maxitemcount = count($this->allitems);
         if (!$ispagebreak || $lastbreakposition <= $firstpagebreak->position) {
             $this->remove_button('gopreviouspage');
         }
@@ -221,12 +224,6 @@ class mod_feedback_complete_form extends moodleform {
 
     protected function definition_after_data_preview() {
         global $DB;
-        if ($this->templateid) {
-            $feedbackitems = $DB->get_records('feedback_item', array('template' => $this->templateid), 'position');
-        } else {
-            $feedbackitems = $DB->get_records('feedback_item', array('feedback' => $this->feedback->id), 'position');
-        }
-        $this->isempty = $feedbackitems ? false : true;
         $pageidx = 1;
         /*foreach ($feedbackitems as $feedbackitem) {
             if ($feedbackitem->typ === 'pagebreak') {
@@ -236,7 +233,7 @@ class mod_feedback_complete_form extends moodleform {
                 break;
             }
         }*/
-        foreach ($feedbackitems as $feedbackitem) {
+        foreach ($this->allitems as $feedbackitem) {
             if ($feedbackitem->typ !== 'pagebreak') {
                 $itemobj = feedback_get_item_class($feedbackitem->typ);
                 $itemobj->complete_form_element($feedbackitem, $this);
@@ -401,7 +398,8 @@ class mod_feedback_complete_form extends moodleform {
     protected function add_item_dependencies($item, $element) {
         global $DB;
         if ($item->dependitem && ($this->mode == self::MODE_EDIT || $this->mode == self::MODE_VIEW_TEMPLATE)) {
-            if ($dependitem = $DB->get_record('feedback_item', array('id' => $item->dependitem))) {
+            if (isset($this->allitems[$item->dependitem])) {
+                $dependitem = $this->allitems[$item->dependitem];
                 $name = $element->getLabel();
                 $name .= html_writer::span(' ('.format_string($dependitem->label).'-&gt;'.$item->dependvalue.')',
                         'feedback_depend');
@@ -559,11 +557,7 @@ class mod_feedback_complete_form extends moodleform {
 
     public function is_empty() {
         // Finalize the form definition if not yet done.
-        if (!$this->_definition_finalized) {
-            $this->_definition_finalized = true;
-            $this->definition_after_data();
-        }
-        return $this->isempty;
+        return empty($this->allitems);
     }
 
     public function display() {

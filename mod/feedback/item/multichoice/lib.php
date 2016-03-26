@@ -25,13 +25,6 @@ define('FEEDBACK_MULTICHOICE_HIDENOSELECT', 'h');
 
 class feedback_item_multichoice extends feedback_item_base {
     protected $type = "multichoice";
-    private $commonparams;
-    private $item_form;
-    private $item;
-
-    public function init() {
-
-    }
 
     public function build_editform($item, $feedback, $cm) {
         global $DB, $CFG;
@@ -75,22 +68,6 @@ class feedback_item_multichoice extends feedback_item_base {
         $this->item_form = new feedback_multichoice_form('edit_item.php', $customdata);
     }
 
-    //this function only can used after the call of build_editform()
-    public function show_editform() {
-        $this->item_form->display();
-    }
-
-    public function is_cancelled() {
-        return $this->item_form->is_cancelled();
-    }
-
-    public function get_data() {
-        if ($this->item = $this->item_form->get_data()) {
-            return true;
-        }
-        return false;
-    }
-
     public function save_item() {
         global $DB;
 
@@ -119,7 +96,16 @@ class feedback_item_multichoice extends feedback_item_base {
 
     //gets an array with three values(typ, name, XXX)
     //XXX is an object with answertext, answercount and quotient
-    public function get_analysed($item, $groupid = false, $courseid = false) {
+
+    /**
+     * Helper function for collected data, both for analysis page and export to excel
+     *
+     * @param $item the db-object from feedback_item
+     * @param $groupid
+     * @param $courseid
+     * @return array
+     */
+    protected function get_analysed($item, $groupid = false, $courseid = false) {
         $info = $this->get_info($item);
 
         $analysed_item = array();
@@ -380,17 +366,18 @@ class feedback_item_multichoice extends feedback_item_base {
         }
     }
 
-    public function create_value($data) {
-        $vallist = $data;
-        if (is_array($vallist)) {
-            $vallist = array_unique(array_filter($vallist));
-        }
-        return trim($this->item_array_to_string($vallist));
+    public function create_value($value) {
+        $value = array_unique(array_filter($value));
+        return join(FEEDBACK_MULTICHOICE_LINE_SEP, $value);
     }
 
-    //compares the dbvalue with the dependvalue
-    //dbvalue is the number of one selection
-    //dependvalue is the presentation of one selection
+    /**
+     * Compares the dbvalue with the dependvalue
+     *
+     * @param stdClass $item
+     * @param string $dbvalue is the value input by user in the format as it is stored in the db
+     * @param string $dependvalue is the value that it needs to be compared against
+     */
     public function compare_value($item, $dbvalue, $dependvalue) {
 
         if (is_array($dbvalue)) {
@@ -411,23 +398,6 @@ class feedback_item_multichoice extends feedback_item_base {
             $index++;
         }
         return false;
-    }
-
-    public function get_presentation($data) {
-        $present = str_replace("\n", FEEDBACK_MULTICHOICE_LINE_SEP, trim($data->itemvalues));
-        if (!isset($data->subtype)) {
-            $subtype = 'r';
-        } else {
-            $subtype = substr($data->subtype, 0, 1);
-        }
-        if (isset($data->horizontal) AND $data->horizontal == 1 AND $subtype != 'd') {
-            $present .= FEEDBACK_MULTICHOICE_ADJUST_SEP.'1';
-        }
-        return $subtype.FEEDBACK_MULTICHOICE_TYPE_SEP.$present;
-    }
-
-    public function get_hasvalue() {
-        return 1;
     }
 
     public function get_info($item) {
@@ -458,19 +428,6 @@ class feedback_item_multichoice extends feedback_item_base {
         return $info;
     }
 
-    private function item_array_to_string($value) {
-        if (!is_array($value)) {
-            return $value;
-        }
-        if (empty($value)) {
-            return '0';
-        }
-        $retval = '';
-        $arrvals = array_values($value);
-        $arrvals = clean_param_array($arrvals, PARAM_INT);  //prevent sql-injection
-        return join(FEEDBACK_MULTICHOICE_LINE_SEP, $arrvals);
-    }
-
     public function set_ignoreempty($item, $ignoreempty=true) {
         $item->options = str_replace(FEEDBACK_MULTICHOICE_IGNOREEMPTY, '', $item->options);
         if ($ignoreempty) {
@@ -497,21 +454,5 @@ class feedback_item_multichoice extends feedback_item_base {
             return true;
         }
         return false;
-    }
-
-    public function can_switch_require() {
-        return true;
-    }
-
-    public function value_type() {
-        return PARAM_INT;
-    }
-
-    public function value_is_array() {
-        return true;
-    }
-
-    public function clean_input_value($value) {
-        return clean_param_array($value, $this->value_type());
     }
 }
