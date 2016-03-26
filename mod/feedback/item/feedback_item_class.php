@@ -80,6 +80,8 @@ abstract class feedback_item_base {
     abstract public function print_analysed($item, $itemnr = '', $groupid = false, $courseid = false);
 
     /**
+     * Prepares the value for exporting to Excel
+     *
      * @param object $item the db-object from feedback_item
      * @param string $value a item-related value from feedback_values
      * @return string
@@ -129,7 +131,7 @@ abstract class feedback_item_base {
             array('class' => 'editing_update', 'data-action' => 'update')
         );
 
-        if ($this->get_hasvalue()) {
+        if ($this->can_switch_require()) {
             if ($item->required == 1) {
                 $buttontitle = get_string('switch_item_to_not_required', 'feedback');
                 $buttonimg = 'required';

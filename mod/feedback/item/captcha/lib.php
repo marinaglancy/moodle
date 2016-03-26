@@ -203,7 +203,6 @@ class feedback_item_captcha extends feedback_item_base {
     public function edit_actions($item, $feedback, $cm) {
         $actions = parent::edit_actions($item, $feedback, $cm);
         unset($actions['update']);
-        unset($actions['required']);
         return $actions;
     }
 }

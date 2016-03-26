@@ -295,10 +295,4 @@ class feedback_item_info extends feedback_item_base {
     public function clean_input_value($value) {
         return clean_param($value, $this->value_type());
     }
-
-    public function edit_actions($item, $feedback, $cm) {
-        $actions = parent::edit_actions($item, $feedback, $cm);
-        unset($actions['required']);
-        return $actions;
-    }
 }
