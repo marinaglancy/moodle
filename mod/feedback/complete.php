@@ -187,9 +187,10 @@ if ($feedback_can_submit) {
         if (!isset($SESSION->feedback->is_started) OR !$SESSION->feedback->is_started == true) {
             print_error('error', '', $CFG->wwwroot.'/course/view.php?id='.$course->id);
         }
-        $completedid = feedback_save_response_tmp($feedback, $data);
+        $completedid = feedback_save_response_tmp($feedback, $courseid, $data);
         if (!empty($data->savevalues)) {
-            $savereturn = feedback_save_response($course, $cm, $feedback, $courseid, $completedid);
+            feedback_save_response($course, $cm, $feedback, $courseid, $completedid);
+            $savereturn = 'saved'; // TODO notification!
             //echo "savereturn = $savereturn<br>";
             //$savevalues = true;
         } else if (!empty($data->gonextpage)) {

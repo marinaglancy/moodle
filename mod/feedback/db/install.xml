@@ -138,23 +138,6 @@
         <INDEX NAME="course_id" UNIQUE="false" FIELDS="course_id"/>
       </INDEXES>
     </TABLE>
-    <TABLE NAME="feedback_tracking" COMMENT="feedback trackingdata">
-      <FIELDS>
-        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
-        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
-        <FIELD NAME="feedback" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
-        <FIELD NAME="completed" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
-        <FIELD NAME="tmp_completed" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
-      </FIELDS>
-      <KEYS>
-        <KEY NAME="primary" TYPE="primary" FIELDS="id" COMMENT="Primary key for feedback_tracking"/>
-        <KEY NAME="feedback" TYPE="foreign" FIELDS="feedback" REFTABLE="feedback" REFFIELDS="id"/>
-        <KEY NAME="completed" TYPE="foreign" FIELDS="completed" REFTABLE="feedback_completed" REFFIELDS="id"/>
-      </KEYS>
-      <INDEXES>
-        <INDEX NAME="userid" UNIQUE="false" FIELDS="userid"/>
-      </INDEXES>
-    </TABLE>
     <TABLE NAME="feedback_sitecourse_map" COMMENT="feedback sitecourse map">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
@@ -162,7 +145,7 @@
         <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
       </FIELDS>
       <KEYS>
-        <KEY NAME="primary" TYPE="primary" FIELDS="id" COMMENT="Primary key for feedback_tracking"/>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id" COMMENT="Primary key for feedback_sitecourse_map"/>
         <KEY NAME="feedbackid" TYPE="foreign" FIELDS="feedbackid" REFTABLE="feedback" REFFIELDS="id"/>
       </KEYS>
       <INDEXES>

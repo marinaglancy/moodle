@@ -108,7 +108,7 @@ class mod_feedback_complete_form extends moodleform {
         }
 
         if ($this->mode == self::MODE_COMPLETE) {
-            $this->completedtmp = feedback_retrieve_response_tmp($this->feedback, $this->courseid);
+            $this->completedtmp = feedback_get_current_completed_tmp($this->feedback, $this->courseid);
         } else {
             $this->completed = isset($this->_customdata['completed']) ?
                     $this->_customdata['completed'] : array();

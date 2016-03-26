@@ -38,14 +38,45 @@ require_once("lib.php");
  * @param stdClass $data data from the form mod_feedback_complete_form
  * @return type
  */
-function feedback_save_response_tmp($feedback, $data) {
-    global $USER;
-    if (isloggedin() && !isguestuser()) {
-        $completedid = feedback_save_values($USER->id, true);
+function feedback_save_response_tmp($feedback, $courseid, $data) {
+    global $DB;
+    if (!$completedtmp = feedback_get_current_completed_tmp($feedback, $courseid)) {
+        $completedtmp = feedback_create_current_completed_tmp($feedback, $courseid);
     } else {
-        $completedid = feedback_save_guest_values(sesskey());
+        $DB->update_record('feedback_completedtmp',
+                ['id' => $completedtmp->id, 'timemodified' => time()]);
     }
-    return $completedid;
+
+    // Find all existing values.
+    $existingvalues = $DB->get_records_menu('feedback_valuetmp',
+            ['completed' => $completedtmp->id], '', 'item, id');
+
+    // Loop through all feedback items and save the ones that are present in $data.
+    $allitems = $DB->get_records('feedback_item',
+            ['feedback' => $completedtmp->feedback, 'hasvalue' => 1]);
+    foreach ($allitems as $item) {
+        $keyname = $item->typ . '_' . $item->id;
+        if (!isset($data->$keyname)) {
+            // This item is either on another page or dependency was not met - nothing to save.
+            continue;
+        }
+
+        $newvalue = ['item' => $item->id, 'completed' => $completedtmp->id, 'course_id' => $completedtmp->courseid];
+
+        // Convert the value to string that can be stored in 'feedback_valuetmp' or 'feedback_value'.
+        $itemobj = feedback_get_item_class($item->typ);
+        $newvalue['value'] = $itemobj->create_value($data->$keyname);
+
+        // Update or insert the value in the 'feedback_valuetmp' table.
+        if (array_key_exists($item->id, $existingvalues)) {
+            $newvalue['id'] = $existingvalues[$item->id];
+            $DB->update_record('feedback_valuetmp', $newvalue);
+        } else {
+            $DB->insert_record('feedback_valuetmp', $newvalue);
+        }
+    }
+
+    return $completedtmp->id;
 }
 
 /**
@@ -60,86 +91,38 @@ function feedback_save_response_tmp($feedback, $data) {
  * @param cm_info $cm
  * @param stdClass $feedback record from db table 'feedback'
  * @param int $courseid
- * @param int $completedid
- * @return string
+ * @param int $completedtmpid
  */
-function feedback_save_response($course, $cm, $feedback, $courseid, $completedid) {
+function feedback_save_response($course, $cm, $feedback, $courseid, $completedtmpid) {
     global $USER, $DB, $SESSION;
 
-    //exists there any pagebreak, so there are values in the feedback_valuetmp
-    $userid = $USER->id; //arb
-
-    if ($feedback->anonymous == FEEDBACK_ANONYMOUS_NO) {
-        $feedbackcompleted = feedback_get_current_completed($feedback->id, false, $courseid);
-    } else {
-        $feedbackcompleted = false;
-    }
-    $params = array('id' => $completedid);
+    $feedbackcompleted = feedback_get_last_completed($feedback, $courseid);
+    $params = array('id' => $completedtmpid);
     $feedbackcompletedtmp = $DB->get_record('feedback_completedtmp', $params);
-    //fake saving for switchrole
-    $is_switchrole = feedback_check_is_switchrole();
-    $savereturn = 'failed';
-    if ($is_switchrole) {
-        $savereturn = 'saved';
-        feedback_delete_completedtmp($completedid);
-    } else {
-        $new_completed_id = feedback_save_tmp_values($feedbackcompletedtmp,
-                                                     $feedbackcompleted,
-                                                     $userid);
-        if ($new_completed_id) {
-            $savereturn = 'saved';
-            if ($feedback->anonymous == FEEDBACK_ANONYMOUS_NO) {
-                feedback_send_email($cm, $feedback, $course, $userid);
-            } else {
-                feedback_send_email_anonym($cm, $feedback, $course, $userid);
-            }
-            if (isloggedin() && !isguestuser()) {
-                // Tracking the submit.
-                $tracking = new stdClass();
-                $tracking->userid = $USER->id;
-                $tracking->feedback = $feedback->id;
-                $tracking->completed = $new_completed_id;
-                $DB->insert_record('feedback_tracking', $tracking);
-            }
-            unset($SESSION->feedback->is_started);
 
-            // Update completion state
-            $completion = new completion_info($course);
-            if (isloggedin() && !isguestuser() && $completion->is_enabled($cm) && $feedback->completionsubmit) {
-                $completion->update_state($cm, COMPLETION_COMPLETE);
-            }
-
-        }
+    if (feedback_check_is_switchrole()) {
+        // We do not actually save anything if the role is switched, just delete temporary values.
+        feedback_delete_completedtmp($completedtmpid);
+        return;
     }
-    return $savereturn;
-}
 
-/**
- * Returns the temporary completion record
- *
- * @param stdClass $feedback record from db table 'feedback'
- * @param int $courseid
- * @return stdClass record from table 'feedback_completedtmp'
- */
-function feedback_retrieve_response_tmp($feedback, $courseid) {
-    global $SESSION;
-    if ((!isset($SESSION->feedback->is_started)) AND
-                          ($feedback->anonymous == FEEDBACK_ANONYMOUS_NO)) {
+    // Save values.
+    $completedid = feedback_save_tmp_values($feedbackcompletedtmp, $feedbackcompleted);
 
-        $feedbackcompletedtmp = feedback_get_current_completed($feedback->id, true, $courseid);
-        if (!$feedbackcompletedtmp) {
-            $feedbackcompleted = feedback_get_current_completed($feedback->id, false, $courseid);
-            if ($feedbackcompleted) {
-                //copy the values to feedback_valuetmp create a completedtmp
-                $feedbackcompletedtmp = feedback_set_tmp_values($feedbackcompleted);
-            }
-        }
-    } else if (isloggedin() && !isguestuser()) {
-        $feedbackcompletedtmp = feedback_get_current_completed($feedback->id, true, $courseid);
+    // Send email.
+    if ($feedback->anonymous == FEEDBACK_ANONYMOUS_NO) {
+        feedback_send_email($cm, $feedback, $course, $USER);
     } else {
-        $feedbackcompletedtmp = feedback_get_current_completed($feedback->id, true, $courseid, sesskey());
+        feedback_send_email_anonym($cm, $feedback, $course);
     }
-    return $feedbackcompletedtmp;
+
+    unset($SESSION->feedback->is_started);
+
+    // Update completion state
+    $completion = new completion_info($course);
+    if (isloggedin() && !isguestuser() && $completion->is_enabled($cm) && $feedback->completionsubmit) {
+        $completion->update_state($cm, COMPLETION_COMPLETE);
+    }
 }
 
 /**
@@ -180,4 +163,73 @@ function feedback_get_page_boundaries($feedback, $gopage) {
         $firstpagebreak = false;
     }
     return array($startposition, $firstpagebreak, $ispagebreak, $feedbackitems);
+}
+
+/**
+ * Returns the temporary completion record for the current user or guest session
+ *
+ * @param stdClass $feedback record from db table 'feedback'
+ * @param int $courseid current course (only for site feedbacks)
+ * @return stdClass record from feedback_completedtmp or false if not found
+ */
+function feedback_get_current_completed_tmp($feedback, $courseid = false) {
+    global $USER, $DB;
+    $params = array('feedback' => $feedback->id);
+    if ($feedback->course == SITEID) {
+        $params['courseid'] = $courseid ? intval($courseid): SITEID;
+    }
+    if (isloggedin() && !isguestuser()) {
+        $params['userid'] = $USER->id;
+    } else {
+        $params['guestid'] = sesskey();
+    }
+    return $DB->get_record('feedback_completedtmp', $params);
+}
+
+/**
+ * Creates a new record in the 'feedback_completedtmp' table for the current user/guest session
+ *
+ * @param stdClass $feedback record from db table 'feedback'
+ * @param int $courseid current course (only for site feedbacks)
+ * @return stdClass record from feedback_completedtmp or false if not found
+ */
+function feedback_create_current_completed_tmp($feedback, $courseid = false) {
+    global $USER, $DB;
+    $record = (object)['feedback' => $feedback->id];
+    if ($feedback->course == SITEID) {
+        $record->courseid = $courseid ? intval($courseid): SITEID;
+    }
+    if (isloggedin() && !isguestuser()) {
+        $record->userid = $USER->id;
+    } else {
+        $record->guestid = sesskey();
+    }
+    $record->timemodified = time();
+    $record->anonymous_response = $feedback->anonymous;
+    $id = $DB->insert_record('feedback_completedtmp', $record);
+    return $DB->get_record('feedback_completedtmp', ['id' => $id]);
+}
+
+/**
+ * Retrieves the last completion record for the current user
+ *
+ * @param stdClass $feedback
+ * @param int $courseid current course (only for site feedbacks)
+ * @return stdClass record from feedback_completed or false if not found
+ */
+function feedback_get_last_completed($feedback, $courseid = false) {
+    global $USER, $DB;
+    if (isloggedin() || isguestuser()) {
+        // Not possible to retrieve completed feedback for guests.
+        return false;
+    }
+    if ($feedback->anonymous == FEEDBACK_ANONYMOUS_YES) {
+        // Not possible to retrieve completed anonymous feedback.
+        return false;
+    }
+    $params = array('feedback' => $feedback->id, 'userid' => $USER->id);
+    if ($feedback->course == SITEID) {
+        $params['courseid'] = $courseid ? intval($courseid): SITEID;
+    }
+    return $DB->get_record('feedback_completed', $params);
 }

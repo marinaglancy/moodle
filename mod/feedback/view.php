@@ -21,8 +21,9 @@
  * @license http://www.gnu.org/copyleft/gpl.html GNU Public License
  * @package mod_feedback
  */
-require_once("../../config.php");
-require_once("lib.php");
+require_once(__DIR__ . '/../../config.php');
+require_once($CFG->dirroot . '/mod/feedback/lib.php');
+require_once($CFG->dirroot . '/mod/feedback/locallib.php');
 
 $id = required_param('id', PARAM_INT);
 $courseid = optional_param('courseid', false, PARAM_INT);
@@ -58,7 +59,9 @@ if (!empty($CFG->feedback_allowfullanonymous)
 }
 
 //check whether the feedback is located and! started from the mainsite
-if ($course->id == SITEID AND !$courseid) {
+if ($course->id != SITEID) {
+    $courseid = false;
+} else if (!$courseid) {
     $courseid = SITEID;
 }
 
@@ -269,7 +272,7 @@ if ($feedback_complete_cap) {
         $url_params = array('id'=>$id, 'courseid'=>$courseid, 'gopage'=>0);
         $completeurl = new moodle_url('/mod/feedback/complete.php', $url_params);
 
-        $feedbackcompletedtmp = feedback_get_current_completed($feedback->id, true, $courseid, $guestid);
+        $feedbackcompletedtmp = feedback_get_current_completed_tmp($feedback, $courseid);
         if ($feedbackcompletedtmp) {
             if ($startpage = feedback_get_page_to_continue($feedback->id, $courseid, $guestid)) {
                 $completeurl->param('gopage', $startpage);
