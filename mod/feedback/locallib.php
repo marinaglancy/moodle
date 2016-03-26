@@ -26,6 +26,18 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once("lib.php");
 
+/**
+ * Saves unfinished response to the temporary table
+ *
+ * This is called when user proceeds to the next/previous page in the complete form
+ * and also right after the form submit.
+ * After the form submit the {@link feedback_save_response()} is called to
+ * move response from temporary table to completion table.
+ *
+ * @param stdClass $feedback record from db table 'feedback'
+ * @param stdClass $data data from the form mod_feedback_complete_form
+ * @return type
+ */
 function feedback_save_response_tmp($feedback, $data) {
     global $USER;
     if (isloggedin() && !isguestuser()) {
@@ -36,6 +48,21 @@ function feedback_save_response_tmp($feedback, $data) {
     return $completedid;
 }
 
+/**
+ * Saves the response
+ *
+ * The form data has already been stored in the temporary table in
+ * {@link feedback_save_response_tmp()}. This function copies the values
+ * from the temporary table to the completion table.
+ * It is also responsible for sending email notifications when applicable.
+ *
+ * @param stdClass $course
+ * @param cm_info $cm
+ * @param stdClass $feedback record from db table 'feedback'
+ * @param int $courseid
+ * @param int $completedid
+ * @return string
+ */
 function feedback_save_response($course, $cm, $feedback, $courseid, $completedid) {
     global $USER, $DB, $SESSION;
 
@@ -87,6 +114,13 @@ function feedback_save_response($course, $cm, $feedback, $courseid, $completedid
     return $savereturn;
 }
 
+/**
+ * Returns the temporary completion record
+ *
+ * @param stdClass $feedback record from db table 'feedback'
+ * @param int $courseid
+ * @return stdClass record from table 'feedback_completedtmp'
+ */
 function feedback_retrieve_response_tmp($feedback, $courseid) {
     global $SESSION;
     if ((!isset($SESSION->feedback->is_started)) AND
@@ -108,6 +142,12 @@ function feedback_retrieve_response_tmp($feedback, $courseid) {
     return $feedbackcompletedtmp;
 }
 
+/**
+ *
+ * @param stdClass $feedback
+ * @param int $gopage
+ * @return array [$startposition, $firstpagebreak, $ispagebreak, $feedbackitems]
+ */
 function feedback_get_page_boundaries($feedback, $gopage) {
     global $DB;
     if ($allbreaks = feedback_get_all_break_positions($feedback->id)) {

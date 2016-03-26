@@ -2410,14 +2410,12 @@ function feedback_is_already_submitted($feedbackid, $courseid = false) {
  * by pagebreak or by multiple submit so the complete must be found.
  * if the param $tmp is set true so all things are related to temporary completeds
  *
- * @global object
- * @global object
- * @global object
  * @param int $feedbackid
  * @param boolean $tmp
  * @param int $courseid
  * @param string $guestid
- * @return int the id of the found completed
+ * @return stdClass found record from the table 'feedback_completedtmp' or 'feedback_completed'
+ *      (depending on $tmp argument)
  */
 function feedback_get_current_completed($feedbackid,
                                         $tmp = false,
