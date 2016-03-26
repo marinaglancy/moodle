@@ -2407,6 +2407,10 @@ function feedback_get_group_values($item,
 function feedback_is_already_submitted($feedbackid, $courseid = false) {
     global $USER, $DB;
 
+    if (!isloggedin() || isguestuser()) {
+        return false;
+    }
+
     $params = array('userid' => $USER->id, 'feedback' => $feedbackid);
     if ($courseid) {
         $params['courseid'] = $courseid;

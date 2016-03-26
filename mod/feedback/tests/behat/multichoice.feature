@@ -168,6 +168,7 @@ Feature: Testing multichoice questions in feedback
     And I should not see "%" in the "option c:" "table_row"
     And I log out
 
+  @javascript
   Scenario: Non-rated multiple-answers multiple choice questions in feedback
     # Create a feedback with three pages, required and dependent questions.
     And I add a "Multiple choice" question to the feedback with:

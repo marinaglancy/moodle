@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- *
+ * Help functions for mod_feedback
  *
  * @package   mod_feedback
  * @copyright 2016 Marina Glancy
@@ -24,7 +24,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once("lib.php");
+require_once($CFG->dirroot . '/mod/feedback/lib.php');
 
 /**
  * Saves unfinished response to the temporary table
