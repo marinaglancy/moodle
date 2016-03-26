@@ -1023,7 +1023,13 @@ function feedback_get_complete_users($cm,
         $startpage = 0;
         $pagecount = 0;
     }
-    return $DB->get_records_sql($sql, $params, $startpage, $pagecount);
+    $records = array();
+    $recordset = $DB->get_recordset_sql($sql, $params, $startpage, $pagecount);
+    foreach ($recordset as $record) {
+        $records[] = $record;
+    }
+    $recordset->close();
+    return $records;
 }
 
 /**
