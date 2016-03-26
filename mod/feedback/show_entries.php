@@ -112,9 +112,12 @@ if ($userid || $showcompleted) {
 
     if ($userid) {
         $usr = $DB->get_record('user', array('id' => $userid, 'deleted' => 0), '*', MUST_EXIST);
-        $feedbackcompleted = $DB->get_record('feedback_completed',
-                array('feedback' => $feedback->id, 'userid' => $userid,
-                    'anonymous_response' => FEEDBACK_ANONYMOUS_NO));
+        $params = array('feedback' => $feedback->id, 'userid' => $userid,
+                    'anonymous_response' => FEEDBACK_ANONYMOUS_NO);
+        if ($showcompleted) {
+            $params['id'] = $showcompleted;
+        }
+        $feedbackcompleted = $DB->get_record('feedback_completed', $params);
         $responsetitle = userdate($feedbackcompleted->timemodified) . ' (' . fullname($usr) . ')';
     } else if ($showcompleted) {
         $feedbackcompleted = $DB->get_record('feedback_completed',
