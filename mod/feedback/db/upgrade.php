@@ -38,6 +38,7 @@ defined('MOODLE_INTERNAL') || die();
 
 function xmldb_feedback_upgrade($oldversion) {
     global $CFG, $DB;
+    require_once($CFG->dirroot . '/mod/feedback/db/upgradelib.php');
 
     $dbman = $DB->get_manager(); // Loads ddl manager and xmldb classes.
 
@@ -74,7 +75,7 @@ function xmldb_feedback_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2016031601, 'feedback');
     }
 
-    if ($oldversion < 2016032600) {
+    if ($oldversion < 2016032601) {
 
         // Define field courseid to be added to feedback_completed.
         $table = new xmldb_table('feedback_completed');
@@ -94,8 +95,12 @@ function xmldb_feedback_upgrade($oldversion) {
             $dbman->add_field($table, $field);
         }
 
+        // Run upgrade script to fill the new field courseid with the data from feedback_value* tables.
+        mod_feedback_upgrade_courseid(false);
+        mod_feedback_upgrade_courseid(true);
+
         // Feedback savepoint reached.
-        upgrade_mod_savepoint(true, 2016032600, 'feedback');
+        upgrade_mod_savepoint(true, 2016032601, 'feedback');
     }
 
     return true;
