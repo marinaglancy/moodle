@@ -126,7 +126,8 @@ class mod_feedback_responses_table extends flexible_table {
                     html_writer::link($nameurl, $fullname));
 
             // Link to the entry of the user.
-            $showentryurl = new moodle_url($this->baseurl, array('userid' => $student->id));
+            $showentryurl = new moodle_url($this->baseurl, array('userid' => $student->id,
+                'showcompleted' => $student->completed_id));
             $data[] = html_writer::link($showentryurl, userdate($student->completed_timemodified));
 
             // Link to delete the entry.
