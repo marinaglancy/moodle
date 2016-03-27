@@ -105,7 +105,7 @@ class mod_feedback_structure {
 
     /**
      * Get all items in this feedback or this template
-     * @return array
+     * @return array of objects from feedback_item with an additional attribute 'itemnr'
      */
     public function get_items() {
         global $DB;
@@ -114,6 +114,10 @@ class mod_feedback_structure {
                 $this->allitems = $DB->get_records('feedback_item', ['template' => $this->templateid], 'position');
             } else {
                 $this->allitems = $DB->get_records('feedback_item', ['feedback' => $this->feedback->id], 'position');
+            }
+            $idx = 1;
+            foreach ($this->allitems as $id => $item) {
+                $item->itemnr = $item->hasvalue ? ($idx++) : null;
             }
         }
         return $this->allitems;
@@ -124,7 +128,11 @@ class mod_feedback_structure {
      * @return bool
      */
     public function is_empty() {
-        return !count($this->get_items());
+        $items = $this->get_items();
+        $displayeditems = array_filter($items, function($item) {
+            return $item->typ !== 'pagebreak';
+        });
+        return !$displayeditems;
     }
 
     public function is_anonymous() {

@@ -281,5 +281,7 @@ class feedback_item_pagebreak extends feedback_item_base {
     }
 
     public function complete_form_element($item, $form) {
+        $form->add_form_element($item,
+                ['static', $item->typ.'_'.$item->id, '', '<hr class="feedback_pagebreak">']);
     }
 }

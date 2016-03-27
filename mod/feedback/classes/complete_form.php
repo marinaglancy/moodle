@@ -42,6 +42,8 @@ class mod_feedback_complete_form extends moodleform {
     protected $mode;
     /** @var mod_feedback_structure */
     protected $structure;
+    /** @var mod_feedback_completion */
+    protected $completion;
 
     //protected $feedback;
     /** @var cm_info */
@@ -50,13 +52,13 @@ class mod_feedback_complete_form extends moodleform {
     //protected $templateid;
 
     protected $gopage;
-    protected $completedtmp;
-    protected $completed;
+    //protected $completedtmp;
+    //protected $completed;
     protected $hasrequired = false;
-    protected $isempty = true;
+    //protected $isempty = true;
     //protected $allitems = null;
-    protected $valuestmp = null;
-    protected $values = null;
+    //protected $valuestmp = null;
+    //protected $values = null;
 
     public function __construct($mode, $structure, $id, $customdata = null) {
         $this->mode = $mode;
@@ -97,6 +99,7 @@ class mod_feedback_complete_form extends moodleform {
             $element->setAttributes($element->getAttributes() + ['class' => 'feedback_mode']);
         }
 
+        // Add buttons to go to previous/next pages and submit the feedback.
         if ($this->mode == self::MODE_COMPLETE) {
             $buttonarray = array();
             $buttonarray[] = &$mform->createElement('submit', 'gopreviouspage', get_string('previous_page', 'feedback'));
@@ -112,18 +115,20 @@ class mod_feedback_complete_form extends moodleform {
 
         // Get the current completed values.
         if ($this->mode == self::MODE_COMPLETE) {
-            $this->completedtmp = feedback_get_current_completed_tmp($feedback, $this->structure->get_courseid());
+            $this->completion = new mod_feedback_completion($this->structure);
+            /*$this->completedtmp = feedback_get_current_completed_tmp($feedback, $this->structure->get_courseid());
             if ($this->completedtmp) {
                 $this->valuestmp = $DB->get_records_menu('feedback_valuetmp', ['completed' => $this->completedtmp->id],
                         '', 'item, value');
-            }
+            }*/
         } else if ($this->mode == self::MODE_VIEW_RESPONSE) {
-            $this->completed = isset($this->_customdata['completed']) ?
+            $this->completion = new mod_feedback_completion($this->structure, $this->_customdata['completed']);
+            /*$this->completed = isset($this->_customdata['completed']) ?
                     $this->_customdata['completed'] : array();
             if ($this->completed) {
                 $this->values = $DB->get_records_menu('feedback_value', ['completed' => $this->completed->id],
                         '', 'item, value');
-            }
+            }*/
         }
 
         // Set data.
@@ -173,88 +178,34 @@ class mod_feedback_complete_form extends moodleform {
     }
 
     protected function definition_after_data_complete() {
-        global $DB, $OUTPUT;
-        $mform = $this->_form;
-        $feedback = $this->structure->get_feedback();
-        $allitems = $this->structure->get_items();
-        list($startposition, $firstpagebreak, $ispagebreak, $feedbackitems) =
-                feedback_get_page_boundaries($feedback, $this->gopage);
+        $pages = $this->completion->get_pages();
+        $gopage = $this->gopage;
+        $pageitems = $pages[$gopage];
+        $hasnextpage = $gopage < count($pages) - 1; // Until we complete this page we can not trust get_next_page(). TODO?
+        $hasprevpage = $gopage && ($this->completion->get_previous_page($gopage, false) !== null);
 
         // Add elements.
-        $startitem = null;
-        $lastbreakposition = 0;
-        foreach ($feedbackitems as $feedbackitem) {
-            if (!isset($startitem)) {
-                // Avoid showing double pagebreaks.
-                if ($feedbackitem->typ == 'pagebreak') {
-                    continue;
-                }
-                $startitem = $feedbackitem;
-            }
-
-            if ($feedbackitem->dependitem > 0 && isset($allitems[$feedbackitem->dependitem])) {
-                // Check if the conditions are ok.
-                if (!isset($this->completedtmp->id) OR
-                        !feedback_compare_item_value($this->completedtmp->id,
-                            $allitems[$feedbackitem->dependitem], $feedbackitem->dependvalue, true)) {
-                    $lastitem = $feedbackitem;
-                    $lastbreakposition = $feedbackitem->position;
-                    continue;
-                }
-            }
-
-            if ($feedbackitem->typ != 'pagebreak') {
-                $itemobj = feedback_get_item_class($feedbackitem->typ);
-                $itemobj->complete_form_element($feedbackitem, $this);
-            }
-
-            $lastbreakposition = $feedbackitem->position; // Last item-pos (item or pagebreak).
-            if ($feedbackitem->typ == 'pagebreak') {
-                break;
-            } else {
-                $lastitem = $feedbackitem;
-            }
+        foreach ($pageitems as $item) {
+            $itemobj = feedback_get_item_class($item->typ);
+            $itemobj->complete_form_element($item, $this);
         }
 
         // Remove invalid buttons (for example, no "previous page" if we are on the first page).
-        $maxitemcount = count($allitems);
-        if (!$ispagebreak || $lastbreakposition <= $firstpagebreak->position) {
+        if (!$hasprevpage) {
             $this->remove_button('gopreviouspage');
         }
-        if ($lastbreakposition >= $maxitemcount) {
+        if (!$hasnextpage) {
             $this->remove_button('gonextpage');
         }
-        if ($lastbreakposition < $maxitemcount) {
+        if ($hasnextpage) {
             $this->remove_button('savevalues');
         }
     }
 
     protected function definition_after_data_preview() {
-        global $DB;
-        $pageidx = 1;
-        /*foreach ($feedbackitems as $feedbackitem) {
-            if ($feedbackitem->typ === 'pagebreak') {
-                $mform->addElement('header', 'page'.$pageidx, 'PAGE '.$pageidx); // TODO string
-                $mform->setExpanded('page'.$pageidx);
-                $pageidx++;
-                break;
-            }
-        }*/
-        $allitems = $this->structure->get_items();
-        foreach ($allitems as $feedbackitem) {
-            if ($feedbackitem->typ !== 'pagebreak') {
-                $itemobj = feedback_get_item_class($feedbackitem->typ);
-                $itemobj->complete_form_element($feedbackitem, $this);
-            } else {
-                $this->add_form_element($feedbackitem,
-                        ['static', 'page'.$pageidx, '', '<hr class="feedback_pagebreak">']);
-                //$element = $mform->addElement('static', 'page'.$pageidx, '', '<hr class="feedback_pagebreak">');
-                //$element->setAttributes($element->getAttributes() + array('class' => 'feedback-item-pagebreak'));
-                //$mform->addElement('header', 'page'.$pageidx, 'PAGE '.$pageidx); // TODO string
-                //$mform->setExpanded('page'.$pageidx);
-                $pageidx++;
-            }
-
+        foreach ($this->structure->get_items() as $feedbackitem) {
+            $itemobj = feedback_get_item_class($feedbackitem->typ);
+            $itemobj->complete_form_element($feedbackitem, $this);
         }
     }
 
@@ -269,17 +220,17 @@ class mod_feedback_complete_form extends moodleform {
     }
 
     /**
-     * Returns value for this element that is already stored in temporary table,
+     * Returns value for this element that is already stored in temporary or permanent table,
      * usually only available when user clicked "Previous page". Null means no value is stored.
      *
      * @param stdClass $item
      * @return string
      */
     public function get_item_value($item) {
-        if (isset($this->completedtmp->id) && isset($this->valuestmp[$item->id])) {
-            return $this->valuestmp[$item->id];
-        } else if (isset($this->completed->id) && isset($this->values[$item->id])) {
-            return $this->values[$item->id];
+        if ($this->mode == self::MODE_COMPLETE) {
+            return $this->completion->get_values_tmp($item);
+        } else if ($this->mode == self::MODE_VIEW_RESPONSE) {
+            return $this->completion->get_values($item);
         }
         return null;
     }

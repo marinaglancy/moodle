@@ -158,12 +158,17 @@ if (!$feedbackstructure->is_empty() && $cansubmit) {
             $savereturn = 'saved'; // TODO notification!
             //echo "savereturn = $savereturn<br>";
             //$savevalues = true;
-        } else if (!empty($data->gonextpage)) {
-            // TODO(later) smart calc next page
-            redirect(new moodle_url($PAGE->url, array('gopage' => $gopage + 1)));
-        } else if (!empty($data->gopreviouspage)) {
-            // TODO(later) smart calc next page
-            redirect(new moodle_url($PAGE->url, array('gopage' => $gopage - 1)));
+        } else {
+            $completion = new mod_feedback_completion($feedbackstructure);
+            if (!empty($data->gonextpage)) {
+                // TODO(later) smart calc next page
+                $nextpage = $completion->get_next_page($gopage) ?: $gopage + 1; // TODO?
+                redirect(new moodle_url($PAGE->url, array('gopage' => $nextpage)));
+            } else if (!empty($data->gopreviouspage)) {
+                // TODO(later) smart calc next page
+                $prevpage = $completion->get_previous_page($gopage);
+                redirect(new moodle_url($PAGE->url, array('gopage' => intval($prevpage))));
+            }
         }
     }
 }

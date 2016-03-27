@@ -108,67 +108,23 @@ if (!$showcompleted && !$deleteid && !$userid) {
 
 // Print the response of the given user.
 if ($userid || $showcompleted) {
-    //get the feedbackitems
-    $feedbackitems = $DB->get_records('feedback_item', array('feedback' => $feedback->id), 'position');
+    $feedbackcompleted = mod_feedback_completion::get_completed($feedback, $showcompleted, $userid, MUST_EXIST);
 
     if ($userid) {
         $usr = $DB->get_record('user', array('id' => $userid, 'deleted' => 0), '*', MUST_EXIST);
-        $params = array('feedback' => $feedback->id, 'userid' => $userid,
-                    'anonymous_response' => FEEDBACK_ANONYMOUS_NO);
-        if ($showcompleted) {
-            $params['id'] = $showcompleted;
-        }
-        $feedbackcompleted = $DB->get_record('feedback_completed', $params);
         $responsetitle = userdate($feedbackcompleted->timemodified) . ' (' . fullname($usr) . ')';
     } else if ($showcompleted) {
-        $feedbackcompleted = $DB->get_record('feedback_completed',
-                array('feedback' => $feedback->id, 'id' => $showcompleted,
-                    'anonymous_response' => FEEDBACK_ANONYMOUS_YES), '*', MUST_EXIST);
         $responsetitle = get_string('response_nr', 'feedback') . ': ' .
             $feedbackcompleted->random_response . ' (' . get_string('anonymous', 'feedback') . ')';
     }
 
     echo $OUTPUT->heading($responsetitle, 4);
 
-    //$params = array('completed'=>$feedbackcompleted->id);
-    //$completeddata = $DB->get_records('feedback_value', $params);
-    //print_r($completeddata);
     $form = new mod_feedback_complete_form(mod_feedback_complete_form::MODE_VIEW_RESPONSE,
             $feedbackstructure, 'feedback_viewresponse_form', array('completed' => $feedbackcompleted));
     $form->display();
 
-
-    // Print the items.
-    /*if (is_array($feedbackitems)) {
-        $align = right_to_left() ? 'right' : 'left';
-
-        echo $OUTPUT->box_start('feedback_items');
-        $itemnr = 0;
-        foreach ($feedbackitems as $feedbackitem) {
-            //get the values
-            $params = array('completed'=>$feedbackcompleted->id, 'item'=>$feedbackitem->id);
-            $value = $DB->get_record('feedback_value', $params);
-            echo $OUTPUT->box_start('feedback_item_box_'.$align);
-            if ($feedbackitem->hasvalue == 1 AND $feedback->autonumbering) {
-                $itemnr++;
-                echo $OUTPUT->box_start('feedback_item_number_'.$align);
-                echo $itemnr;
-                echo $OUTPUT->box_end();
-            }
-
-            if ($feedbackitem->typ != 'pagebreak') {
-                echo $OUTPUT->box_start('box generalbox boxalign_'.$align);
-                if (isset($value->value)) {
-                    feedback_print_item_show_value($feedbackitem, $value->value);
-                } else {
-                    feedback_print_item_show_value($feedbackitem, false);
-                }
-                echo $OUTPUT->box_end();
-            }
-            echo $OUTPUT->box_end();
-        }
-        echo $OUTPUT->box_end();
-    }*/
+    // TODO: prev, up, next
     echo $OUTPUT->continue_button($baseurl);
 }
 
@@ -178,10 +134,6 @@ if ($deleteid) {
     echo $OUTPUT->confirm(get_string('confirmdeleteentry', 'feedback'), $continueurl, $baseurl);
 }
 
-/// Finish the page
-///////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////
-
+// Finish the page
 echo $OUTPUT->footer();
 
