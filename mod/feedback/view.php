@@ -66,6 +66,8 @@ if ($course->id != SITEID) {
 }
 
 require_course_login($course, true, $cm);
+$PAGE->set_activity_record($feedback);
+$feedbackstructure = new mod_feedback_structure($feedback, $PAGE->cm, $courseid);
 
 if ($course->id == SITEID) {
     $PAGE->set_context($context);
@@ -203,20 +205,8 @@ if (has_capability('mod/feedback:edititems', $context)) {
 if (has_capability('mod/feedback:edititems', $context)) {
     require_once($CFG->libdir . '/filelib.php');
 
-    $page_after_submit_output = file_rewrite_pluginfile_urls($feedback->page_after_submit,
-                                                            'pluginfile.php',
-                                                            $context->id,
-                                                            'mod_feedback',
-                                                            'page_after_submit',
-                                                            0);
-
     echo $OUTPUT->heading(get_string("page_after_submit", "feedback"), 3);
-    echo $OUTPUT->box_start('generalbox feedback_after_submit');
-    echo format_text($page_after_submit_output,
-                     $feedback->page_after_submitformat,
-                     array('overflowdiv'=>true));
-
-    echo $OUTPUT->box_end();
+    echo $OUTPUT->box($feedbackstructure->page_after_submit(), 'generalbox feedback_after_submit');
 }
 
 if (!has_capability('mod/feedback:viewreports', $context) &&
@@ -255,14 +245,7 @@ if ($feedback_complete_cap) {
         exit;
     }
 
-    //check multiple Submit
-    $feedback_can_submit = true;
-    if ($feedback->multiple_submit == 0 ) {
-        if (feedback_is_already_submitted($feedback->id, $courseid)) {
-            $feedback_can_submit = false;
-        }
-    }
-    if ($feedback_can_submit) {
+    if ($feedbackstructure->can_submit()) {
         //if the user is not known so we cannot save the values temporarly
         if (!isloggedin() or isguestuser()) {
             $guestid = sesskey();

@@ -2152,7 +2152,7 @@ function feedback_get_item_value($completedid, $itemid, $tmp = false) {
  * @param boolean $tmp
  * @return bool
  */
-function feedback_compare_item_value($completedid, $item, $dependvalue, $tmp = false) {
+function feedback_compare_item_value($completedid, $item, $dependvalue, $tmp = false, $values = null) {
     global $DB;
 
     if (is_int($item)) {

@@ -50,6 +50,7 @@ $context = context_module::instance($cm->id);
 
 require_login($course, true, $cm);
 $feedback = $PAGE->activityrecord;
+$feedbackstructure = new mod_feedback_structure($feedback, $cm);
 
 require_capability('mod/feedback:viewreports', $context);
 
@@ -133,12 +134,7 @@ if ($userid || $showcompleted) {
     //$completeddata = $DB->get_records('feedback_value', $params);
     //print_r($completeddata);
     $form = new mod_feedback_complete_form(mod_feedback_complete_form::MODE_VIEW_RESPONSE,
-            'feedback_viewresponse_form', array(
-                'feedback' => $feedback,
-                'cm' => $cm,
-                'courseid' => $courseid,
-                'completed' => $feedbackcompleted
-            ));
+            $feedbackstructure, 'feedback_viewresponse_form', array('completed' => $feedbackcompleted));
     $form->display();
 
 

@@ -40,41 +40,41 @@ class mod_feedback_complete_form extends moodleform {
     const MODE_VIEW_TEMPLATE = 5;
 
     protected $mode;
-    protected $feedback;
+    /** @var mod_feedback_structure */
+    protected $structure;
+
+    //protected $feedback;
     /** @var cm_info */
-    protected $cm;
-    protected $courseid;
-    protected $templateid;
+    //protected $cm;
+    //protected $courseid;
+    //protected $templateid;
+
     protected $gopage;
     protected $completedtmp;
     protected $completed;
     protected $hasrequired = false;
     protected $isempty = true;
-    protected $allitems = null;
+    //protected $allitems = null;
+    protected $valuestmp = null;
+    protected $values = null;
 
-    public function __construct($mode, $id, $customdata = null) {
+    public function __construct($mode, $structure, $id, $customdata = null) {
         $this->mode = $mode;
-        $isanonymous = $customdata['feedback']->anonymous == FEEDBACK_ANONYMOUS_YES ?
-                ' ianonymous' : '';
+        $this->structure = $structure;
+        $this->gopage = isset($customdata['gopage']) ?
+                $customdata['gopage'] : 0;
+        $isanonymous = $this->structure->is_anonymous() ? ' ianonymous' : '';
         parent::__construct(null, $customdata, 'POST', '',
                 array('id' => $id, 'class' => 'feedback-form' . $isanonymous), true);
     }
 
     public function definition() {
         global $DB;
-        $this->feedback = $this->_customdata['feedback'];
-        $this->cm = $this->_customdata['cm'];
-        $this->courseid = !empty($this->_customdata['courseid']) ?
-                $this->_customdata['courseid'] : $this->cm->course;
-        $this->templateid = !empty($this->_customdata['templateid']) ?
-                $this->_customdata['templateid'] : null;
-        $this->gopage = isset($this->_customdata['gopage']) ?
-                $this->_customdata['gopage'] : 0;
 
         $mform = $this->_form;
-        $mform->addElement('hidden', 'id', $this->cm->id);
+        $mform->addElement('hidden', 'id', $this->get_cm()->id);
         $mform->setType('id', PARAM_INT);
-        $mform->addElement('hidden', 'courseid', $this->courseid);
+        $mform->addElement('hidden', 'courseid', $this->get_current_course_id());
         $mform->setType('courseid', PARAM_INT);
         $mform->addElement('hidden', 'gopage');
         $mform->setType('gopage', PARAM_INT);
@@ -85,9 +85,10 @@ class mod_feedback_complete_form extends moodleform {
         $mform->addElement('hidden', 'lastitempos');
         $mform->setType('lastitempos', PARAM_INT);
 
-        if ($this->feedback->anonymous == FEEDBACK_ANONYMOUS_YES) {
+        $feedback = $this->get_feedback();
+        if ($this->structure->is_anonymous()) {
             $anonymousmodeinfo = get_string('anonymous', 'feedback');
-        } else if ($this->feedback->anonymous == FEEDBACK_ANONYMOUS_NO) {
+        } else {
             $anonymousmodeinfo = get_string('non_anonymous', 'feedback');
         }
         if (isloggedin() && !isguestuser() && $this->mode != self::MODE_EDIT && $this->mode != self::MODE_VIEW_TEMPLATE) {
@@ -109,19 +110,23 @@ class mod_feedback_complete_form extends moodleform {
             $mform->closeHeaderBefore('buttonar');
         }
 
+        // Get the current completed values.
         if ($this->mode == self::MODE_COMPLETE) {
-            $this->completedtmp = feedback_get_current_completed_tmp($this->feedback, $this->courseid);
-        } else {
+            $this->completedtmp = feedback_get_current_completed_tmp($feedback, $this->structure->get_courseid());
+            if ($this->completedtmp) {
+                $this->valuestmp = $DB->get_records_menu('feedback_valuetmp', ['completed' => $this->completedtmp->id],
+                        '', 'item, value');
+            }
+        } else if ($this->mode == self::MODE_VIEW_RESPONSE) {
             $this->completed = isset($this->_customdata['completed']) ?
                     $this->_customdata['completed'] : array();
+            if ($this->completed) {
+                $this->values = $DB->get_records_menu('feedback_value', ['completed' => $this->completed->id],
+                        '', 'item, value');
+            }
         }
 
-        if ($this->templateid) {
-            $this->allitems = $DB->get_records('feedback_item', array('template' => $this->templateid), 'position');
-        } else {
-            $this->allitems = $DB->get_records('feedback_item', array('feedback' => $this->feedback->id), 'position');
-        }
-
+        // Set data.
         $this->set_data(array('gopage' => $this->gopage));
     }
 
@@ -170,8 +175,10 @@ class mod_feedback_complete_form extends moodleform {
     protected function definition_after_data_complete() {
         global $DB, $OUTPUT;
         $mform = $this->_form;
+        $feedback = $this->structure->get_feedback();
+        $allitems = $this->structure->get_items();
         list($startposition, $firstpagebreak, $ispagebreak, $feedbackitems) =
-                feedback_get_page_boundaries($this->feedback, $this->gopage);
+                feedback_get_page_boundaries($feedback, $this->gopage);
 
         // Add elements.
         $startitem = null;
@@ -185,11 +192,11 @@ class mod_feedback_complete_form extends moodleform {
                 $startitem = $feedbackitem;
             }
 
-            if ($feedbackitem->dependitem > 0 && isset($this->allitems[$feedbackitem->dependitem])) {
+            if ($feedbackitem->dependitem > 0 && isset($allitems[$feedbackitem->dependitem])) {
                 // Check if the conditions are ok.
                 if (!isset($this->completedtmp->id) OR
                         !feedback_compare_item_value($this->completedtmp->id,
-                            $this->allitems[$feedbackitem->dependitem], $feedbackitem->dependvalue, true)) {
+                            $allitems[$feedbackitem->dependitem], $feedbackitem->dependvalue, true)) {
                     $lastitem = $feedbackitem;
                     $lastbreakposition = $feedbackitem->position;
                     continue;
@@ -210,7 +217,7 @@ class mod_feedback_complete_form extends moodleform {
         }
 
         // Remove invalid buttons (for example, no "previous page" if we are on the first page).
-        $maxitemcount = count($this->allitems);
+        $maxitemcount = count($allitems);
         if (!$ispagebreak || $lastbreakposition <= $firstpagebreak->position) {
             $this->remove_button('gopreviouspage');
         }
@@ -233,7 +240,8 @@ class mod_feedback_complete_form extends moodleform {
                 break;
             }
         }*/
-        foreach ($this->allitems as $feedbackitem) {
+        $allitems = $this->structure->get_items();
+        foreach ($allitems as $feedbackitem) {
             if ($feedbackitem->typ !== 'pagebreak') {
                 $itemobj = feedback_get_item_class($feedbackitem->typ);
                 $itemobj->complete_form_element($feedbackitem, $this);
@@ -264,36 +272,24 @@ class mod_feedback_complete_form extends moodleform {
      * Returns value for this element that is already stored in temporary table,
      * usually only available when user clicked "Previous page". Null means no value is stored.
      *
-     * @param stdClass $feedbackitem
+     * @param stdClass $item
      * @return string
      */
-    public function get_item_value($feedbackitem) {
-                $value = null;
-                //get the value
-                //$frmvaluename = $feedbackitem->typ . '_'. $feedbackitem->id;
-                /*if ($mform->getElementValue('id')) {
-                    $value = $mform->getElementValue($frmvaluename);
-                    $value = feedback_clean_input_value($feedbackitem, $value);
-                } else {*/
-                    if (isset($this->completedtmp->id)) {
-                        $value = feedback_get_item_value($this->completedtmp->id,
-                                                         $feedbackitem->id,
-                                                         true);
-                    } else if (isset($this->completed->id)) {
-                        $value = feedback_get_item_value($this->completed->id,
-                                                         $feedbackitem->id,
-                                                         false);
-                    }
-                //}
-        return $value;
+    public function get_item_value($item) {
+        if (isset($this->completedtmp->id) && isset($this->valuestmp[$item->id])) {
+            return $this->valuestmp[$item->id];
+        } else if (isset($this->completed->id) && isset($this->values[$item->id])) {
+            return $this->values[$item->id];
+        }
+        return null;
     }
 
     public function get_course_id() {
-        return $this->courseid;
+        return $this->structure->get_courseid();
     }
 
     public function get_feedback() {
-        return $this->feedback;
+        return $this->structure->get_feedback();
     }
 
     public function get_mode() {
@@ -380,7 +376,7 @@ class mod_feedback_complete_form extends moodleform {
 
     protected function add_item_number($item, $element) {
         static $itemnr = 0; // TODO this is incorrect for complete!
-        if ($item->hasvalue == 1 AND $this->feedback->autonumbering) {
+        if ($item->hasvalue == 1 AND $this->get_feedback()->autonumbering) {
             $itemnr++;
             $name = $element->getLabel();
             $element->setLabel(html_writer::span($itemnr. '.', 'itemnr') . ' ' . $name);
@@ -397,9 +393,10 @@ class mod_feedback_complete_form extends moodleform {
 
     protected function add_item_dependencies($item, $element) {
         global $DB;
+        $allitems = $this->structure->get_items();
         if ($item->dependitem && ($this->mode == self::MODE_EDIT || $this->mode == self::MODE_VIEW_TEMPLATE)) {
-            if (isset($this->allitems[$item->dependitem])) {
-                $dependitem = $this->allitems[$item->dependitem];
+            if (isset($allitems[$item->dependitem])) {
+                $dependitem = $allitems[$item->dependitem];
                 $name = $element->getLabel();
                 $name .= html_writer::span(' ('.format_string($dependitem->label).'-&gt;'.$item->dependvalue.')',
                         'feedback_depend');
@@ -452,7 +449,7 @@ class mod_feedback_complete_form extends moodleform {
             $actions = $this->pagebreak_actions($item);
         } else {
             $itemobj = feedback_get_item_class($item->typ);
-            $actions = $itemobj->edit_actions($item, $this->feedback, $this->cm);
+            $actions = $itemobj->edit_actions($item, $this->get_feedback(), $this->get_cm());
         }
         foreach ($actions as $action) {
             $menu->add($action);
@@ -545,19 +542,11 @@ class mod_feedback_complete_form extends moodleform {
      * @return cm_info
      */
     public function get_cm() {
-        return $this->cm;
+        return $this->structure->get_cm();
     }
 
     public function get_current_course_id() {
-        if ($this->feedback->course == SITEID && $this->courseid) {
-            return $this->courseid;
-        }
-        return $this->feedback->course;
-    }
-
-    public function is_empty() {
-        // Finalize the form definition if not yet done.
-        return empty($this->allitems);
+        return $this->structure->get_courseid() ?: $this->get_feedback()->course;
     }
 
     public function display() {

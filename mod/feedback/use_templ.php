@@ -42,6 +42,7 @@ $context = context_module::instance($cm->id);
 require_login($course, true, $cm);
 
 $feedback = $PAGE->activityrecord;
+$feedbackstructure = new mod_feedback_structure($feedback, $cm, 0, $templateid);
 
 require_capability('mod/feedback:edititems', $context);
 
@@ -75,11 +76,8 @@ echo $OUTPUT->heading(get_string('confirmusetemplate', 'feedback'), 4);
 
 $mform->display();
 
-$form = new mod_feedback_complete_form(
-        mod_feedback_complete_form::MODE_VIEW_TEMPLATE,
-        'feedback_preview_form',
-        ['feedback' => $feedback, 'cm' => $cm, 'templateid' => $templateid]
-);
+$form = new mod_feedback_complete_form(mod_feedback_complete_form::MODE_VIEW_TEMPLATE,
+        $feedbackstructure, 'feedback_preview_form', ['templateid' => $templateid]);
 $form->display();
 
 echo $OUTPUT->footer();

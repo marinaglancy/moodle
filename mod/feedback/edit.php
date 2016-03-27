@@ -51,6 +51,7 @@ $context = context_module::instance($cm->id);
 require_login($course, false, $cm);
 require_capability('mod/feedback:edititems', $context);
 $feedback = $PAGE->activityrecord;
+$feedbackstructure = new mod_feedback_structure($feedback, $cm);
 
 //Move up/down items
 if ($moveupitem) {
@@ -188,9 +189,8 @@ if ($do_show == 'edit') {
     echo $OUTPUT->render($select);
 
 
-    $form = new mod_feedback_complete_form(mod_feedback_complete_form::MODE_EDIT, 'feedback_edit_form', array(
-        'feedback' => $feedback, 'cm' => $cm, 'courseid' => $course->id
-    ));
+    $form = new mod_feedback_complete_form(mod_feedback_complete_form::MODE_EDIT,
+            $feedbackstructure, 'feedback_edit_form');
     echo '<div id="feedback_dragarea">'; //The container for the dragging area
     $form->display();
     echo '</div>';

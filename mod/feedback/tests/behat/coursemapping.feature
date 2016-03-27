@@ -83,7 +83,7 @@ Feature: Anonymous feedback
     And I should not see "Mapped courses"
     And I should not see "Map feedback to courses"
 
-  @javascript
+  @javascript @xxx
   Scenario: Site feedback is not mapped to any course
     And I log in as "user1"
     And I am on site homepage

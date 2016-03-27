@@ -34,6 +34,7 @@ list($course, $cm) = get_course_and_cm_from_cmid($id, 'feedback');
 require_course_login($course, true, $cm);
 
 $feedback = $PAGE->activityrecord;
+$feedbackstructure = new mod_feedback_structure($feedback, $cm, $courseid);
 
 $PAGE->set_pagelayout('popup');
 
@@ -60,9 +61,8 @@ if ($courseid) {
     $continueurl->param('courseid', $courseid);
 }
 
-$form = new mod_feedback_complete_form(mod_feedback_complete_form::MODE_PRINT, 'feedback_print_form', array(
-    'feedback' => $feedback, 'cm' => $cm, 'courseid' => $courseid
-));
+$form = new mod_feedback_complete_form(mod_feedback_complete_form::MODE_PRINT,
+        $feedbackstructure, 'feedback_print_form');
 echo $OUTPUT->continue_button($continueurl);
 $form->display();
 echo $OUTPUT->continue_button($continueurl);
