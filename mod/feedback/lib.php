@@ -642,7 +642,7 @@ function feedback_reset_userdata($data) {
     //reset the selected feedbacks
     foreach ($resetfeedbacks as $id) {
         $feedback = $DB->get_record('feedback', array('id'=>$id));
-        feedback_delete_all_completeds($id);
+        feedback_delete_all_completeds($feedback);
         $status[] = array('component'=>$componentstr.':'.$feedback->name,
                         'item'=>get_string('resetting_data', 'feedback'),
                         'error'=>false);
@@ -1887,20 +1887,7 @@ function feedback_save_tmp_values($feedbackcompletedtmp, $feedbackcompleted) {
 
     // Trigger event for the delete action we performed.
     $cm = get_coursemodule_from_instance('feedback', $feedbackcompleted->feedback);
-    $event = \mod_feedback\event\response_submitted::create(array(
-        'relateduserid' => $feedbackcompleted->userid,
-        'objectid' => $feedbackcompleted->id,
-        'context' => context_module::instance($cm->id),
-        'anonymous' => ($feedbackcompleted->anonymous_response == FEEDBACK_ANONYMOUS_YES),
-        'other' => array(
-            'cmid' => $cm->id,
-            'instanceid' => $feedbackcompleted->feedback,
-            'anonymous' => $feedbackcompleted->anonymous_response // Deprecated.
-        )
-    ));
-
-    $event->add_record_snapshot('feedback_completed', $feedbackcompleted);
-
+    $event = \mod_feedback\event\response_submitted::create_from_record($feedbackcompleted, $cm);
     $event->trigger();
     return $feedbackcompleted->id;
 
@@ -1909,12 +1896,16 @@ function feedback_save_tmp_values($feedbackcompletedtmp, $feedbackcompleted) {
 /**
  * deletes the given temporary completed and all related temporary values
  *
- * @global object
+ * @deprecated since Moodle 3.1
+ *
  * @param int $tmpcplid
  * @return void
  */
 function feedback_delete_completedtmp($tmpcplid) {
     global $DB;
+
+    debugging('Function feedback_delete_completedtmp() is deprecated because it is no longer used',
+            DEBUG_DEVELOPER);
 
     $DB->delete_records('feedback_valuetmp', array('completed'=>$tmpcplid));
     $DB->delete_records('feedback_completedtmp', array('id'=>$tmpcplid));
@@ -2076,7 +2067,7 @@ function feedback_save_values($usrid, $tmp = false) {
             'enough arguments, was not suitable for non-temporary table and was taking '.
             'data directly from input', DEBUG_DEVELOPER);
 
-    $feedback = $PAGE->activityrecord; // TODO param?
+    $feedback = $PAGE->activityrecord;
     $tmpstr = $tmp ? 'tmp' : '';
     $time = time();
     $timemodified = mktime(0, 0, 0, date('m', $time), date('d', $time), date('Y', $time));
@@ -2256,7 +2247,7 @@ function feedback_update_values($completed, $tmp = false) {
             'enough arguments, was not suitable for non-temporary table and was taking '.
             'data directly from input', DEBUG_DEVELOPER);
 
-    $courseid = optional_param('courseid', false, PARAM_INT); // TODO from param
+    $courseid = optional_param('courseid', false, PARAM_INT);
     $tmpstr = $tmp ? 'tmp' : '';
 
     $DB->update_record('feedback_completed'.$tmpstr, $completed);
@@ -2555,18 +2546,31 @@ function feedback_get_completeds_group_count($feedback, $groupid = false, $cours
  * deletes all completed-recordsets from a feedback.
  * all related data such as values also will be deleted
  *
- * @global object
- * @param int $feedbackid
+ * @param stdClass|int $feedback
+ * @param stdClass|cm_info $cm
+ * @param stdClass $course
  * @return void
  */
-function feedback_delete_all_completeds($feedbackid) {
+function feedback_delete_all_completeds($feedback, $cm = null, $course = null) {
     global $DB;
 
-    if (!$completeds = $DB->get_records('feedback_completed', array('feedback'=>$feedbackid))) {
+    if (is_int($feedback)) {
+        $feedback = $DB->get_record('feedback', array('id' => $feedback));
+    }
+
+    if (!$completeds = $DB->get_records('feedback_completed', array('feedback'=>$feedback->id))) {
         return;
     }
+    if (!$course && !($course = $DB->get_record('course', array('id' => $feedback->course)))) {
+        return false;
+    }
+
+    if (!$cm && !($cm = get_coursemodule_from_instance('feedback', $feedback->id))) {
+        return false;
+    }
+
     foreach ($completeds as $completed) {
-        feedback_delete_completed($completed->id);
+        feedback_delete_completed($completed, $feedback, $cm, $course);
     }
 }
 
@@ -2574,27 +2578,31 @@ function feedback_delete_all_completeds($feedbackid) {
  * deletes a completed given by completedid.
  * all related data such values or tracking data also will be deleted
  *
- * @global object
- * @param int $completedid
+ * @param int|stdClass $completed
+ * @param stdClass $feedback
+ * @param stdClass|cm_info $cm
+ * @param stdClass $course
  * @return boolean
  */
-function feedback_delete_completed($completedid) {
+function feedback_delete_completed($completed, $feedback = null, $cm = null, $course = null) {
     global $DB, $CFG;
     require_once($CFG->libdir.'/completionlib.php');
 
-    if (!$completed = $DB->get_record('feedback_completed', array('id'=>$completedid))) {
+    if (!isset($completed->id)) {
+        if (!$completed = $DB->get_record('feedback_completed', array('id'=>$completed))) {
+            return false;
+        }
+    }
+
+    if (!$feedback && !($feedback = $DB->get_record('feedback', array('id'=>$completed->feedback)))) {
         return false;
     }
 
-    if (!$feedback = $DB->get_record('feedback', array('id'=>$completed->feedback))) {
+    if (!$course && !($course = $DB->get_record('course', array('id'=>$feedback->course)))) {
         return false;
     }
 
-    if (!$course = $DB->get_record('course', array('id'=>$feedback->course))) {
-        return false;
-    }
-
-    if (!$cm = get_coursemodule_from_instance('feedback', $feedback->id)) {
+    if (!$cm && !($cm = get_coursemodule_from_instance('feedback', $feedback->id))) {
         return false;
     }
 
@@ -2610,22 +2618,7 @@ function feedback_delete_completed($completedid) {
     $return = $DB->delete_records('feedback_completed', array('id'=>$completed->id));
 
     // Trigger event for the delete action we performed.
-    $event = \mod_feedback\event\response_deleted::create(array(
-        'relateduserid' => $completed->userid,
-        'objectid' => $completedid,
-        'courseid' => $course->id,
-        'context' => context_module::instance($cm->id),
-        'anonymous' => ($completed->anonymous_response == FEEDBACK_ANONYMOUS_YES),
-        'other' => array(
-            'cmid' => $cm->id,
-            'instanceid' => $feedback->id,
-            'anonymous' => $completed->anonymous_response) // Deprecated.
-    ));
-
-    $event->add_record_snapshot('feedback_completed', $completed);
-    $event->add_record_snapshot('course', $course);
-    $event->add_record_snapshot('feedback', $feedback);
-
+    $event = \mod_feedback\event\response_deleted::create_from_record($completed, $cm, $feedback);
     $event->trigger();
 
     return $return;

@@ -40,7 +40,7 @@ class mod_feedback_completion extends mod_feedback_structure {
     protected $valuestmp = null;
     /** @var stdClass[] */
     protected $values = null;
-
+    /** @var bool */
     protected $iscompleted = false;
 
 
@@ -82,6 +82,10 @@ class mod_feedback_completion extends mod_feedback_structure {
         }
     }
 
+    /**
+     * Returns
+     * @return type
+     */
     public function get_completed() {
         return $this->completed;
     }
@@ -109,48 +113,56 @@ class mod_feedback_completion extends mod_feedback_structure {
     }
 
     /**
-     * compares the value of the itemid related to the completedid with the dependvalue.
-     * this is used if a depend item is set.
-     * the value can come as temporary or as permanently value. the deciding is done by $tmp.
+     * Can the current user see the item, if dependency is met?
      *
-     * @global object
-     * @global object
-     * @param int $completedid
-     * @param stdClass|int $item
-     * @param mixed $dependvalue
-     * @param boolean $tmp
-     * @return bool
+     * @param stdClass $item
+     * @return bool whether user can see item or not,
+     *     null if dependency is broken or dependent question is not answered.
      */
-    function compare_item_value($completedid, $item, $dependvalue, $tmp = false, $values = null) {
-        global $DB;
-
-        // TODO optimise
-
-        if (is_int($item)) {
-            $item = $DB->get_record('feedback_item', array('id' => $item));
-        }
-
-        $dbvalue = feedback_get_item_value($completedid, $item->id, $tmp);
-
-        $itemobj = feedback_get_item_class($item->typ);
-        return $itemobj->compare_value($item, $dbvalue, $dependvalue); //true or false
-    }
-
     public function can_see_item($item) {
         if (empty($item->dependitem)) {
             return true;
         }
+        if ($this->dependency_has_error($item)) {
+            return null;
+        }
         $allitems = $this->get_items();
-        // TODO check that dependitem is BEFORE $item and there is a pagebreak between them.
-        if (isset($allitems[$item->dependitem])) {
-            $completedtmp = $this->get_current_completed_tmp();
-            // Check if the conditions are ok.
-            if (!$completedtmp OR
-                    !$this->compare_item_value($this->completedtmp->id,
-                        $allitems[$item->dependitem], $item->dependvalue, true)) { // TODO compare against stored items!
+        $ditem = $allitems[$item->dependitem];
+        $itemobj = feedback_get_item_class($ditem->typ);
+        if ($this->iscompleted) {
+            $value = $this->get_values($ditem);
+        } else {
+            $value = $this->get_values_tmp($ditem);
+        }
+        if ($value === null) {
+            return null;
+        }
+        return $itemobj->compare_value($ditem, $value, $item->dependvalue) ? true : false;
+    }
+
+    public function dependency_has_error($item) {
+        if (empty($item->dependitem)) {
+            // No dependency - no error.
+            return false;
+        }
+        $allitems = $this->get_items();
+        if (!array_key_exists($item->dependitem, $allitems)) {
+            // Looks like dependent item has been removed.
+            return true;
+        }
+        $itemids = array_keys($allitems);
+        $index1 = array_search($item->dependitem, $itemids);
+        $index2 = array_search($item->id, $itemids);
+        if ($index1 >= $index2) {
+            // Dependent item is after the current item in the feedback.
+            return true;
+        }
+        for ($i = $index1 + 1; $i < $index2; $i++) {
+            if ($allitems[$itemids[$i]]->typ === 'pagebreak') {
                 return false;
             }
         }
+        // There are no page breaks between dependent items.
         return true;
     }
 
@@ -187,6 +199,15 @@ class mod_feedback_completion extends mod_feedback_structure {
         return $this->values;
     }
 
+    /**
+     * Splits the feedback items into pages
+     *
+     * Items that we definitely know at this stage as not applicable are excluded.
+     * Items that are dependent on something that has not yet been answered are
+     * still present, as well as items with broken dependencies.
+     *
+     * @return array array of arrays of items
+     */
     public function get_pages() {
         $pages = [[]]; // The first page always exists.
         $items = $this->get_items();
@@ -201,10 +222,18 @@ class mod_feedback_completion extends mod_feedback_structure {
     }
 
     /**
-     * Returns the last page that has items with the value (i.e. not label) which have not been answered.
-     * @return int|null page index (0-based) or null if the first page has unanswered items.
+     * Returns the last page that has items with the value (i.e. not label) which have been answered
+     * as well as the first page that has items with the values that have not been answered.
+     *
+     * Either of the two return values may be null if there are no answered page or there are no
+     * unanswered pages left respectively.
+     *
+     * Two pages may not be directly following each other because there may be empty pages
+     * or pages with information texts only between them
+     *
+     * @return array array of two elements [$lastcompleted, $firstincompleted]
      */
-    public function get_last_completed_page() {
+    protected function get_last_completed_page() {
         $completed = [];
         $incompleted = [];
         $pages = $this->get_pages();
@@ -235,13 +264,18 @@ class mod_feedback_completion extends mod_feedback_structure {
     }
 
     /**
+     * Get the next page for the feedback
      *
-     * @param type $gopage
+     * This is normally $gopage+1 but may be bigger if there are empty pages or
+     * pages without visible questions.
+     *
+     * This method can only be called when questions on the current page are
+     * already answered, otherwise it may be inaccurate.
+     *
+     * @param int $gopage current page
+     * @param bool $strictcheck when gopage is the user-input value, make sure we do not jump over unanswered questions
+     * @return int|null the index of the next page or null if this is the last page
      */
-    public function guess_next_page($gopage) {
-
-    }
-
     public function get_next_page($gopage, $strictcheck = true) {
         if ($strictcheck) {
             list($lastcompleted, $firstincompleted) = $this->get_last_completed_page();
@@ -259,25 +293,42 @@ class mod_feedback_completion extends mod_feedback_structure {
         return null;
     }
 
+    /**
+     * Get the previous page for the feedback
+     *
+     * This is normally $gopage-1 but may be smaller if there are empty pages or
+     * pages without visible questions.
+     *
+     * @param int $gopage current page
+     * @param bool $strictcheck when gopage is the user-input value, make sure we do not jump over unanswered questions
+     * @return int|null the index of the next page or null if this is the first page with items
+     */
     public function get_previous_page($gopage, $strictcheck = true) {
         if (!$gopage) {
+            // If we are already on the first (0) page, there is definitely no previous page.
             return null;
         }
-        // TODO strict check
-        /*if ($strictcheck) {
-            list($lastcompleted, $firstincompleted) = $this->get_last_completed_page();
-            if ($firstincompleted !== null && $firstincompleted <= $gopage) {
-                return $firstincompleted;
-            }
-        }*/
         $pages = $this->get_pages();
+        $rv = null;
+        // Iterate through previous pages and find the closest one that has any items on it.
         for ($pageidx = $gopage - 1; $pageidx >= 0; $pageidx--) {
             if (!empty($pages[$pageidx])) {
-                return $pageidx;
+                $rv = $pageidx;
+                break;
             }
         }
-        // We are already on the first page that has items.
-        return null;
+        if ($rv === null) {
+            // We are on the very first page that has items.
+            return null;
+        }
+        if ($rv > 0 && $strictcheck) {
+            // Check if this page is actually not past than first incompleted page.
+            list($lastcompleted, $firstincompleted) = $this->get_last_completed_page();
+            if ($firstincompleted !== null && $firstincompleted < $rv) {
+                return $firstincompleted;
+            }
+        }
+        return $rv;
     }
 
     /**
@@ -290,86 +341,6 @@ class mod_feedback_completion extends mod_feedback_structure {
     public function get_resume_page() {
         list($lastcompleted, $firstincompleted) = $this->get_last_completed_page();
         return $lastcompleted === null ? 0 : $this->get_next_page($lastcompleted, false);
-    }
-
-    /**
-     *
-     * @param stdClass $feedback
-     * @param int $gopage
-     * @return array [$startposition, $firstpagebreak, $ispagebreak, $feedbackitems]
-     */
-    function feedback_get_page_boundaries($gopage) {
-        global $DB;
-        $feedback = $this->get_feedback();
-        if ($allbreaks = feedback_get_all_break_positions($feedback->id)) {
-            if ($gopage <= 0) {
-                $startposition = 0;
-            } else {
-                if (!isset($allbreaks[$gopage - 1])) {
-                    $gopage = count($allbreaks);
-                }
-                $startposition = $allbreaks[$gopage - 1];
-            }
-            $ispagebreak = true;
-        } else {
-            $startposition = 0;
-            //$newpage = 0;
-            $ispagebreak = false;
-        }
-
-        //get the feedbackitems after the last shown pagebreak
-        $select = 'feedback = ? AND position > ?';
-        $params = array($feedback->id, $startposition);
-        $feedbackitems = $DB->get_records_select('feedback_item', $select, $params, 'position');
-
-        //get the first pagebreak
-        $params = array('feedback' => $feedback->id, 'typ' => 'pagebreak');
-        if ($pagebreaks = $DB->get_records('feedback_item', $params, 'position')) {
-            $pagebreaks = array_values($pagebreaks);
-            $firstpagebreak = $pagebreaks[0];
-        } else {
-            $firstpagebreak = false;
-        }
-        return array($startposition, $firstpagebreak, $ispagebreak, $feedbackitems);
-    }
-
-    public function get_items_on_page($gopage) {
-        global $DB, $OUTPUT;
-        $feedback = $this->get_feedback();
-        list($startposition, $firstpagebreak, $ispagebreak, $feedbackitems) =
-                $this->feedback_get_page_boundaries($gopage);
-
-        // Add elements.
-        $items = array();
-        $startitem = null;
-        $lastbreakposition = 0;
-        foreach ($feedbackitems as $feedbackitem) {
-            if (!isset($startitem)) {
-                // Avoid showing double pagebreaks.
-                if ($feedbackitem->typ == 'pagebreak') {
-                    continue;
-                }
-                $startitem = $feedbackitem;
-            }
-
-            if (!$this->can_see_item($feedbackitem)) {
-                $lastitem = $feedbackitem;
-                $lastbreakposition = $feedbackitem->position;
-                continue;
-            }
-
-            if ($feedbackitem->typ != 'pagebreak') {
-                $items[] = $feedbackitem;
-            }
-
-            $lastbreakposition = $feedbackitem->position; // Last item-pos (item or pagebreak).
-            if ($feedbackitem->typ == 'pagebreak') {
-                break;
-            } else {
-                $lastitem = $feedbackitem;
-            }
-        }
-        return $items;
     }
 
     /**
@@ -394,9 +365,20 @@ class mod_feedback_completion extends mod_feedback_structure {
         $record->anonymous_response = $this->feedback->anonymous;
         $id = $DB->insert_record('feedback_completedtmp', $record);
         $this->completedtmp = $DB->get_record('feedback_completedtmp', ['id' => $id]);
+        $this->valuestmp = null;
         return $this->completedtmp;
     }
 
+    /**
+     * Saves unfinished response to the temporary table
+     *
+     * This is called when user proceeds to the next/previous page in the complete form
+     * and also right after the form submit.
+     * After the form submit the {@link save_response()} is called to
+     * move response from temporary table to completion table.
+     *
+     * @param stdClass $data data from the form mod_feedback_complete_form
+     */
     public function save_response_tmp($data) {
         global $DB;
         if (!$completedtmp = $this->get_current_completed_tmp()) {
@@ -443,8 +425,15 @@ class mod_feedback_completion extends mod_feedback_structure {
         $this->valuestmp = null;
     }
 
+    /**
+     * Saves the response
+     *
+     * The form data has already been stored in the temporary table in
+     * {@link save_response_tmp()}. This function copies the values
+     * from the temporary table to the completion table.
+     * It is also responsible for sending email notifications when applicable.
+     */
     public function save_response() {
-        // TODO move to this class
         global $USER, $SESSION, $DB;
 
         $feedbackcompleted = $this->find_last_completed();
@@ -452,7 +441,7 @@ class mod_feedback_completion extends mod_feedback_structure {
 
         if (feedback_check_is_switchrole()) {
             // We do not actually save anything if the role is switched, just delete temporary values.
-            feedback_delete_completedtmp($feedbackcompletedtmp->id); // TODO move to this class
+            $this->delete_completedtmp();
             return;
         }
 
@@ -473,6 +462,19 @@ class mod_feedback_completion extends mod_feedback_structure {
         $completion = new completion_info($this->cm->get_course());
         if (isloggedin() && !isguestuser() && $completion->is_enabled($this->cm) && $this->feedback->completionsubmit) {
             $completion->update_state($this->cm, COMPLETION_COMPLETE);
+        }
+    }
+
+    /**
+     * Deletes the temporary completed and all related temporary values
+     */
+    protected function delete_completedtmp() {
+        global $DB;
+
+        if ($completedtmp = $this->get_current_completed_tmp()) {
+            $DB->delete_records('feedback_valuetmp', ['completed' => $completedtmp->id]);
+            $DB->delete_records('feedback_completedtmp', ['id' => $completedtmp->id]);
+            $this->completedtmp = null;
         }
     }
 
@@ -499,6 +501,18 @@ class mod_feedback_completion extends mod_feedback_structure {
         return $this->completed;
     }
 
+    /**
+     * Checks if current user has capability to submit the feedback
+     *
+     * There is an exception for fully anonymous feedbacks when guests can complete
+     * feedback without the proper capability.
+     *
+     * This should be followed by checking {@link can_submit()} because even if
+     * user has capablity to complete, they may have already submitted feedback
+     * and can not re-submit
+     *
+     * @return bool
+     */
     public function can_complete() {
         global $CFG;
 
@@ -516,5 +530,21 @@ class mod_feedback_completion extends mod_feedback_structure {
         }
 
         return false;
+    }
+
+    /**
+     * Checks if user is prevented from re-submission.
+     *
+     * This must be called after {@link can_complete()}
+     *
+     * @return boolean
+     */
+    public function can_submit() {
+        if ($this->get_feedback()->multiple_submit == 0 ) {
+            if (feedback_is_already_submitted($this->get_feedback()->id, $this->get_courseid())) {
+                return false;
+            }
+        }
+        return true;
     }
 }

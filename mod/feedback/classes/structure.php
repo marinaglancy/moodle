@@ -117,7 +117,7 @@ class mod_feedback_structure {
             }
             $idx = 1;
             foreach ($this->allitems as $id => $item) {
-                $item->itemnr = $item->hasvalue ? ($idx++) : null;
+                $this->allitems[$id]->itemnr = $item->hasvalue ? ($idx++) : null;
             }
         }
         return $this->allitems;
@@ -135,23 +135,19 @@ class mod_feedback_structure {
         return !$displayeditems;
     }
 
+    /**
+     * Is this feedback anonymous?
+     * @return bool
+     */
     public function is_anonymous() {
         return $this->feedback->anonymous == FEEDBACK_ANONYMOUS_YES;
     }
 
     /**
-     * Checks if user is prevented from re-submission.
-     * @return boolean
+     * Returns the formatted text of the page after submit or null if it is not set
+     *
+     * @return string|null
      */
-    public function can_submit() {
-        if ($this->get_feedback()->multiple_submit == 0 ) {
-            if (feedback_is_already_submitted($this->get_feedback()->id, $this->get_courseid())) {
-                return false;
-            }
-        }
-        return true;
-    }
-
     public function page_after_submit() {
         global $CFG;
         require_once($CFG->libdir . '/filelib.php');

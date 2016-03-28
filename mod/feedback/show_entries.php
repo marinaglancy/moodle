@@ -57,7 +57,7 @@ if ($deleteid) {
     $feedbackcompletion = new mod_feedback_completion($feedback, $cm, 0, true, $deleteid);
     if (optional_param('confirm', 0, PARAM_BOOL) && confirm_sesskey()) {
         // Process delete template result.
-        feedback_delete_completed($feedbackcompletion->get_completed()->id); // TODO move to the class.
+        feedback_delete_completed($feedbackcompletion->get_completed(), $feedback, $cm);
         redirect($baseurl);
     }
 } else if ($showcompleted || $userid) {

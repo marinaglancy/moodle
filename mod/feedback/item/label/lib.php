@@ -163,10 +163,23 @@ class feedback_item_label extends feedback_item_base {
      * @param mod_feedback_complete_form $form
      */
     public function complete_form_element($item, $form) {
-        $context = $form->get_cm()->context;
-        // TODO this may be a template! See print_item()
+        global $DB;
+        if (!$item->feedback AND $item->template) {
+            // This is a template.
+            $template = $DB->get_record('feedback_template', array('id' => $item->template));
+            if ($template->ispublic) {
+                $context = context_system::instance();
+            } else {
+                $context = context_course::instance($template->course);
+            }
+            $filearea = 'template';
+        } else {
+            // This is a question in the current feedback.
+            $context = $form->get_cm()->context;
+            $filearea = 'item';
+        }
         $output = file_rewrite_pluginfile_urls($item->presentation, 'pluginfile.php',
-                $context->id, 'mod_feedback', 'item', $item->id);
+                $context->id, 'mod_feedback', $filearea, $item->id);
         $formatoptions = array('overflowdiv' => true, 'noclean' => true);
         $output = format_text($output, FORMAT_HTML, $formatoptions);
 

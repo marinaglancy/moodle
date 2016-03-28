@@ -144,7 +144,6 @@ if (!$feedbackcompletion->is_empty() && $cansubmit) {
             ($form->is_validated() || optional_param('gopreviouspage', null, PARAM_RAW))) {
         // Form was submitted (skip validation for "Previous page" button).
         $data = $form->get_submitted_data();
-        //  echo "<pre>";print_r($data);echo "</pre>";exit;
         if (!isset($SESSION->feedback->is_started) OR !$SESSION->feedback->is_started == true) {
             print_error('error', '', $CFG->wwwroot.'/course/view.php?id='.$course->id);
         }

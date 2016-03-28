@@ -34,13 +34,13 @@ list($course, $cm) = get_course_and_cm_from_cmid($id, 'feedback');
 require_course_login($course, true, $cm);
 $feedback = $PAGE->activityrecord;
 
-$feedbackstructure = new mod_feedback_completion($feedback, $cm, $courseid);
+$feedbackcompletion = new mod_feedback_completion($feedback, $cm, $courseid);
 
 $context = context_module::instance($cm->id);
 
-$feedback_complete_cap = $feedbackstructure->can_complete();
+$feedback_complete_cap = $feedbackcompletion->can_complete();
 
-$courseid = $feedbackstructure->get_courseid();
+$courseid = $feedbackcompletion->get_courseid();
 
 if ($course->id == SITEID) {
     $PAGE->set_pagelayout('incourse');
@@ -76,17 +76,7 @@ if ($courseid AND $courseid != SITEID) {
 }
 
 // Trigger module viewed event.
-$event = \mod_feedback\event\course_module_viewed::create(array(
-    'objectid' => $feedback->id,
-    'context' => $context,
-    'anonymous' => ($feedback->anonymous == FEEDBACK_ANONYMOUS_YES),
-    'other' => array(
-        'anonymous' => $feedback->anonymous // Deprecated.
-    )
-));
-//$event->add_record_snapshot('course_modules', $cm);
-$event->add_record_snapshot('course', $course);
-$event->add_record_snapshot('feedback', $feedback);
+$event = \mod_feedback\event\course_module_viewed::create_from_record($feedback, $cm, $course);
 $event->trigger();
 
 /// Print the page header
@@ -174,7 +164,7 @@ if (has_capability('mod/feedback:edititems', $context)) {
     require_once($CFG->libdir . '/filelib.php');
 
     echo $OUTPUT->heading(get_string("page_after_submit", "feedback"), 3);
-    echo $OUTPUT->box($feedbackstructure->page_after_submit(), 'generalbox feedback_after_submit');
+    echo $OUTPUT->box($feedbackcompletion->page_after_submit(), 'generalbox feedback_after_submit');
 }
 
 if (!has_capability('mod/feedback:viewreports', $context) &&
@@ -213,11 +203,11 @@ if ($feedback_complete_cap) {
         exit;
     }
 
-    if ($feedbackstructure->can_submit()) {
+    if ($feedbackcompletion->can_submit()) {
         //if the user is not known so we cannot save the values temporarly
         $completeurl = new moodle_url('/mod/feedback/complete.php',
                 ['id' => $id, 'courseid' => $courseid]);
-        if ($startpage = $feedbackstructure->get_resume_page()) {
+        if ($startpage = $feedbackcompletion->get_resume_page()) {
             $completeurl->param('gopage', $startpage);
             $label = get_string('continue_the_form', 'feedback');
         } else {

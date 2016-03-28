@@ -118,34 +118,6 @@ class mod_feedback_complete_form extends moodleform {
         $this->set_data(array('gopage' => $this->gopage));
     }
 
-    /*
-    public function set_defaults() {
-        // TODO this is dodgy
-        global  $DB;
-        $defaultvalues = array();
-        if ($this->completedtmp) {
-            $sql = "SELECT fi.id, fi.typ, fv.value
-                       FROM {feedback_valuetmp} fv, {feedback_item} fi
-                      WHERE fv.course_id = :courseid
-                            AND fv.completed = :completedid
-                            AND fv.item = fi.id";
-            $params['completedid'] = $this->completedtmp->id;
-            $params['courseid']    = $this->courseid;
-            $params['feedbackid']  = $this->feedback->id;
-
-            $rs = $DB->get_recordset_sql($sql, $params);
-            foreach ($rs as $record) {
-                $defaultvalues[$record->typ . '_' . $record->id] = $record->value;
-            }
-            $rs->close();
-        }
-    }
-     */
-
-    //public function get_completedtmp_id() {
-    //    return isset($this->completedtmp->id) ? $this->completedtmp->id : null;
-    //}
-
     /**
      * This method is called after definition(), data submission and set_data().
      * All form setup that is dependent on form values should go in here.
@@ -168,7 +140,7 @@ class mod_feedback_complete_form extends moodleform {
         $pages = $this->structure->get_pages();
         $gopage = $this->gopage;
         $pageitems = $pages[$gopage];
-        $hasnextpage = $gopage < count($pages) - 1; // Until we complete this page we can not trust get_next_page(). TODO?
+        $hasnextpage = $gopage < count($pages) - 1; // Until we complete this page we can not trust get_next_page().
         $hasprevpage = $gopage && ($this->structure->get_previous_page($gopage, false) !== null);
 
         // Add elements.
@@ -292,8 +264,6 @@ class mod_feedback_complete_form extends moodleform {
             $element->freeze();
         }
 
-        //$element->setLabel($itemclass->get_display_name()); // TODO do I want it?
-
         // Add red asterisks on required fields.
         if ($item->required) {
             $required = '<img class="req" title="'.get_string('requiredelement', 'form').'" alt="'.
@@ -315,11 +285,9 @@ class mod_feedback_complete_form extends moodleform {
     }
 
     protected function add_item_number($item, $element) {
-        static $itemnr = 0; // TODO this is incorrect for complete!
-        if ($item->hasvalue == 1 AND $this->get_feedback()->autonumbering) {
-            $itemnr++;
+        if ($this->get_feedback()->autonumbering && !empty($item->itemnr)) {
             $name = $element->getLabel();
-            $element->setLabel(html_writer::span($itemnr. '.', 'itemnr') . ' ' . $name);
+            $element->setLabel(html_writer::span($item->itemnr. '.', 'itemnr') . ' ' . $name);
         }
     }
 
