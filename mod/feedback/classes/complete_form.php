@@ -40,7 +40,7 @@ class mod_feedback_complete_form extends moodleform {
     const MODE_VIEW_TEMPLATE = 5;
 
     protected $mode;
-    /** @var mod_feedback_structure */
+    /** @var mod_feedback_structure|mod_feedback_completion */
     protected $structure;
     /** @var mod_feedback_completion */
     protected $completion;
@@ -60,7 +60,7 @@ class mod_feedback_complete_form extends moodleform {
     //protected $valuestmp = null;
     //protected $values = null;
 
-    public function __construct($mode, $structure, $id, $customdata = null) {
+    public function __construct($mode, mod_feedback_structure $structure, $id, $customdata = null) {
         $this->mode = $mode;
         $this->structure = $structure;
         $this->gopage = isset($customdata['gopage']) ?
@@ -93,7 +93,8 @@ class mod_feedback_complete_form extends moodleform {
         } else {
             $anonymousmodeinfo = get_string('non_anonymous', 'feedback');
         }
-        if (isloggedin() && !isguestuser() && $this->mode != self::MODE_EDIT && $this->mode != self::MODE_VIEW_TEMPLATE) {
+        if (isloggedin() && !isguestuser() && $this->mode != self::MODE_EDIT && $this->mode != self::MODE_VIEW_TEMPLATE &&
+                    $this->mode != self::MODE_VIEW_RESPONSE) {
             $element = $mform->addElement('static', 'anonymousmode', '',
                     get_string('mode', 'feedback') . ': ' . $anonymousmodeinfo);
             $element->setAttributes($element->getAttributes() + ['class' => 'feedback_mode']);
@@ -111,24 +112,6 @@ class mod_feedback_complete_form extends moodleform {
             $buttonarray[] = &$mform->createElement('cancel');
             $mform->addGroup($buttonarray, 'buttonar', '', array(' '), false);
             $mform->closeHeaderBefore('buttonar');
-        }
-
-        // Get the current completed values.
-        if ($this->mode == self::MODE_COMPLETE) {
-            $this->completion = new mod_feedback_completion($this->structure);
-            /*$this->completedtmp = feedback_get_current_completed_tmp($feedback, $this->structure->get_courseid());
-            if ($this->completedtmp) {
-                $this->valuestmp = $DB->get_records_menu('feedback_valuetmp', ['completed' => $this->completedtmp->id],
-                        '', 'item, value');
-            }*/
-        } else if ($this->mode == self::MODE_VIEW_RESPONSE) {
-            $this->completion = new mod_feedback_completion($this->structure, $this->_customdata['completed']);
-            /*$this->completed = isset($this->_customdata['completed']) ?
-                    $this->_customdata['completed'] : array();
-            if ($this->completed) {
-                $this->values = $DB->get_records_menu('feedback_value', ['completed' => $this->completed->id],
-                        '', 'item, value');
-            }*/
         }
 
         // Set data.
@@ -178,11 +161,15 @@ class mod_feedback_complete_form extends moodleform {
     }
 
     protected function definition_after_data_complete() {
-        $pages = $this->completion->get_pages();
+        if (!$this->structure instanceof mod_feedback_completion) {
+            // We should not really be here but just in case.
+            return;
+        }
+        $pages = $this->structure->get_pages();
         $gopage = $this->gopage;
         $pageitems = $pages[$gopage];
         $hasnextpage = $gopage < count($pages) - 1; // Until we complete this page we can not trust get_next_page(). TODO?
-        $hasprevpage = $gopage && ($this->completion->get_previous_page($gopage, false) !== null);
+        $hasprevpage = $gopage && ($this->structure->get_previous_page($gopage, false) !== null);
 
         // Add elements.
         foreach ($pageitems as $item) {
@@ -227,10 +214,12 @@ class mod_feedback_complete_form extends moodleform {
      * @return string
      */
     public function get_item_value($item) {
-        if ($this->mode == self::MODE_COMPLETE) {
-            return $this->completion->get_values_tmp($item);
-        } else if ($this->mode == self::MODE_VIEW_RESPONSE) {
-            return $this->completion->get_values($item);
+        if ($this->structure instanceof mod_feedback_completion) {
+            if ($this->mode == self::MODE_COMPLETE) {
+                return $this->structure->get_values_tmp($item);
+            } else if ($this->mode == self::MODE_VIEW_RESPONSE) {
+                return $this->structure->get_values($item);
+            }
         }
         return null;
     }
@@ -510,7 +499,7 @@ class mod_feedback_complete_form extends moodleform {
 
         $mform = $this->_form;
 
-        // Add "has required fields" note.
+        // Add "This form has required fields" text in the bottom of the form.
         if (($mform->_required || $this->hasrequired) &&
                 ($this->mode == self::MODE_COMPLETE || $this->mode == self::MODE_PRINT || $this->mode == self::MODE_VIEW_TEMPLATE)) {
             $element = $mform->addElement('static', 'requiredfields', '',

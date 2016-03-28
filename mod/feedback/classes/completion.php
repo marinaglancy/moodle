@@ -31,12 +31,9 @@ defined('MOODLE_INTERNAL') || die();
  * @copyright 2016 Marina Glancy
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class mod_feedback_completion {
-    /** @var mod_feedback_structure */
-    protected $structure;
-    /** @var int */
+class mod_feedback_completion extends mod_feedback_structure {
+    /** @var stdClass */
     protected $completed;
-
     /** @var stdClass */
     protected $completedtmp = null;
     /** @var stdClass[] */
@@ -44,76 +41,49 @@ class mod_feedback_completion {
     /** @var stdClass[] */
     protected $values = null;
 
+    protected $iscompleted = false;
+
 
     /**
      * Constructor
      *
-     * @param stdClass $structure
-     * @param stdClass $completed can be specified when viewing the feedback completed by somebody else
-     */
-    public function __construct($structure, $completed = null) {
-        $this->structure = $structure;
-        $this->completed = $completed;
-    }
-
-    /**
-     * Retrieves a record from 'feedback_completed' table for a given response
-     *
-     * @param stdClass $feedback
+     * @param stdClass $feedback feedback object, in case of the template
+     *     this is the current feedback the template is accessed from
+     * @param cm_info $cm course module object corresponding to the $feedback
+     * @param int $courseid current course (for site feedbacks only)
+     * @param bool $iscompleted has feedback been already completed? If yes either completedid or userid must be specified.
      * @param int $completedid id in the table feedback_completed, may be omitted if userid is specified
      *     but it is highly recommended because the same user may have multiple responses to the same feedback
      *     for different courses
      * @param int $userid id of the user - if specified only non-anonymous replies will be returned. If not
      *     specified only anonymous replies will be returned and the $completedid is mandatory.
-     * @param int $strictness
-     * @return stdClass
      */
-    public static function get_completed($feedback, $completedid, $userid = null, $strictness = IGNORE_MISSING) {
+    public function __construct($feedback, $cm, $courseid, $iscompleted = false, $completedid = null, $userid = null) {
         global $DB;
-        $anonymous = $userid ? FEEDBACK_ANONYMOUS_NO : FEEDBACK_ANONYMOUS_YES;
-        $params = array('feedback' => $feedback->id, 'anonymous_response' => $anonymous);
-        if (!$userid && !$completedid) {
-            throw new coding_exception('Either $completedid or $userid must be specified');
+        parent::__construct($feedback, $cm, $courseid, 0);
+        if ($iscompleted) {
+            // Retrieve information about the completion.
+            $this->iscompleted = true;
+            $params = array('feedback' => $feedback->id);
+            if (!$userid && !$completedid) {
+                throw new coding_exception('Either $completedid or $userid must be specified for completed feedbacks');
+            }
+            if ($completedid) {
+                $params['id'] = $completedid;
+            }
+            if ($userid) {
+                // We must respect the anonymousity of the reply that the user saw when they were completing the feedback,
+                // not the current state that may have been changed later by the teacher.
+                $params['anonymous_response'] = FEEDBACK_ANONYMOUS_NO;
+                $params['userid'] = $userid;
+            }
+            $this->completed = $DB->get_record('feedback_completed', $params, '*', MUST_EXIST);
+            $this->courseid = $this->completed->courseid;
         }
-        if ($completedid) {
-            $params['id'] = $completedid;
-        }
-        if ($userid) {
-            $params['userid'] = $userid;
-        }
-        return $DB->get_record('feedback_completed', $params, '*', $strictness);
     }
 
-    /**
-     * Returns feedback structre
-     * @return mod_feedback_structure
-     */
-    public function get_structure() {
-        return $this->structure;
-    }
-
-    /**
-     * Current feedback
-     * @return stdClass
-     */
-    public function get_feedback() {
-        return $this->structure->get_feedback();
-    }
-
-    /**
-     * Current course module
-     * @return stdClass
-     */
-    public function get_cm() {
-        return $this->structure->get_cm();
-    }
-
-    /**
-     * Id of the current course (for site feedbacks only)
-     * @return stdClass
-     */
-    public function get_courseid() {
-        $this->structure->get_courseid();
+    public function get_completed() {
+        return $this->completed;
     }
 
     /**
@@ -170,7 +140,7 @@ class mod_feedback_completion {
         if (empty($item->dependitem)) {
             return true;
         }
-        $allitems = $this->structure->get_items();
+        $allitems = $this->get_items();
         // TODO check that dependitem is BEFORE $item and there is a pagebreak between them.
         if (isset($allitems[$item->dependitem])) {
             $completedtmp = $this->get_current_completed_tmp();
@@ -219,7 +189,7 @@ class mod_feedback_completion {
 
     public function get_pages() {
         $pages = [[]]; // The first page always exists.
-        $items = $this->structure->get_items();
+        $items = $this->get_items();
         foreach ($items as $item) {
             if ($item->typ === 'pagebreak') {
                 $pages[] = [];
@@ -314,12 +284,12 @@ class mod_feedback_completion {
      * Page index to resume the feedback
      *
      * When user abandones answering feedback and then comes back to it we should send him
-     * to the first page after the last page he completed. This can be
+     * to the first page after the last page he fully completed.
      * @return int
      */
     public function get_resume_page() {
         list($lastcompleted, $firstincompleted) = $this->get_last_completed_page();
-        $resumepage = $this->get_next_page($lastcompleted === null ? -1 : $lastcompleted, false);
+        return $lastcompleted === null ? 0 : $this->get_next_page($lastcompleted, false);
     }
 
     /**
@@ -400,5 +370,151 @@ class mod_feedback_completion {
             }
         }
         return $items;
+    }
+
+    /**
+     * Creates a new record in the 'feedback_completedtmp' table for the current user/guest session
+     *
+     * @param stdClass $feedback record from db table 'feedback'
+     * @param int $courseid current course (only for site feedbacks)
+     * @return stdClass record from feedback_completedtmp or false if not found
+     */
+    protected function create_current_completed_tmp() {
+        global $USER, $DB;
+        $record = (object)['feedback' => $this->feedback->id];
+        if ($this->get_courseid()) {
+            $record->courseid = $this->get_courseid();
+        }
+        if (isloggedin() && !isguestuser()) {
+            $record->userid = $USER->id;
+        } else {
+            $record->guestid = sesskey();
+        }
+        $record->timemodified = time();
+        $record->anonymous_response = $this->feedback->anonymous;
+        $id = $DB->insert_record('feedback_completedtmp', $record);
+        $this->completedtmp = $DB->get_record('feedback_completedtmp', ['id' => $id]);
+        return $this->completedtmp;
+    }
+
+    public function save_response_tmp($data) {
+        global $DB;
+        if (!$completedtmp = $this->get_current_completed_tmp()) {
+            $completedtmp = $this->create_current_completed_tmp();
+        } else {
+            $currentime = time();
+            $DB->update_record('feedback_completedtmp',
+                    ['id' => $completedtmp->id, 'timemodified' => $currentime]);
+            $completedtmp->timemodified = $currentime;
+        }
+
+        // Find all existing values.
+        $existingvalues = $DB->get_records_menu('feedback_valuetmp',
+                ['completed' => $completedtmp->id], '', 'item, id');
+
+        // Loop through all feedback items and save the ones that are present in $data.
+        $allitems = $this->get_items();
+        foreach ($allitems as $item) {
+            if (!$item->hasvalue) {
+                continue;
+            }
+            $keyname = $item->typ . '_' . $item->id;
+            if (!isset($data->$keyname)) {
+                // This item is either on another page or dependency was not met - nothing to save.
+                continue;
+            }
+
+            $newvalue = ['item' => $item->id, 'completed' => $completedtmp->id, 'course_id' => $completedtmp->courseid];
+
+            // Convert the value to string that can be stored in 'feedback_valuetmp' or 'feedback_value'.
+            $itemobj = feedback_get_item_class($item->typ);
+            $newvalue['value'] = $itemobj->create_value($data->$keyname);
+
+            // Update or insert the value in the 'feedback_valuetmp' table.
+            if (array_key_exists($item->id, $existingvalues)) {
+                $newvalue['id'] = $existingvalues[$item->id];
+                $DB->update_record('feedback_valuetmp', $newvalue);
+            } else {
+                $DB->insert_record('feedback_valuetmp', $newvalue);
+            }
+        }
+
+        // Reset valuestmp cache.
+        $this->valuestmp = null;
+    }
+
+    public function save_response() {
+        // TODO move to this class
+        global $USER, $SESSION, $DB;
+
+        $feedbackcompleted = $this->find_last_completed();
+        $feedbackcompletedtmp = $this->get_current_completed_tmp();
+
+        if (feedback_check_is_switchrole()) {
+            // We do not actually save anything if the role is switched, just delete temporary values.
+            feedback_delete_completedtmp($feedbackcompletedtmp->id); // TODO move to this class
+            return;
+        }
+
+        // Save values.
+        $completedid = feedback_save_tmp_values($feedbackcompletedtmp, $feedbackcompleted);
+        $this->completed = $DB->get_record('feedback_completed', array('id' => $completedid));
+
+        // Send email.
+        if ($this->feedback->anonymous == FEEDBACK_ANONYMOUS_NO) {
+            feedback_send_email($this->cm, $this->feedback, $this->cm->get_course(), $USER);
+        } else {
+            feedback_send_email_anonym($this->cm, $this->feedback, $this->cm->get_course());
+        }
+
+        unset($SESSION->feedback->is_started);
+
+        // Update completion state
+        $completion = new completion_info($this->cm->get_course());
+        if (isloggedin() && !isguestuser() && $completion->is_enabled($this->cm) && $this->feedback->completionsubmit) {
+            $completion->update_state($this->cm, COMPLETION_COMPLETE);
+        }
+    }
+
+    /**
+     * Retrieves the last completion record for the current user
+     *
+     * @return stdClass record from feedback_completed or false if not found
+     */
+    protected function find_last_completed() {
+        global $USER, $DB;
+        if (isloggedin() || isguestuser()) {
+            // Not possible to retrieve completed feedback for guests.
+            return false;
+        }
+        if ($this->is_anonymous()) {
+            // Not possible to retrieve completed anonymous feedback.
+            return false;
+        }
+        $params = array('feedback' => $this->feedback->id, 'userid' => $USER->id);
+        if ($this->get_courseid()) {
+            $params['courseid'] = $this->get_courseid();
+        }
+        $this->completed = $DB->get_record('feedback_completed', $params);
+        return $this->completed;
+    }
+
+    public function can_complete() {
+        global $CFG;
+
+        $context = context_module::instance($this->cm->id);
+        if (has_capability('mod/feedback:complete', $context)) {
+            return true;
+        }
+
+        if (!empty($CFG->feedback_allowfullanonymous)
+                    AND $this->feedback->course == SITEID
+                    AND $this->feedback->anonymous == FEEDBACK_ANONYMOUS_YES
+                    AND (!isloggedin() OR isguestuser())) {
+            // Guests are allowed to complete fully anonymous feedback without having 'mod/feedback:complete' capability.
+            return true;
+        }
+
+        return false;
     }
 }

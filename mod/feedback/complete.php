@@ -87,8 +87,7 @@ $PAGE->set_url('/mod/feedback/complete.php', $urlparams);
 require_course_login($course, true, $cm);
 $PAGE->set_activity_record($feedback);
 
-$feedbackstructure = new mod_feedback_structure($feedback, $cm, $courseid);
-$feedbackcompletion = new mod_feedback_completion($feedbackstructure);
+$feedbackcompletion = new mod_feedback_completion($feedback, $cm, $courseid);
 
 //check whether the given courseid exists
 if ($courseid AND $courseid != SITEID) {
@@ -114,7 +113,7 @@ if ($course->id == SITEID) {
 }
 
 //check, if the feedback is open (timeopen, timeclose)
-if (!$feedbackstructure->is_open()) {
+if (!$feedbackcompletion->is_open()) {
     echo $OUTPUT->header();
     echo $OUTPUT->heading(format_string($feedback->name));
     echo $OUTPUT->box_start('generalbox boxaligncenter');
@@ -132,12 +131,12 @@ if (isloggedin() && !isguestuser()) {
 }
 
 // Check if user is prevented from re-submission.
-$cansubmit = $feedbackstructure->can_submit();
+$cansubmit = $feedbackcompletion->can_submit();
 
 // Initialise the form processing feedback completion.
-if (!$feedbackstructure->is_empty() && $cansubmit) {
-    $form = new mod_feedback_complete_form(mod_feedback_complete_form::MODE_COMPLETE, 
-            $feedbackstructure, 'feedback_complete_form', array('gopage' => $gopage));
+if (!$feedbackcompletion->is_empty() && $cansubmit) {
+    $form = new mod_feedback_complete_form(mod_feedback_complete_form::MODE_COMPLETE,
+            $feedbackcompletion, 'feedback_complete_form', array('gopage' => $gopage));
     if ($form->is_cancelled()) {
         // Form was cancelled - return to the course page.
         redirect(course_get_url($courseid ?: $course));
@@ -149,26 +148,19 @@ if (!$feedbackstructure->is_empty() && $cansubmit) {
         if (!isset($SESSION->feedback->is_started) OR !$SESSION->feedback->is_started == true) {
             print_error('error', '', $CFG->wwwroot.'/course/view.php?id='.$course->id);
         }
-        $completedid = feedback_save_response_tmp($feedback, $courseid, $data);
-        if (!empty($data->savevalues)) {
-            feedback_save_response($course, $cm, $feedback, $courseid, $completedid);
-            if (!$feedback->page_after_submit) {
-                \core\notification::success(get_string('entries_saved', 'feedback'));
-            }
-            $savereturn = 'saved'; // TODO notification!
-            //echo "savereturn = $savereturn<br>";
-            //$savevalues = true;
-        } else {
-            $completion = new mod_feedback_completion($feedbackstructure);
-            if (!empty($data->gonextpage)) {
-                // TODO(later) smart calc next page
-                $nextpage = $completion->get_next_page($gopage) ?: $gopage + 1; // TODO?
+        $feedbackcompletion->save_response_tmp($data);
+        if (!empty($data->savevalues) || !empty($data->gonextpage)) {
+            if (($nextpage = $feedbackcompletion->get_next_page($gopage)) !== null) {
                 redirect(new moodle_url($PAGE->url, array('gopage' => $nextpage)));
-            } else if (!empty($data->gopreviouspage)) {
-                // TODO(later) smart calc next page
-                $prevpage = $completion->get_previous_page($gopage);
-                redirect(new moodle_url($PAGE->url, array('gopage' => intval($prevpage))));
+            } else {
+                $feedbackcompletion->save_response();
+                if (!$feedback->page_after_submit) {
+                    \core\notification::success(get_string('entries_saved', 'feedback'));
+                }
             }
+        } else if (!empty($data->gopreviouspage)) {
+            $prevpage = $feedbackcompletion->get_previous_page($gopage);
+            redirect(new moodle_url($PAGE->url, array('gopage' => intval($prevpage))));
         }
     }
 }
@@ -180,13 +172,13 @@ $strfeedback  = get_string("modulename", "feedback");
 echo $OUTPUT->header();
 echo $OUTPUT->heading(format_string($feedback->name));
 
-if ($feedbackstructure->is_empty()) {
+if ($feedbackcompletion->is_empty()) {
     \core\notification::error(get_string('no_items_available_yet', 'feedback'));
 } else if ($cansubmit) {
-    if (!empty($data->savevalues)) {
+    if (!empty($data->savevalues) || !empty($data->gonextpage)) {
         // Display information after the submit.
         if ($feedback->page_after_submit) {
-            echo $OUTPUT->box($feedbackstructure->page_after_submit(),
+            echo $OUTPUT->box($feedbackcompletion->page_after_submit(),
                     'generalbox boxaligncenter boxwidthwide');
         }
         if (feedback_can_view_analysis($feedback, $context, $courseid)) {

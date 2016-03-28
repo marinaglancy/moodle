@@ -30,48 +30,19 @@ $courseid = optional_param('courseid', false, PARAM_INT);
 
 $current_tab = 'view';
 
-if (! $cm = get_coursemodule_from_id('feedback', $id)) {
-    print_error('invalidcoursemodule');
-}
+list($course, $cm) = get_course_and_cm_from_cmid($id, 'feedback');
+require_course_login($course, true, $cm);
+$feedback = $PAGE->activityrecord;
 
-if (! $course = $DB->get_record("course", array("id"=>$cm->course))) {
-    print_error('coursemisconf');
-}
-
-if (! $feedback = $DB->get_record("feedback", array("id"=>$cm->instance))) {
-    print_error('invalidcoursemodule');
-}
+$feedbackstructure = new mod_feedback_completion($feedback, $cm, $courseid);
 
 $context = context_module::instance($cm->id);
 
-$feedback_complete_cap = false;
+$feedback_complete_cap = $feedbackstructure->can_complete();
 
-if (has_capability('mod/feedback:complete', $context)) {
-    $feedback_complete_cap = true;
-}
-
-if (!empty($CFG->feedback_allowfullanonymous)
-            AND $course->id == SITEID
-            AND $feedback->anonymous == FEEDBACK_ANONYMOUS_YES
-            AND (!isloggedin() OR isguestuser())) {
-    // Guests are allowed to complete fully anonymous feedback without having 'mod/feedback:complete' capability.
-    $feedback_complete_cap = true;
-}
-
-//check whether the feedback is located and! started from the mainsite
-if ($course->id != SITEID) {
-    $courseid = false;
-} else if (!$courseid) {
-    $courseid = SITEID;
-}
-
-require_course_login($course, true, $cm);
-$PAGE->set_activity_record($feedback);
-$feedbackstructure = new mod_feedback_structure($feedback, $PAGE->cm, $courseid);
+$courseid = $feedbackstructure->get_courseid();
 
 if ($course->id == SITEID) {
-    $PAGE->set_context($context);
-    $PAGE->set_cm($cm, $course);
     $PAGE->set_pagelayout('incourse');
 }
 $PAGE->set_url('/mod/feedback/view.php', array('id' => $cm->id));
@@ -99,7 +70,6 @@ if ($course->id == SITEID AND !has_capability('mod/feedback:edititems', $context
 if ($courseid AND $courseid != SITEID) {
     if ($course2 = $DB->get_record('course', array('id'=>$courseid))) {
         require_course_login($course2); //this overwrites the object $course :-(
-        $course = $DB->get_record("course", array("id"=>$cm->course)); // the workaround
     } else {
         print_error('invalidcourseid');
     }
@@ -114,14 +84,12 @@ $event = \mod_feedback\event\course_module_viewed::create(array(
         'anonymous' => $feedback->anonymous // Deprecated.
     )
 ));
-$event->add_record_snapshot('course_modules', $cm);
+//$event->add_record_snapshot('course_modules', $cm);
 $event->add_record_snapshot('course', $course);
 $event->add_record_snapshot('feedback', $feedback);
 $event->trigger();
 
 /// Print the page header
-$strfeedbacks = get_string("modulenameplural", "feedback");
-$strfeedback  = get_string("modulename", "feedback");
 echo $OUTPUT->header();
 
 /// Print the main part of the page
@@ -247,30 +215,18 @@ if ($feedback_complete_cap) {
 
     if ($feedbackstructure->can_submit()) {
         //if the user is not known so we cannot save the values temporarly
-        if (!isloggedin() or isguestuser()) {
-            $guestid = sesskey();
+        $completeurl = new moodle_url('/mod/feedback/complete.php',
+                ['id' => $id, 'courseid' => $courseid]);
+        if ($startpage = $feedbackstructure->get_resume_page()) {
+            $completeurl->param('gopage', $startpage);
+            $label = get_string('continue_the_form', 'feedback');
         } else {
-            $guestid = false;
+            $label = get_string('complete_the_form', 'feedback');
         }
-        $url_params = array('id'=>$id, 'courseid'=>$courseid, 'gopage'=>0);
-        $completeurl = new moodle_url('/mod/feedback/complete.php', $url_params);
-
-        $feedbackcompletedtmp = feedback_get_current_completed_tmp($feedback, $courseid);
-        if ($feedbackcompletedtmp) {
-            if ($startpage = feedback_get_page_to_continue($feedback->id, $courseid, $guestid)) {
-                $completeurl->param('gopage', $startpage);
-            }
-            echo '<a href="'.$completeurl->out().'">'.get_string('continue_the_form', 'feedback').'</a>';
-        } else {
-            echo '<a href="'.$completeurl->out().'">'.get_string('complete_the_form', 'feedback').'</a>';
-        }
+        echo html_writer::link($completeurl, $label);
     } else {
         echo $OUTPUT->notification(get_string('this_feedback_is_already_submitted', 'feedback'));
-        if ($courseid) {
-            echo $OUTPUT->continue_button($CFG->wwwroot.'/course/view.php?id='.$courseid);
-        } else {
-            echo $OUTPUT->continue_button($CFG->wwwroot.'/course/view.php?id='.$course->id);
-        }
+        $OUTPUT->continue_button(course_get_url($courseid ?: $course->id));
     }
     echo $OUTPUT->box_end();
 }
