@@ -151,7 +151,7 @@ class mod_feedback_responses_table extends table_sql {
                 AND c.feedback = :instance
                 AND u.deleted = :notdeleted';
 
-        $group = groups_get_activity_group($this->cm);
+        $group = groups_get_activity_group($this->cm, true);
         if ($group) {
             $from .= ', {groups_members} g';
             $where .= ' AND g.groupid = :group AND g.userid = c.userid';
