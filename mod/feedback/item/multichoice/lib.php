@@ -25,13 +25,6 @@ define('FEEDBACK_MULTICHOICE_HIDENOSELECT', 'h');
 
 class feedback_item_multichoice extends feedback_item_base {
     protected $type = "multichoice";
-    private $commonparams;
-    private $item_form;
-    private $item;
-
-    public function init() {
-
-    }
 
     public function build_editform($item, $feedback, $cm) {
         global $DB, $CFG;
@@ -75,22 +68,6 @@ class feedback_item_multichoice extends feedback_item_base {
         $this->item_form = new feedback_multichoice_form('edit_item.php', $customdata);
     }
 
-    //this function only can used after the call of build_editform()
-    public function show_editform() {
-        $this->item_form->display();
-    }
-
-    public function is_cancelled() {
-        return $this->item_form->is_cancelled();
-    }
-
-    public function get_data() {
-        if ($this->item = $this->item_form->get_data()) {
-            return true;
-        }
-        return false;
-    }
-
     public function save_item() {
         global $DB;
 
@@ -119,7 +96,16 @@ class feedback_item_multichoice extends feedback_item_base {
 
     //gets an array with three values(typ, name, XXX)
     //XXX is an object with answertext, answercount and quotient
-    public function get_analysed($item, $groupid = false, $courseid = false) {
+
+    /**
+     * Helper function for collected data, both for analysis page and export to excel
+     *
+     * @param $item the db-object from feedback_item
+     * @param $groupid
+     * @param $courseid
+     * @return array
+     */
+    protected function get_analysed($item, $groupid = false, $courseid = false) {
         $info = $this->get_info($item);
 
         $analysed_item = array();
@@ -299,311 +285,99 @@ class feedback_item_multichoice extends feedback_item_base {
         return $row_offset;
     }
 
-    /**
-     * print the item at the edit-page of feedback
-     *
-     * @global object
-     * @param object $item
-     * @return void
-     */
-    public function print_item_preview($item) {
-        global $OUTPUT, $DB;
+    protected function get_options($item) {
         $info = $this->get_info($item);
-        $align = right_to_left() ? 'right' : 'left';
-
         $presentation = explode (FEEDBACK_MULTICHOICE_LINE_SEP, $info->presentation);
-        $strrequiredmark = '<img class="req" title="'.get_string('requiredelement', 'form').'" alt="'.
-            get_string('requiredelement', 'form').'" src="'.$OUTPUT->pix_url('req') .'" />';
-
-        //test if required and no value is set so we have to mark this item
-        //we have to differ check and the other subtypes
-        $requiredmark = ($item->required == 1) ? $strrequiredmark : '';
-
-        //print the question and label
-        echo '<div class="feedback_item_label_'.$align.'">';
-        if ($info->subtype == 'd') {
-            echo '<label for="'. $item->typ . '_' . $item->id .'">';
+        $options = array();
+        foreach ($presentation as $idx => $optiontext) {
+            $options[$idx+1] = format_text($optiontext, FORMAT_HTML, array('noclean' => true, 'para' => false));
         }
-        if (strval($item->label) !== '') {
-            echo '('. format_string($item->label).') ';
-        }
-        echo format_text($item->name . $requiredmark, FORMAT_HTML, array('noclean' => true, 'para' => false));
-        if ($item->dependitem) {
-            if ($dependitem = $DB->get_record('feedback_item', array('id'=>$item->dependitem))) {
-                echo ' <span class="feedback_depend">';
-                echo '('.format_string($dependitem->label).'-&gt;'.$item->dependvalue.')';
-                echo '</span>';
-            }
-        }
-        if ($info->subtype == 'd') {
-            echo '</label>';
-        }
-        echo '</div>';
-
-        //print the presentation
-        echo '<div class="feedback_item_presentation_'.$align.'">';
-        $index = 1;
-        $checked = '';
-        if ($info->subtype == 'r' || $info->subtype == 'c') {
-            // if (r)adio buttons or (c)heckboxes
-            echo '<fieldset>';
-            echo '<ul>';
+        if ($info->subtype === 'r' && !$this->hidenoselect($item)) {
+            $options = array(0 => get_string('not_selected', 'feedback')) + $options;
         }
 
-        if ($info->horizontal) {
-            $hv = 'h';
-        } else {
-            $hv = 'v';
-        }
-
-        if ($info->subtype == 'r' AND !$this->hidenoselect($item)) {
-        //print the "not_selected" item on radiobuttons
-        ?>
-        <li class="feedback_item_radio_<?php echo $hv.'_'.$align;?>">
-            <span class="feedback_item_radio_<?php echo $hv.'_'.$align;?>">
-                <?php
-                    echo '<input type="radio" '.
-                            'name="'.$item->typ.'_'.$item->id.'[]" '.
-                            'id="'.$item->typ.'_'.$item->id.'_xxx" '.
-                            'value="" checked="checked" />';
-                ?>
-            </span>
-            <span class="feedback_item_radiolabel_<?php echo $hv.'_'.$align;?>">
-                <label for="<?php echo $item->typ . '_' . $item->id.'_xxx';?>">
-                    <?php print_string('not_selected', 'feedback');?>
-                </label>
-            </span>
-        </li>
-        <?php
-        }
-
-        switch($info->subtype) {
-            case 'r':
-                $this->print_item_radio($presentation, $item, false, $info, $align);
-                break;
-            case 'c':
-                $this->print_item_check($presentation, $item, false, $info, $align);
-                break;
-            case 'd':
-                $this->print_item_dropdown($presentation, $item, false, $info, $align);
-                break;
-        }
-        if ($info->subtype == 'r' || $info->subtype == 'c') {
-            // if (r)adio buttons or (c)heckboxes
-            echo '</ul>';
-            echo '</fieldset>';
-        }
-        echo '</div>';
+        return $options;
     }
 
     /**
-     * print the item at the complete-page of feedback
+     * Adds an input element to the complete form
      *
-     * @global object
-     * @param object $item
-     * @param string $value
-     * @param bool $highlightrequire
-     * @return void
+     * This element has many options - it can be displayed as group or radio elements,
+     * group of checkboxes or a dropdown list.
+     *
+     * @param stdClass $item
+     * @param mod_feedback_complete_form $form
      */
-    public function print_item_complete($item, $value = null, $highlightrequire = false) {
-        global $OUTPUT;
+    public function complete_form_element($item, $form) {
         $info = $this->get_info($item);
-        $align = right_to_left() ? 'right' : 'left';
+        $name = $this->get_display_name($item);
+        $class = 'multichoice-' . $info->subtype;
+        $inputname = $item->typ . '_' . $item->id ;
+        $options = $this->get_options($item);
+        $separator = !empty($info->horizontal) ? ' ' : '<br>';
 
-        if ($value == null) {
-            $value = array();
-        }
-        $presentation = explode (FEEDBACK_MULTICHOICE_LINE_SEP, $info->presentation);
-        $strrequiredmark = '<img class="req" title="'.get_string('requiredelement', 'form').'" alt="'.
-            get_string('requiredelement', 'form').'" src="'.$OUTPUT->pix_url('req') .'" />';
-
-        //test if required and no value is set so we have to mark this item
-        //we have to differ check and the other subtypes
-        if (is_array($value)) {
-            $values = $value;
-        } else {
-            $values = explode(FEEDBACK_MULTICHOICE_LINE_SEP, $value);
-        }
-        $requiredmark = ($item->required == 1) ? $strrequiredmark : '';
-
-        //print the question and label
-        $inputname = $item->typ . '_' . $item->id;
-        echo '<div class="feedback_item_label_'.$align.'">';
-        if ($info->subtype == 'd') {
-            echo '<label for="'. $inputname .'">';
-            echo format_text($item->name . $requiredmark, FORMAT_HTML, array('noclean' => true, 'para' => false));
-            if ($highlightrequire AND $item->required AND (count($values) == 0 OR $values[0] == '' OR $values[0] == 0)) {
-                echo '<br class="error"><span id="id_error_'.$inputname.'" class="error"> '.get_string('err_required', 'form').
-                    '</span><br id="id_error_break_'.$inputname.'" class="error" >';
+        if ($info->subtype === 'd' || ($info->subtype === 'r' && $form->is_frozen())) {
+            // Display as a dropdown in the complete form or a single value in the response view.
+            $el = $form->add_form_element($item,
+                    ['select', $inputname.'[0]', $name, array('' => '') + $options, array('class' => $class)]);
+        } else if ($info->subtype === 'c' && $form->is_frozen()) {
+            // Display list of checkbox values in the response view.
+            $objs = [];
+            foreach (explode(FEEDBACK_MULTICHOICE_LINE_SEP, $form->get_item_value($item)) as $v) {
+                $objs[] = ['static', $inputname."[$v]", '', isset($options[$v]) ? $options[$v] : ''];
             }
-            echo '</label>';
+            $el = $form->add_form_group_element($item, 'group_'.$inputname, $name, $objs, $separator, $class);
         } else {
-            echo format_text($item->name . $requiredmark, FORMAT_HTML, array('noclean' => true, 'para' => false));
-            if ($highlightrequire AND $item->required AND (count($values) == 0 OR $values[0] == '' OR $values[0] == 0)) {
-                echo '<br class="error"><span id="id_error_'.$inputname.'" class="error"> '.get_string('err_required', 'form').
-                    '</span><br id="id_error_break_'.$inputname.'" class="error" >';
-            }
-        }
-        echo '</div>';
-
-        //print the presentation
-        echo '<div class="feedback_item_presentation_'.$align.'">';
-
-        if ($info->subtype == 'r' || $info->subtype == 'c') {
-            // if (r)adio buttons or (c)heckboxes
-            echo '<fieldset>';
-            echo '<ul>';
-        }
-        if ($info->horizontal) {
-            $hv = 'h';
-        } else {
-            $hv = 'v';
-        }
-        //print the "not_selected" item on radiobuttons
-        if ($info->subtype == 'r' AND !$this->hidenoselect($item)) {
-        ?>
-            <li class="feedback_item_radio_<?php echo $hv.'_'.$align;?>">
-                <span class="feedback_item_radio_<?php echo $hv.'_'.$align;?>">
-                    <?php
-                    $checked = '';
-                    // if (!$value) {
-                        // $checked = 'checked="checked"';
-                    // }
-                    if (count($values) == 0 OR $values[0] == '' OR $values[0] == 0) {
-                        $checked = 'checked="checked"';
+            // Display group or radio or checkbox elements.
+            $tmpvalue = $form->get_item_value($item);
+            $class .= ' multichoice-' . ($info->horizontal ? 'horizontal' : 'vertical');
+            $objs = [];
+            if ($info->subtype === 'c') {
+                // Checkboxes.
+                $objs[] = ['hidden', $inputname.'[0]', 0];
+                foreach ($options as $idx => $label) {
+                    $objs[] = ['advcheckbox', $inputname.'['.$idx.']', '', $label, null, array(0, $idx)];
+                }
+                $el = $form->add_form_group_element($item, 'group_'.$inputname, $name, $objs, $separator, $class);
+                if ($tmpvalue) {
+                    foreach (explode(FEEDBACK_MULTICHOICE_LINE_SEP, $tmpvalue) as $v) {
+                        $form->set_element_default($inputname.'['.$v.']', $v);
                     }
-                    echo '<input type="radio" '.
-                            'name="'.$item->typ.'_'.$item->id.'[]" '.
-                            'id="'.$item->typ.'_'.$item->id.'_xxx" '.
-                            'value="" '.$checked.' />';
-                    ?>
-                </span>
-                <span class="feedback_item_radiolabel_<?php echo $hv.'_'.$align;?>">
-                    <label for="<?php echo $item->typ.'_'.$item->id.'_xxx';?>">
-                        <?php print_string('not_selected', 'feedback');?>
-                    </label>
-                </span>
-            </li>
-        <?php
-        }
-
-        switch($info->subtype) {
-            case 'r':
-                $this->print_item_radio($presentation, $item, $value, $info, $align);
-                break;
-            case 'c':
-                $this->print_item_check($presentation, $item, $value, $info, $align);
-                break;
-            case 'd':
-                $this->print_item_dropdown($presentation, $item, $value, $info, $align);
-                break;
-        }
-        if ($info->subtype == 'r' || $info->subtype == 'c') {
-            // if (r)adio buttons or (c)heckboxes
-            echo '</ul>';
-            echo '</fieldset>';
-        }
-        echo '</div>';
-    }
-
-    /**
-     * print the item at the complete-page of feedback
-     *
-     * @global object
-     * @param object $item
-     * @param string $value
-     * @return void
-     */
-    public function print_item_show_value($item, $value = null) {
-        global $OUTPUT;
-        $info = $this->get_info($item);
-        $align = right_to_left() ? 'right' : 'left';
-
-        if ($value == null) {
-            $value = array();
-        }
-
-        $presentation = explode (FEEDBACK_MULTICHOICE_LINE_SEP, $info->presentation);
-
-        //test if required and no value is set so we have to mark this item
-        //we have to differ check and the other subtypes
-        if ($info->subtype == 'c') {
-            if (is_array($value)) {
-                $values = $value;
+                }
             } else {
-                $values = explode(FEEDBACK_MULTICHOICE_LINE_SEP, $value);
-            }
-        }
-        $requiredmark = '';
-        if ($item->required == 1) {
-            $requiredmark = '<img class="req" title="'.get_string('requiredelement', 'form').'" alt="'.
-                get_string('requiredelement', 'form').'" src="'.$OUTPUT->pix_url('req') .'" />';
-        }
-
-        //print the question and label
-        echo '<div class="feedback_item_label_'.$align.'">';
-        if (strval($item->label) !== '') {
-            echo '('. format_string($item->label).') ';
-        }
-        echo format_text($item->name . $requiredmark, FORMAT_HTML, array('noclean' => true, 'para' => false));
-        echo '</div>';
-
-        //print the presentation
-        echo '<div class="feedback_item_presentation_'.$align.'">';
-        $index = 1;
-        if ($info->subtype == 'c') {
-            echo $OUTPUT->box_start('generalbox boxalign'.$align);
-            foreach ($presentation as $pres) {
-                foreach ($values as $val) {
-                    if ($val == $index) {
-                        echo '<div class="feedback_item_multianswer">';
-                        echo format_text($pres, FORMAT_HTML, array('noclean' => true, 'para' => false));
-                        echo '</div>';
-                        break;
-                    }
+                // Radio.
+                foreach ($options as $idx => $label) {
+                    $objs[] = ['radio', $inputname.'[0]', '', $label, $idx];
                 }
-                $index++;
-            }
-            echo $OUTPUT->box_end();
-        } else {
-            foreach ($presentation as $pres) {
-                if ($value == $index) {
-                    echo $OUTPUT->box_start('generalbox boxalign'.$align);
-                    echo format_text($pres, FORMAT_HTML, array('noclean' => true, 'para' => false));
-                    echo $OUTPUT->box_end();
-                    break;
+                $el = $form->add_form_group_element($item, 'group_'.$inputname, $name, $objs, $separator, $class);
+                if ($tmpvalue) {
+                    $form->set_element_default($inputname.'[0]', $tmpvalue);
                 }
-                $index++;
+            }
+
+            // Process 'required' rule.
+            if ($item->required) {
+                $form->add_validation_rule(function($values, $files) use ($item) {
+                    $inputname = $item->typ . '_' . $item->id;
+                    return empty($values[$inputname]) || !array_filter($values[$inputname]) ?
+                        array('group_' . $inputname => get_string('required')) : true;
+                });
             }
         }
-        echo '</div>';
     }
 
-    public function check_value($value, $item) {
-        $info = $this->get_info($item);
-
-        if ($item->required != 1) {
-            return true;
-        }
-
-        if (empty($value) OR !is_array($value) OR !array_filter($value)) {
-            return false;
-        }
-
-        return true;
+    public function create_value($value) {
+        $value = array_unique(array_filter($value));
+        return join(FEEDBACK_MULTICHOICE_LINE_SEP, $value);
     }
 
-    public function create_value($data) {
-        $vallist = $data;
-        if (is_array($vallist)) {
-            $vallist = array_unique(array_filter($vallist));
-        }
-        return trim($this->item_array_to_string($vallist));
-    }
-
-    //compares the dbvalue with the dependvalue
-    //dbvalue is the number of one selection
-    //dependvalue is the presentation of one selection
+    /**
+     * Compares the dbvalue with the dependvalue
+     *
+     * @param stdClass $item
+     * @param string $dbvalue is the value input by user in the format as it is stored in the db
+     * @param string $dependvalue is the value that it needs to be compared against
+     */
     public function compare_value($item, $dbvalue, $dependvalue) {
 
         if (is_array($dbvalue)) {
@@ -624,23 +398,6 @@ class feedback_item_multichoice extends feedback_item_base {
             $index++;
         }
         return false;
-    }
-
-    public function get_presentation($data) {
-        $present = str_replace("\n", FEEDBACK_MULTICHOICE_LINE_SEP, trim($data->itemvalues));
-        if (!isset($data->subtype)) {
-            $subtype = 'r';
-        } else {
-            $subtype = substr($data->subtype, 0, 1);
-        }
-        if (isset($data->horizontal) AND $data->horizontal == 1 AND $subtype != 'd') {
-            $present .= FEEDBACK_MULTICHOICE_ADJUST_SEP.'1';
-        }
-        return $subtype.FEEDBACK_MULTICHOICE_TYPE_SEP.$present;
-    }
-
-    public function get_hasvalue() {
-        return 1;
     }
 
     public function get_info($item) {
@@ -671,163 +428,6 @@ class feedback_item_multichoice extends feedback_item_base {
         return $info;
     }
 
-    private function item_array_to_string($value) {
-        if (!is_array($value)) {
-            return $value;
-        }
-        if (empty($value)) {
-            return '0';
-        }
-        $retval = '';
-        $arrvals = array_values($value);
-        $arrvals = clean_param_array($arrvals, PARAM_INT);  //prevent sql-injection
-        $retval = $arrvals[0];
-        $sizeofarrvals = count($arrvals);
-        for ($i = 1; $i < $sizeofarrvals; $i++) {
-            $retval .= FEEDBACK_MULTICHOICE_LINE_SEP.$arrvals[$i];
-        }
-        return $retval;
-    }
-
-    private function print_item_radio($presentation, $item, $value, $info, $align) {
-        $index = 1;
-        $checked = '';
-
-        if (is_array($value)) {
-            $values = $value;
-        } else {
-            $values = array($value);
-        }
-
-        if ($info->horizontal) {
-            $hv = 'h';
-        } else {
-            $hv = 'v';
-        }
-
-        foreach ($presentation as $radio) {
-            foreach ($values as $val) {
-                if ($val == $index) {
-                    $checked = 'checked="checked"';
-                    break;
-                } else {
-                    $checked = '';
-                }
-            }
-            $inputname = $item->typ . '_' . $item->id;
-            $inputid = $inputname.'_'.$index;
-        ?>
-            <li class="feedback_item_radio_<?php echo $hv.'_'.$align;?>">
-                <span class="feedback_item_radio_<?php echo $hv.'_'.$align;?>">
-                    <?php
-                        echo '<input type="radio" '.
-                                'name="'.$inputname.'[]" '.
-                                'id="'.$inputid.'" '.
-                                'value="'.$index.'" '.$checked.' />';
-                    ?>
-                </span>
-                <span class="feedback_item_radiolabel_<?php echo $hv.'_'.$align;?>">
-                    <label for="<?php echo $inputid;?>">
-                        <?php echo format_text($radio, FORMAT_HTML, array('noclean' => true, 'para' => false));?>
-                    </label>
-                </span>
-            </li>
-        <?php
-            $index++;
-        }
-    }
-
-    private function print_item_check($presentation, $item, $value, $info, $align) {
-
-        if (is_array($value)) {
-            $values = $value;
-        } else {
-            $values = explode(FEEDBACK_MULTICHOICE_LINE_SEP, $value);
-        }
-
-        if ($info->horizontal) {
-            $hv = 'h';
-        } else {
-            $hv = 'v';
-        }
-
-        $index = 1;
-        $checked = '';
-        $inputname = $item->typ. '_' . $item->id;
-        echo '<input type="hidden" name="'.$inputname.'[]" value="0" />';
-        foreach ($presentation as $check) {
-            foreach ($values as $val) {
-                if ($val == $index) {
-                    $checked = 'checked="checked"';
-                    break;
-                } else {
-                    $checked = '';
-                }
-            }
-            $inputid = $item->typ. '_' . $item->id.'_'.$index;
-        ?>
-            <li class="feedback_item_check_<?php echo $hv.'_'.$align;?>">
-                <span class="feedback_item_check_<?php echo $hv.'_'.$align;?>">
-                    <?php
-                        echo '<input type="checkbox" '.
-                              'name="'.$inputname.'[]" '.
-                              'id="'.$inputid.'" '.
-                              'value="'.$index.'" '.$checked.' />';
-                    ?>
-                </span>
-                <span class="feedback_item_radiolabel_<?php echo $hv.'_'.$align;?>">
-                    <label for="<?php echo $inputid;?>">
-                        <?php echo format_text($check, FORMAT_HTML, array('noclean' => true, 'para' => false));?>&nbsp;
-                    </label>
-                </span>
-            </li>
-        <?php
-            $index++;
-        }
-    }
-
-    private function print_item_dropdown($presentation, $item, $value, $info, $align) {
-        if (is_array($value)) {
-            $values = $value;
-        } else {
-            $values = array($value);
-        }
-
-        if ($info->horizontal) {
-            $hv = 'h';
-        } else {
-            $hv = 'v';
-        }
-
-        ?>
-        <div class="feedback_item_select_<?php echo $hv.'_'.$align;?>">
-            <select  id="<?php echo $item->typ .'_' . $item->id;?>" name="<?php echo $item->typ .'_' . $item->id;?>[]" size="1">
-                <option value="0">&nbsp;</option>
-                <?php
-                $index = 1;
-                $selected = '';
-                foreach ($presentation as $dropdown) {
-                    foreach ($values as $val) {
-                        if ($val == $index) {
-                            $selected = 'selected="selected"';
-                            break;
-                        } else {
-                            $selected = '';
-                        }
-                    }
-                ?>
-                    <option value="<?php echo $index;?>" <?php echo $selected;?>>
-                        <?php echo format_text($dropdown, FORMAT_HTML, array('noclean' => true, 'para' => false));?>
-                    </option>
-                <?php
-                    $index++;
-                }
-                ?>
-            </select>
-        </div>
-        <?php
-    }
-
     public function set_ignoreempty($item, $ignoreempty=true) {
         $item->options = str_replace(FEEDBACK_MULTICHOICE_IGNOREEMPTY, '', $item->options);
         if ($ignoreempty) {
@@ -854,21 +454,5 @@ class feedback_item_multichoice extends feedback_item_base {
             return true;
         }
         return false;
-    }
-
-    public function can_switch_require() {
-        return true;
-    }
-
-    public function value_type() {
-        return PARAM_INT;
-    }
-
-    public function value_is_array() {
-        return true;
-    }
-
-    public function clean_input_value($value) {
-        return clean_param_array($value, $this->value_type());
     }
 }
