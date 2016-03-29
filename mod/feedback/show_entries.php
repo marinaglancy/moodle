@@ -54,18 +54,18 @@ $feedback = $PAGE->activityrecord;
 if ($deleteid) {
     // This is a request to delete a reponse.
     require_capability('mod/feedback:deletesubmissions', $context);
-    $feedbackcompletion = new mod_feedback_completion($feedback, $cm, 0, true, $deleteid);
+    $feedbackstructure = new mod_feedback_completion($feedback, $cm, 0, true, $deleteid);
     if (optional_param('confirm', 0, PARAM_BOOL) && confirm_sesskey()) {
         // Process delete template result.
-        feedback_delete_completed($feedbackcompletion->get_completed(), $feedback, $cm);
+        feedback_delete_completed($feedbackstructure->get_completed(), $feedback, $cm);
         redirect($baseurl);
     }
 } else if ($showcompleted || $userid) {
     // Viewing individual response.
-    $feedbackcompletion = new mod_feedback_completion($feedback, $cm, 0, true, $showcompleted, $userid);
+    $feedbackstructure = new mod_feedback_completion($feedback, $cm, 0, true, $showcompleted, $userid);
 } else {
     // Viewing list of reponses.
-    $feedbackcompletion = new mod_feedback_structure($feedback, $cm);
+    $feedbackstructure = new mod_feedback_analysis($feedback, $cm);
 }
 
 // Print the page header.
@@ -89,7 +89,7 @@ if ($deleteid) {
     echo $OUTPUT->confirm(get_string('confirmdeleteentry', 'feedback'), $continueurl, $baseurl);
 } else if ($userid || $showcompleted) {
     // Print the response of the given user.
-    $completedrecord = $feedbackcompletion->get_completed();
+    $completedrecord = $feedbackstructure->get_completed();
 
     if ($userid) {
         $usr = $DB->get_record('user', array('id' => $userid), '*', MUST_EXIST);
@@ -102,7 +102,7 @@ if ($deleteid) {
     echo $OUTPUT->heading($responsetitle, 4);
 
     $form = new mod_feedback_complete_form(mod_feedback_complete_form::MODE_VIEW_RESPONSE,
-            $feedbackcompletion, 'feedback_viewresponse_form');
+            $feedbackstructure, 'feedback_viewresponse_form');
     $form->display();
 
     // TODO: prev, up, next
@@ -113,17 +113,17 @@ if ($deleteid) {
     // Show non-anonymous responses (always retrieve them even if current feedback is anonymous).
     $responsestable = new mod_feedback_responses_table('feedback-showentry-list-' . $course->id,
             $cm, $showall, $perpage);
-    if (!$feedbackcompletion->is_anonymous() || $responsestable->totalrows) {
+    if (!$feedbackstructure->is_anonymous() || $responsestable->totalrows) {
         echo $OUTPUT->heading(get_string('non_anonymous_entries', 'feedback', $responsestable->totalrows), 4);
         groups_print_activity_menu($cm, $baseurl->out());
         $responsestable->print_html();
     }
 
     // Show anonymous responses (always retrieve them even if current feedback is not anonymous).
-    feedback_shuffle_anonym_responses($feedback);
+    $feedbackstructure->shuffle_anonym_responses($feedback);
     $anonymresponsestable = new mod_feedback_responses_anonym_table('feedback-showentryanonym-list-' . $course->id,
             $cm, $showall, $perpage);
-    if ($feedbackcompletion->is_anonymous() || $anonymresponsestable->totalrows) {
+    if ($feedbackstructure->is_anonymous() || $anonymresponsestable->totalrows) {
         echo $OUTPUT->heading(get_string('anonymous_entries', 'feedback', $anonymresponsestable->totalrows), 4);
         $anonymresponsestable->print_html();
     }

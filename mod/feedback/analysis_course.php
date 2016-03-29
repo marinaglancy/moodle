@@ -69,6 +69,8 @@ if (!($feedback->publish_stats OR has_capability('mod/feedback:viewreports', $co
     print_error('error');
 }
 
+$feedbackanalysis = new mod_feedback_analysis($feedback, $PAGE->cm, $courseid);
+
 /// Print the page header
 $strfeedbacks = get_string("modulenameplural", "feedback");
 $strfeedback  = get_string("modulename", "feedback");
@@ -96,7 +98,7 @@ if (has_capability('mod/feedback:viewreports', $context)) {
 //lstgroupid is the choosen id
 $mygroupid = false;
 //get completed feedbacks
-$completedscount = feedback_get_completeds_group_count($feedback, $mygroupid, $courseid);
+$completedscount = count($feedbackanalysis->get_all_completed());
 
 //show the count
 echo '<b>'.get_string('completed_feedbacks', 'feedback').': '.$completedscount. '</b><br />';

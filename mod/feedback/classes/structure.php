@@ -105,9 +105,10 @@ class mod_feedback_structure {
 
     /**
      * Get all items in this feedback or this template
+     * @param bool $hasvalueonly only count items with a value.
      * @return array of objects from feedback_item with an additional attribute 'itemnr'
      */
-    public function get_items() {
+    public function get_items($hasvalueonly = false) {
         global $DB;
         if ($this->allitems === null) {
             if ($this->templateid) {
@@ -119,6 +120,11 @@ class mod_feedback_structure {
             foreach ($this->allitems as $id => $item) {
                 $this->allitems[$id]->itemnr = $item->hasvalue ? ($idx++) : null;
             }
+        }
+        if ($hasvalueonly && $this->allitems) {
+            return array_filter($this->allitems, function($item) {
+                return $item->hasvalue;
+            });
         }
         return $this->allitems;
     }
@@ -163,5 +169,67 @@ class mod_feedback_structure {
                 'pluginfile.php', $context->id, 'mod_feedback', 'page_after_submit', 0);
 
         return format_text($output, $pageaftersubmitformat, array('overflowdiv' => true));
+    }
+
+    /**
+     * Checks if current user is able to view feedback on this course.
+     *
+     * @return bool
+     */
+    function can_view_analysis() {
+        $context = context_module::instance($this->cm->id);
+        if (has_capability('mod/feedback:viewreports', $context)) {
+            return true;
+        }
+
+        if (intval($this->feedback->publish_stats) != 1 ||
+                !has_capability('mod/feedback:viewanalysepage', $context)) {
+            return false;
+        }
+
+        if (!isloggedin() || isguestuser()) {
+            // There is no tracking for the guests, assume that they can view analysis if condition above is satisfied.
+            return $this->feedback->course == SITEID;
+        }
+
+        return $this->is_already_submitted(true);
+    }
+
+    /**
+     * check for multiple_submit = false.
+     * if the feedback is global so the courseid must be given
+     *
+     * @return bool true if the feedback already is submitted otherwise false
+     */
+    public function is_already_submitted($anycourseid = false) {
+        global $USER, $DB;
+
+        if (!isloggedin() || isguestuser()) {
+            return false;
+        }
+
+        $params = array('userid' => $USER->id, 'feedback' => $this->feedback->id);
+        if (!$anycourseid && $this->courseid) {
+            $params['courseid'] = $this->courseid;
+        }
+        return $DB->record_exists('feedback_completed', $params);
+    }
+
+    /**
+     * Check whether the feedback is mapped to the given courseid.
+     */
+    public function check_course_is_mapped() {
+        global $DB;
+        if ($this->feedback->course != SITEID) {
+            return true;
+        }
+        if ($DB->get_records('feedback_sitecourse_map', array('feedbackid' => $this->feedback->id))) {
+            $params = array('feedbackid' => $this->feedback->id, 'courseid' => $this->courseid);
+            if (!$DB->get_record('feedback_sitecourse_map', $params)) {
+                return false;
+            }
+        }
+        // No mapping means any course is mapped.
+        return true;
     }
 }

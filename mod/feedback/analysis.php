@@ -36,16 +36,15 @@ list($course, $cm) = get_course_and_cm_from_cmid($id, 'feedback');
 require_course_login($course, true, $cm);
 
 $feedback = $PAGE->activityrecord;
+$feedbackanalysis = new mod_feedback_analysis($feedback, $cm);
 
 $context = context_module::instance($cm->id);
 
-if (!feedback_can_view_analysis($feedback, $context)) {
+if (!$feedbackanalysis->can_view_analysis()) {
     print_error('error');
 }
 
 /// Print the page header
-$strfeedbacks = get_string("modulenameplural", "feedback");
-$strfeedback  = get_string("modulename", "feedback");
 
 $PAGE->set_heading($course->fullname);
 $PAGE->set_title($feedback->name);
@@ -57,9 +56,9 @@ require('tabs.php');
 
 
 //get the groupid
-$myurl = $CFG->wwwroot.'/mod/feedback/analysis.php?id='.$cm->id.'&do_show=analysis';
+$myurl = $CFG->wwwroot.'/mod/feedback/analysis.php?id='.$cm->id;
+$mygroupid = groups_get_activity_group($cm, true);
 $groupselect = groups_print_activity_menu($cm, $myurl, true);
-$mygroupid = groups_get_activity_group($cm);
 
 if ( has_capability('mod/feedback:viewreports', $context) ) {
 
@@ -76,19 +75,17 @@ if ( has_capability('mod/feedback:viewreports', $context) ) {
 }
 
 //get completed feedbacks
-$completedscount = feedback_get_completeds_group_count($feedback, $mygroupid);
+$completedscount = count($feedbackanalysis->get_all_completed($mygroupid));
 
 //show the group, if available
 if ($mygroupid and $group = $DB->get_record('groups', array('id'=>$mygroupid))) {
-    echo '<b>'.get_string('group').': '.$group->name. '</b><br />';
+    echo '<b>'.get_string('group').': '.format_string($group->name). '</b><br />';
 }
 //show the count
 echo '<b>'.get_string('completed_feedbacks', 'feedback').': '.$completedscount. '</b><br />';
 
 // get the items of the feedback
-$items = $DB->get_records('feedback_item',
-                          array('feedback'=>$feedback->id, 'hasvalue'=>1),
-                          'position');
+$items = $feedbackanalysis->get_items(true);
 //show the count
 if (is_array($items)) {
     echo '<b>'.get_string('questions', 'feedback').': ' .count($items). ' </b><hr />';
@@ -107,9 +104,6 @@ if ($check_anonymously) {
     $itemnr = 0;
     //print the items in an analysed form
     foreach ($items as $item) {
-        if ($item->hasvalue == 0) {
-            continue;
-        }
         echo '<table width="100%" class="generalbox">';
 
         //get the class of item-typ

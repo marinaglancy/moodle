@@ -87,7 +87,7 @@ class mod_feedback_responses_table extends flexible_table {
         }
 
         // Get the list of responses for the selected group (if applicable).
-        $usedgroupid = groups_get_activity_group($cm);
+        $usedgroupid = groups_get_activity_group($cm, true);
         $matchcount = feedback_count_complete_users($cm, $usedgroupid);
         $this->initialbars(true);
 

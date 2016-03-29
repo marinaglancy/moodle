@@ -1033,31 +1033,6 @@ function feedback_get_complete_users($cm,
 }
 
 /**
- * If there are any new responses to the anonymous feedback, re-shuffle all
- * responses and assign response number to each of them.
- *
- * @param stdClass $feedback
- */
-function feedback_shuffle_anonym_responses($feedback) {
-    global $DB;
-    $params = array('feedback' => $feedback->id,
-                    'random_response' => 0,
-                    'anonymous_response' => FEEDBACK_ANONYMOUS_YES);
-
-    if ($DB->count_records('feedback_completed', $params, 'random_response')) {
-        // Get all of the anonymous records, go through them and assign a response id.
-        unset($params['random_response']);
-        $feedbackcompleteds = $DB->get_records('feedback_completed', $params, 'id');
-        shuffle($feedbackcompleteds);
-        $num = 1;
-        foreach ($feedbackcompleteds as $compl) {
-            $compl->random_response = $num++;
-            $DB->update_record('feedback_completed', $compl);
-        }
-    }
-}
-
-/**
  * get users which have the viewreports-capability
  *
  * @uses CONTEXT_MODULE

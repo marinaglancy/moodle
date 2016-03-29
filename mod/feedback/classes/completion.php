@@ -567,7 +567,7 @@ class mod_feedback_completion extends mod_feedback_structure {
      */
     public function can_submit() {
         if ($this->get_feedback()->multiple_submit == 0 ) {
-            if (feedback_is_already_submitted($this->get_feedback()->id, $this->get_courseid())) {
+            if ($this->is_already_submitted()) {
                 return false;
             }
         }
