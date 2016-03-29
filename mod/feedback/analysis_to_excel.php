@@ -54,6 +54,7 @@ if (! $feedback = $DB->get_record("feedback", array("id"=>$cm->instance))) {
 $context = context_module::instance($cm->id);
 
 require_login($course, true, $cm);
+$feedbackanalysis = new mod_feedback_analysis($feedback, $PAGE->cm, $coursefilter);
 
 require_capability('mod/feedback:viewreports', $context);
 
@@ -79,7 +80,8 @@ ob_end_clean();
 
 //get the questions (item-names)
 $params = array('feedback' => $feedback->id, 'hasvalue' => 1);
-if (!$items = $DB->get_records('feedback_item', $params, 'position')) {
+$items = $feedbackanalysis->get_items(true);
+if (!$items) {
     print_error('no_items_available_yet',
                 'feedback',
                 $CFG->wwwroot.'/mod/feedback/view.php?id='.$id);
@@ -139,7 +141,8 @@ $worksheet1->write_string($row_offset1, 0, userdate(time()), $xls_formats->head1
 //print the analysed sheet
 ////////////////////////////////////////////////////////////////////////
 //get the completeds
-$completedscount = feedback_get_completeds_group_count($feedback, $mygroupid, $coursefilter);
+$completeds = $feedbackanalysis->get_all_completed($mygroupid);
+$completedscount = count($completeds);
 if ($completedscount > 0) {
     //write the count of completeds
     $row_offset1++;
@@ -182,7 +185,6 @@ foreach ($items as $item) {
 ////////////////////////////////////////////////////////////////////////
 //get the completeds
 
-$completeds = feedback_get_completeds_group($feedback, $mygroupid, $coursefilter);
 //important: for each completed you have to print each item, even if it is not filled out!!!
 //therefor for each completed we have to iterate over all items of the feedback
 //this is done by feedback_excelprint_detailed_items
