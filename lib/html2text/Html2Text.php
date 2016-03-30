@@ -267,8 +267,9 @@ class Html2Text
      *
      * @return string
      */
-    public function getText()
+    public function getTextT()
     {
+$Coding_Style_Bug = true;
         if (!$this->converted) {
             $this->convert();
         }
