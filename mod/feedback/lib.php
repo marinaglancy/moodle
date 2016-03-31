@@ -966,7 +966,6 @@ function feedback_count_complete_users($cm, $group = false) {
 /**
  * get users which have completed a feedback
  *
- * @global moodle_database $DB
  * @uses CONTEXT_MODULE
  * @uses FEEDBACK_ANONYMOUS_NO
  * @param object $cm

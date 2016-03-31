@@ -50,12 +50,6 @@ Feature: Non anonymous feedback
     And I press "Continue"
 
   Scenario: Complete non anonymous feedback on the front page as an authenticated user
-    And I log in as "admin"
-    And I set the following system permissions of "Authenticated user" role:
-      | capability | permission |
-      | mod/feedback:view | Allow |
-      | mod/feedback:complete | Allow |
-    And I log out
     And I log in as "user1"
     And I am on site homepage
     When I follow "Site feedback"
@@ -74,8 +68,6 @@ Feature: Non anonymous feedback
     And I log in as "admin"
     And I set the following system permissions of "Authenticated user on frontpage" role:
       | capability                   | permission |
-      | mod/feedback:view            | Allow      |
-      | mod/feedback:complete        | Allow      |
       | mod/feedback:viewanalysepage | Allow      |
     And I log out
     And I log in as "user1"

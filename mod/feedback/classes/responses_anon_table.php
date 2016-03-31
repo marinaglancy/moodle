@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Contains class mod_feedback_responses_table
+ * Contains class mod_feedback_responses_anon_table
  *
  * @package   mod_feedback
  * @copyright 2016 Marina Glancy
@@ -28,13 +28,13 @@ global $CFG;
 require_once($CFG->libdir . '/tablelib.php');
 
 /**
- * Class mod_feedback_responses_table
+ * Class mod_feedback_responses_anon_table
  *
  * @package   mod_feedback
  * @copyright 2016 Marina Glancy
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class mod_feedback_responses_table extends table_sql {
+class mod_feedback_responses_anon_table extends table_sql {
 
     /** @var cm_info */
     protected $cm;
@@ -48,13 +48,15 @@ class mod_feedback_responses_table extends table_sql {
      * @param cm_info $cm
      */
     public function __construct(cm_info $cm) {
+
         $this->cm = $cm;
         $context = context_module::instance($cm->id);
 
-        parent::__construct('feedback-showentry-list-' . $cm->course);
+        parent::__construct('feedback-showentryanonym-list-' . $cm->course);
+        $this->request[TABLE_VAR_PAGE] = 'apage';
 
-        $tablecolumns = array('userpic', 'fullname', 'completed_timemodified');
-        $tableheaders = array(get_string('userpic'), get_string('fullnameuser'), get_string('date'));
+        $tablecolumns = array('response', 'showresponse');
+        $tableheaders = array('', '');
 
         if (has_capability('mod/feedback:deletesubmissions', $context)) {
             $tablecolumns[] = 'deleteentry';
@@ -64,73 +66,58 @@ class mod_feedback_responses_table extends table_sql {
         $this->define_columns($tablecolumns);
         $this->define_headers($tableheaders);
 
-        $this->sortable(true, 'lastname', SORT_ASC);
+        $this->sortable(false, 'response');
         $this->collapsible(false);
-        $this->set_attribute('id', 'showentrytable');
+        $this->set_attribute('id', 'showentryanonymtable');
 
-        $this->build_queries();
+        $params = array('instance' => $this->cm->instance, 'anon' => FEEDBACK_ANONYMOUS_YES);
+
+        $fields = 'id, random_response AS response';
+        $from = '{feedback_completed}';
+        $where = 'anonymous_response = :anon AND feedback = :instance';
+
+        $this->set_sql($fields, $from, $where, $params);
+        $this->set_count_sql("SELECT COUNT(id) FROM $from WHERE $where", $params);
     }
 
     /**
-     * Prepares column userpic for display
-     * @param stdClass $student
+     * Prepares column reponse for display
+     * @param stdClass $row
      * @return string
      */
-    public function col_userpic($student) {
-        global $OUTPUT;
-        return $OUTPUT->user_picture($student, array('courseid' => $this->cm->course));
+    public function col_response($row) {
+        return get_string('response_nr', 'feedback').': '. $row->response;
+    }
+
+    /**
+     * Prepares column showresponse for display
+     * @param stdClass $row
+     * @return string
+     */
+    public function col_showresponse($row) {
+        $showentryurl = new moodle_url($this->baseurl, array('showcompleted' => $row->id));
+        return html_writer::link($showentryurl, get_string('show_entry', 'feedback'));
     }
 
     /**
      * Prepares column deleteentry for display
-     * @param stdClass $student
+     * @param stdClass $row
      * @return string
      */
-    public function col_deleteentry($student) {
+    public function col_deleteentry($row) {
         $context = context_module::instance($this->cm->id);
         if (has_capability('mod/feedback:deletesubmissions', $context)) {
             $deleteentryurl = new moodle_url('/mod/feedback/show_entries.php',
-                ['id' => $this->cm->id, 'delete' => $student->completed_id]);
+                array('id' => $this->cm->id, 'delete' => $row->id));
             return html_writer::link($deleteentryurl, get_string('delete_entry', 'feedback'));
         }
     }
 
     /**
-     * Prepares column completed_timemodified for display
-     * @param stdClass $student
-     * @return string
+     * Generate the HTML for the table preferences reset button.
      */
-    public function col_completed_timemodified($student) {
-        $showentryurl = new moodle_url($this->baseurl, ['userid' => $student->id, 'showcompleted' => $student->completed_id]);
-        return html_writer::link($showentryurl, userdate($student->completed_timemodified));
-    }
-
-    /**
-     * Prepares the queries for the table.
-     */
-    protected function build_queries() {
-        $params = array();
-        $params['anon'] = FEEDBACK_ANONYMOUS_NO;
-        $params['instance'] = $this->cm->instance;
-        $params['notdeleted'] = 0;
-
-        $ufields = user_picture::fields('u');
-        $fields = 'DISTINCT c.id as completed_id, c.timemodified as completed_timemodified, '.$ufields;
-        $from = '{user} u, {feedback_completed} c';
-        $where = 'anonymous_response = :anon
-                AND u.id = c.userid
-                AND c.feedback = :instance
-                AND u.deleted = :notdeleted';
-
-        $group = groups_get_activity_group($this->cm);
-        if ($group) {
-            $from .= ', {groups_members} g';
-            $where .= ' AND g.groupid = :group AND g.userid = c.userid';
-            $params['group'] = $group;
-        }
-
-        $this->set_sql($fields, $from, $where, $params);
-        $this->set_count_sql("SELECT COUNT(DISTINCT c.id) FROM $from WHERE $where", $params);
+    protected function render_reset_button() {
+        return '';
     }
 
     /**
@@ -145,29 +132,15 @@ class mod_feedback_responses_table extends table_sql {
         $this->totalrows = $grandtotal = $this->get_total_responses_count();
         $this->initialbars($useinitialsbar);
 
-        list($wsql, $wparams) = $this->get_sql_where();
-        if ($wsql) {
-            $this->countsql .= ' AND '.$wsql;
-            $this->countparams = array_merge($this->countparams, $wparams);
-
-            $this->sql->where .= ' AND '.$wsql;
-            $this->sql->params = array_merge($this->sql->params, $wparams);
-
-            $this->totalrows  = $DB->count_records_sql($this->countsql, $this->countparams);
-        }
-
         if ($this->totalrows > $pagesize) {
             $this->pagesize($pagesize, $this->totalrows);
         }
 
-        if ($sort = $this->get_sql_sort()) {
-            $sort = "ORDER BY $sort";
-        }
         $sql = "SELECT
                 {$this->sql->fields}
                 FROM {$this->sql->from}
                 WHERE {$this->sql->where}
-                {$sort}";
+                ORDER BY " . $this->get_sql_sort();
 
         $this->rawdata = $DB->get_records_sql($sql, $this->sql->params, $this->get_page_start(), $this->get_page_size());
     }
@@ -194,19 +167,19 @@ class mod_feedback_responses_table extends table_sql {
             echo $OUTPUT->box(get_string('nothingtodisplay'), 'generalbox nothingtodisplay');
             return;
         }
-        $showall = optional_param('showall', 0, PARAM_BOOL);
+        $showall = optional_param('ashowall', 0, PARAM_BOOL);
         $this->define_baseurl(new moodle_url('/mod/feedback/show_entries.php',
-            ['id' => $this->cm->id, 'showall' => $showall]));
-        $this->out($showall ? $grandtotal : FEEDBACK_DEFAULT_PAGE_COUNT, $grandtotal > FEEDBACK_DEFAULT_PAGE_COUNT);
+            array('id' => $this->cm->id, 'showall' => $showall)));
+        $this->out($showall ? $grandtotal : FEEDBACK_DEFAULT_PAGE_COUNT, false);
 
         // Toggle 'Show all' link.
         if ($this->totalrows > FEEDBACK_DEFAULT_PAGE_COUNT) {
             if (!$this->use_pages) {
-                echo html_writer::div(html_writer::link(new moodle_url($this->baseurl, ['showall' => 0]),
-                        get_string('showperpage', '', FEEDBACK_DEFAULT_PAGE_COUNT)), 'showall');
+                echo html_writer::div(html_writer::link(new moodle_url($this->baseurl, array('ashowall' => 0)),
+                    get_string('showperpage', '', FEEDBACK_DEFAULT_PAGE_COUNT)), 'showall');
             } else {
-                echo html_writer::div(html_writer::link(new moodle_url($this->baseurl, ['showall' => 1]),
-                        get_string('showall', '', $this->totalrows)), 'showall');
+                echo html_writer::div(html_writer::link(new moodle_url($this->baseurl, array('ashowall' => 1)),
+                    get_string('showall', '', $this->totalrows)), 'showall');
             }
         }
     }
