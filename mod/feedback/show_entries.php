@@ -31,8 +31,6 @@ require_once($CFG->libdir.'/tablelib.php');
 ////////////////////////////////////////////////////////
 $id = required_param('id', PARAM_INT);
 $userid = optional_param('userid', false, PARAM_INT);
-$perpage = optional_param('perpage', FEEDBACK_DEFAULT_PAGE_COUNT, PARAM_INT);  // how many per page
-$showall = optional_param('showall', false, PARAM_INT);  // should we show all users
 $showcompleted = optional_param('showcompleted', false, PARAM_INT);
 $deleteid = optional_param('delete', null, PARAM_INT);
 
@@ -42,9 +40,9 @@ $deleteid = optional_param('delete', null, PARAM_INT);
 
 list($course, $cm) = get_course_and_cm_from_cmid($id, 'feedback');
 
-$baseurl = new moodle_url('/mod/feedback/show_entries.php', array('id'=>$cm->id));
+$baseurl = new moodle_url('/mod/feedback/show_entries.php', array('id' => $cm->id));
 $PAGE->set_url(new moodle_url($baseurl, array('userid' => $userid, 'showcompleted' => $showcompleted,
-        'perpage' => $perpage, 'showall' => $showall, 'delete' => $deleteid)));
+        'delete' => $deleteid)));
 
 $context = context_module::instance($cm->id);
 
@@ -82,25 +80,25 @@ require('tabs.php');
 // Print the list of responses.
 if (!$showcompleted && !$deleteid && !$userid) {
     // Show non-anonymous responses.
-    $responsestable = new mod_feedback_responses_table('feedback-showentry-list-' . $course->id,
-            $cm, $showall, $perpage);
-    if ($feedback->anonymous == FEEDBACK_ANONYMOUS_NO || $responsestable->totalrows) {
-        echo $OUTPUT->heading(get_string('non_anonymous_entries', 'feedback', $responsestable->totalrows), 4);
+    $responsestable = new mod_feedback_responses_table($cm);
+    $totalrows = $responsestable->get_total_responses_count();
+    if ($feedback->anonymous == FEEDBACK_ANONYMOUS_NO || $totalrows) {
+        echo $OUTPUT->heading(get_string('non_anonymous_entries', 'feedback', $totalrows), 4);
 
         $groupselect = groups_print_activity_menu($cm, $baseurl->out(), true);
         echo isset($groupselect) ? $groupselect : '';
         echo '<div class="clearer"></div>';
 
-        $responsestable->print_html();
+        $responsestable->display();
     }
 
     // Show anonymous responses.
     feedback_shuffle_anonym_responses($feedback);
-    $anonymresponsestable = new mod_feedback_responses_anonym_table('feedback-showentryanonym-list-' . $course->id,
-            $cm, $showall, $perpage);
-    if ($feedback->anonymous == FEEDBACK_ANONYMOUS_YES || $anonymresponsestable->totalrows) {
-        echo $OUTPUT->heading(get_string('anonymous_entries', 'feedback', $anonymresponsestable->totalrows), 4);
-        $anonymresponsestable->print_html();
+    $anonresponsestable = new mod_feedback_responses_anon_table($cm);
+    $totalrows = $anonresponsestable->get_total_responses_count();
+    if ($feedback->anonymous == FEEDBACK_ANONYMOUS_YES || $totalrows) {
+        echo $OUTPUT->heading(get_string('anonymous_entries', 'feedback', $totalrows), 4);
+        $anonresponsestable->display();
     }
 
 }
@@ -111,11 +109,13 @@ if ($userid || $showcompleted) {
     $feedbackitems = $DB->get_records('feedback_item', array('feedback' => $feedback->id), 'position');
 
     if ($userid) {
-        $usr = $DB->get_record('user', array('id' => $userid, 'deleted' => 0), '*', MUST_EXIST);
-        $feedbackcompleted = $DB->get_record('feedback_completed',
-                array('feedback' => $feedback->id, 'userid' => $userid,
-                    'anonymous_response' => FEEDBACK_ANONYMOUS_NO));
-        $responsetitle = userdate($feedbackcompleted->timemodified) . ' (' . fullname($usr) . ')';
+        $user = $DB->get_record('user', array('id' => $userid, 'deleted' => 0), '*', MUST_EXIST);
+        $params = ['feedback' => $feedback->id, 'userid' => $userid, 'anonymous_response' => FEEDBACK_ANONYMOUS_NO];
+        if ($showcompleted) {
+            $params['id'] = $showcompleted;
+        }
+        $feedbackcompleted = $DB->get_record('feedback_completed', $params);
+        $responsetitle = userdate($feedbackcompleted->timemodified) . ' (' . fullname($user) . ')';
     } else if ($showcompleted) {
         $feedbackcompleted = $DB->get_record('feedback_completed',
                 array('feedback' => $feedback->id, 'id' => $showcompleted,
