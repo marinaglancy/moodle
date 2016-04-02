@@ -66,6 +66,16 @@ if ($deleteid) {
     $feedbackstructure = new mod_feedback_analysis($feedback, $cm);
 }
 
+$responsestable = new mod_feedback_responses_table($feedbackstructure);
+$anonresponsestable = new mod_feedback_responses_anon_table($feedbackstructure);
+
+if ($responsestable->is_downloading()) {
+    $responsestable->download($download);
+}
+if ($anonresponsestable->is_downloading()) {
+    $anonresponsestable->download($download);
+}
+
 // Print the page header.
 navigation_node::override_active_url($baseurl);
 $PAGE->set_heading($course->fullname);
@@ -103,12 +113,9 @@ if ($deleteid) {
             $feedbackstructure, 'feedback_viewresponse_form');
     $form->display();
 
-    if ($userid) {
-        $responsestable = new mod_feedback_responses_table($cm);
-    } else {
-        $responsestable = new mod_feedback_responses_anon_table($cm);
-    }
-    list($prevresponseurl, $returnurl, $nextresponseurl) = $responsestable->get_reponse_navigation_links($completedrecord);
+    list($prevresponseurl, $returnurl, $nextresponseurl) = $userid ?
+            $responsestable->get_reponse_navigation_links($completedrecord) :
+            $anonresponsestable->get_reponse_navigation_links($completedrecord);
 
     echo html_writer::start_div('response_navigation');
     echo $prevresponseurl ? html_writer::link($prevresponseurl, get_string('prev'), ['class' => 'prev_response']) : '';
@@ -119,7 +126,6 @@ if ($deleteid) {
     // Print the list of responses.
 
     // Show non-anonymous responses (always retrieve them even if current feedback is anonymous).
-    $responsestable = new mod_feedback_responses_table($cm);
     $totalrows = $responsestable->get_total_responses_count();
     if (!$feedbackstructure->is_anonymous() || $totalrows) {
         echo $OUTPUT->heading(get_string('non_anonymous_entries', 'feedback', $totalrows), 4);
@@ -129,7 +135,6 @@ if ($deleteid) {
 
     // Show anonymous responses (always retrieve them even if current feedback is not anonymous).
     $feedbackstructure->shuffle_anonym_responses();
-    $anonresponsestable = new mod_feedback_responses_anon_table($cm);
     $totalrows = $anonresponsestable->get_total_responses_count();
     if ($feedbackstructure->is_anonymous() || $totalrows) {
         echo $OUTPUT->heading(get_string('anonymous_entries', 'feedback', $totalrows), 4);

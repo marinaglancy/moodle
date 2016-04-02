@@ -36,8 +36,8 @@ require_once($CFG->libdir . '/tablelib.php');
  */
 class mod_feedback_responses_table extends table_sql {
 
-    /** @var cm_info */
-    protected $cm;
+    /** @var mod_feedback_structure */
+    protected $feedbackstructure;
 
     /** @var int */
     protected $grandtotal = null;
@@ -48,22 +48,29 @@ class mod_feedback_responses_table extends table_sql {
     /** @var string */
     protected $showallparamname = 'showall';
 
+    /** @var string */
+    protected $downloadparamname = 'download';
+
     /**
      * Constructor
      *
-     * @param cm_info $cm
+     * @param mod_feedback_structure $feedbackstructure
      */
-    public function __construct(cm_info $cm) {
-        $this->cm = $cm;
+    public function __construct(mod_feedback_structure $feedbackstructure) {
+        $this->feedbackstructure = $feedbackstructure;
 
-        parent::__construct('feedback-showentry-list-' . $cm->course);
+        parent::__construct('feedback-showentry-list-' . $feedbackstructure->get_cm()->course);
 
         $this->showall = optional_param($this->showallparamname, 0, PARAM_BOOL);
         $this->define_baseurl(new moodle_url('/mod/feedback/show_entries.php',
-            ['id' => $this->cm->id]));
+            ['id' => $this->feedbackstructure->get_cm()->id]));
         if ($this->showall) {
             $this->baseurl->param($this->showallparamname, $this->showall);
         }
+
+        $this->is_downloadable(true);
+        $this->is_downloading(optional_param($this->downloadparamname, 0, PARAM_ALPHA),
+                'feedback_test');
 
         $this->init();
     }
@@ -76,20 +83,68 @@ class mod_feedback_responses_table extends table_sql {
         $tablecolumns = array('userpic', 'fullname', 'completed_timemodified');
         $tableheaders = array(get_string('userpic'), get_string('fullnameuser'), get_string('date'));
 
-        $context = context_module::instance($this->cm->id);
-        if (has_capability('mod/feedback:deletesubmissions', $context)) {
-            $tablecolumns[] = 'deleteentry';
-            $tableheaders[] = '';
+        // When downloading data:
+        if ($this->is_downloading()) {
+            // Remove 'userpic' from downloaded data.
+            array_shift($tablecolumns);
+            array_shift($tableheaders);
+
+            // Add all identity fields as separate columns.
+            foreach ($extrafields as $field) {
+                $fields .= ", u.{$field}";
+                $tablecolumns[] = $field;
+                $tableheaders[] = get_user_field_name($field);
+            }
         }
 
         $this->define_columns($tablecolumns);
         $this->define_headers($tableheaders);
 
         $this->sortable(true, 'lastname', SORT_ASC);
-        $this->collapsible(false);
+        $this->collapsible(true);
         $this->set_attribute('id', 'showentrytable');
 
-        $this->build_queries();
+        $params = array();
+        $params['anon'] = FEEDBACK_ANONYMOUS_NO;
+        $params['instance'] = $this->feedbackstructure->get_feedback()->id;
+        $params['notdeleted'] = 0;
+
+        $extrafields = get_extra_user_fields($this->get_context());
+        $ufields = user_picture::fields('u', $extrafields, 'userid');
+        $fields = 'DISTINCT c.id, c.timemodified as completed_timemodified, '.$ufields;
+        $from = '{feedback_completed} c '
+                . 'JOIN {user} u ON u.id = c.userid AND u.deleted = :notdeleted';
+        $where = 'c.anonymous_response = :anon
+                AND c.feedback = :instance';
+
+        $group = groups_get_activity_group($this->feedbackstructure->get_cm(), true);
+        if ($group) {
+            $from .= 'JOIN {groups_members} g ON g.groupid = :group AND g.userid = c.userid';
+            $params['group'] = $group;
+        }
+
+        $this->set_sql($fields, $from, $where, $params);
+        $this->set_count_sql("SELECT COUNT(DISTINCT c.id) FROM $from WHERE $where", $params);
+    }
+
+    /**
+     * Current context
+     * @return context_module
+     */
+    protected function get_context() {
+        return context_module::instance($this->feedbackstructure->get_cm()->id);
+    }
+
+    /**
+     * Allows to set the display column value for all columns without "col_xxxxx" method.
+     */
+    function other_cols($column, $row) {
+        if (preg_match('/^val(\d+)$/', $column, $matches)) {
+            $items = $this->feedbackstructure->get_items();
+            $itemobj = feedback_get_item_class($items[$matches[1]]->typ);
+            return trim($itemobj->get_printval($items[$matches[1]], (object) ['value' => $row->$column] ));
+        }
+        return $row->$column;
     }
 
     /**
@@ -99,7 +154,7 @@ class mod_feedback_responses_table extends table_sql {
      */
     public function col_userpic($row) {
         global $OUTPUT;
-        return $OUTPUT->user_picture($row, array('courseid' => $this->cm->course));
+        return $OUTPUT->user_picture($row, array('courseid' => $this->feedbackstructure->get_cm()->course));
     }
 
     /**
@@ -108,11 +163,10 @@ class mod_feedback_responses_table extends table_sql {
      * @return string
      */
     public function col_deleteentry($row) {
-        $context = context_module::instance($this->cm->id);
-        if (has_capability('mod/feedback:deletesubmissions', $context)) {
-            $deleteentryurl = new moodle_url($this->baseurl, ['delete' => $row->id]);
-            return html_writer::link($deleteentryurl, get_string('delete_entry', 'feedback'));
-        }
+        global $OUTPUT;
+        $icon = $OUTPUT->render(new \pix_icon('t/delete', get_string('delete_entry', 'feedback')));
+        $deleteentryurl = new moodle_url($this->baseurl, ['delete' => $row->id]);
+        return html_writer::link($deleteentryurl, $icon);
     }
 
     /**
@@ -130,37 +184,43 @@ class mod_feedback_responses_table extends table_sql {
      * @return string
      */
     public function col_completed_timemodified($student) {
-        return html_writer::link($this->get_link_single_entry($student),
-                userdate($student->completed_timemodified));
+        if ($this->is_downloading()) {
+            return userdate($student->completed_timemodified);
+        } else {
+            return html_writer::link($this->get_link_single_entry($student),
+                    userdate($student->completed_timemodified));
+        }
     }
 
     /**
-     * Prepares the queries for the table.
+     * Adds common values to the table that do not change the number or order of entries and
+     * are only needed when outputting or downloading data.
      */
-    protected function build_queries() {
-        $params = array();
-        $params['anon'] = FEEDBACK_ANONYMOUS_NO;
-        $params['instance'] = $this->cm->instance;
-        $params['notdeleted'] = 0;
+    protected function add_all_values_to_output() {
+        $tablecolumns = array_keys($this->columns);
+        $tableheaders = $this->headers;
 
-        $ufields = user_picture::fields('u', null, 'userid');
-        $fields = 'DISTINCT c.id, c.timemodified as completed_timemodified, '.$ufields;
-        $from = '{user} u, {feedback_completed} c';
-        $where = 'anonymous_response = :anon
-                AND u.id = c.userid
-                AND c.feedback = :instance
-                AND u.deleted = :notdeleted';
+        // Add all feedback response values.
+        //if ($this->is_downloading()) {
+            $items = $this->feedbackstructure->get_items(true);
+            foreach ($items as $nr => $item) {
+                $this->sql->fields .= ", v{$nr}.value AS val{$nr}";
+                $this->sql->from .= " LEFT OUTER JOIN {feedback_value} v{$nr} ON v{$nr}.completed = c.id AND v{$nr}.item = :itemid{$nr}";
+                $this->sql->params["itemid{$nr}"] = $item->id;
+                $tablecolumns[] = "val{$nr}";
+                $tableheaders[] = format_string($item->name); // TODO proper formatting
+            }
+        //}
 
-        $group = groups_get_activity_group($this->cm, true);
-        if ($group) {
-            $from .= ', {groups_members} g';
-            $where .= ' AND g.groupid = :group AND g.userid = c.userid';
-            $params['group'] = $group;
+        // Add 'Delete entry' column.
+        if (!$this->is_downloading() && has_capability('mod/feedback:deletesubmissions', $this->get_context())) {
+            $tablecolumns[] = 'deleteentry';
+            $tableheaders[] = '';
         }
 
-        $this->set_sql($fields, $from, $where, $params);
-        $this->set_count_sql("SELECT COUNT(DISTINCT c.id) FROM $from WHERE $where", $params);
-    }
+        $this->define_columns($tablecolumns);
+        $this->define_headers($tableheaders);
+}
 
     /**
      * Query the db. Store results in the table object for use by build_table.
@@ -172,21 +232,23 @@ class mod_feedback_responses_table extends table_sql {
     public function query_db($pagesize, $useinitialsbar=true) {
         global $DB;
         $this->totalrows = $grandtotal = $this->get_total_responses_count();
-        $this->initialbars($useinitialsbar);
+        if (!$this->is_downloading()) {
+            $this->initialbars($useinitialsbar);
 
-        list($wsql, $wparams) = $this->get_sql_where();
-        if ($wsql) {
-            $this->countsql .= ' AND '.$wsql;
-            $this->countparams = array_merge($this->countparams, $wparams);
+            list($wsql, $wparams) = $this->get_sql_where();
+            if ($wsql) {
+                $this->countsql .= ' AND '.$wsql;
+                $this->countparams = array_merge($this->countparams, $wparams);
 
-            $this->sql->where .= ' AND '.$wsql;
-            $this->sql->params = array_merge($this->sql->params, $wparams);
+                $this->sql->where .= ' AND '.$wsql;
+                $this->sql->params = array_merge($this->sql->params, $wparams);
 
-            $this->totalrows  = $DB->count_records_sql($this->countsql, $this->countparams);
-        }
+                $this->totalrows  = $DB->count_records_sql($this->countsql, $this->countparams);
+            }
 
-        if ($this->totalrows > $pagesize) {
-            $this->pagesize($pagesize, $this->totalrows);
+            if ($this->totalrows > $pagesize) {
+                $this->pagesize($pagesize, $this->totalrows);
+            }
         }
 
         if ($sort = $this->get_sql_sort()) {
@@ -198,7 +260,11 @@ class mod_feedback_responses_table extends table_sql {
                 WHERE {$this->sql->where}
                 {$sort}";
 
-        $this->rawdata = $DB->get_recordset_sql($sql, $this->sql->params, $this->get_page_start(), $this->get_page_size());
+        if (!$this->is_downloading()) {
+            $this->rawdata = $DB->get_recordset_sql($sql, $this->sql->params, $this->get_page_start(), $this->get_page_size());
+        } else {
+            $this->rawdata = $DB->get_recordset_sql($sql, $this->sql->params);
+        }
     }
 
     /**
@@ -211,6 +277,15 @@ class mod_feedback_responses_table extends table_sql {
             $this->grandtotal = $DB->count_records_sql($this->countsql, $this->countparams);
         }
         return $this->grandtotal;
+    }
+
+    /**
+     * Convenience method to call a number of methods for you to display the
+     * table.
+     */
+    function out($pagesize, $useinitialsbar, $downloadhelpbutton='') {
+        $this->add_all_values_to_output();
+        parent::out($pagesize, $useinitialsbar, $downloadhelpbutton);
     }
 
     /**
@@ -272,5 +347,36 @@ class mod_feedback_responses_table extends table_sql {
             new moodle_url($this->baseurl, [$this->request[TABLE_VAR_PAGE] => $page]),
             $nextrow ? $this->get_link_single_entry($nextrow) : null,
         ];
+    }
+
+    /**
+     * Download the data.
+     */
+    public function download() {
+        \core\session\manager::write_close();
+        $this->out($this->get_total_responses_count(), false);
+        exit;
+    }
+
+    /**
+     * Returns html code for displaying "Download" button if applicable.
+     */
+    public function download_buttons() {
+        if ($this->is_downloadable() && !$this->is_downloading()) {
+
+            $elementid = $this->uniqueid . '_download';
+            $html = '<div class="mdl-align">';
+            $html .= '<form action="'. $this->baseurl .'" method="post" class="form-inline">';
+            $html .= html_writer::tag('label', get_string('downloadresponseas', 'feedback'),
+                    ['for' => $elementid]);
+            $html .= html_writer::select($this->get_download_menu(),
+                    $this->downloadparamname, $this->defaultdownloadformat, false, ['id' => $elementid]);
+            $html .= html_writer::empty_tag('input', ['type' => 'submit', 'value' => get_string('download')]);
+            $html .= '</form></div>';
+
+            return $html;
+        } else {
+            return '';
+        }
     }
 }

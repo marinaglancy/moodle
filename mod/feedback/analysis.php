@@ -60,18 +60,9 @@ $myurl = $CFG->wwwroot.'/mod/feedback/analysis.php?id='.$cm->id;
 $mygroupid = groups_get_activity_group($cm, true);
 $groupselect = groups_print_activity_menu($cm, $myurl, true);
 
-if ( has_capability('mod/feedback:viewreports', $context) ) {
-
-    if (!empty($groupselect)) {
-        echo $groupselect;
-        echo '<div class="clearer"></div>';
-    }
-
-    //button "export to excel"
-    echo $OUTPUT->container_start('form-buttons');
-    $aurl = new moodle_url('analysis_to_excel.php', array('sesskey'=>sesskey(), 'id'=>$id));
-    echo $OUTPUT->single_button($aurl, get_string('export_to_excel', 'feedback'));
-    echo $OUTPUT->container_end();
+if (!empty($groupselect)) {
+    echo $groupselect;
+    echo '<div class="clearer"></div>';
 }
 
 //get completed feedbacks

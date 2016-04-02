@@ -36,42 +36,40 @@ class mod_feedback_responses_anon_table extends mod_feedback_responses_table {
     /** @var string */
     protected $showallparamname = 'ashowall';
 
+    /** @var string */
+    protected $downloadparamname = 'adownload';
+
     /**
      * Initialises table
      */
     public function init() {
 
-        $this->uniqueid = 'feedback-showentry-anon-list-' . $this->cm->course;
+        $cm = $this->feedbackstructure->get_cm();
+        $this->uniqueid = 'feedback-showentry-anon-list-' . $cm->course;
 
         // There potentially can be both tables with anonymouns and non-anonymous responses on
         // the same page (for example when feedback anonymity was changed after some people
         // already responded). In this case we need to distinguish tables' pagination parameters.
         $this->request[TABLE_VAR_PAGE] = 'apage';
 
-        $tablecolumns = array('random_response', 'showresponse');
-        $tableheaders = array('', '');
-
-        $context = context_module::instance($this->cm->id);
-        if (has_capability('mod/feedback:deletesubmissions', $context)) {
-            $tablecolumns[] = 'deleteentry';
-            $tableheaders[] = '';
-        }
+        $tablecolumns = ['random_response'];
+        $tableheaders = [get_string('response_nr', 'feedback')];
 
         $this->define_columns($tablecolumns);
         $this->define_headers($tableheaders);
 
-        $this->sortable(false, 'random_response');
-        $this->collapsible(false);
+        $this->sortable(true, 'random_response');
+        $this->collapsible(true);
         $this->set_attribute('id', 'showentryanonymtable');
 
-        $params = ['instance' => $this->cm->instance, 'anon' => FEEDBACK_ANONYMOUS_YES];
+        $params = ['instance' => $cm->instance, 'anon' => FEEDBACK_ANONYMOUS_YES];
 
-        $fields = 'id, random_response';
-        $from = '{feedback_completed}';
-        $where = 'anonymous_response = :anon AND feedback = :instance';
+        $fields = 'c.id, c.random_response';
+        $from = '{feedback_completed} c';
+        $where = 'c.anonymous_response = :anon AND c.feedback = :instance';
 
         $this->set_sql($fields, $from, $where, $params);
-        $this->set_count_sql("SELECT COUNT(id) FROM $from WHERE $where", $params);
+        $this->set_count_sql("SELECT COUNT(c.id) FROM $from WHERE $where", $params);
     }
 
     /**
@@ -89,22 +87,11 @@ class mod_feedback_responses_anon_table extends mod_feedback_responses_table {
      * @return string
      */
     public function col_random_response($row) {
-        return get_string('response_nr', 'feedback').': '. $row->random_response;
-    }
-
-    /**
-     * Prepares column showresponse for display
-     * @param stdClass $row
-     * @return string
-     */
-    public function col_showresponse($row) {
-        return html_writer::link($this->get_link_single_entry($row), get_string('show_entry', 'feedback'));
-    }
-
-    /**
-     * Generate the HTML for the table preferences reset button.
-     */
-    protected function render_reset_button() {
-        return '';
+        if ($this->is_downloading()) {
+            return $row->random_response;
+        } else {
+            return html_writer::link($this->get_link_single_entry($row),
+                    get_string('response_nr', 'feedback').': '. $row->random_response);
+        }
     }
 }
