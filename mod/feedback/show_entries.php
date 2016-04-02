@@ -70,10 +70,10 @@ $responsestable = new mod_feedback_responses_table($feedbackstructure);
 $anonresponsestable = new mod_feedback_responses_anon_table($feedbackstructure);
 
 if ($responsestable->is_downloading()) {
-    $responsestable->download($download);
+    $responsestable->download();
 }
 if ($anonresponsestable->is_downloading()) {
-    $anonresponsestable->download($download);
+    $anonresponsestable->download();
 }
 
 // Print the page header.

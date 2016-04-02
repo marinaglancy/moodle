@@ -83,6 +83,14 @@ class mod_feedback_responses_table extends table_sql {
         $tablecolumns = array('userpic', 'fullname', 'completed_timemodified');
         $tableheaders = array(get_string('userpic'), get_string('fullnameuser'), get_string('date'));
 
+        $extrafields = get_extra_user_fields($this->get_context());
+        $ufields = user_picture::fields('u', $extrafields, 'userid');
+        $fields = 'DISTINCT c.id, c.timemodified as completed_timemodified, '.$ufields;
+        $from = '{feedback_completed} c '
+                . 'JOIN {user} u ON u.id = c.userid AND u.deleted = :notdeleted';
+        $where = 'c.anonymous_response = :anon
+                AND c.feedback = :instance';
+
         // When downloading data:
         if ($this->is_downloading()) {
             // Remove 'userpic' from downloaded data.
@@ -108,14 +116,6 @@ class mod_feedback_responses_table extends table_sql {
         $params['anon'] = FEEDBACK_ANONYMOUS_NO;
         $params['instance'] = $this->feedbackstructure->get_feedback()->id;
         $params['notdeleted'] = 0;
-
-        $extrafields = get_extra_user_fields($this->get_context());
-        $ufields = user_picture::fields('u', $extrafields, 'userid');
-        $fields = 'DISTINCT c.id, c.timemodified as completed_timemodified, '.$ufields;
-        $from = '{feedback_completed} c '
-                . 'JOIN {user} u ON u.id = c.userid AND u.deleted = :notdeleted';
-        $where = 'c.anonymous_response = :anon
-                AND c.feedback = :instance';
 
         $group = groups_get_activity_group($this->feedbackstructure->get_cm(), true);
         if ($group) {
