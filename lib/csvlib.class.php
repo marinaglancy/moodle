@@ -552,7 +552,7 @@ class csv_export_writer {
      * Make sure that everything is closed when we are finished.
      */
     public function __destruct() {
-        fclose($this->fp);
-        unlink($this->path);
+        @fclose($this->fp);
+        @unlink($this->path);
     }
 }

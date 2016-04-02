@@ -60,14 +60,6 @@ $myurl = $CFG->wwwroot.'/mod/feedback/analysis.php?id='.$cm->id;
 $mygroupid = groups_get_activity_group($cm, true);
 groups_print_activity_menu($cm, $myurl);
 
-if ( has_capability('mod/feedback:viewreports', $context) ) {
-    //button "export to excel"
-    echo $OUTPUT->container_start('form-buttons');
-    $aurl = new moodle_url('analysis_to_excel.php', array('sesskey'=>sesskey(), 'id'=>$id));
-    echo $OUTPUT->single_button($aurl, get_string('export_to_excel', 'feedback'));
-    echo $OUTPUT->container_end();
-}
-
 // Get completed feedbacks.
 $completedscount = count($feedbackanalysis->get_all_completed($mygroupid));
 
