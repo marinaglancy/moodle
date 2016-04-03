@@ -58,21 +58,13 @@ require('tabs.php');
 //get the groupid
 $myurl = $CFG->wwwroot.'/mod/feedback/analysis.php?id='.$cm->id;
 $mygroupid = groups_get_activity_group($cm, true);
-$groupselect = groups_print_activity_menu($cm, $myurl, true);
+echo groups_print_activity_menu($cm, $myurl, true);
 
-if (!empty($groupselect)) {
-    echo $groupselect;
-    echo '<div class="clearer"></div>';
-}
-
-//get completed feedbacks
+// Get completed feedbacks.
 $completedscount = count($feedbackanalysis->get_all_completed($mygroupid));
 
-//show the group, if available
-if ($mygroupid and $group = $DB->get_record('groups', array('id'=>$mygroupid))) {
-    echo '<b>'.get_string('group').': '.format_string($group->name). '</b><br />';
-}
-//show the count
+// Show the count.
+echo '<div class="analysis_header">';
 echo '<b>'.get_string('completed_feedbacks', 'feedback').': '.$completedscount. '</b><br />';
 
 // get the items of the feedback
@@ -83,6 +75,7 @@ if (is_array($items)) {
 } else {
     $items=array();
 }
+echo '</div>';
 $check_anonymously = true;
 if ($mygroupid > 0 AND $feedback->anonymous == FEEDBACK_ANONYMOUS_YES) {
     if ($completedscount < FEEDBACK_MIN_ANONYMOUS_COUNT_IN_GROUP) {

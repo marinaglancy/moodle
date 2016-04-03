@@ -1,4 +1,4 @@
-@mod @mod_feedback @xxx
+@mod @mod_feedback
 Feature: Non anonymous feedback
   In order to collect feedbacks
   As an teacher

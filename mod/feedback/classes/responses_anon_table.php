@@ -64,12 +64,18 @@ class mod_feedback_responses_anon_table extends mod_feedback_responses_table {
 
         $params = ['instance' => $cm->instance, 'anon' => FEEDBACK_ANONYMOUS_YES];
 
-        $fields = 'c.id, c.random_response';
+        $fields = 'DISTINCT c.id, c.random_response';
         $from = '{feedback_completed} c';
         $where = 'c.anonymous_response = :anon AND c.feedback = :instance';
 
+        $group = groups_get_activity_group($this->feedbackstructure->get_cm(), true);
+        if ($group) {
+            $from .= ' JOIN {groups_members} g ON g.groupid = :group AND g.userid = c.userid';
+            $params['group'] = $group;
+        }
+
         $this->set_sql($fields, $from, $where, $params);
-        $this->set_count_sql("SELECT COUNT(c.id) FROM $from WHERE $where", $params);
+        $this->set_count_sql("SELECT COUNT(DISTINCT c.id) FROM $from WHERE $where", $params);
     }
 
     /**

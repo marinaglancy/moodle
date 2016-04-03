@@ -293,6 +293,7 @@ class mod_feedback_responses_table extends table_sql {
      */
     public function display() {
         global $OUTPUT;
+        groups_print_activity_menu($this->feedbackstructure->get_cm(), $this->baseurl->out());
         $grandtotal = $this->get_total_responses_count();
         if (!$grandtotal) {
             echo $OUTPUT->box(get_string('nothingtodisplay'), 'generalbox nothingtodisplay');

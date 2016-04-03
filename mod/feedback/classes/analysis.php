@@ -83,10 +83,9 @@ class mod_feedback_analysis extends mod_feedback_structure {
                         FROM {feedback_completed} fbc, {groups_members} gm
                         WHERE fbc.feedback = ?
                             AND gm.groupid = ?
-                            AND fbc.anonymous_response = ?
                             AND fbc.userid = gm.userid";
             return $DB->get_records_sql($query,
-                    array($this->feedback->id, intval($groupid), FEEDBACK_ANONYMOUS_NO));
+                    array($this->feedback->id, intval($groupid)));
         } else if ($this->courseid) {
             $query = "SELECT fbc.*
                         FROM {feedback_completed} fbc

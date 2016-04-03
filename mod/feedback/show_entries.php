@@ -129,7 +129,6 @@ if ($deleteid) {
     $totalrows = $responsestable->get_total_responses_count();
     if (!$feedbackstructure->is_anonymous() || $totalrows) {
         echo $OUTPUT->heading(get_string('non_anonymous_entries', 'feedback', $totalrows), 4);
-        groups_print_activity_menu($cm, $baseurl->out());
         $responsestable->display();
     }
 
