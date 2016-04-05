@@ -45,6 +45,9 @@ $form = new mod_feedback_course_map_form();
 $form->set_data(array('id' => $cm->id, 'mappedcourses' => $coursemap));
 if ($data = $form->get_data()) {
     feedback_update_sitecourse_map($feedback, $data->mappedcourses);
+    if (!empty($data->nooutput)) {
+        exit;
+    }
 }
 
 // Print the page header.

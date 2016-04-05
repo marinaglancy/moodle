@@ -34,6 +34,7 @@ define(['jquery'], function($) {
             // Auto submit form on every change to element with id elementid.
             $('body').on('change', elementid, function (e) {
                 var form = $(e.target).closest('form');
+                form.find("input[name=nooutput]").val(1);
                 $.ajax(form.attr('action'), {
                     type: 'POST',
                     data: form.serialize()

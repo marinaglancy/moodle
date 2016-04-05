@@ -41,6 +41,9 @@ class mod_feedback_course_map_form extends moodleform {
         $mform->addElement('hidden', 'id');
         $mform->setType('id', PARAM_INT);
 
+        $mform->addElement('hidden', 'nooutput');
+        $mform->setType('nooutput', PARAM_INT);
+
         $options = array('multiple' => true);
         $mform->addElement('course', 'mappedcourses', get_string('courses'), $options);
 
