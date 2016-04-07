@@ -36,11 +36,11 @@ list($course, $cm) = get_course_and_cm_from_cmid($id, 'feedback');
 require_course_login($course, true, $cm);
 
 $feedback = $PAGE->activityrecord;
-$feedbackanalysis = new mod_feedback_analysis($feedback, $cm);
+$feedbackstructure = new mod_feedback_structure($feedback, $cm);
 
 $context = context_module::instance($cm->id);
 
-if (!$feedbackanalysis->can_view_analysis()) {
+if (!$feedbackstructure->can_view_analysis()) {
     print_error('error');
 }
 
@@ -61,20 +61,20 @@ $mygroupid = groups_get_activity_group($cm, true);
 groups_print_activity_menu($cm, $myurl);
 
 // Get completed feedbacks.
-$completedscount = count($feedbackanalysis->get_all_completed($mygroupid));
+$completedcount = $feedbackstructure->count_completed_responses($mygroupid);
 
-echo '<div class="analysis_header">';
 // Show the submissions count.
-echo '<b>'.get_string('completed_feedbacks', 'feedback').': '.$completedscount. '</b><br />';
+echo '<div class="feedback_info">';
+echo html_writer::span(get_string('completed_feedbacks', 'feedback') . ': ', 'feedback_info');
+echo html_writer::span($completedcount, 'feedback_info_value');
+echo '</div>';
 
-// get the items of the feedback
-$items = $feedbackanalysis->get_items(true);
+// Get the items of the feedback.
+$items = $feedbackstructure->get_items(true);
 // Show the items count.
-if (is_array($items)) {
-    echo '<b>'.get_string('questions', 'feedback').': ' .count($items). ' </b>';
-} else {
-    $items=array();
-}
+echo '<div class="feedback_info">';
+echo html_writer::span(get_string('questions', 'feedback') . ': ', 'feedback_info');
+echo html_writer::span(count($items), 'feedback_info_value');
 echo '</div>';
 
 $check_anonymously = true;

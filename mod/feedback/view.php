@@ -45,7 +45,6 @@ $PAGE->set_title($feedback->name);
 $PAGE->set_heading($course->fullname);
 
 // Check access to the given courseid.
-$courseid = $feedbackcompletion->get_courseid();
 if ($courseid AND $courseid != SITEID) {
     require_course_login(get_course($courseid)); // This overwrites the object $COURSE .
 }

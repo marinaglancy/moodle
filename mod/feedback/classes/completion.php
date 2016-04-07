@@ -60,6 +60,12 @@ class mod_feedback_completion extends mod_feedback_structure {
      */
     public function __construct($feedback, $cm, $courseid, $iscompleted = false, $completedid = null, $userid = null) {
         global $DB;
+        // Make sure courseid is always set for site feedback and never for course feedback.
+        if ($feedback->course == SITEID) {
+            $courseid = $courseid ?: SITEID;
+        } else {
+            $courseid = 0;
+        }
         parent::__construct($feedback, $cm, $courseid, 0);
         if ($iscompleted) {
             // Retrieve information about the completion.

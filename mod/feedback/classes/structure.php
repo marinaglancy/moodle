@@ -42,6 +42,8 @@ class mod_feedback_structure {
     protected $templateid;
     /** @var array */
     protected $allitems;
+    /** @var array */
+    protected $allcourses;
 
     /**
      * Constructor
@@ -55,9 +57,7 @@ class mod_feedback_structure {
     public function __construct($feedback, $cm, $courseid = 0, $templateid = null) {
         $this->feedback = $feedback;
         $this->cm = $cm;
-        if ($feedback->course == SITEID) {
-            $this->courseid = $courseid ?: SITEID;
-        }
+        $this->courseid = ($feedback->course == SITEID) ? $courseid : 0;
         $this->templateid = $templateid;
     }
 
@@ -231,5 +231,98 @@ class mod_feedback_structure {
         }
         // No mapping means any course is mapped.
         return true;
+    }
+
+    /**
+     * If there are any new responses to the anonymous feedback, re-shuffle all
+     * responses and assign response number to each of them.
+     */
+    function shuffle_anonym_responses() {
+        global $DB;
+        $params = array('feedback' => $this->feedback->id,
+            'random_response' => 0,
+            'anonymous_response' => FEEDBACK_ANONYMOUS_YES);
+
+        if ($DB->count_records('feedback_completed', $params, 'random_response')) {
+            // Get all of the anonymous records, go through them and assign a response id.
+            unset($params['random_response']);
+            $feedbackcompleteds = $DB->get_records('feedback_completed', $params, 'id');
+            shuffle($feedbackcompleteds);
+            $num = 1;
+            foreach ($feedbackcompleteds as $compl) {
+                $compl->random_response = $num++;
+                $DB->update_record('feedback_completed', $compl);
+            }
+        }
+    }
+
+    /**
+     * Counts records from {feedback_completed} table for a given feedback
+     *
+     * If $groupid or $this->courseid is set, the records are filtered by the group/course
+     *
+     * @param int $groupid
+     * @return mixed array of found completeds otherwise false
+     */
+    function count_completed_responses($groupid = 0) {
+        global $DB;
+        if (intval($groupid) > 0) {
+            $query = "SELECT COUNT(DISTINCT fbc.id)
+                        FROM {feedback_completed} fbc, {groups_members} gm
+                        WHERE fbc.feedback = :feedback
+                            AND gm.groupid = :groupid
+                            AND fbc.userid = gm.userid";
+        } else if ($this->courseid) {
+            $query = "SELECT COUNT(fbc.id)
+                        FROM {feedback_completed} fbc
+                        WHERE fbc.feedback = :feedback
+                            AND fbc.courseid = :courseid";
+        } else {
+            $query = "SELECT COUNT(fbc.id) FROM {feedback_completed} fbc WHERE fbc.feedback = :feedback";
+        }
+        $params = ['feedback' => $this->feedback->id, 'groupid' => $groupid, 'courseid' => $this->courseid];
+        return $DB->get_field_sql($query, $params);
+    }
+
+    /**
+     * For the frontpage feedback returns the list of courses with at least one completed feedback
+     *
+     * @return array id=>name pairs of courses
+     */
+    function get_completed_courses() {
+        global $DB;
+
+        if ($this->get_feedback()->course != SITEID) {
+            return [];
+        }
+
+        if ($this->allcourses !== null) {
+            return $this->allcourses;
+        }
+
+        $coursestofetch = $DB->get_fieldset_sql("SELECT DISTINCT fbc.courseid
+            FROM {feedback_completed} fbc
+            WHERE fbc.feedback = ?", [$this->get_feedback()->id]);
+
+        $ctxselect = context_helper::get_preload_record_columns_sql('ctx');
+        list($whereclause, $params) = $DB->get_in_or_equal($coursestofetch, SQL_PARAMS_NAMED, 'id');
+
+        $sql = 'SELECT c.id, c.shortname, c.fullname, c.idnumber, c.visible, '. $ctxselect. '
+                FROM {course} c
+                JOIN {context} ctx ON c.id = ctx.instanceid AND ctx.contextlevel = :contextcourse
+                WHERE c.id '. $whereclause.' ORDER BY c.sortorder';
+        $list = $DB->get_records_sql($sql, ['contextcourse' => CONTEXT_COURSE] + $params);
+
+        $this->allcourses = array();
+        foreach ($list as $course) {
+            context_helper::preload_from_record($course);
+            if (!$course->visible && !has_capability('moodle/course:viewhiddencourses', context_course::instance($course->id))) {
+                // Do not return courses that current user can not see.
+                continue;
+            }
+            $label = get_course_display_name_for_list($course);
+            $this->allcourses[$course->id] = $label;
+        }
+        return $this->allcourses;
     }
 }

@@ -32,6 +32,7 @@ $id = required_param('id', PARAM_INT);
 $userid = optional_param('userid', false, PARAM_INT);
 $showcompleted = optional_param('showcompleted', false, PARAM_INT);
 $deleteid = optional_param('delete', null, PARAM_INT);
+$courseid = optional_param('courseid', null, PARAM_INT);
 
 ////////////////////////////////////////////////////////
 //get the objects
@@ -63,7 +64,7 @@ if ($deleteid) {
     $feedbackstructure = new mod_feedback_completion($feedback, $cm, 0, true, $showcompleted, $userid);
 } else {
     // Viewing list of reponses.
-    $feedbackstructure = new mod_feedback_analysis($feedback, $cm);
+    $feedbackstructure = new mod_feedback_structure($feedback, $cm, $courseid);
 }
 
 $responsestable = new mod_feedback_responses_table($feedbackstructure);
@@ -76,6 +77,11 @@ if ($anonresponsestable->is_downloading()) {
     $anonresponsestable->download();
 }
 
+// Process course select form.
+$courseselectform = new mod_feedback_course_select_form($baseurl, $feedbackstructure, $feedback->course == SITEID);
+if ($data = $courseselectform->get_data()) {
+    redirect(new moodle_url($baseurl, ['courseid' => $data->courseid]));
+}
 // Print the page header.
 navigation_node::override_active_url($baseurl);
 $PAGE->set_heading($course->fullname);
@@ -124,6 +130,7 @@ if ($deleteid) {
     echo html_writer::end_div();
 } else {
     // Print the list of responses.
+    $courseselectform->display();
 
     // Show non-anonymous responses (always retrieve them even if current feedback is anonymous).
     $totalrows = $responsestable->get_total_responses_count();

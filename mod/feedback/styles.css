@@ -1,25 +1,17 @@
 /* styles using by feedback */
-span.feedback_info {
+.path-mod-feedback span.feedback_info {
     font-weight:bold;
 }
 
-div.feedback_depend {
+.path-mod-feedback div.feedback_is_dependent {
     background:#DDDDDD;
 }
 
-div.feedback_complete_depend {
-    background:#EEEEEE;
-}
-
-span.feedback_depend {
+.path-mod-feedback span.feedback_depend {
     color:#ff0000;
 }
 
-div.feedback_items label{
-    display: inline;
-}
-
-hr.feedback_pagebreak {
+.path-mod-feedback hr.feedback_pagebreak {
     height:4px;
     color:#aaaaaa;
     background-color:#aaaaaa;
@@ -27,22 +19,16 @@ hr.feedback_pagebreak {
     margin: 0;
 }
 
-.drag_target_active {
+.path-mod-feedback .drag_target_active {
     opacity: .25;
 }
 
-.drag_item_active {
+.path-mod-feedback .drag_item_active {
     opacity: .5;
 }
 
 .path-mod-feedback .feedback_bar_image {
     height: 10px;
-}
-
-.path-mod-feedback input,
-.path-mod-feedback textarea,
-.path-mod-feedback .uneditable-input {
-    width: auto;
 }
 
 .path-mod-feedback #analysis-form label { display: inline; }
@@ -120,6 +106,17 @@ body.dir-rtl.path-mod-feedback #region-main .mform.feedback_form .femptylabel .f
     float: right;
     padding-right: 0;
     padding-left: 0;
+}
+
+.path-mod-feedback #showentrytable td.cell.completed_timemodified,
+.path-mod-feedback #showentryanontable td.cell.random_response {
+    font-weight: bold;
+}
+
+.path-mod-feedback #showentrytable td.cell.userpic,
+.path-mod-feedback #showentrytable td.cell.deleteentry,
+.path-mod-feedback #showentryanontable td.cell.deleteentry {
+    width: 10px;
 }
 
 /* Responses navigation */

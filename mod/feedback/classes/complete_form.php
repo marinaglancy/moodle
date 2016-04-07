@@ -279,7 +279,7 @@ class mod_feedback_complete_form extends moodleform {
     protected function get_suggested_class($item) {
         $class = "feedback_itemlist feedback-item-{$item->typ}";
         if ($item->dependitem) {
-            $class .= " feedback_depend";
+            $class .= " feedback_is_dependent";
         }
         if ($item->typ !== 'pagebreak') {
             $itemobj = feedback_get_item_class($item->typ);

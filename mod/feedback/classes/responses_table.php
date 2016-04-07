@@ -64,6 +64,9 @@ class mod_feedback_responses_table extends table_sql {
         $this->showall = optional_param($this->showallparamname, 0, PARAM_BOOL);
         $this->define_baseurl(new moodle_url('/mod/feedback/show_entries.php',
             ['id' => $this->feedbackstructure->get_cm()->id]));
+        if ($courseid = $this->feedbackstructure->get_courseid()) {
+            $this->baseurl->param('courseid', $courseid);
+        }
         if ($this->showall) {
             $this->baseurl->param($this->showallparamname, $this->showall);
         }
@@ -80,16 +83,19 @@ class mod_feedback_responses_table extends table_sql {
      */
     protected function init() {
 
-        $tablecolumns = array('userpic', 'fullname', 'completed_timemodified');
-        $tableheaders = array(get_string('userpic'), get_string('fullnameuser'), get_string('date'));
+        $tablecolumns = array('userpic', 'fullname');
+        $tableheaders = array(get_string('userpic'), get_string('fullnameuser'));
 
         $extrafields = get_extra_user_fields($this->get_context());
         $ufields = user_picture::fields('u', $extrafields, 'userid');
-        $fields = 'DISTINCT c.id, c.timemodified as completed_timemodified, '.$ufields;
+        $fields = 'DISTINCT c.id, c.timemodified as completed_timemodified, c.courseid, '.$ufields;
         $from = '{feedback_completed} c '
                 . 'JOIN {user} u ON u.id = c.userid AND u.deleted = :notdeleted';
         $where = 'c.anonymous_response = :anon
                 AND c.feedback = :instance';
+        if ($this->feedbackstructure->get_courseid()) {
+            $where .= ' AND c.courseid = :courseid';
+        }
 
         // When downloading data:
         if ($this->is_downloading()) {
@@ -105,6 +111,14 @@ class mod_feedback_responses_table extends table_sql {
             }
         }
 
+        if ($this->feedbackstructure->get_feedback()->course == SITEID && !$this->feedbackstructure->get_courseid()) {
+            $tablecolumns[] = 'courseid';
+            $tableheaders[] = get_string('course');
+        }
+
+        $tablecolumns[] = 'completed_timemodified';
+        $tableheaders[] = get_string('date');
+
         $this->define_columns($tablecolumns);
         $this->define_headers($tableheaders);
 
@@ -116,6 +130,7 @@ class mod_feedback_responses_table extends table_sql {
         $params['anon'] = FEEDBACK_ANONYMOUS_NO;
         $params['instance'] = $this->feedbackstructure->get_feedback()->id;
         $params['notdeleted'] = 0;
+        $params['courseid'] = $this->feedbackstructure->get_courseid();
 
         $group = groups_get_activity_group($this->feedbackstructure->get_cm(), true);
         if ($group) {
@@ -190,6 +205,23 @@ class mod_feedback_responses_table extends table_sql {
             return html_writer::link($this->get_link_single_entry($student),
                     userdate($student->completed_timemodified));
         }
+    }
+
+    /**
+     * Prepares column courseid for display
+     * @param array $row
+     * @return string
+     */
+    public function col_courseid($row) {
+        $courses = $this->feedbackstructure->get_completed_courses();
+        $name = '';
+        if (isset($courses[$row->courseid])) {
+            $name = $courses[$row->courseid];
+            if (!$this->is_downloading()) {
+                $name = html_writer::link(course_get_url($row->courseid), $name);
+            }
+        }
+        return $name;
     }
 
     /**
@@ -277,6 +309,19 @@ class mod_feedback_responses_table extends table_sql {
             $this->grandtotal = $DB->count_records_sql($this->countsql, $this->countparams);
         }
         return $this->grandtotal;
+    }
+
+    /**
+     * Defines columns
+     * @param array $columns an array of identifying names for columns. If
+     * columns are sorted then column names must correspond to a field in sql.
+     */
+    function define_columns($columns) {
+        parent::define_columns($columns);
+        foreach ($this->columns as $column => $column) {
+            // Automatically assign classes to columns.
+            $this->column_class[$column] = ' ' . $column;
+        }
     }
 
     /**
@@ -368,6 +413,9 @@ class mod_feedback_responses_table extends table_sql {
             $elementid = $this->uniqueid . '_download';
             $html = '<div class="mdl-align">';
             $html .= '<form action="'. $this->baseurl .'" method="post" class="form-inline">';
+            if ($courseid = $this->feedbackstructure->get_courseid()) {
+                $html .= '<input type="hidden" name="courseid" value="' . s($courseid) . '">';
+            }
             $html .= html_writer::tag('label', get_string('downloadresponseas', 'feedback'),
                     ['for' => $elementid]);
             $html .= html_writer::select($this->get_download_menu(),
