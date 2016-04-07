@@ -834,7 +834,7 @@ class group_non_members_selector extends groups_user_selector_base {
                 } else {
                     $usergrouplist = '';
                 }
-                $usersummaries[] = $usergrouplist;
+                $usersummaries[$userid] = $usergrouplist;
             }
         }
 

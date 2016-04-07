@@ -224,18 +224,18 @@ function updateUserSummary() {
         summaryDiv = document.getElementById('group-usersummary'),
         length = selectEl.length,
         selectCnt = 0,
-        selectIdx = -1,
+        selectUserid = -1,
         i;
 
     for (i = 0; i < length; i++) {
         if (selectEl.options[i].selected) {
             selectCnt++;
-            selectIdx = i;
+            selectUserid = selectEl.options[i].value;
         }
     }
 
-    if (selectCnt == 1 && userSummaries[selectIdx]) {
-        summaryDiv.innerHTML = userSummaries[selectIdx];
+    if (selectCnt == 1 && userSummaries[selectUserid]) {
+        summaryDiv.innerHTML = userSummaries[selectUserid];
     } else {
         summaryDiv.innerHTML = '';
     }
