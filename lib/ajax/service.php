@@ -41,7 +41,6 @@ if ($requests === null) {
 }
 $responses = array();
 
-
 foreach ($requests as $request) {
     $response = array();
     $methodname = clean_param($request['methodname'], PARAM_ALPHANUMEXT);

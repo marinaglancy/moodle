@@ -359,7 +359,7 @@ class external_api {
      * @since Moodle 2.0
      */
     public static function validate_context($context) {
-        global $CFG;
+        global $CFG, $PAGE;
 
         if (empty($context)) {
             throw new invalid_parameter_exception('Context does not exist');
@@ -382,10 +382,9 @@ class external_api {
             }
         }
 
-        if ($context->contextlevel >= CONTEXT_COURSE) {
-            list($context, $course, $cm) = get_context_info_array($context->id);
-            require_login($course, false, $cm, false, true);
-        }
+        $PAGE->reset_theme_and_output();
+        list($context, $course, $cm) = get_context_info_array($context->id);
+        require_login($course, false, $cm, false, true);
     }
 
     /**
