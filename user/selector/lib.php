@@ -794,23 +794,22 @@ class group_non_members_selector extends groups_user_selector_base {
     }
 
     /**
-     * Creates a global JS variable (userSummaries) that is used by the group selector
-     * to print related information when the user clicks on a user in the groups UI.
+     * For each potential member, retrieve the list of groups he's already a part of (for the given course).
      *
-     * Used by /group/clientlib.js
+     * Used by group_non_members_selector::print_user_summaries
+	 * Used by user_memberships.php (AJAX service to retrieve user memberships)
      *
      * @global moodle_database $DB
-     * @global moodle_page $PAGE
-     * @param int $courseid
+     * @param int $courseid the id of the course
+	 * @param array $potentialmembersids the list of ids of potential members
      */
-    public function print_user_summaries($courseid) {
-        global $DB, $PAGE;
+    public function get_user_summaries($courseid, $potentialmembersids) {
+        global $DB;
 
         $usersummaries = array();
 
         // Get other groups user already belongs to.
         $usergroups = array();
-        $potentialmembersids = $this->potentialmembersids;
         if (empty($potentialmembersids) == false) {
             list($membersidsclause, $params) = $DB->get_in_or_equal($potentialmembersids, SQL_PARAMS_NAMED, 'pm');
             $sql = "SELECT u.id AS userid, g.*
@@ -839,8 +838,23 @@ class group_non_members_selector extends groups_user_selector_base {
             }
         }
 
-        $PAGE->requires->data_for_js('userSummaries', $usersummaries);
+        return $usersummaries;
     }
+	
+	/**
+     * Creates a global JS variable (userSummaries) that is used by the group selector
+     * to print related information when the user clicks on a user in the groups UI.
+     *
+     * Used by /group/clientlib.js
+     *
+     * @global moodle_page $PAGE
+     * @param int $courseid
+     */
+	public function print_user_summaries($courseid) {
+		global $PAGE;
+		$usersummaries = $this->get_user_summaries($courseid, $this->potentialmembersids);
+		$PAGE->requires->data_for_js('userSummaries', $usersummaries);
+	}
 
     /**
      * Finds users to display in this control.

@@ -179,6 +179,8 @@ M.core_user.init_user_selector = function (Y, name, hash, extrafields, lastsearc
                     return new M.core.ajaxException(data);
                 }
                 this.output_options(data);
+				// MDL-29774 Reload user memberships because the original user memberships array no longer reflects the new (filtered) list of potential members.
+				this.load_user_summaries();
             } catch (e) {
                 this.listbox.setStyle('background','');
                 this.searchfield.addClass('error');
@@ -225,6 +227,63 @@ M.core_user.init_user_selector = function (Y, name, hash, extrafields, lastsearc
             }
             this.handle_selection_change();
         },
+		
+		/**
+		 * Loads the user memberships of the potential members of this given course in the "userSummaries" JS variable
+		 */
+		load_user_summaries : function() {
+			// Retrieve the list of potential members from the user selector
+			var potentialmembersids = [];
+            this.listbox.all('optgroup').each(function(optgroup){
+                optgroup.all('option').each(function(option){
+					potentialmembersids.push(option.get('value'));
+                }, this);
+            }, this);
+			
+			// Send AJAX request to retrieve the user memberships of the potential members
+			var iotrans = Y.io(M.cfg.wwwroot + '/group/user_memberships.php', {
+                method: 'POST',
+                data: 'selectorid=' + hash + '&sesskey=' + M.cfg.sesskey + '&potential=' + potentialmembersids,
+                on: {
+                    complete: this.handle_response_user_summaries
+                },
+                context:this
+            });
+			
+            this.iotransactions[iotrans.id] = iotrans;
+		},
+		
+		/**
+		 * Handle the response from the server when we receive the user memberships
+		 */
+		handle_response_user_summaries : function(requestid, response) {
+            try {
+                delete this.iotransactions[requestid];
+                if (!Y.Object.isEmpty(this.iotransactions)) {
+                    // More searches pending. Wait until they are all done.
+                    return;
+                }
+                var data = Y.JSON.parse(response.responseText);
+                if (data.error) {
+                    return new M.core.ajaxException(data);
+                }
+				
+				// Initialize a new array which will contain the new user memberships
+				var newusersummaries = {};
+				
+				for (var i = 0; i < data.results.length; i++) {
+					var userid = data.results[i].userid;
+					var usergrouplist = data.results[i].usergrouplist;
+					newusersummaries[userid] = usergrouplist;
+				}
+				
+				// Replace the userSummaries variable (created in group_non_members_selector::print_user_summaries) with the new user memberships
+                userSummaries = newusersummaries;
+            } catch (e) {
+                return new M.core.exception(e);
+            }
+        },
+		
         /**
          * This method should do the same sort of thing as the PHP method
          * user_selector_base::output_optgroup.
