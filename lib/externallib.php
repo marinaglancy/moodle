@@ -83,7 +83,7 @@ class external_api {
         global $DB, $CFG;
 
         if (!is_object($function)) {
-            if (!$function = $DB->get_record('external_functions', array('name'=>$function), '*', $strictness)) {
+            if (!$function = $DB->get_record('external_functions', array('name' => $function), '*', $strictness)) {
                 return false;
             }
         }
@@ -91,7 +91,11 @@ class external_api {
         // First try class autoloading.
         if (!class_exists($function->classname)) {
             // Fallback to explicit include of externallib.php.
-            $function->classpath = empty($function->classpath) ? core_component::get_component_directory($function->component).'/externallib.php' : $CFG->dirroot.'/'.$function->classpath;
+            if (empty($function->classpath)) {
+                $function->classpath = core_component::get_component_directory($function->component).'/externallib.php';
+            } else {
+                $function->classpath = $CFG->dirroot.'/'.$function->classpath;
+            }
             if (!file_exists($function->classpath)) {
                 throw new coding_exception('Cannot find file with external function implementation');
             }
@@ -106,7 +110,7 @@ class external_api {
         $function->returns_method    = $function->methodname.'_returns';
         $function->deprecated_method = $function->methodname.'_is_deprecated';
 
-        // make sure the implementaion class is ok
+        // Make sure the implementaion class is ok.
         if (!method_exists($function->classname, $function->methodname)) {
             throw new coding_exception('Missing implementation method of '.$function->classname.'::'.$function->methodname);
         }
@@ -123,24 +127,25 @@ class external_api {
         }
         $function->allowed_from_ajax = false;
 
-        // fetch the parameters description
+        // Fetch the parameters description.
         $function->parameters_desc = call_user_func(array($function->classname, $function->parameters_method));
         if (!($function->parameters_desc instanceof external_function_parameters)) {
             throw new coding_exception('Invalid parameters description');
         }
 
-        // fetch the return values description
+        // Fetch the return values description.
         $function->returns_desc = call_user_func(array($function->classname, $function->returns_method));
-        // null means void result or result is ignored
+        // Null means void result or result is ignored.
         if (!is_null($function->returns_desc) and !($function->returns_desc instanceof external_description)) {
             throw new coding_exception('Invalid return description');
         }
 
-        //now get the function description
-        //TODO MDL-31115 use localised lang pack descriptions, it would be nice to have
-        //      easy to understand descriptions in admin UI,
-        //      on the other hand this is still a bit in a flux and we need to find some new naming
-        //      conventions for these descriptions in lang packs
+        // Now get the function description.
+
+        // TODO MDL-31115 use localised lang pack descriptions, it would be nice to have
+        // easy to understand descriptions in admin UI,
+        // on the other hand this is still a bit in a flux and we need to find some new naming
+        // conventions for these descriptions in lang packs.
         $function->description = null;
         $servicesfile = core_component::get_component_directory($function->component).'/db/services.php';
         if (file_exists($servicesfile)) {
@@ -202,21 +207,15 @@ class external_api {
             $COURSE = null;
 
             if ($ajaxonly && !$externalfunctioninfo->allowed_from_ajax) {
-                error_log('This external function is not available to ajax. ' .
-                          'Failed to call "' . $externalfunctioninfo->methodname . '"');
                 throw new moodle_exception('servicenotavailable', 'webservice');
             }
 
             // Do not allow access to write or delete webservices as a public user.
             if ($externalfunctioninfo->loginrequired) {
                 if (defined('NO_MOODLE_COOKIES') && NO_MOODLE_COOKIES && !PHPUNIT_TEST) {
-                    error_log('Set "loginrequired" to false in db/service.php when calling external function with no session. ' .
-                              'Failed to call "' . $externalfunctioninfo->methodname . '"');
                     throw new moodle_exception('servicenotavailable', 'webservice');
                 }
                 if (!isloggedin()) {
-                    error_log('This external function is not available to public users. ' .
-                              'Failed to call "' . $externalfunctioninfo->methodname . '"');
                     throw new moodle_exception('servicenotavailable', 'webservice');
                 } else {
                     require_sesskey();

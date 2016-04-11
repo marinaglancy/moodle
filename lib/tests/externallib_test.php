@@ -365,7 +365,13 @@ class core_externallib_testcase extends advanced_testcase {
         // First test a function that calls validate_context outside a course.
         $this->setAdminUser();
         $category = $this->getDataGenerator()->create_category();
-        $cohort1 = $this->getDataGenerator()->create_cohort(array('contextid'=>context_coursecat::instance($category->id)->id, 'name'=>'aaagrrryyy', 'idnumber'=>'','description'=>''));
+        $params = array(
+            'contextid' => context_coursecat::instance($category->id)->id,
+            'name' => 'aaagrrryyy',
+            'idnumber' => '',
+            'description' => ''
+        );
+        $cohort1 = $this->getDataGenerator()->create_cohort();
         $cohort2 = $this->getDataGenerator()->create_cohort();
 
         $beforepage = $PAGE;
