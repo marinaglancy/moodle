@@ -371,7 +371,7 @@ class core_externallib_testcase extends advanced_testcase {
             'idnumber' => '',
             'description' => ''
         );
-        $cohort1 = $this->getDataGenerator()->create_cohort();
+        $cohort1 = $this->getDataGenerator()->create_cohort($params);
         $cohort2 = $this->getDataGenerator()->create_cohort();
 
         $beforepage = $PAGE;

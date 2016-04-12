@@ -191,7 +191,7 @@ class external_api {
      * @return array containing keys for error (bool), exception and data.
      */
     public static function call_external_function($function, $args, $ajaxonly=false) {
-        global $PAGE, $COURSE, $CFG;
+        global $PAGE, $COURSE, $CFG, $SITE;
 
         require_once($CFG->libdir . "/pagelib.php");
 
@@ -204,7 +204,7 @@ class external_api {
         try {
 
             $PAGE = new moodle_page();
-            $COURSE = null;
+            $COURSE = clone($SITE);
 
             if ($ajaxonly && !$externalfunctioninfo->allowed_from_ajax) {
                 throw new moodle_exception('servicenotavailable', 'webservice');
@@ -481,8 +481,9 @@ class external_api {
         }
 
         $PAGE->reset_theme_and_output();
-        list($context, $course, $cm) = get_context_info_array($context->id);
+        list($unused, $course, $cm) = get_context_info_array($context->id);
         require_login($course, false, $cm, false, true);
+        $PAGE->set_context($context);
     }
 
     /**

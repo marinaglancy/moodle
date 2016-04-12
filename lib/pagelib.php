@@ -1562,9 +1562,9 @@ class moodle_page {
      * @return string the name of the theme that should be used on this page.
      */
     public function reset_theme_and_output() {
-        global $COURSE;
+        global $COURSE, $SITE;
 
-        $COURSE = null;
+        $COURSE = clone($SITE);
         $this->_theme = null;
         $this->_wherethemewasinitialised = null;
         $this->_course = null;
