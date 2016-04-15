@@ -29,15 +29,20 @@
  */
 abstract class base_plan implements checksumable, executable {
 
-    protected $name;      // One simple name for identification purposes
-    protected $settings;  // One array of (accumulated from tasks) base_setting elements
-    protected $tasks;     // One array of base_task elements
-    protected $results;   // One array of results received from tasks
-
-    protected $built;     // Flag to know if one plan has been built
+    /** @var string One simple name for identification purposes */
+    protected $name;
+    /** @var base_setting[] One array of (accumulated from tasks) base_setting elements */
+    protected $settings;
+    /** @var base_task[] One array of base_task elements */
+    protected $tasks;
+    /** @var array One array of results received from tasks */
+    protected $results;
+    /** @var bool Flag to know if one plan has been built */
+    protected $built;
 
     /**
      * Constructor - instantiates one object of this class
+     * @param string $name
      */
     public function __construct($name) {
         $this->name = $name;
@@ -51,6 +56,10 @@ abstract class base_plan implements checksumable, executable {
         return $this->name;
     }
 
+    /**
+     * Adds a task
+     * @param base_task $task
+     */
     public function add_task($task) {
         if (! $task instanceof base_task) {
             throw new base_plan_exception('wrong_base_task_specified');
@@ -75,6 +84,10 @@ abstract class base_plan implements checksumable, executable {
         }
     }
 
+    /**
+     * Returns all tasks
+     * @return base_task[]
+     */
     public function get_tasks() {
         return $this->tasks;
     }
@@ -104,6 +117,10 @@ abstract class base_plan implements checksumable, executable {
         return $this->results;
     }
 
+    /**
+     * Returns all settings
+     * @return base_setting[]
+     */
     public function get_settings() {
         return $this->settings;
     }
@@ -113,6 +130,7 @@ abstract class base_plan implements checksumable, executable {
      * that are, by definition, unique by name.
      *
      * @param string $name name of the setting
+     * @return base_setting
      * @throws base_plan_exception if setting name is not found.
      */
     public function get_setting($name) {

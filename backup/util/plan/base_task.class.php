@@ -29,16 +29,23 @@
  */
 abstract class base_task implements checksumable, executable, loggable {
 
-    protected $name;      // One simple name for identification purposes
-    protected $plan;      // Plan this is part of
-    protected $settings;  // One array of base_setting elements to define this task
-    protected $steps;     // One array of base_step elements
-
-    protected $built;     // Flag to know if one task has been built
-    protected $executed;  // Flag to know if one task has been executed
+    /** @var string One simple name for identification purposes */
+    protected $name;
+    /** @var base_plan Plan this is part of  */
+    protected $plan;
+    /** @var base_setting[] One array of base_setting elements to define this task */
+    protected $settings;
+    /** @var base_step[] One array of base_step elements */
+    protected $steps;
+    /** @var bool Flag to know if one task has been built */
+    protected $built;
+    /** @var bool Flag to know if one task has been executed */
+    protected $executed;
 
     /**
      * Constructor - instantiates one object of this class
+     * @param string $name
+     * @param base_plan $plan
      */
     public function __construct($name, $plan = null) {
         if (!is_null($plan) && !($plan instanceof base_plan)) {
@@ -59,10 +66,16 @@ abstract class base_task implements checksumable, executable, loggable {
         return $this->name;
     }
 
+    /**
+     * @return base_step[]
+     */
     public function get_steps() {
         return $this->steps;
     }
 
+    /**
+     * @return base_setting[]
+     */
     public function get_settings() {
         return $this->settings;
     }
@@ -78,6 +91,10 @@ abstract class base_task implements checksumable, executable, loggable {
         return 1;
     }
 
+    /**
+     * @param string $name
+     * @return base_setting|null
+     */
     public function get_setting($name) {
         // First look in task settings
         $result = null;
@@ -136,6 +153,10 @@ abstract class base_task implements checksumable, executable, loggable {
         backup_helper::log($message, $level, $a, $depth, $display, $this->get_logger());
     }
 
+    /**
+     * Adds a step
+     * @param base_step $step
+     */
     public function add_step($step) {
         if (! $step instanceof base_step) {
             throw new base_task_exception('wrong_base_step_specified');
@@ -145,6 +166,10 @@ abstract class base_task implements checksumable, executable, loggable {
         $this->steps[] = $step;
     }
 
+    /**
+     * Sets the plan
+     * @param base_plan $step
+     */
     public function set_plan($plan) {
         if (! $plan instanceof base_plan) {
             throw new base_task_exception('wrong_base_plan_specified');

@@ -30,10 +30,13 @@
 abstract class base_step implements executable, loggable {
 
     protected $name;      // One simple name for identification purposes
+    /** @var base_task */
     protected $task;      // Task this is part of
 
     /**
      * Constructor - instantiates one object of this class
+     * @param string $name
+     * @param base_task $task
      */
     public function __construct($name, $task = null) {
         if (!is_null($task) && !($task instanceof base_task)) {
@@ -50,6 +53,11 @@ abstract class base_step implements executable, loggable {
         return $this->name;
     }
 
+    /**
+     * Sets the task
+     * @param base_tak $task
+     * @throws base_step_exception
+     */
     public function set_task($task) {
         if (! $task instanceof base_task) {
             throw new base_step_exception('wrong_base_task_specified');

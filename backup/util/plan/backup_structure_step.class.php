@@ -37,6 +37,10 @@ abstract class backup_structure_step extends backup_step {
 
     /**
      * Constructor - instantiates one object of this class
+     *
+     * @param string $name
+     * @param string $filename
+     * @param backup_task $task
      */
     public function __construct($name, $filename, $task = null) {
         if (!is_null($task) && !($task instanceof backup_task)) {
@@ -118,6 +122,7 @@ abstract class backup_structure_step extends backup_step {
     /**
      * As far as backup structure steps are implementing backup_plugin stuff, they need to
      * have the parent task available for wrapping purposes (get course/context....)
+     * @return backup_task
      */
     public function get_task() {
         return $this->task;

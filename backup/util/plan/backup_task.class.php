@@ -29,6 +29,9 @@
  */
 abstract class backup_task extends base_task {
 
+    /** @var backup_plan Plan this is part of  */
+    protected $plan;
+
     /**
      * Constructor - instantiates one object of this class
      */
