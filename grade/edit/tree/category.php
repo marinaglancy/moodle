@@ -144,6 +144,10 @@ if ($mform->is_cancelled()) {
     if (!isset($data->aggregateoutcomes)) {
         $data->aggregateoutcomes = 0;
     }
+    if (!isset($data->hidden)) {
+        $data->hidden = 0;
+    }
+
     grade_category::set_properties($grade_category, $data);
 
     /// CATEGORY
