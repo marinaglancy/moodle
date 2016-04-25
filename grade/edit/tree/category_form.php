@@ -198,10 +198,10 @@ class edit_category_form extends moodleform {
 
         /// hiding
         // advcheckbox is not compatible with disabledIf!
-        $mform->addElement('checkbox', 'grade_item_hidden', get_string('hidden', 'grades'));
-        $mform->addHelpButton('grade_item_hidden', 'hidden', 'grades');
-        $mform->addElement('date_time_selector', 'grade_item_hiddenuntil', get_string('hiddenuntil', 'grades'), array('optional'=>true));
-        $mform->disabledIf('grade_item_hidden', 'grade_item_hiddenuntil[off]', 'notchecked');
+        $mform->addElement('checkbox', 'hidden', get_string('hidden', 'grades'));
+        $mform->addHelpButton('hidden', 'hidden', 'grades');
+        $mform->addElement('date_time_selector', 'grade_item_hidden', get_string('hiddenuntil', 'grades'), array('optional'=>true));
+        $mform->disabledIf('hidden', 'grade_item_hidden[off]', 'notchecked');
 
         /// locking
         $mform->addElement('checkbox', 'grade_item_locked', get_string('locked', 'grades'));
@@ -410,8 +410,6 @@ class edit_category_form extends moodleform {
         if ($id = $mform->getElementValue('id')) {
             $grade_category = grade_category::fetch(array('id'=>$id));
             $grade_item = $grade_category->load_grade_item();
-
-            $mform->setDefault('grade_item_hidden', (int) $grade_item->hidden);
 
             if ($grade_item->is_outcome_item()) {
                 // we have to prevent incompatible modifications of outcomes if outcomes disabled
