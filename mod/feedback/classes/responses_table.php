@@ -75,6 +75,7 @@ class mod_feedback_responses_table extends table_sql {
         $this->is_downloading(optional_param($this->downloadparamname, 0, PARAM_ALPHA),
                 'feedback_test');
 
+        $this->useridfield = 'userid';
         $this->init();
     }
 
@@ -87,7 +88,7 @@ class mod_feedback_responses_table extends table_sql {
         $tableheaders = array(get_string('userpic'), get_string('fullnameuser'));
 
         $extrafields = get_extra_user_fields($this->get_context());
-        $ufields = user_picture::fields('u', $extrafields, 'userid');
+        $ufields = user_picture::fields('u', $extrafields, $this->useridfield);
         $fields = 'c.id, c.timemodified as completed_timemodified, c.courseid, '.$ufields;
         $from = '{feedback_completed} c '
                 . 'JOIN {user} u ON u.id = c.userid AND u.deleted = :notdeleted';
@@ -171,7 +172,8 @@ class mod_feedback_responses_table extends table_sql {
      */
     public function col_userpic($row) {
         global $OUTPUT;
-        return $OUTPUT->user_picture($row, array('courseid' => $this->feedbackstructure->get_cm()->course));
+        $user = user_picture::unalias($row, [], $this->useridfield);
+        return $OUTPUT->user_picture($user, array('courseid' => $this->feedbackstructure->get_cm()->course));
     }
 
     /**
@@ -193,7 +195,7 @@ class mod_feedback_responses_table extends table_sql {
      * @return \moodle_url
      */
     protected function get_link_single_entry($row) {
-        return new moodle_url($this->baseurl, ['userid' => $row->userid, 'showcompleted' => $row->id]);
+        return new moodle_url($this->baseurl, ['userid' => $row->{$this->useridfield}, 'showcompleted' => $row->id]);
     }
 
     /**
