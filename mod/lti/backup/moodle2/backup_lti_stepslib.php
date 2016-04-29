@@ -56,6 +56,10 @@ class backup_lti_activity_structure_step extends backup_activity_structure_step 
     /** @var stdClass stores config for 'lti' plugin */
     protected $config;
 
+    /**
+     * Defines structure of activity backup
+     * @return backup_nested_element
+     */
     protected function define_structure() {
         global $DB;
 
@@ -91,32 +95,50 @@ class backup_lti_activity_structure_step extends backup_activity_structure_step 
             )
         );
 
-        $ltitypes = new backup_nested_element('ltitypes');
         $ltitype  = new backup_nested_element('ltitype', array('id'), array(
             'name',
             'baseurl',
             'tooldomain',
             'state',
+            'course',
             'coursevisible',
+            'toolproxyid',
+            'enabledcapability',
+            'parameter',
+            'icon',
+            'secureicon',
             'createdby',
             'timecreated',
             'timemodified',
+            'description'
             )
         );
 
         $ltitypesconfigs = new backup_nested_element('ltitypesconfigs');
         $ltitypesconfig  = new backup_nested_element('ltitypesconfig', array('id'), array(
-            'typeid',
             'name',
             'value',
+            'value_encrypted',
+            )
+        );
+
+        $ltitoolproxy = new backup_nested_element('ltitoolproxy', array('id'));
+
+        $ltitoolsettings = new backup_nested_element('ltitoolsettings');
+        $ltitoolsetting  = new backup_nested_element('ltitoolsetting', array('id'), array(
+                'settings',
+                'timecreated',
+                'timemodified',
             )
         );
 
         // Build the tree
-        $lti->add_child($ltitypes);
-        $lti->add_child($ltitypesconfigs);
-        $ltitypes->add_child($ltitype);
+        $lti->add_child($ltitype);
+        $ltitype->add_child($ltitypesconfigs);
         $ltitypesconfigs->add_child($ltitypesconfig);
+        $ltitype->add_child($ltitoolproxy);
+        $ltitoolproxy->add_child($ltitoolsettings);
+        $ltitoolsettings->add_child($ltitoolsetting);
 
         // Define sources.
         $ltirecord = $DB->get_record('lti', ['id' => $this->task->get_activityid()]);
@@ -125,20 +147,36 @@ class backup_lti_activity_structure_step extends backup_activity_structure_step 
         $this->encrypt_field($ltirecord, 'password');
         $lti->set_source_array([$ltirecord]);
 
-        $ltitype->set_source_sql("SELECT lt.*
-            FROM {lti} l
-            JOIN {lti_types} lt ON lt.id = l.typeid
-            WHERE l.id = ?", array(backup::VAR_ACTIVITYID));
-        $ltitypesconfig->set_source_sql("SELECT lc.*
-            FROM {lti} l
-            JOIN {lti_types_config} lc ON lc.typeid = l.typeid
-            WHERE lc.name != 'password'
-            AND lc.name != 'resourcekey'
-            AND lc.name != 'servicesalt'
-            AND l.id = ?", array(backup::VAR_ACTIVITYID));
+        $ltitypedata = $this->retrieve_lti_type($ltirecord);
+        $ltitype->set_source_array($ltitypedata ? [$ltitypedata] : []);
+
+        if (isset($ltitypedata->baseurl)) {
+            // Add type config values only if the type was backed up.
+            $records = $DB->get_records_sql("SELECT lc.*
+                FROM {lti_types_config} lc
+                WHERE lc.typeid = ?", [$ltitypedata->id]);
+            foreach ($records as $key => $record) {
+                if ($record->name === 'password' || $record->name === 'resourcekey') {
+                    $this->encrypt_field($records[$key], 'value');
+                }
+            }
+            $ltitypesconfig->set_source_array($records);
+        }
+
+        if (!empty($ltitypedata->toolproxyid)) {
+            // If this is LTI 2 tool add settings for the current activity.
+            $ltitoolproxy->set_source_array([['id' => $ltitypedata->toolproxyid]]);
+            $ltitoolsetting->set_source_sql("SELECT *
+                FROM {lti_tool_settings}
+                WHERE toolproxyid = ? AND course = ? AND coursemoduleid = ?",
+                [backup_helper::is_sqlparam($ltitypedata->toolproxyid), backup::VAR_COURSEID, backup::VAR_MODID]);
+        } else {
+            $ltitoolproxy->set_source_array([]);
+        }
 
         // Define id annotations
         $ltitype->annotate_ids('user', 'createdby');
+        $ltitype->annotate_ids('course', 'course');
 
         // Define file annotations.
         $lti->annotate_files('mod_lti', 'intro', null); // This file areas haven't itemid.
@@ -185,5 +223,35 @@ class backup_lti_activity_structure_step extends backup_activity_structure_step 
         }
         // Always exclude the unencrypted field from the record even encryption was not possible.
         unset($record->$fieldname);
+    }
+
+    /**
+     * Retrieves a record from {lti_type} table associated with the current activity
+     *
+     * Information about site tools is not returned because it is insecure to back it up,
+     * only fields necessary for same-site tool matching are left in the record
+     *
+     * @param stdClass $ltirecord record from {lti} table
+     * @return stdClass|null
+     */
+    protected function retrieve_lti_type($ltirecord) {
+        global $DB;
+        if (!$ltirecord->typeid) {
+            return null;
+        }
+
+        $record = $DB->get_record('lti_types', ['id' => $ltirecord->typeid]);
+        if ($record && $record->course == SITEID) {
+            // Site LTI types or registrations are not backed up except for their name (which is visible).
+            // Predefined course types can be backed up.
+            $allowedkeys = ['id', 'course', 'name', 'toolproxyid'];
+            foreach ($record as $key => $value) {
+                if (!in_array($key, $allowedkeys)) {
+                    $record->$key = null;
+                }
+            }
+        }
+
+        return $record;
     }
 }
