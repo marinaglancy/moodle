@@ -53,12 +53,15 @@ defined('MOODLE_INTERNAL') || die;
  */
 class restore_lti_activity_structure_step extends restore_activity_structure_step {
 
+    /** @var bool */
+    protected $newltitype = false;
+
     protected function define_structure() {
 
         $paths = array();
         $lti = new restore_path_element('lti', '/activity/lti');
-        $paths[] = new restore_path_element('ltitype', '/activity/lti/ltitypes/ltitype');
-        $paths[] = new restore_path_element('ltitypesconfig', '/activity/lti/ltitypesconfigs/ltitypesconfig');
+        $paths[] = new restore_path_element('ltitype', '/activity/lti/ltitype');
+        $paths[] = new restore_path_element('ltitypesconfig', '/activity/lti/ltitype/ltitypesconfigs/ltitypesconfig');
         $paths[] = $lti;
 
         // Add support for subplugin structures.
@@ -90,65 +93,82 @@ class restore_lti_activity_structure_step extends restore_activity_structure_ste
 
     /**
      * Process an lti type restore
-     * @param object $data The data in object form
+     * @param mixed $data The data from backup XML file
      * @return void
      */
     protected function process_ltitype($data) {
         global $DB;
 
         $data = (object)$data;
+        $oldid = $data->id;
         $data->createdby = $this->get_mappingid('user', $data->createdby);
-        $ltitype = $DB->get_record_sql("SELECT *
-            FROM {lti_types}
-            WHERE id = ?
-            AND baseurl = ?", array($data->id, $data->baseurl));
 
-        // If restore is occurring on the same site, don't add lti_types data if
-        // restoring on the SITEID. If restore isn't occurring on the same site,
-        // always add lti_type data from backup.
-        if ($this->task->is_samesite() && $ltitype->course != SITEID
-                && $ltitype->state == LTI_TOOL_STATE_CONFIGURED) {
-            // If restoring into the same course, use existing data, else re-create.
-            $courseid = $this->get_courseid();
-            if ($ltitype->course != $courseid) {
-                // Override course field of restore data with current courseid.
+        $courseid = $this->get_courseid();
+        $data->course = ($this->get_mappingid('course', $data->course) == $courseid) ? $courseid : SITEID;
+
+        // Try to find existing lti type with the same properties.
+        $ltitypeid = $this->find_existing_lti_type($data);
+
+        $this->newltitype = false;
+        if (!$ltitypeid) {
+            if ($data->course == SITEID && !has_capability('moodle/site:config', context_system::instance())) {
+                // Non-admins restore as course tool even if it was system tool.
                 $data->course = $courseid;
-                $ltitype = new stdClass();
-                $ltitype->id = $DB->insert_record('lti_types', $data);
             }
-        } else if (!$this->task->is_samesite() || !isset($ltitype->id)) {
-            // Either we are restoring into a new site, or didn't find a database match.
-            // Override course field of restore data with current courseid.
-            $data->course = $this->get_courseid();
-            $ltitype = new stdClass();
-            $ltitype->id = $DB->insert_record('lti_types', $data);
+            $ltitypeid = $DB->insert_record('lti_types', $data);
+            $this->newltitype = true;
         }
 
         // Add the typeid entry back to LTI module.
-        $lti = new stdClass();
-        $lti->id = $this->get_new_parentid('lti');
-        $lti->typeid = $ltitype->id;
-        $DB->update_record('lti', $lti);
+        $DB->update_record('lti', ['id' => $this->get_new_parentid('lti'), 'typeid' => $ltitypeid]);
+
+        $this->set_mapping('ltitype', $oldid, $ltitypeid);
+    }
+
+    /**
+     * Attempts to find an existing lti_type so we don't need to duplicate them
+     * @param stdClass $data
+     * @return int
+     */
+    protected function find_existing_lti_type($data) {
+        global $DB;
+        if ($ltitypeid = $this->get_mappingid('ltitype', $data->id)) {
+            return $ltitypeid;
+        }
+
+        $sql = 'id = :id AND baseurl = :baseurl AND course = :course';
+        $params = array_intersect_key((array)$data,
+            ['id' => 1, 'baseurl' => 1, 'course' => 1]);
+        if ($this->task->is_samesite()) {
+            // If we are restoring on the same site first try to find lti type with the same id.
+            if ($ltitype = $DB->get_record_select('lti_types', $sql, $params, 'id')) {
+                return $ltitype->id;
+            }
+        }
+        // Now try to find the same type on the current site available in this course.
+        $sql = 'baseurl = :baseurl AND course = :course AND tooldomain = :tooldomain AND name = :name';
+        $params = array_intersect_key((array)$data,
+            ['baseurl' => 1, 'course' => 1, 'tooldomain' => 1, 'name' => 1]);
+        $ltitype = $DB->get_record_select('lti_types', $sql, $params, 'id');
+        if (!$ltitype && $params['course'] == SITEID) {
+            $params['course'] = $this->get_courseid();
+            $ltitype = $DB->get_record_select('lti_types', $sql, $params, 'id');
+        }
+        return $ltitype ? $ltitype->id : null;
     }
 
     /**
      * Process an lti config restore
-     * @param object $data The data in object form
-     * @return void
+     * @param mixed $data The data from backup XML file
      */
     protected function process_ltitypesconfig($data) {
         global $DB;
 
         $data = (object)$data;
+        $data->typeid = $this->get_new_parentid('ltitype');
 
-        $parentid = $this->get_new_parentid('lti');
-        $lti = $DB->get_record_sql("SELECT typeid
-            FROM {lti}
-            WHERE id = ?", array($parentid));
-
-        // Only add configuration if typeid doesn't match new LTI tool.
-        if ($lti->typeid != $data->typeid) {
-            $data->typeid = $lti->typeid;
+        // Only add configuration if the new lti_type was created.
+        if ($data->typeid && $this->newltitype) {
             if ($data->name == 'servicesalt') {
                 $data->value = uniqid('', true);
             }

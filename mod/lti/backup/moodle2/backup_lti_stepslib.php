@@ -85,31 +85,35 @@ class backup_lti_activity_structure_step extends backup_activity_structure_step 
             )
         );
 
-        $ltitypes = new backup_nested_element('ltitypes');
         $ltitype  = new backup_nested_element('ltitype', array('id'), array(
             'name',
             'baseurl',
             'tooldomain',
             'state',
+            'course',
             'coursevisible',
+            // 'toolproxyid',
+            'enabledcapability',
+            'parameter',
+            'icon',
+            'secureicon',
             'createdby',
             'timecreated',
             'timemodified',
+            'description',
             )
         );
 
         $ltitypesconfigs = new backup_nested_element('ltitypesconfigs');
         $ltitypesconfig  = new backup_nested_element('ltitypesconfig', array('id'), array(
-            'typeid',
             'name',
             'value',
             )
         );
 
         // Build the tree
-        $lti->add_child($ltitypes);
-        $lti->add_child($ltitypesconfigs);
-        $ltitypes->add_child($ltitype);
+        $lti->add_child($ltitype);
+        $ltitype->add_child($ltitypesconfigs);
         $ltitypesconfigs->add_child($ltitypesconfig);
 
         // Define sources.
@@ -119,15 +123,15 @@ class backup_lti_activity_structure_step extends backup_activity_structure_step 
             JOIN {lti_types} lt ON lt.id = l.typeid
             WHERE l.id = ?", array(backup::VAR_ACTIVITYID));
         $ltitypesconfig->set_source_sql("SELECT lc.*
-            FROM {lti} l
-            JOIN {lti_types_config} lc ON lc.typeid = l.typeid
+            FROM {lti_types_config} lc
             WHERE lc.name != 'password'
             AND lc.name != 'resourcekey'
             AND lc.name != 'servicesalt'
-            AND l.id = ?", array(backup::VAR_ACTIVITYID));
+            AND lc.typeid = ?", array(backup::VAR_PARENTID));
 
         // Define id annotations
         $ltitype->annotate_ids('user', 'createdby');
+        $ltitype->annotate_ids('course', 'course');
 
         // Define file annotations.
         $lti->annotate_files('mod_lti', 'intro', null); // This file areas haven't itemid.
