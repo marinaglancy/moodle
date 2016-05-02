@@ -62,6 +62,8 @@ class restore_lti_activity_structure_step extends restore_activity_structure_ste
         $lti = new restore_path_element('lti', '/activity/lti');
         $paths[] = new restore_path_element('ltitype', '/activity/lti/ltitype');
         $paths[] = new restore_path_element('ltitypesconfig', '/activity/lti/ltitype/ltitypesconfigs/ltitypesconfig');
+        $paths[] = new restore_path_element('ltitoolproxy', '/activity/lti/ltitype/ltitoolproxy');
+        $paths[] = new restore_path_element('ltitoolsetting', '/activity/lti/ltitype/ltitoolproxy/ltitoolsettings/ltitoolsetting');
         $paths[] = $lti;
 
         // Add support for subplugin structures.
@@ -113,6 +115,7 @@ class restore_lti_activity_structure_step extends restore_activity_structure_ste
         if (!$ltitypeid) {
             if ($data->course == SITEID && !has_capability('moodle/site:config', context_system::instance())) {
                 // Non-admins restore as course tool even if it was system tool.
+                // TODO should not be possible to restore if this is an LTI2 (isset($data->toolproxyid)).
                 $data->course = $courseid;
             }
             $ltitypeid = $DB->insert_record('lti_types', $data);
@@ -136,10 +139,10 @@ class restore_lti_activity_structure_step extends restore_activity_structure_ste
             return $ltitypeid;
         }
 
-        $sql = 'id = :id AND baseurl = :baseurl AND course = :course';
-        $params = array_intersect_key((array)$data,
-            ['id' => 1, 'baseurl' => 1, 'course' => 1]);
+        $params = (array)$data;
         if ($this->task->is_samesite()) {
+            $sql = 'id = :id AND baseurl = :baseurl AND course = :course';
+            $sql .= ($data->toolproxyid) ? ' AND toolproxyid = :toolproxyid' : ' AND toolproxyid IS NULL';
             // If we are restoring on the same site first try to find lti type with the same id.
             if ($ltitype = $DB->get_record_select('lti_types', $sql, $params, 'id')) {
                 return $ltitype->id;
@@ -147,8 +150,7 @@ class restore_lti_activity_structure_step extends restore_activity_structure_ste
         }
         // Now try to find the same type on the current site available in this course.
         $sql = 'baseurl = :baseurl AND course = :course AND tooldomain = :tooldomain AND name = :name';
-        $params = array_intersect_key((array)$data,
-            ['baseurl' => 1, 'course' => 1, 'tooldomain' => 1, 'name' => 1]);
+        // TODO match toolproxy somehow?
         $ltitype = $DB->get_record_select('lti_types', $sql, $params, 'id');
         if (!$ltitype && $params['course'] == SITEID) {
             $params['course'] = $this->get_courseid();
@@ -174,6 +176,24 @@ class restore_lti_activity_structure_step extends restore_activity_structure_ste
             }
             $DB->insert_record('lti_types_config', $data);
         }
+    }
+
+    protected function process_ltitoolproxy($data) {
+        if (!$this->newltitype) {
+            return;
+        }
+
+        $data = (object)$data;
+        $oldid = $data->id;
+        $data->createdby = $this->get_mappingid('user', $data->createdby);
+
+        $courseid = $this->get_courseid();
+        $data->course = ($this->get_mappingid('course', $data->course) == $courseid) ? $courseid : SITEID;
+
+    }
+
+    protected function process_ltitoolsetting($data) {
+
     }
 
     protected function after_execute() {

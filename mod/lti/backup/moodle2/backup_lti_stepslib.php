@@ -92,7 +92,7 @@ class backup_lti_activity_structure_step extends backup_activity_structure_step 
             'state',
             'course',
             'coursevisible',
-            // 'toolproxyid',
+            'toolproxyid',
             'enabledcapability',
             'parameter',
             'icon',
@@ -111,10 +111,39 @@ class backup_lti_activity_structure_step extends backup_activity_structure_step 
             )
         );
 
+        $ltitoolproxy  = new backup_nested_element('ltitoolproxy', array('id'), array(
+                'name',
+                'regurl',
+                'state',
+                'guid',
+                'secret',
+                'vendorcode',
+                'capabilityoffered',
+                'serviceoffered',
+                'toolproxy',
+                'createdby',
+                'timecreated',
+                'timemodified',
+            )
+        );
+
+        $ltitoolsettings = new backup_nested_element('ltitoolsettings');
+        $ltitoolsetting  = new backup_nested_element('ltitoolsetting', array('id'), array(
+                'course',
+                'coursemoduleid',
+                'settings',
+                'timecreated',
+                'timemodified',
+            )
+        );
+
         // Build the tree
         $lti->add_child($ltitype);
         $ltitype->add_child($ltitypesconfigs);
         $ltitypesconfigs->add_child($ltitypesconfig);
+        $ltitype->add_child($ltitoolproxy);
+        $ltitoolproxy->add_child($ltitoolsettings);
+        $ltitoolsettings->add_child($ltitoolsetting);
 
         // Define sources.
         $lti->set_source_table('lti', array('id' => backup::VAR_ACTIVITYID));
@@ -124,14 +153,26 @@ class backup_lti_activity_structure_step extends backup_activity_structure_step 
             WHERE l.id = ?", array(backup::VAR_ACTIVITYID));
         $ltitypesconfig->set_source_sql("SELECT lc.*
             FROM {lti_types_config} lc
-            WHERE lc.name != 'password'
+            WHERE "/*."lc.name != 'password'
             AND lc.name != 'resourcekey'
             AND lc.name != 'servicesalt'
-            AND lc.typeid = ?", array(backup::VAR_PARENTID));
+            AND "*/."lc.typeid = ?", array(backup::VAR_PARENTID));
+        $ltitoolproxy->set_source_sql("SELECT lp.*
+            FROM {lti_types} lt
+            JOIN {lti_tool_proxies} lp ON lp.id = lt.toolproxyid
+            WHERE lt.id = ?", array(backup::VAR_PARENTID));
+        $ltitoolsetting->set_source_sql("SELECT *
+            FROM {lti_tool_settings}
+            WHERE toolproxyid = ?
+            AND ((course IS NULL AND coursemoduleid IS NULL) OR (course = ? AND coursemoduleid = ?))",
+            array(backup::VAR_PARENTID, backup::VAR_COURSEID, backup::VAR_ACTIVITYID));
 
         // Define id annotations
         $ltitype->annotate_ids('user', 'createdby');
         $ltitype->annotate_ids('course', 'course');
+        $ltitoolproxy->annotate_ids('user', 'createdby');
+        $ltitoolsetting->annotate_ids('course', 'course');
+        $ltitoolsetting->annotate_ids('course_modules', 'coursemoduleid');
 
         // Define file annotations.
         $lti->annotate_files('mod_lti', 'intro', null); // This file areas haven't itemid.
