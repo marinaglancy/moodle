@@ -77,6 +77,6 @@ require('tabs.php');
 echo $OUTPUT->heading(format_string($course->shortname, true, array('context' => $context)) .' '.$stroverview, 3);
 
 $tmpl = new \core_group\output\groupsoverview($courseid);
-echo $tmpl->render($OUTPUT);
+$tmpl->render($OUTPUT);
 
 echo $OUTPUT->footer();

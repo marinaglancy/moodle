@@ -134,6 +134,7 @@ class groupsoverview implements \templatable {
                         'idnumber' => $group->idnumber,
                         'name' => $group->formattedname, // TODO
                         'description' => $group->formatteddescription, // TODO
+                        'picture' => $group->picture,
                         'members' => join(', ', $members),
                         'memberscount' => count($members)
                     );
@@ -167,6 +168,15 @@ class groupsoverview implements \templatable {
     }
 
     public function render(renderer_base $output) {
-        return $output->render_from_template('core_group/groupsoverview', $this->export_for_template($output));
+        global $PAGE;
+        $hoverevents = array();
+        foreach ($this->allgroups as $group) {
+            $hoverevents[$group->id] = $group->formatteddescription;
+        }
+        if (count($hoverevents)>0) {
+            $PAGE->requires->string_for_js('description', 'moodle');
+            $PAGE->requires->js_init_call('M.core_group.init_hover_events', array($hoverevents));
+        }
+        echo $output->render_from_template('core_group/groupsoverview', $this->export_for_template($output));
     }
 }
