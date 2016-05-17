@@ -35,17 +35,13 @@ $action       = optional_param('action', null, PARAM_ALPHANUMEXT);
 $id           = optional_param('id', null, PARAM_INT);
 $tab          = optional_param('tab', '', PARAM_ALPHAEXT);
 
-// No guest autologin.
-require_login(0, false);
-
 $isupdate = !empty($id);
 $pageurl = new moodle_url('/mod/lti/registersettings.php');
 if ($isupdate) {
     $pageurl->param('id', $id);
 }
-$PAGE->set_url($pageurl);
-
-admin_externalpage_setup('ltitoolproxies');
+admin_externalpage_setup('ltitoolconfigure', '', null, $pageurl);
+$PAGE->navbar->add(get_string('lti_administration', 'lti'));
 
 $redirect = new moodle_url('/mod/lti/toolproxies.php', array('tab' => $tab));
 $redirect = $redirect->out();
@@ -71,7 +67,6 @@ if ($form->is_cancelled()) {
     redirect($redirect);
 } else {
     $PAGE->set_title("{$SITE->shortname}: " . get_string('toolregistration', 'lti'));
-    $PAGE->navbar->add(get_string('lti_administration', 'lti'), $redirect);
 
     echo $OUTPUT->header();
     echo $OUTPUT->heading(get_string('toolregistration', 'lti'));
