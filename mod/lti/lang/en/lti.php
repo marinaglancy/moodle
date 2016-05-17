@@ -74,6 +74,7 @@ $string['allowsetting'] = 'Allow tool to store 8K of settings in Moodle';
 $string['always'] = 'Always';
 $string['automatic'] = 'Automatic, based on launch URL';
 $string['autoaddtype'] = 'Add tool';
+$string['backupsecret'] = 'Backup shared secret';
 $string['baseurl'] = 'Base URL/tool registration name';
 $string['basiclti'] = 'LTI';
 $string['basiclti_base_string'] = 'LTI OAuth base string';
@@ -94,6 +95,7 @@ $string['capabilitiesrequired'] = 'This tool requires access to the following da
 $string['capabilities_help'] = 'Select those capabilities which you wish to offer to the tool provider.  More than one capability can be selected.';
 $string['click_to_continue'] = '<a href="{$a->link}" target="_top">Click to continue</a>';
 $string['comment'] = 'Comment';
+$string['configbackupsecret'] = 'Include consumer key and shared secret in backup files when current user has capability to view them';
 $string['configpassword'] = 'Default remote tool password';
 $string['configpreferheight'] = 'Default preferred height';
 $string['configpreferwidget'] = 'Set widget as default launch';
