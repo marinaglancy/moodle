@@ -141,6 +141,17 @@ class backup_lti_activity_structure_step extends backup_activity_structure_step 
             )
         );
 
+        $ltisubmissions = new backup_nested_element('ltisubmissions');
+        $ltisubmission = new backup_nested_element('ltisubmission', array('id'), array(
+            'userid',
+            'datesubmitted',
+            'dateupdated',
+            'gradepercent',
+            'originalgrade',
+            'launchid',
+            'state'
+        ));
+
         // Build the tree
         $lti->add_child($ltitype);
         $ltitype->add_child($ltitypesconfigs);
@@ -148,6 +159,8 @@ class backup_lti_activity_structure_step extends backup_activity_structure_step 
         $ltitype->add_child($ltitoolproxy);
         $ltitoolproxy->add_child($ltitoolsettings);
         $ltitoolsettings->add_child($ltitoolsetting);
+        $lti->add_child($ltisubmissions);
+        $ltisubmissions->add_child($ltisubmission);
 
         // Define sources.
         $lti->set_source_table('lti', array('id' => backup::VAR_ACTIVITYID));
@@ -187,12 +200,18 @@ class backup_lti_activity_structure_step extends backup_activity_structure_step 
                 [backup_helper::is_sqlparam($ltitypedata->toolproxyid), backup::VAR_COURSEID, backup::VAR_ACTIVITYID]);
         }
 
+        // All the rest of elements only happen if we are including user info
+        if ($userinfo) {
+            $ltisubmission->set_source_table('lti_submission', array('ltiid' => backup::VAR_ACTIVITYID));
+        }
+
         // Define id annotations
         $ltitype->annotate_ids('user', 'createdby');
         $ltitype->annotate_ids('course', 'course');
         $ltitype->annotate_ids('user', 'toolproxy_createdby');
         $ltitoolsetting->annotate_ids('course', 'course');
         $ltitoolsetting->annotate_ids('course_modules', 'coursemoduleid');
+        $ltisubmission->annotate_ids('user', 'userid');
 
         // Define file annotations.
         $lti->annotate_files('mod_lti', 'intro', null); // This file areas haven't itemid.
