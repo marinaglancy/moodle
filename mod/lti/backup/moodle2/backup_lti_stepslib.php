@@ -171,9 +171,13 @@ class backup_lti_activity_structure_step extends backup_activity_structure_step 
 
         if (isset($ltitypedata->baseurl)) {
             // Add type config values only if the type was backed up.
-            $ltitypesconfig->set_source_sql("SELECT lc.*
+            $sql = "SELECT lc.*
                 FROM {lti_types_config} lc
-                WHERE lc.typeid = ?",
+                WHERE lc.typeid = ?";
+            if (empty($config->backupsecret)) {
+                $sql .= " AND lc.name != 'password' AND lc.name != 'resourcekey'";
+            }
+            $ltitypesconfig->set_source_sql($sql,
                 [backup_helper::is_sqlparam($ltitypedata->id)]);
         }
 
