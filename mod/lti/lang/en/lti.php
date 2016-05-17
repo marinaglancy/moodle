@@ -410,6 +410,7 @@ $string['selectcontent'] = 'Select content';
 $string['send'] = 'Send';
 $string['services'] = 'Services';
 $string['services_help'] = 'Select those services which you wish to offer to the tool provider.  More than one service can be selected.';
+$string['settings'] = 'External tool settings';
 $string['setupoptions'] = 'Set-up options';
 $string['share_email'] = 'Share launcher\'s email with the tool';
 $string['share_email_admin'] = 'Share launcher\'s email with tool';

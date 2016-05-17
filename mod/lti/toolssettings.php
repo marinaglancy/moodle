@@ -40,8 +40,15 @@ if ($returnto == 'toolconfigure') {
     $returnurl = new moodle_url($CFG->wwwroot . '/mod/lti/toolconfigure.php');
 }
 
-// No guest autologin.
-require_login(0, false);
+$pageurl = new moodle_url('/mod/lti/toolssettings.php');
+if (!empty($id)) {
+    $pageurl->param('id', $id);
+}
+if (!empty($returnto)) {
+    $pageurl->param('returnto', $returnto);
+}
+admin_externalpage_setup('ltitoolconfigure', '', null, $pageurl);
+$PAGE->navbar->add(get_string('toolsetup', 'lti'));
 
 require_sesskey();
 
@@ -60,18 +67,7 @@ if ($err) {
     redirect($redirect);
 }
 
-$pageurl = new moodle_url('/mod/lti/toolssettings.php');
-if (!empty($id)) {
-    $pageurl->param('id', $id);
-}
-if (!empty($returnto)) {
-    $pageurl->param('returnto', $returnto);
-}
-$PAGE->set_url($pageurl);
-
-admin_externalpage_setup('managemodules'); // Hacky solution for printing the admin page.
-
-$redirect = "$CFG->wwwroot/$CFG->admin/settings.php?section=modsettinglti&tab={$tab}";
+$redirect = new moodle_url('/mod/lti/tooltypes.php', ['tab' => $tab]);
 if (!empty($returnurl)) {
     $redirect = $returnurl;
 }
@@ -107,7 +103,6 @@ if ($data = $form->get_data()) {
 }
 
 $PAGE->set_title(format_string($SITE->shortname) . ': ' . get_string('toolsetup', 'lti'));
-$PAGE->navbar->add(get_string('lti_administration', 'lti'), $CFG->wwwroot.'/'.$CFG->admin.'/settings.php?section=modsettinglti');
 
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('toolsetup', 'lti'));

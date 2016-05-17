@@ -27,13 +27,9 @@ require_once('../../config.php');
 require_once($CFG->libdir.'/adminlib.php');
 require_once($CFG->dirroot.'/mod/lti/locallib.php');
 
-// No guest autologin.
-require_login(0, false);
-
 $pageurl = new moodle_url('/mod/lti/toolproxies.php');
-$PAGE->set_url($pageurl);
-
-admin_externalpage_setup('ltitoolproxies');
+admin_externalpage_setup('ltitoolconfigure', '', null, $pageurl);
+$PAGE->navbar->add(get_string('toolregistration', 'lti'));
 
 $PAGE->set_title("{$SITE->shortname}: " . get_string('toolregistration', 'lti'));
 

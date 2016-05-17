@@ -1,0 +1,181 @@
+<?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ * This file defines the global lti administration form
+ *
+ * @package mod_lti
+ * @copyright  2009 Marc Alier, Jordi Piguillem, Nikolas Galanis
+ *  marc.alier@upc.edu
+ * @copyright  2009 Universitat Politecnica de Catalunya http://www.upc.edu
+ * @author     Marc Alier
+ * @author     Jordi Piguillem
+ * @author     Nikolas Galanis
+ * @author     Chris Scribner
+ * @copyright  2015 Vital Source Technologies http://vitalsource.com
+ * @author     Stephen Vickers
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+require_once('../../config.php');
+require_once($CFG->libdir.'/adminlib.php');
+require_once($CFG->dirroot.'/mod/lti/locallib.php');
+
+$pageurl = new moodle_url('/mod/lti/tooltypes.php');
+admin_externalpage_setup('ltitoolconfigure', '', null, $pageurl);
+$PAGE->navbar->add(get_string('external_tool_types', 'lti'));
+
+$configuredtoolshtml = '';
+$pendingtoolshtml = '';
+$rejectedtoolshtml = '';
+
+$active = get_string('active', 'lti');
+$pending = get_string('pending', 'lti');
+$rejected = get_string('rejected', 'lti');
+
+// Gather strings used for labels in the inline JS.
+$PAGE->requires->strings_for_js(
+    array(
+        'typename',
+        'baseurl',
+        'action',
+        'createdon'
+    ),
+    'mod_lti'
+);
+
+$types = lti_filter_get_types(get_site()->id);
+
+$configuredtools = lti_filter_tool_types($types, LTI_TOOL_STATE_CONFIGURED);
+
+$configuredtoolshtml = lti_get_tool_table($configuredtools, 'lti_configured');
+
+$pendingtools = lti_filter_tool_types($types, LTI_TOOL_STATE_PENDING);
+
+$pendingtoolshtml = lti_get_tool_table($pendingtools, 'lti_pending');
+
+$rejectedtools = lti_filter_tool_types($types, LTI_TOOL_STATE_REJECTED);
+
+$rejectedtoolshtml = lti_get_tool_table($rejectedtools, 'lti_rejected');
+
+$tab = optional_param('tab', '', PARAM_ALPHAEXT);
+$activeselected = '';
+$pendingselected = '';
+$rejectedselected = '';
+switch ($tab) {
+    case 'lti_pending':
+        $pendingselected = 'class="selected"';
+        break;
+    case 'lti_rejected':
+        $rejectedselected = 'class="selected"';
+        break;
+    default:
+        $activeselected = 'class="selected"';
+        break;
+}
+$addtype = get_string('addtype', 'lti');
+$config = get_string('manage_tool_proxies', 'lti');
+
+$addtypeurl = "{$CFG->wwwroot}/mod/lti/typessettings.php?action=add&amp;sesskey={$USER->sesskey}";
+
+$template = <<< EOD
+<div id="lti_tabs" class="yui-navset">
+    <ul id="lti_tab_heading" class="yui-nav" style="display:none">
+        <li {$activeselected}>
+            <a href="#tab1">
+                <em>$active</em>
+            </a>
+        </li>
+        <li {$pendingselected}>
+            <a href="#tab2">
+                <em>$pending</em>
+            </a>
+        </li>
+        <li {$rejectedselected}>
+            <a href="#tab3">
+                <em>$rejected</em>
+            </a>
+        </li>
+    </ul>
+    <div class="yui-content">
+        <div>
+            <div><a style="margin-top:.25em" href="{$addtypeurl}">{$addtype}</a></div>
+            $configuredtoolshtml
+        </div>
+        <div>
+            $pendingtoolshtml
+        </div>
+        <div>
+            $rejectedtoolshtml
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+//<![CDATA[
+    YUI().use('yui2-tabview', 'yui2-datatable', function(Y) {
+        //If javascript is disabled, they will just see the three tabs one after another
+        var lti_tab_heading = document.getElementById('lti_tab_heading');
+        lti_tab_heading.style.display = '';
+
+        new Y.YUI2.widget.TabView('lti_tabs');
+
+        var setupTools = function(id, sort){
+            var lti_tools = Y.YUI2.util.Dom.get(id);
+
+            if(lti_tools){
+                var dataSource = new Y.YUI2.util.DataSource(lti_tools);
+
+                var configuredColumns = [
+                    {key:'name', label: M.util.get_string('typename', 'mod_lti'), sortable: true},
+                    {key:'baseURL', label: M.util.get_string('baseurl', 'mod_lti'), sortable: true},
+                    {key:'timecreated', label: M.util.get_string('createdon', 'mod_lti'), sortable: true},
+                    {key:'action', label: M.util.get_string('action', 'mod_lti')}
+                ];
+
+                dataSource.responseType = Y.YUI2.util.DataSource.TYPE_HTMLTABLE;
+                dataSource.responseSchema = {
+                    fields: [
+                        {key:'name'},
+                        {key:'baseURL'},
+                        {key:'timecreated'},
+                        {key:'action'}
+                    ]
+                };
+
+                new Y.YUI2.widget.DataTable(id + '_container', configuredColumns, dataSource,
+                    {
+                        sortedBy: sort
+                    }
+                );
+            }
+        };
+
+        setupTools('lti_configured_tools', {key:'name', dir:'asc'});
+        setupTools('lti_pending_tools', {key:'timecreated', dir:'desc'});
+        setupTools('lti_rejected_tools', {key:'timecreated', dir:'desc'});
+    });
+//]]
+</script>
+EOD;
+
+echo $OUTPUT->header();
+echo $OUTPUT->heading(get_string('external_tool_types', 'lti'), 2);
+
+echo $template;
+
+echo $OUTPUT->footer();
+

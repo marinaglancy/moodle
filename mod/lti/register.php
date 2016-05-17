@@ -30,7 +30,9 @@ require_once($CFG->dirroot.'/mod/lti/locallib.php');
 $id = required_param('id', PARAM_INT);
 $tab = optional_param('tab', '', PARAM_ALPHAEXT);
 
-require_login(0, false);
+$url = new moodle_url('/mod/lti/register.php', array('id' => $id));
+admin_externalpage_setup('ltitoolconfigure', '', null, $url);
+$PAGE->navbar->add(get_string('toolproxyregistration', 'lti'));
 
 $redirect = new moodle_url('/mod/lti/toolproxies.php', array('tab' => $tab));
 $redirect = $redirect->out();
@@ -59,11 +61,6 @@ $profileservice = lti_get_service_by_name('profile');
 if (empty($profileservice)) {
     redirect($redirect,  get_string('noprofileservice', 'lti'));
 }
-
-$url = new moodle_url('/mod/lti/register.php', array('id' => $id));
-$PAGE->set_url($url);
-
-admin_externalpage_setup('ltitoolproxies');
 
 
 $PAGE->set_heading(get_string('toolproxyregistration', 'lti'));
