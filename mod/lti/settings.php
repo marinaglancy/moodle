@@ -49,6 +49,15 @@ foreach (core_plugin_manager::instance()->get_plugins_of_type('ltisource') as $p
     $plugin->load_settings($ADMIN, 'modltifolder', $hassiteconfig);
 }
 
+if ($ADMIN->fulltree) {
+    $name = new lang_string('backupsecret', 'mod_lti');
+    $description = new lang_string('configbackupsecret', 'mod_lti');
+    $settings->add(new admin_setting_configcheckbox('lti/backupsecret',
+        $name,
+        $description,
+        0));
+}
+
 // Tell core we already added the settings structure.
 $settings = null;
 

@@ -60,6 +60,8 @@ class backup_lti_activity_structure_step extends backup_activity_structure_step 
         // To know if we are including userinfo.
         $userinfo = $this->get_setting_value('userinfo');
 
+        $config = get_config('lti');
+
         // Define each element separated.
         $lti = new backup_nested_element('lti', array('id'), array(
             'name',
@@ -86,6 +88,10 @@ class backup_lti_activity_structure_step extends backup_activity_structure_step 
             'secureicon',
             )
         );
+
+        if (!empty($config->backupsecret)) {
+            $lti->add_final_elements(['resourcekey', 'password']);
+        }
 
         // Build the tree
         // (none).
