@@ -88,11 +88,14 @@ function choice_user_outline($course, $user, $mod, $choice) {
  */
 function choice_user_complete($course, $user, $mod, $choice) {
     global $DB;
-    if ($answer = $DB->get_record('choice_answers', array("choiceid" => $choice->id, "userid" => $user->id))) {
-        $result = new stdClass();
-        $result->info = "'".format_string(choice_get_option_text($choice, $answer->optionid))."'";
-        $result->time = $answer->timemodified;
-        echo get_string("answered", "choice").": $result->info. ".get_string("updated", '', userdate($result->time));
+    if ($answers = $DB->get_records('choice_answers', array("choiceid" => $choice->id, "userid" => $user->id))) {
+        $info = [];
+        foreach ($answers as $answer) {
+            $info[] = "'" . format_string(choice_get_option_text($choice, $answer->optionid)) . "'";
+        }
+        core_collator::asort($info);
+        echo get_string("answered", "choice") . ": ". join(', ', $info) . ". " .
+                get_string("updated", '', userdate($answer->timemodified));
     } else {
         print_string("notanswered", "choice");
     }
