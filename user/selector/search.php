@@ -74,6 +74,9 @@ foreach ($results as $groupname => $users) {
         if (!empty($user->infobelow)) {
             $output->infobelow = $user->infobelow;
         }
+        if (!empty($user->groups)) {
+            $output->groups = $user->groups;
+        }
         $groupdata['users'][] = $output;
     }
     $json[] = $groupdata;

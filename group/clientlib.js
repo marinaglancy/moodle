@@ -215,29 +215,35 @@ var removeLoaderImgs = function (elClass, parentId) {
 /**
  * Updates the current groups information shown about a user when a user is selected.
  *
- * @global {Array} userSummaries
- *      userSummaries is added to the page via /user/selector/lib.php - group_non_members_selector::print_user_summaries()
- *      as a global that can be used by this function.
+ * @global {Array} M.core_user.user_summary_data
+ *      M.core_user.user_summary_data is added to the page via /user/selector/lib.php -
+ *      group_non_members_selector::print_user_summaries() as a global that can be used by this function.
  */
 function updateUserSummary() {
     var selectEl = document.getElementById('addselect'),
         summaryDiv = document.getElementById('group-usersummary'),
         length = selectEl.length,
-        selectCnt = 0,
-        selectIdx = -1,
+        summaryData = M.core_user.user_summary_data,
+        selectKey = null,
         i;
 
     for (i = 0; i < length; i++) {
         if (selectEl.options[i].selected) {
-            selectCnt++;
-            selectIdx = i;
+            selectKey = M.core_user.get_user_summary_key(selectEl.options[i].value);
+            break;
         }
     }
 
-    if (selectCnt == 1 && userSummaries[selectIdx]) {
-        summaryDiv.innerHTML = userSummaries[selectIdx];
-    } else {
-        summaryDiv.innerHTML = '';
+    summaryDiv.innerHTML = '';
+    if (selectKey !== null && summaryData[selectKey]) {
+        var list = document.createElement('ul');
+        for (i = 0; i < summaryData[selectKey].length; i++) {
+            var item = document.createElement('li');
+            item.appendChild(document.createTextNode(summaryData[selectKey][i]));
+            list.appendChild(item);
+        }
+
+        summaryDiv.appendChild(list);
     }
 
     return true;
@@ -249,6 +255,18 @@ function init_add_remove_members_page(Y) {
     add.set('disabled', addselect.is_selection_empty());
     addselect.on('user_selector:selectionchanged', function(isempty) {
         add.set('disabled', isempty);
+    });
+    addselect.on('user_selector:searchcomplete', function(data) {
+        // Inject user/group information
+        M.core_user.clear_user_summary_data();
+        for( var key in data.results ) {
+            for( var idx in data.results[key].users ) {
+                var user = data.results[key].users[idx];
+                if( 'groups' in user ) {
+                    M.core_user.replace_user_summary(user.id, user.groups);
+                }
+            }
+        }
     });
 
     var remove = Y.one('#remove');

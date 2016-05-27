@@ -794,7 +794,7 @@ class group_non_members_selector extends groups_user_selector_base {
     }
 
     /**
-     * Creates a global JS variable (userSummaries) that is used by the group selector
+     * Creates a global JS variable (M.core_user.user_summary_data) that is used by the group selector
      * to print related information when the user clicks on a user in the groups UI.
      *
      * Used by /group/clientlib.js
@@ -809,37 +809,66 @@ class group_non_members_selector extends groups_user_selector_base {
         $usersummaries = array();
 
         // Get other groups user already belongs to.
-        $usergroups = array();
         $potentialmembersids = $this->potentialmembersids;
-        if (empty($potentialmembersids) == false) {
-            list($membersidsclause, $params) = $DB->get_in_or_equal($potentialmembersids, SQL_PARAMS_NAMED, 'pm');
-            $sql = "SELECT u.id AS userid, g.*
+        if ( ! empty($potentialmembersids) ) {
+            $usergroups = $this->get_group_users_for_course($potentialmembersids,$courseid);
+            $usersummaries = self::convert_group_users_to_user_summary($usergroups,true);
+        }
+
+        $PAGE->requires->js_init_call('M.core_user.init_user_summary_data', array($usersummaries), false, self::$jsmodule);
+    }
+
+    /**
+     * Converts the result from group_non_members_selector::get_group_users_for_course to the summary data
+     * structure used by user/selector/
+     *
+     * @param array(int) $usergroups Two dimensional array of user group memberships. array{user.id}{group.id} => object{group}
+     * @return array Two dimensional array of user group memberships. array{user.id}{string}
+     */
+    private static function convert_group_users_to_user_summary(&$usergroups,$clientside_key = true) {
+        $usersummaries = array();
+        foreach( $usergroups as $userid => $groups ) {
+            $key = $clientside_key ? ('user'.$userid) : $userid;
+            foreach( $groups as $group ) {
+                $usersummaries[$key][] = format_string($group->name);
+            }
+        }
+        return $usersummaries;
+    }
+
+    /**
+     * Finds groups in a course that the specified members belong to.
+     *
+     * @param array(int) $memberids Member (ids) of users we're interested in
+     * @param int $courseid Course (id) to inspect for group membership
+     * @return array Two dimensional array of user group memberships. array{user.id}{group.id} => object{group}
+     */
+    private function get_group_users_for_course($memberids,$courseid) {
+        global $DB;
+
+        $usergroups = array();
+
+        // moodle_database::get_in_or_equal() does not accept empty arrays
+        if( count($memberids) == 0 ) {
+            return $usergroups;
+        }
+
+        list($membersidsclause, $params) = $DB->get_in_or_equal($memberids, SQL_PARAMS_NAMED, 'pm');
+        $params['courseid'] = $courseid;
+
+        $sql = "SELECT u.id AS userid, g.*
                     FROM {user} u
                     JOIN {groups_members} gm ON u.id = gm.userid
                     JOIN {groups} g ON gm.groupid = g.id
                     WHERE u.id $membersidsclause AND g.courseid = :courseid ";
-            $params['courseid'] = $courseid;
-            $rs = $DB->get_recordset_sql($sql, $params);
-            foreach ($rs as $usergroup) {
-                $usergroups[$usergroup->userid][$usergroup->id] = $usergroup;
-            }
-            $rs->close();
 
-            foreach ($potentialmembersids as $userid) {
-                if (isset($usergroups[$userid])) {
-                    $usergrouplist = html_writer::start_tag('ul');
-                    foreach ($usergroups[$userid] as $groupitem) {
-                        $usergrouplist .= html_writer::tag('li', format_string($groupitem->name));
-                    }
-                    $usergrouplist .= html_writer::end_tag('ul');
-                } else {
-                    $usergrouplist = '';
-                }
-                $usersummaries[] = $usergrouplist;
-            }
+        $rs = $DB->get_recordset_sql($sql, $params);
+        foreach ($rs as $usergroup) {
+            $usergroups[$usergroup->userid][$usergroup->id] = $usergroup;
         }
+        $rs->close();
 
-        $PAGE->requires->data_for_js('userSummaries', $usersummaries);
+        return $usergroups;
     }
 
     /**
@@ -901,18 +930,29 @@ class group_non_members_selector extends groups_user_selector_base {
         $rs = $DB->get_recordset_sql("$fields $sql $orderby", array_merge($params, $sortparams));
         $roles = groups_calculate_role_people($rs, $context);
 
-        // Don't hold onto user IDs if we're doing validation.
-        if (empty($this->validatinguserids) ) {
-            if ($roles) {
-                foreach ($roles as $k => $v) {
-                    if ($v) {
-                        foreach ($v->users as $uid => $userobject) {
-                            $this->potentialmembersids[] = $uid;
-                        }
-                    }
+        $result_user_ids = array();
+        if( $roles ) {
+            foreach ($roles as $k => $v) {
+                if ($v) {
+                    $result_user_ids = array_merge($result_user_ids,array_keys($v->users));
                 }
             }
         }
+
+        // Don't hold onto user IDs if we're doing validation.
+        if (empty($this->validatinguserids) ) {
+            $this->potentialmembersids = array_merge($this->potentialmembersids,$result_user_ids);
+        }
+
+        // Get the group membership detail (names) for users we found
+        $coursegroupdata = $this->get_group_users_for_course($result_user_ids,$this->courseid);
+        $usergroupdata = self::convert_group_users_to_user_summary($coursegroupdata,false);
+        foreach( $roles as $v ) {
+            foreach ($v->users as $uid => $userobject) {
+                $userobject->groups = array_key_exists($uid,$usergroupdata) ? $usergroupdata[$uid] : array();
+            }
+        }
+
 
         return $this->convert_array_format($roles, $search);
     }

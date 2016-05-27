@@ -8,6 +8,9 @@
 M.core_user = M.core_user || {};
 // Define a user selectors array for against the cure_user namespace
 M.core_user.user_selectors = [];
+// Define a user summary data object
+M.core_user.user_summary_data = {};
+
 /**
  * Retrieves an instantiated user selector or null if there isn't one by the requested name
  * @param {string} name The name of the selector to retrieve
@@ -179,6 +182,7 @@ M.core_user.init_user_selector = function (Y, name, hash, extrafields, lastsearc
                     return new M.core.ajaxException(data);
                 }
                 this.output_options(data);
+                this.fire('user_selector:searchcomplete', data);
             } catch (e) {
                 this.listbox.setStyle('background','');
                 this.searchfield.addClass('error');
@@ -368,4 +372,42 @@ M.core_user.init_user_selector_options_tracker = function(Y) {
     user_selector_options_tracker.init();
     // Return it just incase it is ever wanted
     return user_selector_options_tracker;
+};
+
+/**
+ * Initialise the variable containing user group membership
+ *
+ * @param {YUI} Y The YUI3 instance
+ * @param {Object} Hash object containing data to initialise
+ */
+M.core_user.init_user_summary_data = function(Y,data) {
+    M.core_user.user_summary_data = data;
+};
+
+/**
+ * Empties the user summary data cache
+ */
+M.core_user.clear_user_summary_data = function() {
+    M.core_user.user_summary_data = {};
+};
+
+/**
+ * Replaces the group summary for a given user, or adds it if
+ * not present.
+ *
+ * @param {int} User identifier
+ * @param {Array[String]} Array of group names that the user belongs to
+ */
+M.core_user.replace_user_summary = function(userid,data) {
+    var key = M.core_user.get_user_summary_key(userid);
+    M.core_user.user_summary_data[key] = data;
+};
+
+/**
+ * Generate the hash key for a user lookup in M.core_user.user_summary_data
+ *
+ * @param {int} UserID to look up
+ */
+M.core_user.get_user_summary_key = function(id) {
+    return 'user'+id;
 };
