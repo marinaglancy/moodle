@@ -1,5 +1,10 @@
 This files describes API changes in the assign code.
 
+=== 3.2 ===
+* Proper checking for empty submissions
+* Submission modification time checking - this will help students working in groups not clobber each others'
+  submissions
+
 === 3.1 ===
 * The feedback plugins now need to implement the is_feedback_modified() method. The default is to return true
   for backwards compatibiltiy.
