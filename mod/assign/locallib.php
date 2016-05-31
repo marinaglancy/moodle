@@ -6372,6 +6372,22 @@ class assign {
     }
 
     /**
+     * Determine if a new submission is empty or not
+     *
+     * @param stdClass $data Submission data
+     * @return bool
+     */
+    public function new_submission_empty($data) {
+        foreach ($this->submissionplugins as $plugin) {
+            if ($plugin->is_enabled() && $plugin->is_visible() && $plugin->allow_submissions() &&
+                    !$plugin->submission_is_empty($data)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
      * Save assignment submission for the current user.
      *
      * @param  stdClass $data
@@ -6415,6 +6431,11 @@ class assign {
         if ($flags && $flags->locked) {
             print_error('submissionslocked', 'assign');
             return true;
+        }
+
+        if ($this->new_submission_empty($data)) {
+            $notices[] = get_string('submissionempty', 'mod_assign');
+            return false;
         }
 
         // Check that no one has modified the submission since we started looking at it.
