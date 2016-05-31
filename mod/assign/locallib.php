@@ -6417,6 +6417,13 @@ class assign {
             return true;
         }
 
+        // Check that no one has modified the submission since we started looking at it.
+        // This is particularly important for group submissions.
+        if (isset($data->firstviewed) && ($submission->timemodified >= $data->firstviewed)) {
+            $notices[] = get_string('submissionmodified', 'mod_assign');
+            return false;
+        }
+
         $pluginerror = false;
         foreach ($this->submissionplugins as $plugin) {
             if ($plugin->is_enabled() && $plugin->is_visible()) {

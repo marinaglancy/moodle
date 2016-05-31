@@ -140,6 +140,7 @@ $string['duedatecolon'] = 'Due date: {$a}';
 $string['duedate_help'] = 'This is when the assignment is due. Submissions will still be allowed after this date but any assignments submitted after this date are marked as late. To prevent submissions after a certain date - set the assignment cut off date.';
 $string['duedateno'] = 'No due date';
 $string['submissionempty'] = 'Nothing was submitted';
+$string['submissionmodified'] = 'The submission has been modified by somebody else. Please refresh and try again';
 $string['duedatereached'] = 'The due date for this assignment has now passed';
 $string['duedatevalidation'] = 'Due date must be after the allow submissions from date.';
 $string['editattemptfeedback'] = 'Edit the grade and feedback for attempt number {$a}.';
