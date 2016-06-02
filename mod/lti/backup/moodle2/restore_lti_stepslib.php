@@ -53,6 +53,9 @@ defined('MOODLE_INTERNAL') || die;
  */
 class restore_lti_activity_structure_step extends restore_activity_structure_step {
 
+    /** @var stdClass stores config for 'lti' plugin */
+    protected $config;
+
     protected function define_structure() {
 
         $paths = array();
@@ -83,6 +86,8 @@ class restore_lti_activity_structure_step extends restore_activity_structure_ste
         // an interim solution until the issue below is implemented.
         // TODO: MDL-34161 - Fix restore to support course/site tools & submissions.
         $data->typeid = 0;
+        $this->decrypt_field($data, 'resourcekey');
+        $this->decrypt_field($data, 'password');
 
         $newitemid = $DB->insert_record('lti', $data);
 
@@ -93,5 +98,32 @@ class restore_lti_activity_structure_step extends restore_activity_structure_ste
     protected function after_execute() {
         // Add lti related files, no need to match by itemname (just internally handled context).
         $this->add_related_files('mod_lti', 'intro', null);
+    }
+
+    /**
+     * Decrypt and restore encrypted fields, such as consumer key and shared secret
+     *
+     * Only if restored on the same site, key and IV are stored in settings and populated during the first backup.
+     *
+     * @see backup_lti_activity_structure_step::encrypt_field()
+     * @param stdClass $record
+     * @param string $fieldname field that need to be decrypted, for example if $record->secret was encrypted, after
+     *    calling this function $record->secret_encrypted will be removed but $record->secret will be added
+     */
+    protected function decrypt_field($record, $fieldname) {
+        if (empty($record->{$fieldname . '_encrypted'}) || !$this->task->is_samesite() || !function_exists('openssl_decrypt')) {
+            unset($record->{$fieldname . '_encrypted'});
+            return;
+        }
+
+        if ($this->config === null) {
+            $this->config = get_config('lti');
+        }
+        if (!empty($this->config->backupencryptkey)) {
+            $iv = base64_decode($this->config->backupencryptiv);
+            $key = base64_decode($this->config->backupencryptkey);
+            $record->$fieldname = openssl_decrypt($record->{$fieldname . '_encrypted'}, 'aes-256-cbc', $key, false, $iv);
+        }
+        unset($record->{$fieldname . '_encrypted'});
     }
 }
