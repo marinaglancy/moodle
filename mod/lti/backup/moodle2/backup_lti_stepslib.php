@@ -53,7 +53,11 @@ defined('MOODLE_INTERNAL') || die;
  */
 class backup_lti_activity_structure_step extends backup_activity_structure_step {
 
+    /** @var stdClass stores config for 'lti' plugin */
+    protected $config;
+
     protected function define_structure() {
+        global $DB;
 
         // TODO: MDL-34161 - Fix restore to support course/site tools & submissions.
 
@@ -84,6 +88,8 @@ class backup_lti_activity_structure_step extends backup_activity_structure_step 
             'showdescriptionlaunch',
             'icon',
             'secureicon',
+            'resourcekey_encrypted',
+            'password_encrypted'
             )
         );
 
@@ -91,7 +97,11 @@ class backup_lti_activity_structure_step extends backup_activity_structure_step 
         // (none).
 
         // Define sources.
-        $lti->set_source_table('lti', array('id' => backup::VAR_ACTIVITYID));
+        $ltirecord = $DB->get_record('lti', ['id' => $this->task->get_activityid()]);
+        // Allow to include encrypted consumer key and shared secret in the backup to be restored on the same site only.
+        $this->encrypt_field($ltirecord, 'resourcekey');
+        $this->encrypt_field($ltirecord, 'password');
+        $lti->set_source_array([$ltirecord]);
 
         // Define id annotations
         // (none).
@@ -105,5 +115,41 @@ class backup_lti_activity_structure_step extends backup_activity_structure_step 
 
         // Return the root element (lti), wrapped into standard activity structure.
         return $this->prepare_activity_structure($lti);
+    }
+
+    /**
+     * Allow to include encrypted secret in the backup to be restored on the same site only.
+     *
+     * Generate key and IV for openssl encryption if not previously generated and store then in the plugin config.
+     * This will allow to restore on the same site but at the same time will not store the secret information
+     * (similar to password) in the backup file when it can be shared.
+     *
+     * @see restore_lti_activity_structure_step::decrypt_field()
+     * @param stdClass $record
+     * @param string $fieldname field that need to be encrypted, for example if $record->secret was encrypted, after
+     *    calling this function $record->secret will not exist but $record->secret_encrypted will be added
+     */
+    protected function encrypt_field($record, $fieldname) {
+        if (!empty($record->$fieldname) && function_exists('openssl_encrypt')) {
+            if ($this->config === null) {
+                $this->config = get_config('lti') ?: new stdClass();
+            }
+
+            if (empty($this->config->backupencryptkey)) {
+                $iv = openssl_random_pseudo_bytes(openssl_cipher_iv_length('aes-256-cbc'));
+                $key = openssl_random_pseudo_bytes(16);
+                $this->config->backupencryptkey = base64_encode($key);
+                $this->config->backupencryptiv = base64_encode($iv);
+                set_config('backupencryptkey', $this->config->backupencryptkey, 'lti');
+                set_config('backupencryptiv', $this->config->backupencryptiv, 'lti');
+            } else {
+                $iv = base64_decode($this->config->backupencryptiv);
+                $key = base64_decode($this->config->backupencryptkey);
+            }
+
+            $record->{$fieldname . '_encrypted'} = openssl_encrypt($record->$fieldname, 'aes-256-cbc', $key, false, $iv);
+        }
+        // Always exclude the unencrypted field from the record even encryption was not possible.
+        unset($record->$fieldname);
     }
 }
