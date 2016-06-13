@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- *
+ * Contains class core_group\output\groupoverview
  *
  * @package   core_group
  * @copyright 2016 Marina Glancy
@@ -33,16 +33,21 @@ use html_writer;
 use core_collator;
 
 /**
+ * Stores and prepares for output the information about groups and groupings in a course
  *
  * @package   core_group
  * @copyright 2016 Marina Glancy
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class groupsoverview implements \templatable {
+class groupoverview implements \templatable {
 
+    /** @var int */
     protected $courseid;
+    /** @var stdClass[] */
     protected $allgroups;
+    /** @var stdClass[] */
     protected $allgroupings;
+    /** @var array */
     protected $allmembers;
     protected $notingroupsmembers;
 

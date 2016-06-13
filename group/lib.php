@@ -1097,39 +1097,37 @@ function groups_sync_with_enrolment($enrolname, $courseid = 0, $gidfield = 'cust
     return $affectedusers;
 }
 
+/**
+ * Retrieves and returns the list of members of all groups and groupings
+ *
+ * @param int $courseid
+ * @return array list of members groupingid=>groupid=>userid=>user
+ */
 function group_get_groups_members_for_overview($courseid) {
     global $DB;
-    $members = array();
-    $context = context_course::instance($courseid);
+    $members = [];
 
-    $params = array('courseid' => $courseid);
+    list($sort, $params) = users_order_by_sql('u');
+    $params['courseid'] = $courseid;
 
-    list($sort, $sortparams) = users_order_by_sql('u');
-
-    $allnames = get_all_user_name_fields(true, 'u');
-    $sql = "SELECT g.id AS groupid, gg.groupingid, u.id AS userid, $allnames, u.idnumber, u.username
+    $allnames = user_picture::fields('u', [], 'userid');
+    $sql = "SELECT g.id AS groupid, gg.groupingid, $allnames
               FROM {groups} g
                    LEFT JOIN {groupings_groups} gg ON g.id = gg.groupid
                    LEFT JOIN {groups_members} gm ON g.id = gm.groupid
                    LEFT JOIN {user} u ON gm.userid = u.id
              WHERE g.courseid = :courseid
-          ORDER BY g.name, $sort";
+          ORDER BY g.id, $sort";
 
-    $rs = $DB->get_recordset_sql($sql, array_merge($params, $sortparams));
+    $rs = $DB->get_recordset_sql($sql, $params);
     foreach ($rs as $row) {
-        $user = new stdClass();
-        $user = username_load_fields_from_object($user, $row, null, array('id' => 'userid', 'username', 'idnumber'));
-        if (!$row->groupingid) {
-            $row->groupingid = OVERVIEW_GROUPING_GROUP_NO_GROUPING;
-        }
-        if (!array_key_exists($row->groupingid, $members)) {
-            $members[$row->groupingid] = array();
-        }
-        if (!array_key_exists($row->groupid, $members[$row->groupingid])) {
-            $members[$row->groupingid][$row->groupid] = array();
-        }
-        if (!empty($user->id)) {
-            $members[$row->groupingid][$row->groupid][] = $user;
+        $groupingid = $row->groupingid ?: OVERVIEW_GROUPING_GROUP_NO_GROUPING;
+        $groupid = $row->groupid;
+        $members += [$groupingid => []];
+        $members[$groupingid] += [$groupid => []];
+        if (!empty($row->userid)) {
+            $user = user_picture::unalias($row, [], 'userid');
+            $members[$groupingid][$groupid][$user->id] = $user;
         }
     }
     $rs->close();
