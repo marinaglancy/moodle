@@ -29,7 +29,6 @@ Feature: Add/Remove Users
       | Group 1 | Anything    | C1 | GROUP1   |
       | Group 2 | Anything    | C1 | GROUP2   |
       | Group 3 | Anything    | C1 | GROUP3   |
-    Given I log out
     And I log in as "teacher1"
     And I follow "Course 1"
     And I expand "Users" node
@@ -43,10 +42,10 @@ Feature: Add/Remove Users
   Scenario: When potential members is less than configured limit, view existing group memberships without search
     Given I set the field "groups" to "Group 3"
     And I press "Add/remove users"
-    Then the "members" select box should contain "Student 1 (student1@example.com) (1)"
-    And the "members" select box should contain "Student 2 (student2@example.com) (1)"
-    And the "members" select box should contain "Student 3 (student3@example.com) (2)"
-    And the "members" select box should contain "Student 4 (student4@example.com) (0)"
+    Then the "addselect" select box should contain "Student 1 (student1@example.com) (1)"
+    And the "addselect" select box should contain "Student 2 (student2@example.com) (1)"
+    And the "addselect" select box should contain "Student 3 (student3@example.com) (2)"
+    And the "addselect" select box should contain "Student 4 (student4@example.com) (0)"
     When I set the field "addselect" to "Student 1 (student1@example.com) (1)"
     Then I should see "Group 1"
 
@@ -54,12 +53,13 @@ Feature: Add/Remove Users
   Scenario: When potential members is less than configured limit, view existing group memberships with search
     Given I set the field "groups" to "Group 3"
     And I press "Add/remove users"
-    Then the "members" select box should contain "Student 1 (student1@example.com) (1)"
-    And the "members" select box should contain "Student 2 (student2@example.com) (1)"
-    And the "members" select box should contain "Student 3 (student3@example.com) (2)"
-    And the "members" select box should contain "Student 4 (student4@example.com) (0)"
+    Then the "addselect" select box should contain "Student 1 (student1@example.com) (1)"
+    And the "addselect" select box should contain "Student 2 (student2@example.com) (1)"
+    And the "addselect" select box should contain "Student 3 (student3@example.com) (2)"
+    And the "addselect" select box should contain "Student 4 (student4@example.com) (0)"
     When I set the field "addselect_searchtext" to "3"
-    Then the "members" select box should contain "Student 3 (student3@example.com) (2)"
+    And I wait "2" seconds
+    Then the "addselect" select box should contain "Student 3 (student3@example.com) (2)"
     When I set the field "addselect" to "Student 3 (student3@example.com) (2)"
     Then I should see "Group 1"
     And I should see "Group 2"
@@ -75,9 +75,9 @@ Feature: Add/Remove Users
     And I follow "Groups"
     Given I set the field "groups" to "Group 3"
     And I press "Add/remove users"
-    Then the "members" select box should contain "Too many users (4) to show"
+    Then the "addselect" select box should contain "Too many users (4) to show"
     When I set the field "addselect_searchtext" to "3"
-    Then the "members" select box should contain "Student 3 (student3@example.com) (2)"
+    Then the "addselect" select box should contain "Student 3 (student3@example.com) (2)"
     When I set the field "addselect" to "Student 3 (student3@example.com) (2)"
     Then I should see "Group 1"
     And I should see "Group 2"
