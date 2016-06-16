@@ -114,6 +114,63 @@ class groupoverview implements \templatable {
         return $members;
     }
 
+    protected function get_grouping_actions($grouping, renderer_base $output) {
+        if ($grouping->id <= 0) {
+            return '';
+        }
+        $context = context_course::instance($this->courseid);
+        $stredit         = get_string('edit');
+        $canchangeidnumber = has_capability('moodle/course:changeidnumber', $context);
+        $strdelete       = get_string('delete');
+        $strmanagegrping = get_string('showgroupsingrouping', 'group');
+
+        $url = new moodle_url('/group/grouping.php', array('id' => $grouping->id));
+        $buttons  = html_writer::link($url, $output->pix_icon('t/edit', $stredit, 'core',
+            array('class' => 'iconsmall')), array('title' => $stredit));
+        if (empty($grouping->idnumber) || $canchangeidnumber) {
+            // It's only possible to delete groups without an idnumber unless the user has the changeidnumber capability.
+            $url = new moodle_url('/group/grouping.php', array('id' => $grouping->id, 'delete' => 1));
+            $buttons .= html_writer::link($url, $output->pix_icon('t/delete', $strdelete, 'core',
+                array('class' => 'iconsmall')), array('title' => $strdelete));
+        } else {
+            $buttons .= $output->spacer();
+        }
+        $url = new moodle_url('/group/assign.php', array('id' => $grouping->id));
+        $buttons .= html_writer::link($url, $output->pix_icon('t/groups', $strmanagegrping, 'core',
+            array('class' => 'iconsmall')), array('title' => $strmanagegrping));
+
+        return $buttons;
+
+    }
+
+    protected function get_group_actions($group, renderer_base $output) {
+        if ($group->id <= 0) {
+            return '';
+        }
+        $context = context_course::instance($this->courseid);
+        $stredit         = get_string('editgroupsettings', 'group');
+        $strdelete       = get_string('delete');
+        $strusers        = get_string('adduserstogroup', 'group');
+
+        $url = new moodle_url('/group/group.php', array('courseid' => $this->courseid, 'id' => $group->id));
+        $buttons  = html_writer::link($url, $output->pix_icon('t/edit', $stredit, 'core',
+            array('class' => 'iconsmall')), array('title' => $stredit));
+
+        if (empty($group->idnumber) || has_capability('moodle/course:changeidnumber', $context)) {
+            $url = new moodle_url('/group/delete.php', array('courseid' => $this->courseid, 'groups' => $group->id));
+            $buttons .= html_writer::link($url, $output->pix_icon('t/delete', $strdelete, 'core',
+                array('class' => 'iconsmall')), array('title' => $strdelete));
+        }
+
+        $url = new moodle_url('/group/members.php', array('group' => $group->id));
+        $buttons .= html_writer::link($url, $output->pix_icon('t/groups', $strusers, 'core',
+            array('class' => 'iconsmall')), array('title' => $strusers));
+
+
+
+        return $buttons;
+    }
+
     /**
      * Function to export the renderer data in a format that is suitable for a
      * mustache template. This means:
@@ -141,7 +198,8 @@ class groupoverview implements \templatable {
                         'description' => $group->formatteddescription, // TODO
                         'picture' => $group->picture,
                         'members' => join(', ', $members),
-                        'memberscount' => count($members)
+                        'memberscount' => count($members),
+                        'actions' => $this->get_group_actions($group, $output),
                     );
                 }
                 \core_collator::asort_array_of_arrays_by_key($groups, 'name', core_collator::SORT_NATURAL);
@@ -152,7 +210,8 @@ class groupoverview implements \templatable {
                 'name' => $grouping->formattedname, // TODO
                 'description' => $grouping->formatteddescription, // TODO
                 'groups' => array_values($groups),
-                'groupscount' => count($groups)
+                'groupscount' => count($groups),
+                'actions' => $this->get_grouping_actions($grouping, $output),
             );
         }
         $groups = array();
@@ -168,7 +227,11 @@ class groupoverview implements \templatable {
             'groups' => array_values($groups),
             'groupings' => array_values($groupings),
             'notingroupsusers' => join(', ', $members),
-            'notingroupsuserscount' => count($members)
+            'notingroupsuserscount' => count($members),
+            'creategroupingurl' => new moodle_url('/group/grouping.php', ['courseid' => $this->courseid]),
+            'creategroupurl' => new moodle_url('/group/group.php', ['courseid' => $this->courseid]),
+            'autocreategroupsurl' => new moodle_url('/group/autogroup.php', ['courseid' => $this->courseid]),
+            'importgroupsurl' => new moodle_url('/group/import.php', ['id' => $this->courseid]),
         );
     }
 

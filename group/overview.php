@@ -63,20 +63,27 @@ $stroverview         = get_string('overview', 'group');
 navigation_node::override_active_url(new moodle_url('/group/index.php', array('id'=>$courseid)));
 $PAGE->navbar->add(get_string('overview', 'group'));
 
-// Print header
+// Print header.
 $PAGE->set_title($strgroups);
 $PAGE->set_heading($course->fullname);
 $PAGE->set_pagelayout('standard');
 echo $OUTPUT->header();
 
-// Add tabs
-$currenttab = 'overview';
-require('tabs.php');
-
-/// Print overview
-echo $OUTPUT->heading(format_string($course->shortname, true, array('context' => $context)) .' '.$stroverview, 3);
+// Print overview.
+echo $OUTPUT->heading(format_string($course->shortname, true, array('context' => $context)) . ' ' . $stroverview, 2);
 
 $tmpl = new \core_group\output\groupoverview($courseid);
 $tmpl->render($OUTPUT);
 
 echo $OUTPUT->footer();
+
+/* TODO NOTES
+
+1. Toggle showing list of users
+2. Separate group members in the list by their role in the course (current functionality)
+
+
+
+
+
+*/

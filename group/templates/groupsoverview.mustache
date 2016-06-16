@@ -34,6 +34,19 @@
 
 }}
 
+{{#creategroupingurl}}
+    <p><a href="{{creategroupingurl}}">{{#str}}creategrouping, group{{/str}}</a></p>
+{{/creategroupingurl}}
+{{#creategroupurl}}
+    <p><a href="{{creategroupurl}}">{{#str}}creategroup, group{{/str}}</a></p>
+{{/creategroupurl}}
+{{#autocreategroupsurl}}
+    <p><a href="{{autocreategroupsurl}}">{{#str}}autocreategroups, group{{/str}}</a></p>
+{{/autocreategroupsurl}}
+{{#importgroupsurl}}
+    <p><a href="{{importgroupsurl}}">{{#str}}importgroups, group{{/str}}</a></p>
+{{/importgroupsurl}}
+
 <div class="groupsfilter">
 
 {{#str}} filtergroups, group {{/str}}
@@ -65,23 +78,28 @@
 
 {{#groupings}}
 <div class="overviewgrouping" data-groupingid="{{id}}">
-    <h3>{{{name}}}</h3>
+    <div style="overflow:auto">
+        <h3 style="float:left">{{{name}}}</h3>
+        <div style="float:right; margin:10px 0" class="groupingactions">{{{actions}}}</div>
+    </div>
     <div class="generalbox">{{{description}}}</div>
     {{#groupscount}}
     <table class="generaltable" width="90%">
     <thead>
         <tr>
             <th class="header c0" width="20%">{{#str}}groupscount, group, {{groupscount}}{{/str}}</th>
-            <th class="header c1" width="70%">{{#str}}groupmembers, group{{/str}}</th>
+            <th class="header c1" width="60%">{{#str}}groupmembers, group{{/str}}</th>
             <th class="header c2 lastcol" width="10%">{{#str}}usercount, group{{/str}}</th>
+            <th class="header c2 lastcol" width="10%"></th>
         </tr>
     </thead>
     <tbody>
         {{#groups}}
             <tr class="overviewgroup" data-groupid="{{id}}">
                 <td class="cell c0" width="20%"><span class="group_hoverdescription" data-groupid="{{id}}">{{{picture}}}{{{name}}}</span></td>
-                <td class="cell c1" width="70%">{{{members}}}</td>
-                <td class="cell c2 lastcol" width="10%">{{{memberscount}}}</td>
+                <td class="cell c1" width="60%">{{{members}}}</td>
+                <td class="cell c2" width="10%">{{{memberscount}}}</td>
+                <td class="cell c3 lastcol" width="10%">{{{actions}}}</td>
             </tr>
         {{/groups}}
     </tbody>
@@ -90,6 +108,9 @@
     {{^groupscount}}
     <p class="groupingempty">{{#str}} groupingempty, group {{/str}}</p>
     {{/groupscount}}
+    {{#creategrouplink}}
+        <p><a href="{{creategrouplink}}">{{#str}}creategroup, group{{/str}}</a></p>
+    {{/creategrouplink}}
 </div>
 {{/groupings}}
 {{#notingroupsuserscount}}
@@ -100,15 +121,17 @@
     <thead>
         <tr>
             <th class="header c0" width="20%"></th>
-            <th class="header c1" width="70%">{{#str}}users{{/str}}</th>
+            <th class="header c1" width="60%">{{#str}}users{{/str}}</th>
             <th class="header c2 lastcol" width="10%">{{#str}}usercount, group{{/str}}</th>
+            <th class="header c2 lastcol" width="10%"></th>
         </tr>
     </thead>
     <tbody>
         <tr class="overviewgroup" data-groupid="-1">
             <td class="cell c0" width="20%">No group</td>
-            <td class="cell c1" width="70%">{{{notingroupsusers}}}</td>
-            <td class="cell c2 lastcol" width="10%">{{{notingroupsuserscount}}}</td>
+            <td class="cell c1" width="60%">{{{notingroupsusers}}}</td>
+            <td class="cell c2" width="10%">{{{notingroupsuserscount}}}</td>
+            <td class="cell c3 lastcol" width="10%"></td>
         </tr>
     </tbody>
     </table>
