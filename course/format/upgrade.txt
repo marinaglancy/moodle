@@ -7,6 +7,13 @@ Overview of this plugin type at http://docs.moodle.org/dev/Course_formats
 * Course formats can overwrite get_default_course_enddate function to set the default course end date for new courses.
   format_base::get_default_course_enddate uses the new "Course duration" site setting to calculate the default course end date
   from the default course start date.
+* Javascript code for editing activities and sections was moved to an AMD module, course/rest.php is no longer
+  responsible for editing actions, instead it is done in web services. Carefully test all editing actions during upgrade.
+* The new method format_base::allow_stealth_module_visibility() can control whether the activities may be marked
+  as hidden but available. This is controlled by setting new property of course_module - visibleoncoursepage.
+  To display activity on course page use $cm->is_visible_on_course_page() instead of $cm->uservisible.
+  For all other modules except course formats the same property $cm->uservisible indicates if the activity contents
+  is actually avilable to student.
 
 === 3.1 ===
 * Course format may use the inplace_editable template to allow quick editing of section names, see

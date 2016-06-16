@@ -618,6 +618,7 @@ class core_course_externallib_testcase extends externallib_advanced_testcase {
                     array('name' => 'numsections', 'value' => $dbcourse->numsections),
                     array('name' => 'hiddensections', 'value' => $dbcourse->hiddensections),
                     array('name' => 'coursedisplay', 'value' => $dbcourse->coursedisplay),
+                    array('name' => 'allowstealth', 'value' => $dbcourse->allowstealth),
                 ));
             }
         }
@@ -1736,7 +1737,7 @@ class core_course_externallib_testcase extends externallib_advanced_testcase {
 
         $this->assertCount(0, $result['warnings']);
         // Test we retrieve all the fields.
-        $this->assertCount(22, $result['cm']);
+        $this->assertCount(23, $result['cm']);
         $this->assertEquals($record['name'], $result['cm']['name']);
         $this->assertEquals($options['idnumber'], $result['cm']['idnumber']);
 

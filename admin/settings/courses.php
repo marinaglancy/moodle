@@ -95,6 +95,12 @@ if ($hassiteconfig or has_any_capability($capabilities, $systemcontext)) {
     $temp->add(new admin_setting_configduration('moodlecourse/courseduration', get_string('courseduration'),
         get_string('courseduration_desc'), YEARSECS));
 
+    $choices = array();
+    $choices[0] = new lang_string('no');
+    $choices[1] = new lang_string('yes');
+    $temp->add(new admin_setting_configselect('moodlecourse/allowstealth', new lang_string('allowstealthmodules'),
+        new lang_string('allowstealthmodules_help'), 0, $choices));
+
     // Appearance.
     $temp->add(new admin_setting_heading('appearancehdr', new lang_string('appearance'), ''));
 

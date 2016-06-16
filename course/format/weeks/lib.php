@@ -242,6 +242,10 @@ class format_weeks extends format_base {
                     'default' => $courseconfig->coursedisplay,
                     'type' => PARAM_INT,
                 ),
+                'allowstealth' => array(
+                    'default' => $courseconfig->allowstealth,
+                    'type' => PARAM_INT,
+                ),
             );
         }
         if ($foreditform && !isset($courseformatoptions['coursedisplay']['label'])) {
@@ -283,7 +287,19 @@ class format_weeks extends format_base {
                     ),
                     'help' => 'coursedisplay',
                     'help_component' => 'moodle',
-                )
+                ),
+                'allowstealth' => array(
+                    'label' => new lang_string('allowstealthmodules'),
+                    'element_type' => 'select',
+                    'element_attributes' => array(
+                        array(
+                            0 => new lang_string('no'),
+                            1 => new lang_string('yes')
+                        )
+                    ),
+                    'help' => 'allowstealthmodules',
+                    'help_component' => 'moodle',
+                ),
             );
             $courseformatoptions = array_merge_recursive($courseformatoptions, $courseformatoptionsedit);
         }
@@ -487,6 +503,22 @@ class format_weeks extends format_base {
         // Final week's last day.
         $dates = $this->get_section_dates(intval($numsections), $startdate);
         return $dates->end;
+    }
+
+    /**
+     * Returns whether this course format allows the activity to
+     * have "triple visibility state" - visible always, hidden on course page but available, hidden.
+     *
+     * @param stdClass|cm_info $cm course module (may be null if we are displaying a form for adding a module)
+     * @param stdClass|section_info $section section where this module is located or will be added to
+     * @return bool
+     */
+    public function allow_stealth_module_visibility($cm, $section) {
+        // Allow the third visibility state inside visible sections or in section 0, not allow in orphaned sections.
+        if (!$this->get_course()->allowstealth) {
+            return false;
+        }
+        return !$section->section || ($section->visible && $section->section <= $this->get_course()->numsections);
     }
 }
 

@@ -1150,6 +1150,18 @@ abstract class format_base {
         $startdate = $mform->getElementValue($fieldnames['startdate']);
         return $mform->getElement($fieldnames['startdate'])->exportValue($startdate);
     }
+
+    /**
+     * Returns whether this course format allows the activity to
+     * have "triple visibility state" - visible always, hidden on course page but available, hidden.
+     *
+     * @param stdClass|cm_info $cm course module (may be null if we are displaying a form for adding a module)
+     * @param stdClass|section_info $section section where this module is located or will be added to
+     * @return bool
+     */
+    public function allow_stealth_module_visibility($cm, $section) {
+        return false;
+    }
 }
 
 /**
@@ -1210,5 +1222,17 @@ class format_site extends format_base {
             );
         }
         return $courseformatoptions;
+    }
+
+    /**
+     * Returns whether this course format allows the activity to
+     * have "triple visibility state" - visible always, hidden on course page but available, hidden.
+     *
+     * @param stdClass|cm_info $cm course module (may be null if we are displaying a form for adding a module)
+     * @param stdClass|section_info $section section where this module is located or will be added to
+     * @return bool
+     */
+    public function allow_stealth_module_visibility($cm, $section) {
+        return true;
     }
 }

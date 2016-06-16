@@ -250,6 +250,22 @@ $functions = array(
         'type' => 'read',
         'services' => array(MOODLE_OFFICIAL_MOBILE_SERVICE),
     ),
+    'core_course_module_action' => array(
+        'classname'   => 'core_course_external',
+        'methodname'  => 'module_action',
+        'classpath'   => 'course/externallib.php',
+        'description' => 'Performs an action on course module (change visibility, duplicate, delete, etc.)',
+        'type'        => 'write',
+        'ajax'        => true,
+    ),
+    'core_course_edit_section' => array(
+        'classname'   => 'core_course_external',
+        'methodname'  => 'edit_section',
+        'classpath'   => 'course/externallib.php',
+        'description' => 'Performs an action on course section (change visibility, set marker, delete)',
+        'type'        => 'write',
+        'ajax'        => true,
+    ),
     'core_course_get_courses' => array(
         'classname' => 'core_course_external',
         'methodname' => 'get_courses',
