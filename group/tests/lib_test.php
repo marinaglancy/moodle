@@ -135,7 +135,7 @@ class core_group_lib_testcase extends advanced_testcase {
 
         $this->assertEquals(context_course::instance($course->id), $event->get_context());
         $this->assertEquals($group->id, $event->objectid);
-        $url = new moodle_url('/group/groupings.php', array('id' => $event->courseid));
+        $url = new moodle_url('/group/index.php', array('id' => $event->courseid));
         $this->assertEquals($url, $event->get_url());
     }
 
@@ -317,7 +317,7 @@ class core_group_lib_testcase extends advanced_testcase {
         $this->assertSame('groups_grouping_deleted', $event->get_legacy_eventname());
         $this->assertEquals(context_course::instance($course->id), $event->get_context());
         $this->assertEquals($group->id, $event->objectid);
-        $url = new moodle_url('/group/groupings.php', array('id' => $event->courseid));
+        $url = new moodle_url('/group/index.php', array('id' => $event->courseid));
         $this->assertEquals($url, $event->get_url());
     }
 

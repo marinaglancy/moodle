@@ -50,8 +50,8 @@ $strgroups           = get_string('groups');
 $strparticipants     = get_string('participants');
 $strautocreategroups = get_string('autocreategroups', 'group');
 
-$PAGE->set_title($strgroups);
-$PAGE->set_heading($course->fullname. ': '.$strgroups);
+$PAGE->set_title("$course->shortname: $strautocreategroups");
+$PAGE->set_heading($course->fullname);
 $PAGE->set_pagelayout('admin');
 navigation_node::override_active_url(new moodle_url('/group/index.php', array('id' => $courseid)));
 
@@ -249,8 +249,6 @@ if ($editform->is_cancelled()) {
     }
 }
 
-$PAGE->navbar->add($strparticipants, new moodle_url('/user/index.php', array('id'=>$courseid)));
-$PAGE->navbar->add($strgroups, new moodle_url('/group/index.php', array('id'=>$courseid)));
 $PAGE->navbar->add($strautocreategroups);
 
 echo $OUTPUT->header();

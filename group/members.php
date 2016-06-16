@@ -89,12 +89,11 @@ $strusergroupmembership = get_string('usergroupmembership', 'group');
 $groupname = format_string($group->name);
 
 $PAGE->requires->js('/group/clientlib.js');
-$PAGE->navbar->add($strparticipants, new moodle_url('/user/index.php', array('id'=>$course->id)));
-$PAGE->navbar->add($strgroups, new moodle_url('/group/index.php', array('id'=>$course->id)));
+navigation_node::override_active_url(new moodle_url('/group/index.php', array('id' => $course->id)));
 $PAGE->navbar->add($stradduserstogroup);
 
 /// Print header
-$PAGE->set_title("$course->shortname: $strgroups");
+$PAGE->set_title("$course->shortname: " . get_string('adduserstogroup', 'group'));
 $PAGE->set_heading($course->fullname);
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('adduserstogroup', 'group').": $groupname", 3);

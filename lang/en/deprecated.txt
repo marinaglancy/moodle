@@ -36,3 +36,5 @@ downloadods,core_table
 downloadoptions,core_table
 downloadtsv,core_table
 downloadxhtml,core_table
+backtogroupings,core_group
+overview,core_group

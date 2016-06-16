@@ -84,7 +84,7 @@ class grouping_deleted extends base {
      * @return \moodle_url
      */
     public function get_url() {
-        return new \moodle_url('/group/groupings.php', array('id' => $this->courseid));
+        return new \moodle_url('/group/index.php', array('id' => $this->courseid));
     }
 
     /**

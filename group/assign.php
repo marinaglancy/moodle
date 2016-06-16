@@ -43,7 +43,7 @@ require_login($course);
 $context = context_course::instance($courseid);
 require_capability('moodle/course:managegroups', $context);
 
-$returnurl = $CFG->wwwroot.'/group/groupings.php?id='.$courseid;
+$returnurl = $CFG->wwwroot.'/group/index.php?id='.$courseid;
 
 
 if ($frm = data_submitted() and confirm_sesskey()) {
@@ -124,8 +124,6 @@ $groupingname = format_string($grouping->name);
 navigation_node::override_active_url(new moodle_url('/group/index.php', array('id'=>$course->id)));
 $PAGE->set_pagelayout('admin');
 
-$PAGE->navbar->add($strparticipants, new moodle_url('/user/index.php', array('id'=>$courseid)));
-$PAGE->navbar->add($strgroups, new moodle_url('/group/index.php', array('id'=>$courseid)));
 $PAGE->navbar->add($straddgroupstogroupings);
 
 /// Print header
@@ -173,7 +171,7 @@ echo $OUTPUT->header();
        </td>
     </tr>
     <tr><td colspan="3" id="backcell">
-        <input type="submit" name="cancel" value="<?php print_string('backtogroupings', 'group'); ?>" />
+        <input type="submit" name="cancel" value="<?php print_string('backtogroups', 'group'); ?>" />
     </td></tr>
     </table>
     </div>

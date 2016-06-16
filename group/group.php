@@ -75,12 +75,11 @@ $context = context_course::instance($course->id);
 require_capability('moodle/course:managegroups', $context);
 
 $strgroups = get_string('groups');
-$PAGE->set_title($strgroups);
-$PAGE->set_heading($course->fullname . ': '.$strgroups);
+$PAGE->set_heading($course->fullname);
 $PAGE->set_pagelayout('admin');
 navigation_node::override_active_url(new moodle_url('/group/index.php', array('id' => $course->id)));
 
-$returnurl = $CFG->wwwroot.'/group/index.php?id='.$course->id.'&group='.$id;
+$returnurl = $CFG->wwwroot.'/group/index.php?id='.$course->id;
 
 // Prepare the description editor: We do support files for group descriptions
 $editoroptions = array('maxfiles'=>EDITOR_UNLIMITED_FILES, 'maxbytes'=>$course->maxbytes, 'trust'=>false, 'context'=>$context, 'noclean'=>true);
@@ -124,12 +123,12 @@ if ($id) {
     $strheading = get_string('creategroup', 'group');
 }
 
-$PAGE->navbar->add($strparticipants, new moodle_url('/user/index.php', array('id'=>$courseid)));
-$PAGE->navbar->add($strgroups, new moodle_url('/group/index.php', array('id'=>$courseid)));
+$PAGE->set_title("$course->shortname: $strheading");
 $PAGE->navbar->add($strheading);
 
 /// Print header
 echo $OUTPUT->header();
+echo $OUTPUT->heading($strheading);
 echo '<div id="grouppicture">';
 if ($id) {
     print_group_picture($group, $course->id);

@@ -31,7 +31,6 @@ $string['adduserstogroup'] = 'Add/remove users';
 $string['allocateby'] = 'Allocate members';
 $string['anygrouping'] = '[Any grouping]';
 $string['autocreategroups'] = 'Auto-create groups';
-$string['backtogroupings'] = 'Back to groupings';
 $string['backtogroups'] = 'Back to groups';
 $string['badnamingscheme'] = 'Must contain exactly one \'@\' or one \'#\'  character';
 $string['byfirstname'] = 'Alphabetically by first name, last name';
@@ -169,7 +168,6 @@ $string['numgroups'] = 'Number of groups';
 $string['nummembers'] = 'Members per group';
 $string['mygroups'] = 'My groups';
 $string['othergroups'] = 'Other groups';
-$string['overview'] = 'Overview';
 $string['potentialmembers'] = 'Potential members: {$a}';
 $string['potentialmembs'] = 'Potential members';
 $string['printerfriendly'] = 'Printer-friendly display';
@@ -189,3 +187,7 @@ $string['toomanygroups'] = 'Insufficient users to populate this number of groups
 $string['usercount'] = 'User count';
 $string['usercounttotal'] = 'User count ({$a})';
 $string['usergroupmembership'] = 'Selected user\'s membership:';
+
+// Deprecated since Moodle 3.2.
+$string['backtogroupings'] = 'Back to groupings';
+$string['overview'] = 'Overview';

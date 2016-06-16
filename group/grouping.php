@@ -67,25 +67,23 @@ $context = context_course::instance($course->id);
 require_capability('moodle/course:managegroups', $context);
 
 $strgroupings = get_string('groupings', 'group');
-$PAGE->set_title($strgroupings);
-$PAGE->set_heading($course->fullname. ': '.$strgroupings);
+$PAGE->set_heading($course->fullname);
 $PAGE->set_pagelayout('admin');
 navigation_node::override_active_url(new moodle_url('/group/index.php', array('id' => $course->id)));
 
-$returnurl = $CFG->wwwroot.'/group/groupings.php?id='.$course->id;
+$returnurl = $CFG->wwwroot.'/group/index.php?id='.$course->id;
 
 if ($id and $delete) {
     if (!empty($grouping->idnumber) && !has_capability('moodle/course:changeidnumber', $context)) {
         print_error('groupinghasidnumber', '', '', $grouping->name);
     }
     if (!$confirm) {
-        $PAGE->set_title(get_string('deletegrouping', 'group'));
-        $PAGE->set_heading($course->fullname. ': '. get_string('deletegrouping', 'group'));
+        $PAGE->set_title("$course->shortname: " . get_string('deletegrouping', 'group'));
         echo $OUTPUT->header();
         $optionsyes = array('id'=>$id, 'delete'=>1, 'courseid'=>$courseid, 'sesskey'=>sesskey(), 'confirm'=>1);
         $optionsno  = array('id'=>$courseid);
         $formcontinue = new single_button(new moodle_url('grouping.php', $optionsyes), get_string('yes'), 'get');
-        $formcancel = new single_button(new moodle_url('groupings.php', $optionsno), get_string('no'), 'get');
+        $formcancel = new single_button(new moodle_url('index.php', $optionsno), get_string('no'), 'get');
         echo $OUTPUT->confirm(get_string('deletegroupingconfirm', 'group', $grouping->name), $formcontinue, $formcancel);
         echo $OUTPUT->footer();
         die;
@@ -138,8 +136,7 @@ if ($id) {
     $strheading = get_string('creategrouping', 'group');
 }
 
-$PAGE->navbar->add($strparticipants, new moodle_url('/user/index.php', array('id'=>$courseid)));
-$PAGE->navbar->add($strgroupings, new moodle_url('/group/groupings.php', array('id'=>$courseid)));
+$PAGE->set_title("$course->shortname: $strheading");
 $PAGE->navbar->add($strheading);
 
 /// Print header
