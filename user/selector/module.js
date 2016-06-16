@@ -179,6 +179,11 @@ M.core_user.init_user_selector = function (Y, name, hash, extrafields, lastsearc
                     return new M.core.ajaxException(data);
                 }
                 this.output_options(data);
+                // If updated userSummaries are present, overwrite the global variable
+                // that's output by group_non_members_selector::print_user_summaries() in user/selector/lib.php
+                if (typeof data.userSummaries !== "undefined") {
+                    userSummaries = data.userSummaries;
+                }
             } catch (e) {
                 this.listbox.setStyle('background','');
                 this.searchfield.addClass('error');
