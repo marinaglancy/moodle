@@ -189,93 +189,31 @@ class enrol_manual_editselectedusers_operation extends enrol_bulk_enrolment_oper
      * @param stdClass $properties The data returned by the form.
      */
     public function process(course_enrolment_manager $manager, array $users, stdClass $properties) {
-        global $DB, $USER;
 
         if (!has_capability("enrol/manual:manage", $manager->get_context())) {
             return false;
         }
 
-        // Get all of the user enrolment id's.
-        $ueids = array();
-        $instances = array();
+        // From array of users get the list of enrol instances and user enrolments to update.
+        // This should be only one enrol instance but we build an array to be sure.
+        $instances = [];
+        $enrolments = [];
         foreach ($users as $user) {
             foreach ($user->enrolments as $enrolment) {
-                $ueids[] = $enrolment->id;
-                if (!array_key_exists($enrolment->id, $instances)) {
-                    $instances[$enrolment->id] = $enrolment;
+                if ($this->plugin->allow_manage($enrolment)) {
+                    $instances[$enrolment->enrolmentinstance->id] = $enrolment->enrolmentinstance;
+                    $enrolment->userid = $user->id;
+                    $enrolments[$enrolment->enrolmentinstance->id][$enrolment->id] = $enrolment;
                 }
             }
         }
 
-        // Check that each instance is manageable by the current user.
         foreach ($instances as $instance) {
-            if (!$this->plugin->allow_manage($instance)) {
-                return false;
-            }
+            $this->plugin->bulk_update_user_enrol($instance, $enrolments[$instance->id],
+                $properties->status, $properties->timestart, $properties->timeend);
         }
 
-        // Collect the known properties.
-        $status = $properties->status;
-        $timestart = $properties->timestart;
-        $timeend = $properties->timeend;
-
-        list($ueidsql, $params) = $DB->get_in_or_equal($ueids, SQL_PARAMS_NAMED);
-
-        $updatesql = array();
-        if ($status == ENROL_USER_ACTIVE || $status == ENROL_USER_SUSPENDED) {
-            $updatesql[] = 'status = :status';
-            $params['status'] = (int)$status;
-        }
-        if (!empty($timestart)) {
-            $updatesql[] = 'timestart = :timestart';
-            $params['timestart'] = (int)$timestart;
-        }
-        if (!empty($timeend)) {
-            $updatesql[] = 'timeend = :timeend';
-            $params['timeend'] = (int)$timeend;
-        }
-        if (empty($updatesql)) {
-            return true;
-        }
-
-        // Update the modifierid.
-        $updatesql[] = 'modifierid = :modifierid';
-        $params['modifierid'] = (int)$USER->id;
-
-        // Update the time modified.
-        $updatesql[] = 'timemodified = :timemodified';
-        $params['timemodified'] = time();
-
-        // Build the SQL statement.
-        $updatesql = join(', ', $updatesql);
-        $sql = "UPDATE {user_enrolments}
-                   SET $updatesql
-                 WHERE id $ueidsql";
-
-        if ($DB->execute($sql, $params)) {
-            foreach ($users as $user) {
-                foreach ($user->enrolments as $enrolment) {
-                    $enrolment->courseid  = $enrolment->enrolmentinstance->courseid;
-                    $enrolment->enrol     = 'manual';
-                    // Trigger event.
-                    $event = \core\event\user_enrolment_updated::create(
-                            array(
-                                'objectid' => $enrolment->id,
-                                'courseid' => $enrolment->courseid,
-                                'context' => context_course::instance($enrolment->courseid),
-                                'relateduserid' => $user->id,
-                                'other' => array('enrol' => 'manual')
-                                )
-                            );
-                    $event->trigger();
-                }
-            }
-            // Delete cached course contacts for this course because they may be affected.
-            cache::make('core', 'coursecontacts')->delete($manager->get_context()->instanceid);
-            return true;
-        }
-
-        return false;
+        return true;
     }
 
     /**
