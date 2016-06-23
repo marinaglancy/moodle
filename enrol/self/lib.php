@@ -561,6 +561,23 @@ class enrol_self_plugin extends enrol_plugin {
     }
 
     /**
+     * The enrol_self plugin has several bulk operations that can be performed.
+     * @param course_enrolment_manager $manager
+     * @return array
+     */
+    public function get_bulk_operations(course_enrolment_manager $manager) {
+        $context = $manager->get_context();
+        $bulkoperations = array();
+        if (has_capability("enrol/self:manage", $context)) {
+            $bulkoperations['editselectedusers'] = new enrol_self_editselectedusers_operation($manager, $this);
+        }
+        if (has_capability("enrol/self:unenrol", $context)) {
+            $bulkoperations['deleteselectedusers'] = new enrol_self_deleteselectedusers_operation($manager, $this);
+        }
+        return $bulkoperations;
+    }
+
+    /**
      * Restore instance and map settings.
      *
      * @param restore_enrolments_structure_step $step
