@@ -1375,6 +1375,25 @@ abstract class enrol_plugin {
      * @return void
      */
     public function update_user_enrol(stdClass $instance, $userid, $status = NULL, $timestart = NULL, $timeend = NULL) {
+        global $DB;
+        $enrolments = $DB->get_records('user_enrolments', ['enrolid' => $instance->id, 'userid' => $userid]);
+        $this->bulk_update_user_enrol($instance, $enrolments, $status, $timestart, $timeend);
+    }
+
+    /**
+     * Store user_enrolments changes and trigger event.
+     *
+     * This method is used from update_user_enrol and from bulk update operations.
+     * There are no capabilities checks here.
+     *
+     * @param stdClass $instance record from table enrol
+     * @param array $enrolments list of records from table user_enrolments for the given enrol instance
+     * @param int $status new status (null for no changes)
+     * @param int $timestart new timestart (null for no changes)
+     * @param int $timeend new timeend (null for no changes)
+     * @return void
+     */
+    public function bulk_update_user_enrol(stdClass $instance, $enrolments, $status = null, $timestart = null, $timeend = null) {
         global $DB, $USER, $CFG;
 
         $name = $this->get_name();
@@ -1383,52 +1402,86 @@ abstract class enrol_plugin {
             throw new coding_exception('invalid enrol instance!');
         }
 
-        if (!$ue = $DB->get_record('user_enrolments', array('enrolid'=>$instance->id, 'userid'=>$userid))) {
-            // weird, user not enrolled
+        if (($status === null && $timestart === null && $timeend === null) || empty($enrolments)) {
+            // Nothing to do.
             return;
         }
 
-        $modified = false;
-        if (isset($status) and $ue->status != $status) {
-            $ue->status = $status;
-            $modified = true;
-        }
-        if (isset($timestart) and $ue->timestart != $timestart) {
-            $ue->timestart = $timestart;
-            $modified = true;
-        }
-        if (isset($timeend) and $ue->timeend != $timeend) {
-            $ue->timeend = $timeend;
-            $modified = true;
+        // Find enrolments that need changing.
+        foreach ($enrolments as $ueid => $ue) {
+            if ($ue->enrolid != $instance->id) {
+                // Inconsistent data, user enrolment record does not correspond to enrol isntance, skip.
+                unset($enrolments[$ueid]);
+                continue;
+            }
+            $modified = false;
+            if (isset($status) and $ue->status != $status) {
+                $enrolments[$ueid]->status = $status;
+                $modified = true;
+            }
+            if (isset($timestart) and $ue->timestart != $timestart) {
+                $enrolments[$ueid]->timestart = $timestart;
+                $modified = true;
+            }
+            if (isset($timeend) and $ue->timeend != $timeend) {
+                $enrolments[$ueid]->timeend = $timeend;
+                $modified = true;
+            }
+            if (!$modified) {
+                unset($enrolments[$ueid]);
+            }
         }
 
-        if (!$modified) {
-            // no change
+        if (empty($enrolments)) {
+            // No users enrolments need updating.
             return;
         }
 
-        $ue->modifierid = $USER->id;
-        $DB->update_record('user_enrolments', $ue);
-        context_course::instance($instance->courseid)->mark_dirty(); // reset enrol caches
+        // Update all users in bulk.
+        list($ueidsql, $params) = $DB->get_in_or_equal(array_keys($enrolments), SQL_PARAMS_NAMED);
+        $updatesql = 'modifierid = :modifierid, timemodified = :timemodified';
+        $params += [
+            'modifierid' => $USER->id,
+            'timemodified' => time(),
+            'status' => $status,
+            'timestart' => $timestart,
+            'timeend' => $timeend
+        ];
+        if (isset($status) && ($status == ENROL_USER_ACTIVE || $status == ENROL_USER_SUSPENDED)) {
+            $updatesql .= ', status = :status';
+        }
+        if (isset($timestart)) {
+            $updatesql .= ', timestart = :timestart';
+        }
+        if (isset($timeend)) {
+            $updatesql .= ', timeend = :timeend';
+        }
+
+        $sql = "UPDATE {user_enrolments} SET $updatesql WHERE id $ueidsql";
+        $DB->execute($sql, $params);
+
+        // Reset enrol caches.
+        context_course::instance($instance->courseid)->mark_dirty();
 
         // Invalidate core_access cache for get_suspended_userids.
         cache_helper::invalidate_by_definition('core', 'suspended_userids', array(), array($instance->courseid));
 
-        // Trigger event.
-        $event = \core\event\user_enrolment_updated::create(
-                array(
-                    'objectid' => $ue->id,
-                    'courseid' => $instance->courseid,
-                    'context' => context_course::instance($instance->courseid),
-                    'relateduserid' => $ue->userid,
-                    'other' => array('enrol' => $name)
-                    )
-                );
-        $event->trigger();
-
         require_once($CFG->libdir . '/coursecatlib.php');
-        coursecat::user_enrolment_changed($instance->courseid, $ue->userid,
+
+        // Trigger events one by one.
+        foreach ($enrolments as $ue) {
+            $event = \core\event\user_enrolment_updated::create([
+                'objectid' => $ue->id,
+                'courseid' => $instance->courseid,
+                'context' => context_course::instance($instance->courseid),
+                'relateduserid' => $ue->userid,
+                'other' => array('enrol' => $name)
+            ]);
+            $event->trigger();
+
+            coursecat::user_enrolment_changed($instance->courseid, $ue->userid,
                 $ue->status, $ue->timestart, $ue->timeend);
+        }
     }
 
     /**
