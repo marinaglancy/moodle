@@ -42,11 +42,11 @@ class mod_assign_submission_form extends moodleform {
      */
     public function definition() {
         $mform = $this->_form;
-
+        $mform->addElement('hidden', 'firstviewed', time());
+        $mform->setType('firstviewed', PARAM_INT);
         list($assign, $data) = $this->_customdata;
 
         $assign->add_submission_form_elements($mform, $data);
-
         $this->add_action_buttons(true, get_string('savechanges', 'assign'));
         if ($data) {
             $this->set_data($data);
