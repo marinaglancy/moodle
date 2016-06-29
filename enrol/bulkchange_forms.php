@@ -89,6 +89,26 @@ abstract class enrol_bulk_enrolment_change_form extends moodleform {
         }
         return html_writer::table($table);
     }
+
+    /**
+     * Return submitted data if properly submitted or returns NULL if validation fails or
+     * if there is no submitted data.
+     *
+     * @return stdClass|null submitted data; null if not valid or not submitted or cancelled
+     */
+    public function get_data() {
+        // TODO MDL-55056 there is no way to remove the enrolment start/end date. Value "0" actually means "no change".
+        // The form should be modified to allow either no change (null) or remove the date (0) or overwrite the date (>0).
+        if ($data = parent::get_data()) {
+            if ($data->timeend == 0) {
+                $data->timeend = null;
+            }
+            if ($data->timestart == 0) {
+                $data->timestart = null;
+            }
+        }
+        return $data;
+    }
 }
 
 /**
