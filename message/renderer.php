@@ -233,7 +233,9 @@ class core_message_renderer extends plugin_renderer_base {
             $userid = $USER->id;
         }
         // Filter out enabled, available system_configured and user_configured processors only.
-        $readyprocessors = array_filter($processors, create_function('$a', 'return $a->enabled && $a->configured && $a->object->is_user_configured();'));
+        $readyprocessors = array_filter($processors, function($a) {
+            return $a->enabled && $a->configured && $a->object->is_user_configured();
+        });
 
         // Start the form.  We're not using mform here because of our special formatting needs ...
         $output = html_writer::start_tag('form', array('method'=>'post', 'class' => 'mform'));
