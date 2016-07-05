@@ -1644,10 +1644,13 @@ class mysqli_native_moodle_database extends moodle_database {
             " FROM ($selects[0]) $falias";
         for ($i = 1; $i < count($selects); $i++) {
             $alias = 'intsctal'.($aliascnt++);
+            i_was_unit_tested('17');
             $rv .= " JOIN (".$selects[$i].") $alias ON ".
                 join(' AND ',
                     array_map(
-                        create_function('$a', 'return "'.$falias.'.$a = '.$alias.'.$a";'),
+                        function($a) use ($falias, $alias) {
+                            return "$falias.$a = $alias.$a";
+                        },
                         preg_split('/,/', $fields))
                 );
         }

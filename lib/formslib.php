@@ -2239,7 +2239,9 @@ var skipClientValidation = false;
             //end of fix
             $escapedElementName = preg_replace_callback(
                 '/[_\[\]-]/',
-                create_function('$matches', 'return sprintf("_%2x",ord($matches[0]));'),
+                function($matches) {
+                    return sprintf("_%2x", ord($matches[0]));
+                },
                 $elementName);
             $valFunc = 'validate_' . $this->_formName . '_' . $escapedElementName . '(ev.target, \''.$escapedElementName.'\')';
 

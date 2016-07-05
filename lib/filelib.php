@@ -2460,7 +2460,9 @@ function put_records_csv($file, $records, $table = NULL) {
     echo "x";
 
     if(!empty($metacolumns)) {
-        $fields_table = array_map(create_function('$a', 'return $a->name;'), $metacolumns);
+        $fields_table = array_map(function($a) {
+            return $a->name;
+        }, $metacolumns);
         $fields = array_intersect($fields_records, $fields_table);
     }
     else {

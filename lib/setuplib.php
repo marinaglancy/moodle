@@ -1107,7 +1107,9 @@ function workaround_max_input_vars() {
     }
 
     $delim = '&';
-    $fun = create_function('$p', 'return implode("'.$delim.'", $p);');
+    $fun = function($p) use ($delim) {
+        return implode($delim, $p);
+    };
     $chunks = array_map($fun, array_chunk(explode($delim, $str), $max));
 
     // Clear everything from existing $_POST array, otherwise it might be included
