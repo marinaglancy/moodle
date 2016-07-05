@@ -279,6 +279,7 @@ class block_activity_results extends block_base {
                 }
 
                 // Sort groupgrades according to average grade, ascending.
+                i_was_unit_tested('07');
                 uasort($groupgrades, function($a, $b) {
                     if ($a["average"] == $b["average"]) {
                         return 0;

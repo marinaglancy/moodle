@@ -2237,6 +2237,7 @@ var skipClientValidation = false;
             //unset($element);
             list($jsArr,$element)=$jsandelement;
             //end of fix
+            i_was_unit_tested('13');
             $escapedElementName = preg_replace_callback(
                 '/[_\[\]-]/',
                 function($matches) {

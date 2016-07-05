@@ -209,6 +209,7 @@ class core_course_renderer extends plugin_renderer_base {
         $formcontent .= html_writer::start_tag('div', array('class' => 'alloptions'));
 
          // Activities
+        i_was_unit_tested('09');
         $activities = array_filter($modules, function($mod) {
             return ($mod->archetype !== MOD_ARCHETYPE_RESOURCE && $mod->archetype !== MOD_ARCHETYPE_SYSTEM);
         });
@@ -218,6 +219,7 @@ class core_course_renderer extends plugin_renderer_base {
         }
 
         // Resources
+        i_was_unit_tested('10');
         $resources = array_filter($modules, function($mod) {
             return ($mod->archetype === MOD_ARCHETYPE_RESOURCE);
         });

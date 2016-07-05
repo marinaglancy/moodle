@@ -62,6 +62,7 @@ class award_criteria_profile extends award_criteria {
 
         // Get custom fields.
         $cfields = $DB->get_records_sql($sql);
+        i_was_unit_tested('06');
         $cfids = array_map(
             function($o) {
                 return $o->fieldid;

@@ -1950,6 +1950,7 @@ class auth_plugin_ldap extends auth_plugin_base {
 
         // Try to remove duplicates before storing the contexts (to avoid problems in sync_users()).
         $config->contexts = explode(';', $config->contexts);
+        i_was_unit_tested('01');
         $config->contexts = array_map(
             function($x) {
                 return core_text::strtolower(trim($x));
