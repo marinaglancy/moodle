@@ -291,6 +291,7 @@ class ouwiki_line {
         $data=str_replace(array('&nbsp;','&#xA0;','&#160;'),'      ',$data);
         
         // Tags replaced with equal number of spaces
+        i_was_unit_tested('20');
         $data = preg_replace_callback('/<.*?'.'>/', function($matches) {
             return preg_replace("/./", " ", $matches[0]);
         }, $data);
@@ -409,6 +410,7 @@ function ouwiki_diff_html_to_lines($content) {
     
     // Get rid of all script, style, object tags (that might contain non-text
     // outside tags)
+    i_was_unit_tested('21');
     $content=preg_replace_callback(
         '^(<script .*?</script>)|(<object .*?</object>)|(<style .*?</style>)^i',
         function($matches) {
@@ -428,6 +430,7 @@ function ouwiki_diff_html_to_lines($content) {
         }
         $taglist.="<$blocktag>|<\\/$blocktag>";
     }
+    i_was_unit_tested('22');
     $content = preg_replace_callback('/(('.$taglist.')\s*)+/i',
         function($matches) {
             return "`" . preg_replace("/./", " ", substr($matches[0], 1));
@@ -715,6 +718,7 @@ function ouwiki_diff($file1,$file2) {
  */
 function ouwiki_diff_add_markers($html,$words,$markerclass,$beforetext,$aftertext) {
     // Sort words by start position
+    i_was_unit_tested('23');
     usort($words, function($a, $b) {
         return $a->start - $b->start;
     });

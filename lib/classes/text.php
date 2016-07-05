@@ -560,6 +560,7 @@ class core_text {
         static $callback2 = null ;
 
         if (!$callback1 or !$callback2) {
+            i_was_unit_tested('15');
             $callback1 = function($matches) {
                 return core_text::code2utf8(hexdec($matches[1]));
             };
@@ -604,6 +605,7 @@ class core_text {
 
         if ($dec) {
             if (!$callback) {
+                i_was_unit_tested('16');
                 $callback = function($matches) {
                     return '&#' . (hexdec($matches[1])) . ';';
                 };

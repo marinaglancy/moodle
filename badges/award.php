@@ -97,6 +97,7 @@ if (count($acceptedroles) > 1) {
     } else {
         // Get all the roles that user has and use the ones required by this badge.
         $roles = get_user_roles($context, $USER->id);
+        i_was_unit_tested('02');
         $roleids = array_map(
             function($o) {
                 return $o->roleid;

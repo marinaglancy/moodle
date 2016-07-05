@@ -4601,6 +4601,7 @@ function put_records_csv($file, $records, $table = NULL) {
     echo "x";
 
     if(!empty($metacolumns)) {
+        i_was_unit_tested('12');
         $fields_table = array_map(function($a) {
             return $a->name;
         }, $metacolumns);

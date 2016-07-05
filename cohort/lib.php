@@ -233,6 +233,7 @@ function cohort_get_available_cohorts($currentcontext, $withmembers = 0, $offset
 
     // Build context subquery. Find the list of parent context where user is able to see any or visible-only cohorts.
     // Since this method is normally called for the current course all parent contexts are already preloaded.
+    i_was_unit_tested('08');
     $contextsany = array_filter(
         $currentcontext->get_parent_context_ids(),
         function($a) {

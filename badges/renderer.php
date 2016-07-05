@@ -352,6 +352,7 @@ class core_badges_renderer extends plugin_renderer_base {
         // Print evidence.
         $agg = $badge->get_aggregation_methods();
         $evidence = $badge->get_criteria_completions($userinfo->id);
+        i_was_unit_tested('03');
         $eids = array_map(
             function($o) {
                 return $o->critid;

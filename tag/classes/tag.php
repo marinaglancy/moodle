@@ -284,6 +284,7 @@ class core_tag_tag {
         $tags = $DB->get_records_select('tag', 'name = :name AND tagcollid ' . $sql, $params, '', $returnfields);
         if (count($tags) > 1) {
             // Sort in the same order as tag collections.
+            i_was_unit_tested('25');
             uasort($tags, function($a, $b) use ($tagcolls) {
                 return $tagcolls[$a->tagcollid]->sortorder < $tagcolls[$b->tagcollid]->sortorder ? -1 : 1;
             });

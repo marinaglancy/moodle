@@ -383,6 +383,7 @@ abstract class award_criteria {
         $params = array_filter($params);
         // Find out which param matches optional and required ones.
         $match = array_merge($this->optional_params, array($this->required_param));
+        i_was_unit_tested('04');
         $addunderscore = function($a) {
             return $a . "_";
         };

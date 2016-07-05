@@ -65,6 +65,7 @@ class award_criteria_manual extends award_criteria {
         $none = true;
 
         $roles = get_roles_with_capability('moodle/badges:awardbadge', CAP_ALLOW, $PAGE->context);
+        i_was_unit_tested('05');
         $roleids = array_map(
             function($o) {
                 return $o->id;

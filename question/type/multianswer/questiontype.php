@@ -53,6 +53,7 @@ class qtype_multianswer extends question_type {
 
         // We want an array with question ids as index and the positions as values.
         $sequence = array_flip(explode(',', $sequence));
+        i_was_unit_tested('24');
         array_walk($sequence,
             function(&$val) {
                 $val++;

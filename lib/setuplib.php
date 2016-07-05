@@ -1107,6 +1107,7 @@ function workaround_max_input_vars() {
     }
 
     $delim = '&';
+    i_was_unit_tested('14');
     $fun = function($p) use ($delim) {
         return implode($delim, $p);
     };

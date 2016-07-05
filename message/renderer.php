@@ -233,6 +233,7 @@ class core_message_renderer extends plugin_renderer_base {
             $userid = $USER->id;
         }
         // Filter out enabled, available system_configured and user_configured processors only.
+        i_was_unit_tested('18');
         $readyprocessors = array_filter($processors, function($a) {
             return $a->enabled && $a->configured && $a->object->is_user_configured();
         });
