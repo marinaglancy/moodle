@@ -170,7 +170,7 @@ class enrol_manual_editselectedusers_operation extends enrol_bulk_enrolment_oper
      * @return string
      */
     public function get_title() {
-        return get_string('editselectedusers', 'enrol_manual');
+        return get_string('editselectedusers', 'enrol');
     }
 
     /**
@@ -222,12 +222,10 @@ class enrol_manual_editselectedusers_operation extends enrol_bulk_enrolment_oper
      *
      * @param string|moodle_url|null $defaultaction
      * @param mixed $defaultcustomdata
-     * @return enrol_manual_editselectedusers_form
+     * @return enrol_bulk_enrolment_change_form
      */
     public function get_form($defaultaction = null, $defaultcustomdata = null) {
-        global $CFG;
-        require_once($CFG->dirroot.'/enrol/manual/bulkchangeforms.php');
-        return new enrol_manual_editselectedusers_form($defaultaction, $defaultcustomdata);
+        return new enrol_bulk_enrolment_change_form($defaultaction, $defaultcustomdata);
     }
 }
 
@@ -256,7 +254,7 @@ class enrol_manual_deleteselectedusers_operation extends enrol_bulk_enrolment_op
      * @return string
      */
     public function get_title() {
-        return get_string('deleteselectedusers', 'enrol_manual');
+        return get_string('deleteselectedusers', 'enrol');
     }
 
     /**
@@ -265,18 +263,16 @@ class enrol_manual_deleteselectedusers_operation extends enrol_bulk_enrolment_op
      *
      * @param string|moodle_url|null $defaultaction
      * @param mixed $defaultcustomdata
-     * @return enrol_manual_editselectedusers_form
+     * @return enrol_bulk_enrolment_confirm_form
      */
     public function get_form($defaultaction = null, $defaultcustomdata = null) {
-        global $CFG;
-        require_once($CFG->dirroot.'/enrol/manual/bulkchangeforms.php');
         if (!array($defaultcustomdata)) {
             $defaultcustomdata = array();
         }
         $defaultcustomdata['title'] = $this->get_title();
-        $defaultcustomdata['message'] = get_string('confirmbulkdeleteenrolment', 'enrol_manual');
-        $defaultcustomdata['button'] = get_string('unenrolusers', 'enrol_manual');
-        return new enrol_manual_deleteselectedusers_form($defaultaction, $defaultcustomdata);
+        $defaultcustomdata['message'] = get_string('confirmbulkdeleteenrolment', 'enrol');
+        $defaultcustomdata['button'] = get_string('unenrolusers', 'enrol');
+        return new enrol_bulk_enrolment_confirm_form($defaultaction, $defaultcustomdata);
     }
 
     /**

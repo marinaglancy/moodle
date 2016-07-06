@@ -51,7 +51,7 @@ class enrol_self_deleteselectedusers_operation extends enrol_bulk_enrolment_oper
      * @return string
      */
     public function get_title() {
-        return get_string('deleteselectedusers', 'enrol_self');
+        return get_string('deleteselectedusers', 'enrol');
     }
 
     /**
@@ -67,8 +67,8 @@ class enrol_self_deleteselectedusers_operation extends enrol_bulk_enrolment_oper
             $defaultcustomdata = array();
         }
         $defaultcustomdata['title'] = $this->get_title();
-        $defaultcustomdata['message'] = get_string('confirmbulkdeleteenrolment', 'enrol_self');
-        $defaultcustomdata['button'] = get_string('unenrolusers', 'enrol_self');
+        $defaultcustomdata['message'] = get_string('confirmbulkdeleteenrolment', 'enrol');
+        $defaultcustomdata['button'] = get_string('unenrolusers', 'enrol');
         return new enrol_self_deleteselectedusers_form($defaultaction, $defaultcustomdata);
     }
 

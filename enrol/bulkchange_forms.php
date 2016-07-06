@@ -32,7 +32,7 @@ require_once("$CFG->libdir/formslib.php");
  * @copyright 2011 Sam Hemelryk
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-abstract class enrol_bulk_enrolment_change_form extends moodleform {
+class enrol_bulk_enrolment_change_form extends moodleform {
 
     /**
      * Defines the standard structure of the form
@@ -100,10 +100,10 @@ abstract class enrol_bulk_enrolment_change_form extends moodleform {
         // TODO MDL-55056 there is no way to remove the enrolment start/end date. Value "0" actually means "no change".
         // The form should be modified to allow either no change (null) or remove the date (0) or overwrite the date (>0).
         if ($data = parent::get_data()) {
-            if ($data->timeend == 0) {
+            if (isset($data->timeend) && $data->timeend == 0) {
                 $data->timeend = null;
             }
-            if ($data->timestart == 0) {
+            if (isset($data->timestart) && $data->timestart == 0) {
                 $data->timestart = null;
             }
         }
@@ -116,7 +116,7 @@ abstract class enrol_bulk_enrolment_change_form extends moodleform {
  * @copyright 2011 Sam Hemelryk
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-abstract class enrol_bulk_enrolment_confirm_form extends enrol_bulk_enrolment_change_form {
+class enrol_bulk_enrolment_confirm_form extends enrol_bulk_enrolment_change_form {
 
     /**
      * Defines the standard structure of the form

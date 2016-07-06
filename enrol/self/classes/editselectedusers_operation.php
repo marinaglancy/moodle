@@ -41,7 +41,7 @@ class enrol_self_editselectedusers_operation extends enrol_bulk_enrolment_operat
      * @return string
      */
     public function get_title() {
-        return get_string('editselectedusers', 'enrol_self');
+        return get_string('editselectedusers', 'enrol');
     }
 
     /**
