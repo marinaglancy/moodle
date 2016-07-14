@@ -27,7 +27,8 @@ class feedback_multichoice_form extends feedback_item_form {
 
         $mform =& $this->_form;
 
-        $mform->addElement('header', 'general', get_string($this->type, 'feedback'));
+        $mform->addElement('header', 'general', 
+                get_string('pluginname', 'feedbackitem_' . $this->type));
 
         $mform->addElement('advcheckbox', 'required', get_string('required', 'feedback'), '' , null , array(0, 1));
 
@@ -45,7 +46,7 @@ class feedback_multichoice_form extends feedback_item_form {
 
         $mform->addElement('select',
                             'subtype',
-                            get_string('multichoicetype', 'feedback').'&nbsp;',
+                            get_string('multichoicetype', 'feedbackitem_multichoice'),
                             array('r'=>get_string('radio', 'feedback'),
                                   'c'=>get_string('check', 'feedback'),
                                   'd'=>get_string('dropdown', 'feedback')));
@@ -66,7 +67,7 @@ class feedback_multichoice_form extends feedback_item_form {
                            'ignoreempty',
                            get_string('do_not_analyse_empty_submits', 'feedback'));
 
-        $mform->addElement('textarea', 'values', get_string('multichoice_values', 'feedback'),
+        $mform->addElement('textarea', 'values', get_string('multichoice_values', 'feedbackitem_multichoice'),
             'wrap="virtual" rows="10" cols="65"');
 
         $mform->addElement('static', 'hint', '', get_string('use_one_line_for_each_value', 'feedback'));
