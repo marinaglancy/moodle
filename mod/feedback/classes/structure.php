@@ -326,4 +326,117 @@ class mod_feedback_structure {
         }
         return $this->allcourses;
     }
+
+    protected function check_xml_utf8($text) {
+        //find the encoding
+        $searchpattern = '/^\<\?xml.+(encoding=\"([a-z0-9-]*)\").+\?\>/is';
+
+        if (!preg_match($searchpattern, $text, $match)) {
+            return false; //no xml-file
+        }
+
+        //$match[0] = \<\? xml ... \?\> (without \)
+        //$match[1] = encoding="...."
+        //$match[2] = ISO-8859-1 or so on
+        if (isset($match[0]) AND !isset($match[1])) { //no encoding given. we assume utf-8
+            return $text;
+        }
+
+        //encoding is given in $match[2]
+        if (isset($match[0]) AND isset($match[1]) AND isset($match[2])) {
+            $enc = $match[2];
+            return core_text::convert($text, $enc);
+        }
+    }
+
+    protected function load_xml_data($xmlcontent) {
+        global $CFG;
+        require_once($CFG->dirroot.'/lib/xmlize.php');
+
+        if (!$xmlcontent = $this->check_xml_utf8($xmlcontent)) {
+            return false;
+        }
+
+        $data = xmlize($xmlcontent, 1, 'UTF-8');
+
+        if (intval($data['FEEDBACK']['@']['VERSION']) != 200701) {
+            return false;
+        }
+        $data = $data['FEEDBACK']['#']['ITEMS'][0]['#']['ITEM'];
+        return $data;
+    }
+
+    public function import_from_xml($xmlcontent, $deleteolditems) {
+        global $DB;
+
+        feedback_load_feedback_items();
+
+        $error = new stdClass();
+        $error->stat = true;
+        $error->msg = array();
+
+        if (!$data = $this->load_xml_data($xmlcontent)) {
+            $error->msg[] = get_string('cannotloadxml', 'feedback');
+            $error->stat = false;
+            return $error;
+        }
+
+        if (!is_array($data)) {
+            $error->msg[] = get_string('data_is_not_an_array', 'feedback');
+            $error->stat = false;
+            return $error;
+        }
+
+        if ($deleteolditems) {
+            feedback_delete_all_items($this->feedback->id);
+            $position = 0;
+        } else {
+            // Items will be add to the end of the existing items.
+            $items = $this->get_items();
+            $position = count($items);
+        }
+
+        //depend items we are storing temporary in an mapping list array(new id => dependitem)
+        //we also store a mapping of all items array(oldid => newid)
+        $dependitemsmap = array();
+        $itembackup = array();
+        foreach ($data as $item) {
+            $position++;
+            //check the typ
+            $oldtyp = $typ = $item['@']['TYPE'];
+            $oldtypemapping = ['radio' => 'multichoice',
+                'dropdown' => 'multichoice',
+                'check' => 'multichoice',
+                'radiorated' => 'multichoicerated',
+                'dropdownrated' => 'multichoicerated'];
+            $typ = isset($oldtypemapping[$oldtyp]) ? $oldtypemapping[$oldtyp] : $oldtyp;
+
+            $itemclass = 'feedback_item_'.$typ;
+            if ($typ != 'pagebreak' AND !class_exists($itemclass)) {
+                $error->stat = false;
+                $error->msg[] = 'type ('.$typ.') not found';
+                continue;
+            }
+            $itemobj = new $itemclass();
+            $newitem = $itemobj->import_item($this->feedback->id, $item, $position);
+
+            $olditemid = intval($item['#']['ITEMID'][0]['#']);
+
+            $itembackup[$olditemid] = $newitem->id;
+            if ($newitem->dependitem) {
+                $dependitemsmap[$newitem->id] = $newitem->dependitem;
+            }
+
+        }
+        //remapping the dependency
+        foreach ($dependitemsmap as $key => $dependitem) {
+            // TODO error that dependency could not be mapped if (!isset($itembackup[$dependitem]))
+            $dependitem = $itembackup[$dependitem];
+            $DB->update_record('feedback_item',
+                ['id' => $key, 'dependitem' => $dependitem]);
+        }
+
+        return $error;
+
+    }
 }

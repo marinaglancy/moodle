@@ -463,4 +463,28 @@ class feedback_item_multichoice extends feedback_item_base {
         }
         return false;
     }
+
+    /**
+     * Converts a presentation of the item in the XML export file to the object
+     * ready to be inserted in the db
+     *
+     * @param array $item
+     * @return \stdClass
+     */
+    protected function prepare_import_item($item) {
+        $newitem = parent::prepare_import_item($item);
+        $oldtyp = $item['@']['TYPE'];
+        switch($oldtyp) {
+            case 'radio':
+                $newitem->presentation = 'r>>>>>'.$newitem->presentation;
+                break;
+            case 'dropdown':
+                $newitem->presentation = 'd>>>>>'.$newitem->presentation;
+                break;
+            case 'check':
+                $newitem->presentation = 'c>>>>>'.$newitem->presentation;
+                break;
+        }
+        return $newitem;
+    }
 }

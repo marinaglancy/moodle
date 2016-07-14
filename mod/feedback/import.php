@@ -22,7 +22,7 @@
  * @package mod_feedback
  */
 
-require_once("../../config.php");
+require_once(__DIR__ . "/../../config.php");
 require_once("lib.php");
 require_once('import_form.php');
 
@@ -40,23 +40,15 @@ if ($action !== false) {
 }
 $PAGE->set_url($url);
 
-if (! $cm = get_coursemodule_from_id('feedback', $id)) {
-    print_error('invalidcoursemodule');
-}
-
-if (! $course = $DB->get_record("course", array("id"=>$cm->course))) {
-    print_error('coursemisconf');
-}
-
-if (! $feedback = $DB->get_record("feedback", array("id"=>$cm->instance))) {
-    print_error('invalidcoursemodule');
-}
-
+list($course, $cm) = get_course_and_cm_from_cmid($id, 'feedback');
 $context = context_module::instance($cm->id);
 
 require_login($course, true, $cm);
 
 require_capability('mod/feedback:edititems', $context);
+
+$feedback = $PAGE->activityrecord;
+$feedbackstructure = new mod_feedback_structure($feedback, $cm);
 
 $mform = new feedback_import_form();
 $newformdata = array('id'=>$id,
@@ -66,29 +58,31 @@ $newformdata = array('id'=>$id,
                     'do_show'=>'templates');
 $mform->set_data($newformdata);
 $formdata = $mform->get_data();
+$redirecturl = new moodle_url('/mod/feedback/edit.php', ['id' => $id, 'do_show' => 'templates']);
 
 if ($mform->is_cancelled()) {
-    redirect('edit.php?id='.$id.'&do_show=templates');
+    redirect($redirecturl);
 }
 
 // process if we are happy file is ok
-if ($choosefile) {
+if (isset($formdata->choosefile)) {
     $xmlcontent = $mform->get_file_content('choosefile');
+    $importerror = $feedbackstructure->import_from_xml($xmlcontent, $formdata->deleteolditems);
 
-    if (!$xmldata = feedback_load_xml_data($xmlcontent)) {
-        print_error('cannotloadxml', 'feedback', 'edit.php?id='.$id);
+    if (isset($importerror->msg) AND is_array($importerror->msg)) {
+        foreach ($importerror->msg as $msg) {
+            \core\notification::add($msg, \core\output\notification::NOTIFY_ERROR);
+        }
     }
-
-    $importerror = feedback_import_loaded_data($xmldata, $feedback->id);
     if ($importerror->stat == true) {
-        $url = 'edit.php?id='.$id.'&do_show=templates';
-        redirect($url, get_string('import_successfully', 'feedback'), 3);
-        exit;
+        \core\notification::add(get_string('import_successfully', 'feedback'),
+                \core\output\notification::NOTIFY_SUCCESS);
     }
+
+    redirect($redirecturl);
 }
 
-
-/// Print the page header
+// Print the page header.
 $strfeedbacks = get_string("modulenameplural", "feedback");
 $strfeedback  = get_string("modulename", "feedback");
 
@@ -100,24 +94,11 @@ echo $OUTPUT->heading(format_string($feedback->name));
 $current_tab = 'templates';
 require('tabs.php');
 
-/// Print the main part of the page
-///////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////
+// Print the main part of the page.
 echo $OUTPUT->heading(get_string('import_questions', 'feedback'), 3);
-
-if (isset($importerror->msg) AND is_array($importerror->msg)) {
-    echo $OUTPUT->box_start('generalbox errorboxcontent boxaligncenter');
-    foreach ($importerror->msg as $msg) {
-        echo $msg.'<br />';
-    }
-    echo $OUTPUT->box_end();
-}
-
 $mform->display();
-
 echo $OUTPUT->footer();
-
+/*
 function feedback_load_xml_data($xmlcontent) {
     global $CFG;
     require_once($CFG->dirroot.'/lib/xmlize.php');
@@ -292,3 +273,4 @@ function feedback_check_xml_utf8($text) {
         return core_text::convert($text, $enc);
     }
 }
+*/

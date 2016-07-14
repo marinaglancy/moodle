@@ -76,6 +76,48 @@ abstract class feedback_item_base {
     abstract public function save_item();
 
     /**
+     * Converts a presentation of the item in the XML export file to the object
+     * ready to be inserted in the db
+     *
+     * @param array $item
+     * @return \stdClass
+     */
+    protected function prepare_import_item($item) {
+        $newitem = new stdClass();
+        $newitem->template = 0;
+        $newitem->typ = $this->type;
+        $newitem->name = trim($item['#']['ITEMTEXT'][0]['#']);
+        $newitem->label = trim($item['#']['ITEMLABEL'][0]['#']);
+        $newitem->options = trim($item['#']['OPTIONS'][0]['#']);
+        $newitem->presentation = trim($item['#']['PRESENTATION'][0]['#']);
+        $newitem->dependitem = 0;
+        $newitem->dependvalue = '';
+
+        if (isset($item['#']['DEPENDITEM'][0]['#'])) {
+            $newitem->dependitem = intval($item['#']['DEPENDITEM'][0]['#']);
+        }
+        if (isset($item['#']['DEPENDVALUE'][0]['#'])) {
+            $newitem->dependvalue = trim($item['#']['DEPENDVALUE'][0]['#']);
+        }
+
+        $newitem->hasvalue = $this->get_hasvalue();
+        $newitem->required = intval($item['@']['REQUIRED']);
+
+        return $newitem;
+    }
+
+    public function import_item($feedbackid, $item, $position) {
+        global $DB;
+
+        $newitem = $this->prepare_import_item($item);
+        $newitem->feedback = $feedbackid;
+        $newitem->position = $position;
+
+        $newitem->id = $DB->insert_record('feedback_item', $newitem);
+        return $newitem;
+    }
+
+    /**
      * Converts the value from complete_form data to the string value that is stored in the db.
      * @param mixed $value element from mod_feedback_complete_form::get_data() with the name $item->typ.'_'.$item->id
      * @return string

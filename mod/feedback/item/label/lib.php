@@ -241,4 +241,18 @@ class feedback_item_label extends feedback_item_base {
     }
     public function get_printval($item, $value) {
     }
+
+    /**
+     * Converts a presentation of the item in the XML export file to the object
+     * ready to be inserted in the db
+     *
+     * @param array $item
+     * @return \stdClass
+     */
+    protected function prepare_import_item($item) {
+        $newitem = parent::prepare_import_item($item);
+        $newitem->label = '';
+        $newitem->name = '';
+        return $newitem;
+    }
 }
