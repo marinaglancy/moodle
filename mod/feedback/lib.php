@@ -1501,22 +1501,19 @@ function feedback_get_item_class($typ, $strictness = MUST_EXIST) {
  * load the available item plugins from given subdirectory of $CFG->dirroot
  * the default is "mod/feedback/item"
  *
- * @global object
- * @param string $dir the subdir
  * @return array pluginnames as string
  */
-function feedback_load_feedback_items($dir = 'mod/feedback/item') {
-    global $CFG;
-    $names = get_list_of_plugins($dir);
-    $ret_names = array();
-
-    foreach ($names as $name) {
-        require_once($CFG->dirroot.'/'.$dir.'/'.$name.'/lib.php');
+function feedback_load_feedback_items() {
+    global $CFG; // Must be here because it can be used in lib.php files.
+    $retnames = [];
+    $dirs = core_component::get_plugin_list('feedbackitem');
+    foreach ($dirs as $name => $fulldir) {
+        require_once($fulldir . '/lib.php');
         if (class_exists('feedback_item_'.$name)) {
-            $ret_names[] = $name;
+            $retnames[] = $name;
         }
     }
-    return $ret_names;
+    return $retnames;
 }
 
 /**
@@ -1526,19 +1523,15 @@ function feedback_load_feedback_items($dir = 'mod/feedback/item') {
  * @return array pluginnames as string
  */
 function feedback_load_feedback_items_options() {
-    global $CFG;
+    $feedbackoptions = array();
 
-    $feedback_options = array("pagebreak" => get_string('add_pagebreak', 'feedback'));
-
-    if (!$feedback_names = feedback_load_feedback_items('mod/feedback/item')) {
-        return array();
+    $feedbacknames = feedback_load_feedback_items('mod/feedback/item');
+    foreach ($feedbacknames as $fn) {
+        $feedbackoptions[$fn] = get_string('pluginname', 'feedbackitem_' . $fn);
     }
-
-    foreach ($feedback_names as $fn) {
-        $feedback_options[$fn] = get_string($fn, 'feedback');
-    }
-    asort($feedback_options);
-    return $feedback_options;
+    
+    asort($feedbackoptions);
+    return ["pagebreak" => get_string('add_pagebreak', 'feedback')] + $feedbackoptions;
 }
 
 /**

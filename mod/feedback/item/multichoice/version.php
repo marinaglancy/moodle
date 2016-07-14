@@ -15,18 +15,15 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Feedback version information
+ * Plugin version information
  *
- * @package mod_feedback
- * @author     Andreas Grabs
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package feedbackitem_multichoice
+ * @author  Marina Glancy
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2017052900;       // The current module version (Date: YYYYMMDDXX)
-$plugin->requires  = 2017050500;    // Requires this Moodle version
-$plugin->component = 'mod_feedback';   // Full name of the plugin (used for diagnostics)
-$plugin->cron      = 0;
-
-$feedback_version_intern = 1; //this version is used for restore older backups
+$plugin->version   = 2016071400;       // The current module version (Date: YYYYMMDDXX)
+$plugin->requires  = 2016051900;    // Requires this Moodle version
+$plugin->component = 'feedbackitem_multichoice';   // Full name of the plugin (used for diagnostics)

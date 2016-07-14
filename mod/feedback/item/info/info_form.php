@@ -30,7 +30,8 @@ class feedback_info_form extends feedback_item_form {
 
         $mform =& $this->_form;
 
-        $mform->addElement('header', 'general', get_string($this->type, 'feedback'));
+        $mform->addElement('header', 'general',
+                get_string('pluginname', 'feedbackitem_' . $this->type));
         $mform->addElement('hidden', 'required', 0);
         $mform->setType('required', PARAM_INT);
 

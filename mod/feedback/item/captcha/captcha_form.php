@@ -28,7 +28,8 @@ class feedback_captcha_form extends feedback_item_form {
 
         $mform =& $this->_form;
 
-        $mform->addElement('header', 'general', get_string($this->type, 'feedback'));
+        $mform->addElement('header', 'general',
+                get_string('pluginname', 'feedbackitem_' . $this->type));
         $mform->addElement('advcheckbox', 'required', get_string('required', 'feedback'), '' , null , array(0, 1));
         $mform->addElement('text',
                             'name',

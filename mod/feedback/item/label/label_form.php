@@ -32,7 +32,7 @@ class feedback_label_form extends feedback_item_form {
         $mform->setType('label', PARAM_ALPHA);
 
         $mform->addElement('header', 'general', get_string($this->type, 'feedback'));
-        $mform->addElement('editor', 'name_editor', get_string('labelcontents', 'feedback'), null, $nameoptions);
+        $mform->addElement('editor', 'name_editor', get_string('contents', 'feedbackitem_label'), null, $nameoptions);
 
         parent::definition();
         $this->set_data($item);
