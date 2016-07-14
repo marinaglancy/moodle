@@ -138,6 +138,17 @@ abstract class mod_feedback_item_base {
 
         $newitem->id = $DB->insert_record('feedback_item', $newitem);
         return $newitem;
+        feedback_create_item($data);
+    }
+
+    /**
+     * When class responsible for the item type is not found, feedback import
+     * will ask all available feedbackitem plugins if any of them agree to
+     * convert from another format to the current.
+     * @param string $itemtype
+     */
+    public function can_import_unknown_item_type($itemtype) {
+        return false;
     }
 
     /**

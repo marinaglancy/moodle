@@ -1546,9 +1546,8 @@ function feedback_create_item($data) {
 /**
  * save the changes of a given item.
  *
- * @global object
- * @param object $item
- * @return boolean
+ * @param object|array $item
+ * @return bool
  */
 function feedback_update_item($item) {
     global $DB;

@@ -369,7 +369,7 @@ class mod_feedback_structure {
     public function import_from_xml($xmlcontent, $deleteolditems) {
         global $DB;
 
-        feedback_load_feedback_items();
+        $feedbackitems = feedback_load_feedback_items();
 
         $error = new stdClass();
         $error->stat = true;
@@ -402,20 +402,23 @@ class mod_feedback_structure {
         $itembackup = array();
         foreach ($data as $item) {
             $position++;
-            //check the typ
-            $oldtyp = $typ = $item['@']['TYPE'];
-            $oldtypemapping = ['radio' => 'multichoice',
-                'dropdown' => 'multichoice',
-                'check' => 'multichoice',
-                'radiorated' => 'multichoicerated',
-                'dropdownrated' => 'multichoicerated'];
-            $typ = isset($oldtypemapping[$oldtyp]) ? $oldtypemapping[$oldtyp] : $oldtyp;
+            // Find the feedback question item class that can import this item.
+            $itemtype = $item['@']['TYPE'];
 
-            $itemobj = feedback_get_item_class($typ);
+            $itemobj = feedback_get_item_class($itemtype);
             if (!$itemobj) {
-                $error->stat = false;
-                $error->msg[] = 'type ('.$typ.') not found';
-                continue;
+                foreach ($feedbackitems as $itemtypetemp) {
+                    $itemobjtemp = feedback_get_item_class($itemtypetemp);
+                    if ($itemobjtemp->can_import_unknown_item_type($itemtype)) {
+                        $itemobj = $itemobjtemp;
+                        break;
+                    }
+                }
+                if (!$itemobj) {
+                    $error->stat = false;
+                    $error->msg[] = 'Question with type "'.$itemtype.'" can not be imported';
+                    continue;
+                }
             }
             $newitem = $itemobj->import_item($this->feedback->id, $item, $position);
 
@@ -430,12 +433,12 @@ class mod_feedback_structure {
         //remapping the dependency
         foreach ($dependitemsmap as $key => $dependitem) {
             // TODO error that dependency could not be mapped if (!isset($itembackup[$dependitem]))
-            $dependitem = $itembackup[$dependitem];
-            $DB->update_record('feedback_item',
-                ['id' => $key, 'dependitem' => $dependitem]);
+            $dependitemnew = $itembackup[$dependitem];
+            feedback_update_item(['id' => $key, 'dependitem' => $dependitemnew]);
         }
 
         return $error;
+        //TODO return the number of imported questions, everything else send notices straight away.
 
     }
 }
