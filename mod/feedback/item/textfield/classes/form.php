@@ -14,10 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-require_once($CFG->dirroot.'/mod/feedback/item/feedback_item_form_class.php');
-
-class feedback_textfield_form extends feedback_item_form {
-    protected $type = "textfield";
+class feedbackitem_textfield_form extends mod_feedback_item_form {
 
     public function definition() {
         $item = $this->_customdata['item'];

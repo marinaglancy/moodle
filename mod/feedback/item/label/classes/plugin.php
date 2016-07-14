@@ -14,12 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-defined('MOODLE_INTERNAL') OR die('not allowed');
-require_once($CFG->dirroot.'/mod/feedback/item/feedback_item_class.php');
-require_once($CFG->libdir.'/formslib.php');
-
-class feedback_item_label extends feedback_item_base {
-    protected $type = "label";
+class feedbackitem_label_plugin extends mod_feedback_item_base {
     private $presentationoptions = null;
     private $context;
 
@@ -27,6 +22,7 @@ class feedback_item_label extends feedback_item_base {
      * Constructor
      */
     public function __construct() {
+        parent::__construct();
         $this->presentationoptions = array('maxfiles' => EDITOR_UNLIMITED_FILES,
                                            'trusttext'=>true);
 
@@ -34,7 +30,6 @@ class feedback_item_label extends feedback_item_base {
 
     public function build_editform($item, $feedback, $cm) {
         global $DB, $CFG;
-        require_once('label_form.php');
 
         //get the lastposition number of the feedback_items
         $position = $item->position;
@@ -83,7 +78,7 @@ class feedback_item_label extends feedback_item_base {
                             'position' => $position,
                             'presentationoptions' => $this->presentationoptions);
 
-        $this->item_form = new feedback_label_form('edit_item.php', $customdata);
+        $this->item_form = new feedbackitem_label_form('edit_item.php', $customdata);
     }
 
     public function save_item() {

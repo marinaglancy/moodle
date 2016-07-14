@@ -1405,18 +1405,18 @@ function feedback_get_template_list($course, $onlyownorpublic = '') {
  * load the lib.php from item-plugin-dir and returns the instance of the itemclass
  *
  * @param string $typ
- * @return feedback_item_base the instance of itemclass
+ * @return mod_feedback_item_base the instance of itemclass
  */
 function feedback_get_item_class($typ) {
-    global $CFG;
-
-    //get the class of item-typ
-    $itemclass = 'feedback_item_'.$typ;
-    //get the instance of item-class
-    if (!class_exists($itemclass)) {
-        require_once($CFG->dirroot.'/mod/feedback/item/'.$typ.'/lib.php');
+    if ($typ === 'pagebreak') {
+        return new mod_feedback_item_pagebreak();
     }
-    return new $itemclass();
+
+    $itemclass = 'feedbackitem_'.$typ.'_plugin';
+    if (class_exists($itemclass)) {
+        return new $itemclass();
+    }
+    return null;
 }
 
 /**
@@ -1426,12 +1426,10 @@ function feedback_get_item_class($typ) {
  * @return array pluginnames as string
  */
 function feedback_load_feedback_items() {
-    global $CFG; // Must be here because it can be used in lib.php files.
     $retnames = [];
     $dirs = core_component::get_plugin_list('feedbackitem');
     foreach ($dirs as $name => $fulldir) {
-        require_once($fulldir . '/lib.php');
-        if (class_exists('feedback_item_'.$name)) {
+        if (class_exists('feedbackitem_'.$name.'_plugin')) {
             $retnames[] = $name;
         }
     }
@@ -1975,14 +1973,14 @@ function feedback_delete_completedtmp($tmpcplid) {
  * @param int $feedbackid
  * @return mixed false if there already is a pagebreak on last position or the id of the pagebreak-item
  */
-function feedback_create_pagebreak($feedbackid) {
+function feedback_create_pagebreak($feedbackid, $position = -1) {
     global $DB;
 
     //check if there already is a pagebreak on the last position
     $lastposition = $DB->count_records('feedback_item', array('feedback'=>$feedbackid));
-    if ($lastposition == feedback_get_last_break_position($feedbackid)) {
-        return false;
-    }
+    //if ($lastposition == feedback_get_last_break_position($feedbackid)) {
+    //    return false;
+    //}
 
     $item = new stdClass();
     $item->feedback = $feedbackid;
@@ -1999,7 +1997,12 @@ function feedback_create_pagebreak($feedbackid) {
 
     $item->required=0;
 
-    return $DB->insert_record('feedback_item', $item);
+    $item->id = $DB->insert_record('feedback_item', $item);
+    if ($position !=-1 && $position < $lastposition + 1) {
+        feedback_move_item($item, $position);
+    }
+
+    return $item->id;
 }
 
 /**

@@ -411,13 +411,12 @@ class mod_feedback_structure {
                 'dropdownrated' => 'multichoicerated'];
             $typ = isset($oldtypemapping[$oldtyp]) ? $oldtypemapping[$oldtyp] : $oldtyp;
 
-            $itemclass = 'feedback_item_'.$typ;
-            if ($typ != 'pagebreak' AND !class_exists($itemclass)) {
+            $itemobj = feedback_get_item_class($typ);
+            if (!$itemobj) {
                 $error->stat = false;
                 $error->msg[] = 'type ('.$typ.') not found';
                 continue;
             }
-            $itemobj = new $itemclass();
             $newitem = $itemobj->import_item($this->feedback->id, $item, $position);
 
             $olditemid = intval($item['#']['ITEMID'][0]['#']);

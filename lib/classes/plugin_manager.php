@@ -1778,6 +1778,11 @@ class core_plugin_manager {
                 'paypal', 'self'
             ),
 
+            'feedbackitem' => array(
+                'captcha', 'info', 'label', 'multichoice', 'multichoicerated',
+                'numeric', 'textarea', 'textfield'
+            ),
+
             'filter' => array(
                 'activitynames', 'algebra', 'censor', 'emailprotect',
                 'emoticon', 'mathjaxloader', 'mediaplugin', 'multilang', 'tex', 'tidy',

@@ -16,8 +16,7 @@
 
 require_once($CFG->dirroot.'/mod/feedback/item/feedback_item_form_class.php');
 
-class feedback_captcha_form extends feedback_item_form {
-    protected $type = "captcha";
+class feedbackitem_numeric_form extends mod_feedback_item_form {
 
     public function definition() {
 
@@ -31,6 +30,7 @@ class feedback_captcha_form extends feedback_item_form {
         $mform->addElement('header', 'general',
                 get_string('pluginname', 'feedbackitem_' . $this->type));
         $mform->addElement('advcheckbox', 'required', get_string('required', 'feedback'), '' , null , array(0, 1));
+
         $mform->addElement('text',
                             'name',
                             get_string('item_name', 'feedback'),
@@ -40,14 +40,49 @@ class feedback_captcha_form extends feedback_item_form {
                             get_string('item_label', 'feedback'),
                             array('size'=>FEEDBACK_ITEM_LABEL_TEXTBOX_SIZE, 'maxlength'=>255));
 
-        $mform->addElement('select',
-                            'presentation',
-                            get_string('count_of_nums', 'feedback').'&nbsp;',
-                            array_slice(range(0, 10), 3, 10, true));
+        $mform->addElement('text',
+                            'rangefrom',
+                            get_string('numeric_range_from', 'feedbackitem_numeric'),
+                            array('size'=>10, 'maxlength'=>10));
+        $mform->setType('rangefrom', PARAM_RAW);
+
+        $mform->addElement('text',
+                            'rangeto',
+                            get_string('numeric_range_to', 'feedbackitem_numeric'),
+                            array('size'=>10, 'maxlength'=>10));
+        $mform->setType('rangeto', PARAM_RAW);
 
         parent::definition();
         $this->set_data($item);
 
     }
-}
 
+    public function get_data() {
+        if (!$item = parent::get_data()) {
+            return false;
+        }
+
+        $num1 = unformat_float($item->rangefrom, true);
+        if ($num1 === false || $num1 === null) {
+            $num1 = '-';
+        }
+
+        $num2 = unformat_float($item->rangeto, true);
+        if ($num2 === false || $num2 === null) {
+            $num2 = '-';
+        }
+
+        if ($num1 === '-' OR $num2 === '-') {
+            $item->presentation = $num1 . '|'. $num2;
+            return $item;
+        }
+
+        if ($num1 > $num2) {
+            $item->presentation =  $num2 . '|'. $num1;
+        } else {
+            $item->presentation = $num1 . '|'. $num2;
+        }
+        return $item;
+    }
+
+}
