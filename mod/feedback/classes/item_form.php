@@ -27,8 +27,6 @@ abstract class mod_feedback_item_form extends moodleform {
     public function __construct($action = null, $customdata = null, $method = 'post', $target = '', $attributes = null, $editable = true, $ajaxformdata = null) {
         if (preg_match('/^feedbackitem_(.*)_form$/', get_class($this), $matches)) {
             $this->type = $matches[1];
-        } else {
-            debugging('Unexpected class name ' . get_class($this));
         }
         parent::__construct($action, $customdata, $method, $target, $attributes, $editable, $ajaxformdata);
     }

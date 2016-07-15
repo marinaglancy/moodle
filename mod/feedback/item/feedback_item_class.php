@@ -14,15 +14,11 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+debugging('Class feedback_item_base is deprecated, please use mod_feedback_item_base',
+        DEBUG_DEVELOPER);
+
 /**
  * @deprecated since 3.2
  */
 abstract class feedback_item_base extends mod_feedback_item_base {
-
-    /**
-     * Constructor
-     */
-    public function __construct() {
-        debugging('Class feedback_item_base is deprecated, please use mod_feedback_item_base');
-    }
 }

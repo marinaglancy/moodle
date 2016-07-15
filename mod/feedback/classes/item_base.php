@@ -15,10 +15,10 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Contains class local_ma_item_base
+ * Contains class mod_feedback_item_base
  *
- * @package   local_ma
- * @copyright 2015 Marina Glancy
+ * @package   mod_feedback
+ * @copyright 2016 Marina Glancy
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -28,16 +28,16 @@ defined('MOODLE_INTERNAL') || die();
  * Base class for plugins feedbackitem
  *
  * @package   mod_feedback
- * @copyright Marina Glancy
+ * @copyright 2016 Marina Glancy
  * @author    Andreas Grabs
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 abstract class mod_feedback_item_base {
 
-    /** @var string type of the element, should be overridden by each item type */
+    /** @var string type of the element, automatically determined from the class name */
     protected $type;
 
-    /** @var feedback_item_form */
+    /** @var mod_feedback_item_form */
     protected $item_form;
 
     /** @var stdClass */
@@ -50,7 +50,8 @@ abstract class mod_feedback_item_base {
         if (preg_match('/^feedbackitem_(.*)_plugin$/', get_class($this), $matches)) {
             $this->type = $matches[1];
         } else {
-            debugging('Unexpected class name ' . get_class($this));
+            throw new coding_exception('Class ' . get_class($this) .
+                    ' should overwrite the constructor to specify the item type.');
         }
     }
 
@@ -103,7 +104,8 @@ abstract class mod_feedback_item_base {
      * ready to be inserted in the db
      *
      * @param array $item
-     * @return \stdClass
+     * @return \stdClass item ready to insert in DB table feedback_item except for
+     *     the fields 'feedback' and 'position'
      */
     protected function prepare_import_item($item) {
         $newitem = new stdClass();
@@ -138,11 +140,10 @@ abstract class mod_feedback_item_base {
 
         $newitem->id = $DB->insert_record('feedback_item', $newitem);
         return $newitem;
-        feedback_create_item($data);
     }
 
     /**
-     * When class responsible for the item type is not found, feedback import
+     * When plugin with the same name as item type is not found, feedback import
      * will ask all available feedbackitem plugins if any of them agree to
      * convert from another format to the current.
      * @param string $itemtype

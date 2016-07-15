@@ -14,6 +14,9 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * Dummy class with the same structure as feedbackitem plugins that represents the page break.
+ */
 class mod_feedback_item_pagebreak extends mod_feedback_item_base {
 
     public function __construct() {
@@ -37,9 +40,9 @@ class mod_feedback_item_pagebreak extends mod_feedback_item_base {
 
         //check if there already is a pagebreak on the last position
         $lastposition = $DB->count_records('feedback_item', array('feedback'=>$feedback->id));
-        if ($lastposition == feedback_get_last_break_position($feedback->id)) {
-            return false;
-        }
+        //if ($lastposition == feedback_get_last_break_position($feedback->id)) {
+        //    return false;
+        //}
 
         $this->item = new stdClass();
         $this->item->feedback = $feedback->id;

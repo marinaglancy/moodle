@@ -14,10 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+debugging('Class feedback_item_form is deprecated, please use mod_feedback_item_form',
+        DEBUG_DEVELOPER);
+
 abstract class feedback_item_form extends mod_feedback_item_form {
-    public function definition() {
-        debugging('Class feedback_item_form is deprecated, please use mod_feedback_item_form',
-                DEBUG_DEVELOPER);
-        parent::definition();
-    }
 }
