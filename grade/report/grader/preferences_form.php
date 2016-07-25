@@ -90,6 +90,8 @@ class grader_report_preferences_form extends moodleform {
 
                 $advanced = array_merge($advanced, array('averagesdisplaytype', 'averagesdecimalpoints'));
             }
+        } else if (has_capability('moodle/grade:hide', $context)) {
+            $preferences['prefshow']['showeyecons']       = $checkbox_default;
         }
 
         // quickgrading and showquickfeedback are conditional on grade:edit capability

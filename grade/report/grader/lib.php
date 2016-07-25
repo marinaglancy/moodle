@@ -1650,11 +1650,15 @@ class grade_report_grader extends grade_report {
             if ($this->get_pref('showcalculations')) {
                 $editcalculationicon = $this->gtree->get_calculation_icon($element, $this->gpr);
             }
+        }
 
+        if (has_capability('moodle/grade:manage', $this->context) || has_capability('moodle/grade:hide', $this->context)) {
             if ($this->get_pref('showeyecons')) {
                 $showhideicon = $this->gtree->get_hiding_icon($element, $this->gpr);
             }
+        }
 
+        if (has_capability('moodle/grade:manage', $this->context)) {
             if ($this->get_pref('showlocks')) {
                 $lockunlockicon = $this->gtree->get_locking_icon($element, $this->gpr);
             }
