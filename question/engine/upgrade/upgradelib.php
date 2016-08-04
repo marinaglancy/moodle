@@ -89,6 +89,7 @@ class question_engine_attempt_upgrader {
                     $datum->attemptstepid = $step->id;
                     $datum->name = $name;
                     $datum->value = $value;
+                    $datum->hash = substr(md5($datum->name), -6);
                     $this->insert_record('question_attempt_step_data', $datum, false);
                 }
             }

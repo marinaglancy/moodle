@@ -5168,6 +5168,7 @@ abstract class restore_questions_activity_structure_step extends restore_activit
             $row->attemptstepid = $newitemid;
             $row->name = $name;
             $row->value = $value;
+            $row->hash = substr(md5($row->name), -6); // For databases with case-insensitive collations like Mysql or MSSQL.
             $DB->insert_record('question_attempt_step_data', $row, false);
         }
     }

@@ -2083,5 +2083,44 @@ function xmldb_main_upgrade($oldversion) {
         upgrade_main_savepoint(true, 2016070700.01);
     }
 
+    if ($oldversion < 2016072808) {
+
+        // Define field hash to be added to question_attempt_step_data.
+        $table = new xmldb_table('question_attempt_step_data');
+        $field = new xmldb_field('hash', XMLDB_TYPE_CHAR, '6', null, XMLDB_NOTNULL, null, '-', 'value');
+
+        // Conditionally launch add field hash.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Define index attemptstepid-name-hash (unique) to be added to question_attempt_step_data.
+        $table = new xmldb_table('question_attempt_step_data');
+        $index = new xmldb_index('attemptstepid-name-hash', XMLDB_INDEX_UNIQUE, array('attemptstepid', 'name', 'hash'));
+
+        // Conditionally launch add index attemptstepid-name-hash.
+        if (!$dbman->index_exists($table, $index)) {
+            try {
+                $dbman->add_index($table, $index);
+            } catch (moodle_exception $e) {
+                // Index could not be created because of case-insensitive duplicates, run upgrade script filling hash.
+                upgrade_question_attempt_step_data();
+                $dbman->add_index($table, $index);
+            }
+        }
+
+        // Define index attemptstepid-name (unique) to be dropped from question_attempt_step_data.
+        $table = new xmldb_table('question_attempt_step_data');
+        $index = new xmldb_index('attemptstepid-name', XMLDB_INDEX_UNIQUE, array('attemptstepid', 'name'));
+
+        // Conditionally launch drop index attemptstepid-name.
+        if ($dbman->index_exists($table, $index)) {
+            $dbman->drop_index($table, $index);
+        }
+
+        // Main savepoint reached.
+        upgrade_main_savepoint(true, 2016072808);
+    }
+
     return true;
 }

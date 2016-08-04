@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="lib/db" VERSION="20160404" COMMENT="XMLDB file for core Moodle tables"
+<XMLDB PATH="lib/db" VERSION="20160804" COMMENT="XMLDB file for core Moodle tables"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../lib/xmldb/xmldb.xsd"
 >
@@ -1347,13 +1347,14 @@
         <FIELD NAME="attemptstepid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Foreign key, references question_attempt_steps.id"/>
         <FIELD NAME="name" TYPE="char" LENGTH="32" NOTNULL="true" SEQUENCE="false" COMMENT="The name of this bit of data."/>
         <FIELD NAME="value" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="The corresponding value"/>
+        <FIELD NAME="hash" TYPE="char" LENGTH="6" NOTNULL="true" DEFAULT="-" SEQUENCE="false"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
         <KEY NAME="attemptstepid" TYPE="foreign" FIELDS="attemptstepid" REFTABLE="question_attempt_steps" REFFIELDS="id"/>
       </KEYS>
       <INDEXES>
-        <INDEX NAME="attemptstepid-name" UNIQUE="true" FIELDS="attemptstepid, name"/>
+        <INDEX NAME="attemptstepid-name-hash" UNIQUE="true" FIELDS="attemptstepid, name, hash"/>
       </INDEXES>
     </TABLE>
     <TABLE NAME="question_statistics" COMMENT="Statistics for individual questions used in an activity.">

@@ -527,3 +527,67 @@ function upgrade_standardise_score($rawgrade, $sourcemin, $sourcemax, $targetmin
     $standardisedvalue = $factor * $diff + $targetmin;
     return $standardisedvalue;
 }
+
+function upgrade_question_attempt_step_data() {
+    global $DB;
+
+    $sql = "SELECT MIN(id) AS id1, MAX(id) AS id2, COUNT(ID) AS cnt, attemptstepid, name
+        FROM {question_attempt_step_data}
+        GROUP BY attemptstepid, name
+        HAVING COUNT(id)>1";
+    $records = $DB->get_records_sql($sql, []);
+    if (!$records) {
+        return;
+    }
+    $sqls = [];
+    $params = [];
+    foreach ($records as $record) {
+        if ($record->cnt == 2) {
+            // Searching by id is faster.
+            $sqls[] = 'id = ? OR id = ?';
+            $params[] = $record->id1;
+            $params[] = $record->id2;
+        } else {
+            $sqls[] = '(attemptstepid = ? AND name = ?)';
+            $params[] = $record->attemptstepid;
+            $params[] = $record->name;
+        }
+    }
+
+    $records = $DB->get_records_sql("SELECT id, attemptstepid, name FROM {question_attempt_step_data} WHERE " .
+        join(' OR ', $sqls), $params);
+
+    foreach ($records as $record) {
+        $hash = substr(md5($record->name), -6);
+        $DB->update_record('question_attempt_step_data', ['id' => $record->id, 'hash' => $hash]);
+    }
+}
+
+function upgrade_question_attempt_step_data_alternative() {
+    global $DB;
+
+    $sql = "SELECT t1.id AS id1, t2.id AS id2
+        FROM {question_attempt_step_data} t1
+        JOIN {question_attempt_step_data} t2
+            ON t2.attemptstepid = t1.attemptstepid
+            AND " . $DB->sql_like('t1.name', 't2.name', false) . "
+            AND t2.id > t1.id";
+    $records = $DB->get_records_sql($sql, []);
+    if (!$records) {
+        return;
+    }
+    $ids = [];
+    foreach ($records as $record) {
+        $ids[$record->id1] = true;
+        $ids[$record->id2] = true;
+    }
+
+    list($sql, $params) = $DB->get_in_or_equal(array_keys($ids));
+    $records = $DB->get_records_sql("SELECT id, attemptstepid, name FROM {question_attempt_step_data} WHERE id " .
+        $sql, $params);
+
+    foreach ($records as $record) {
+        $hash = substr(md5($record->name), -6);
+        $DB->update_record('question_attempt_step_data', ['id' => $record->id, 'hash' => $hash]);
+    }
+}
