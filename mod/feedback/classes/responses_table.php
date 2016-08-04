@@ -36,6 +36,18 @@ require_once($CFG->libdir . '/tablelib.php');
  */
 class mod_feedback_responses_table extends table_sql {
 
+    /** @const maximum number of feedback questions to display in the "Show responses" table */
+    const PREVIEWCOLUNMNSLIMIT = 10;
+
+    /** @const maximum number of feedback questions answers to retrieve in one SQL query. Mysql has a limit of 60, we leave 1 for joining with users table. */
+    const TABLEJOINLIMIT = 59;
+
+    /**
+     * @const when additional queries are needed to retrieve more than TABLEJOINLIMIT questions answers, do it in chunks every x rows.
+     * Value too small will mean too many DB queries, value too big may cause memory overflow.
+     */
+    const ROWCHUNKSIZE = 100;
+
     /** @var mod_feedback_structure */
     protected $feedbackstructure;
 
@@ -50,6 +62,9 @@ class mod_feedback_responses_table extends table_sql {
 
     /** @var string */
     protected $downloadparamname = 'download';
+
+    /** @var int number of columns that were not retrieved in the main SQL query (no more than TABLEJOINLIMIT tables with values can be joined). */
+    protected $hasmorecolumns = 0;
 
     /**
      * Constructor
@@ -237,13 +252,25 @@ class mod_feedback_responses_table extends table_sql {
         $tablecolumns = array_keys($this->columns);
         $tableheaders = $this->headers;
 
-        // Add all feedback response values.
+        // Add feedback response values.
+        // Mysql has a limit of number of tables in the join, so we only add limited number of columns here,
+        // the rest will be added
         $items = $this->feedbackstructure->get_items(true);
+        if (!$this->is_downloading()) {
+            $items = array_slice($items, 0, self::PREVIEWCOLUNMNSLIMIT, true);
+        }
+
+        $columnscount = 0;
+        $this->hasmorecolumns = max(0, count($items) - self::TABLEJOINLIMIT);
+
         foreach ($items as $nr => $item) {
-            $this->sql->fields .= ", v{$nr}.value AS val{$nr}";
-            $this->sql->from .= " LEFT OUTER JOIN {feedback_value} v{$nr} " .
-                "ON v{$nr}.completed = c.id AND v{$nr}.item = :itemid{$nr}";
-            $this->sql->params["itemid{$nr}"] = $item->id;
+            if ($columnscount++ < self::TABLEJOINLIMIT) {
+                $this->sql->fields .= ", v{$nr}.value AS val{$nr}";
+                $this->sql->from .= " LEFT OUTER JOIN {feedback_value} v{$nr} " .
+                    "ON v{$nr}.completed = c.id AND v{$nr}.item = :itemid{$nr}";
+                $this->sql->params["itemid{$nr}"] = $item->id;
+            }
+
             $tablecolumns[] = "val{$nr}";
             $itemobj = feedback_get_item_class($item->typ);
             $tableheaders[] = $itemobj->get_display_name($item);
@@ -352,6 +379,11 @@ class mod_feedback_responses_table extends table_sql {
             echo $OUTPUT->box(get_string('nothingtodisplay'), 'generalbox nothingtodisplay');
             return;
         }
+
+        if (count($this->feedbackstructure->get_items(true)) > self::PREVIEWCOLUNMNSLIMIT) {
+            echo $OUTPUT->notification(get_string('questionslimited', 'feedback', self::PREVIEWCOLUNMNSLIMIT), 'info');
+        }
+
         $this->out($this->showall ? $grandtotal : FEEDBACK_DEFAULT_PAGE_COUNT,
                 $grandtotal > FEEDBACK_DEFAULT_PAGE_COUNT);
 
@@ -410,6 +442,87 @@ class mod_feedback_responses_table extends table_sql {
         \core\session\manager::write_close();
         $this->out($this->get_total_responses_count(), false);
         exit;
+    }
+
+    /**
+     * Take the data returned from the db_query and go through all the rows
+     * processing each col using either col_{columnname} method or other_cols
+     * method or if other_cols returns NULL then put the data straight into the
+     * table.
+     *
+     * This overwrites the parent method because full SQL query may
+     *
+     * @return void
+     */
+    public function build_table() {
+        if ($this->rawdata instanceof \Traversable && !$this->rawdata->valid()) {
+            return;
+        }
+        if (!$this->rawdata) {
+            return;
+        }
+
+        $columnsgroups = [];
+        if ($this->hasmorecolumns) {
+            $items = $this->feedbackstructure->get_items(true);
+            $notretrieveditems = array_slice($items, self::TABLEJOINLIMIT, $this->hasmorecolumns, true);
+            $columnsgroups = array_chunk($notretrieveditems, self::TABLEJOINLIMIT, true);
+        }
+
+        $chunk = [];
+        foreach ($this->rawdata as $row) {
+            if ($this->hasmorecolumns) {
+                $chunk[$row->id] = $row;
+                if (count($chunk) >= self::ROWCHUNKSIZE) {
+                    $this->build_table_chunk($chunk, $columnsgroups);
+                    $chunk = [];
+                }
+            } else {
+                $this->add_data_keyed($this->format_row($row), $this->get_row_class($row));
+            }
+        }
+        $this->build_table_chunk($chunk, $columnsgroups);
+
+        $this->rawdata->close();
+    }
+
+    /**
+     * Retrieve additional columns. Database engine may have a limit on number of joins.
+     *
+     * @param array $rows Array of rows with already retrieved data, new values will be added to this array
+     * @param array $columnsgroups array of arrays of columns. Each element has up to self::TABLEJOINLIMIT items. This
+     *     is easy to calculate but because we can call this method many times we calculate it once and pass by
+     *     reference for performance reasons
+     */
+    protected function build_table_chunk(&$rows, &$columnsgroups) {
+        global $DB;
+        if (!$rows) {
+            return;
+        }
+
+        foreach ($columnsgroups as $columnsgroup) {
+            $fields = 'c.id';
+            $from = '{feedback_completed} c';
+            $params = [];
+            foreach ($columnsgroup as $nr => $item) {
+                $fields .= ", v{$nr}.value AS val{$nr}";
+                $from .= " LEFT OUTER JOIN {feedback_value} v{$nr} " .
+                    "ON v{$nr}.completed = c.id AND v{$nr}.item = :itemid{$nr}";
+                $params["itemid{$nr}"] = $item->id;
+            }
+            list($idsql, $idparams) = $DB->get_in_or_equal(array_keys($rows), SQL_PARAMS_NAMED);
+            $sql = "SELECT $fields FROM $from WHERE c.id ".$idsql;
+            $results = $DB->get_records_sql($sql, $params + $idparams);
+            foreach ($results as $result) {
+                foreach ($result as $key => $value) {
+                    $rows[$result->id]->{$key} = $value;
+                }
+            }
+        }
+
+        foreach ($rows as $row) {
+            $this->add_data_keyed($this->format_row($row), $this->get_row_class($row));
+        }
     }
 
     /**
