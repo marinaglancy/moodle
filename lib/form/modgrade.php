@@ -261,6 +261,11 @@ class MoodleQuickForm_modgrade extends MoodleQuickForm_group {
                 $vals += $thisexport;
             }
         }
+        if ($this->isupdate && $this->hasgrades && $this->canrescale && empty($vals['modgrade_rescalegrades'])) {
+            // If nothing is selected for 'modgrade_rescalegrades' the element 'modgrade_point' is disabled.
+            // In this case we want to return the current value and not default value    .
+            $vals['modgrade_point'] = (string)unformat_float($this->currentgrade);
+        }
 
         $type = (isset($vals['modgrade_type'])) ? $vals['modgrade_type'] : 'none';
         $point = (isset($vals['modgrade_point'])) ? $vals['modgrade_point'] : null;
