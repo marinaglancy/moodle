@@ -493,6 +493,7 @@ class file_storage {
                 ORDER BY
                     $filenamelen DESC,
                     f.filename DESC";
+        // TODO MDL-36208 case-insensitive order by.
         $params = array('contextid' => $contextid, 'component' => $component, 'filearea' => $filearea, 'itemid' => $itemid,
                 'filepath' => $filepath, 'filenamelike' => $filenamelike);
         $results = $DB->get_fieldset_sql($sql, $params, IGNORE_MULTIPLE);
@@ -566,6 +567,7 @@ class file_storage {
                 ORDER BY
                     $filepathlen DESC,
                     f.filepath DESC";
+        // TODO MDL-36208 case-insensitive order by.
         $params = array('contextid' => $contextid, 'component' => $component, 'filearea' => $filearea, 'itemid' => $itemid,
                 'filename' => '.', 'filepathlike' => $filepathlike);
         $results = $DB->get_fieldset_sql($sql, $params, IGNORE_MULTIPLE);
@@ -762,6 +764,7 @@ class file_storage {
      */
     public function get_external_files($repositoryid, $sort = '') {
         global $DB;
+        // TODO MDL-36208 case-insensitive order by.
         $sql = "SELECT ".self::instance_sql_fields('f', 'r')."
                   FROM {files} f
              LEFT JOIN {files_reference} r
@@ -810,6 +813,7 @@ class file_storage {
                        AND f.filearea = :filearea
                        $itemidsql";
         if (!empty($sort)) {
+            // TODO MDL-36208 case-insensitive order by.
             $sql .= " ORDER BY {$sort}";
         }
 
@@ -916,6 +920,7 @@ class file_storage {
             return array();
         }
 
+        // TODO MDL-36208 case-insensitive order by.
         $orderby = (!empty($sort)) ? " ORDER BY {$sort}" : '';
 
         if ($recursive) {
@@ -2287,6 +2292,7 @@ class file_storage {
             return $DB->count_records_sql($sql, $params);
         }
 
+        // TODO MDL-36208 case-insensitive order by.
         $sql .= " ORDER BY f.filename";
 
         $result = array();

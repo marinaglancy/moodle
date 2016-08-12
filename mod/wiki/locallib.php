@@ -1531,6 +1531,7 @@ function wiki_build_tree($page, $node, &$keys) {
 function wiki_get_linked_pages($pageid) {
     global $DB;
 
+    // TODO MDL-36208 case-insensitive order by.
     $sql = "SELECT p.id, p.title
             FROM {wiki_pages} p
             JOIN {wiki_links} l ON l.topageid = p.id

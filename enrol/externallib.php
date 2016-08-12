@@ -468,6 +468,7 @@ class core_enrol_external extends external_api {
                 if ($option['value'] == 'siteorder') {
                     list($sortby, $sortparams) = users_order_by_sql('us');
                 } else {
+                    // TODO MDL-36208 case-insensitive order by.
                     $sortby = 'us.' . $option['value'];
                 }
                 break;

@@ -604,6 +604,7 @@ WHERE
             qubaid_condition $qubaids, $slots) {
         list($slottest, $params) = $this->db->get_in_or_equal($slots, SQL_PARAMS_NAMED, 'slot');
 
+        // TODO MDL-36208 case-insensitive order by.
         $rs = $this->db->get_recordset_sql("
 SELECT
     qa.slot,
@@ -705,6 +706,7 @@ ORDER BY
         if ($orderby == 'random') {
             $sqlorderby = '';
         } else if ($orderby) {
+            // TODO MDL-36208 case-insensitive order by.
             $sqlorderby = 'ORDER BY ' . $orderby;
         } else {
             $sqlorderby = '';

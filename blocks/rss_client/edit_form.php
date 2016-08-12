@@ -58,6 +58,7 @@ class block_rss_client_edit_form extends block_edit_form {
 
         $titlesql = "CASE WHEN preferredtitle = '' THEN {$DB->sql_compare_text('title', 64)} ELSE preferredtitle END";
 
+        // TODO MDL-36208 case-insensitive order by.
         $rssfeeds = $DB->get_records_sql_menu("
                 SELECT id, $titlesql
                   FROM {block_rss_client}

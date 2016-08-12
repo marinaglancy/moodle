@@ -352,6 +352,7 @@ function survey_update_analysis($survey, $user, $notes) {
  */
 function survey_get_user_answers($surveyid, $questionid, $groupid, $sort="sa.answer1,sa.answer2 ASC") {
     global $DB;
+    // TODO MDL-36208 case-insensitive order by.
 
     $params = array('surveyid'=>$surveyid, 'questionid'=>$questionid);
 

@@ -260,6 +260,7 @@ class subscription_manager {
             $userid = $USER->id;
         }
         $sql = self::get_subscription_join_rule_sql();
+        // TODO MDL-36208 case-insensitive order by.
         $sql .= "WHERE s.courseid = :courseid AND s.userid = :userid ORDER BY $order";
 
         return self::get_instances($DB->get_records_sql($sql, array('courseid' => $courseid, 'userid' => $userid), $limitfrom,
@@ -302,6 +303,7 @@ class subscription_manager {
             $userid = $USER->id;
         }
         $sql = self::get_subscription_join_rule_sql();
+        // TODO MDL-36208 case-insensitive order by.
         $sql .= "WHERE s.userid = :userid ORDER BY $order";
 
         return self::get_instances($DB->get_records_sql($sql, array('userid' => $userid), $limitfrom, $limitto));

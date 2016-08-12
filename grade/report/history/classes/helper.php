@@ -145,6 +145,7 @@ class helper {
             $orderby = "";
         } else {
             $select = "SELECT DISTINCT $ufields ";
+            // TODO MDL-36208 case-insensitive order by or use users_order_by_sql().
             $orderby = " ORDER BY u.lastname ASC, u.firstname ASC";
         }
         $sql = "$select
@@ -169,6 +170,7 @@ class helper {
         global $DB;
 
         $ufields = get_all_user_name_fields(true, 'u');
+        // TODO MDL-36208 case-insensitive order by or use users_order_by_sql().
         $sql = "SELECT u.id, $ufields
                   FROM {user} u
                   JOIN {grade_grades_history} ggh ON ggh.usermodified = u.id

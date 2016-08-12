@@ -271,6 +271,7 @@ class enrol_meta_plugin extends enrol_plugin {
         $select = ', ' . context_helper::get_preload_record_columns_sql('ctx');
         $join = "LEFT JOIN {context} ctx ON (ctx.instanceid = c.id AND ctx.contextlevel = :contextlevel)";
 
+        // TODO MDL-36208 case-insensitive order by.
         $sortorder = 'c.' . $this->get_config('coursesort', 'sortorder') . ' ASC';
 
         $sql = "SELECT c.id, c.fullname, c.shortname, c.visible $select FROM {course} c $join $where ORDER BY $sortorder";

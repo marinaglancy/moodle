@@ -260,6 +260,7 @@ class subscriptions {
      */
     public static function get_potential_subscribers($context, $groupid, $fields, $sort = '') {
         global $DB;
+        // TODO MDL-36208 case-insensitive order by or use users_order_by_sql().
 
         // Only active enrolled users or everybody on the frontpage.
         list($esql, $params) = get_enrolled_sql($context, 'mod/forum:allowforcesubscribe', $groupid, true);
@@ -442,6 +443,7 @@ class subscriptions {
                         JOIN {user} u ON u.id = subscriptions.userid
                         JOIN ($esql) je ON je.id = u.id
                         ORDER BY u.email ASC";
+                // TODO MDL-36208 case-insensitive order by.
 
             } else {
                 $sql = "SELECT $fields
@@ -451,6 +453,7 @@ class subscriptions {
                         WHERE
                           s.forum = :forumid
                         ORDER BY u.email ASC";
+                // TODO MDL-36208 case-insensitive order by.
             }
             $results = $DB->get_records_sql($sql, $params);
         }

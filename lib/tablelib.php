@@ -580,6 +580,7 @@ class flexible_table {
      * @return SQL fragment that can be used in an ORDER BY clause.
      */
     public static function construct_order_by($cols, $textsortcols=array()) {
+        // TODO MDL-36208 case-insensitive order by.
         global $DB;
         $bits = array();
 

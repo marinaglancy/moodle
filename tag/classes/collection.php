@@ -378,6 +378,7 @@ class core_tag_collection {
             $whereclause .= ' AND tg.name LIKE ?';
             $params[] = '%' . core_text::strtolower($search) . '%';
         }
+        // TODO MDL-36208 case-insensitive order by.
         $tagsincloud = $DB->get_records_sql(
                 "SELECT tg.id, tg.rawname, tg.name, tg.isstandard, COUNT(ti.id) AS count, tg.flag, tg.tagcollid
                 $fromclause

@@ -143,6 +143,7 @@ class mod_glossary_entry_query_builder {
         }
 
         if (!$count && !empty($this->order)) {
+            // TODO MDL-36208 case-insensitive order by.
             $sql .= 'ORDER BY ' . implode(', ', $this->order);
         }
 

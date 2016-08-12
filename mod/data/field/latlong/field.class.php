@@ -87,6 +87,7 @@ class data_field_latlong extends data_field_base {
     function display_search_field($value = '') {
         global $CFG, $DB;
 
+        // TODO MDL-36208 case-insensitive order by.
         $varcharlat = $DB->sql_compare_text('content');
         $varcharlong= $DB->sql_compare_text('content1');
         $latlongsrs = $DB->get_recordset_sql(

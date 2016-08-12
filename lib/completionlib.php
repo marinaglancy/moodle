@@ -1121,6 +1121,7 @@ class completion_info {
      */
     public function get_tracked_users($where = '', $whereparams = array(), $groupid = 0,
              $sort = '', $limitfrom = '', $limitnum = '', context $extracontext = null) {
+        // TODO MDL-36208 case-insensitive order by or use users_order_by_sql().
 
         global $DB;
 

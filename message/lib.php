@@ -246,6 +246,7 @@ function message_get_blocked_users($user1=null, $user2=null) {
                          WHERE u.deleted = 0 AND mc.userid = :user1id2 AND mc.blocked = 1
                       GROUP BY $userfields
                       ORDER BY u.firstname ASC";
+    // TODO MDL-36208 case-insensitive order by or use users_order_by_sql().
     $rs =  $DB->get_recordset_sql($blockeduserssql, array('user1id1' => $user1->id, 'user1id2' => $user1->id));
 
     foreach($rs as $rd) {
@@ -343,6 +344,7 @@ function message_get_contacts($user1=null, $user2=null) {
                     WHERE u.deleted = 0 AND mc.userid = ? AND mc.blocked = 0
                  GROUP BY $userfields
                  ORDER BY u.firstname ASC";
+    // TODO MDL-36208 case-insensitive order by or use users_order_by_sql().
 
     $rs = $DB->get_recordset_sql($contactsql, array($user1->id, $user1->id));
     foreach ($rs as $rd) {
@@ -369,6 +371,7 @@ function message_get_contacts($user1=null, $user2=null) {
                      WHERE u.deleted = 0 AND mc.id IS NULL AND m.useridto = ?
                   GROUP BY $userfields
                   ORDER BY u.firstname ASC";
+    // TODO MDL-36208 case-insensitive order by or use users_order_by_sql().
 
     $rs = $DB->get_recordset_sql($strangersql, array($USER->id));
     // Add user id as array index, so supportuser and noreply user don't get duplicated (if they are real users).
@@ -1731,6 +1734,7 @@ function message_search_users($courseids, $searchtext, $sort='', $exceptions='')
     $ufields = user_picture::fields('u');
 
     if (!empty($sort)) {
+        // TODO MDL-36208 case-insensitive order by or use users_order_by_sql().
         $order = ' ORDER BY '. $sort;
     } else {
         $order = '';
@@ -2778,6 +2782,7 @@ function message_page_type_list($pagetype, $parentcontext, $currentcontext) {
 function message_get_messages($useridto, $useridfrom = 0, $notifications = -1, $read = true,
                                 $sort = 'mr.timecreated DESC', $limitfrom = 0, $limitnum = 0) {
     global $DB;
+    // TODO MDL-36208 case-insensitive order by.
 
     $messagetable = $read ? '{message_read}' : '{message}';
     $params = array('deleted' => 0);

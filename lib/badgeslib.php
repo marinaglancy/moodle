@@ -849,6 +849,7 @@ function badges_get_badges($type, $courseid = 0, $sort = '', $dir = '', $page = 
         $params['courseid'] = $courseid;
     }
 
+    // TODO MDL-36208 case-insensitive order by.
     $sorting = (($sort != '' && $dir != '') ? 'ORDER BY ' . $sort . ' ' . $dir : '');
     $params['type'] = $type;
 

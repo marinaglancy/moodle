@@ -140,6 +140,7 @@ function get_admins() {
  */
 function search_users($courseid, $groupid, $searchtext, $sort='', array $exceptions=null) {
     global $DB;
+    // TODO MDL-36208 case-insensitive order by or use users_order_by_sql().
 
     $fullname  = $DB->sql_fullname('u.firstname', 'u.lastname');
 
@@ -338,6 +339,7 @@ function users_search_sql($search, $u = 'u', $searchanywhere = true, array $extr
  *      array of parameters used in the SQL fragment.
  */
 function users_order_by_sql($usertablealias = '', $search = null, context $context = null) {
+    // TODO MDL-36208 case-insensitive order by.
     global $DB, $PAGE;
 
     if ($usertablealias) {
@@ -473,6 +475,7 @@ function get_users_listing($sort='lastaccess', $dir='ASC', $page=0, $recordsperp
                            $search='', $firstinitial='', $lastinitial='', $extraselect='',
                            array $extraparams=null, $extracontext = null) {
     global $DB, $CFG;
+    // TODO MDL-36208 case-insensitive order by or use users_order_by_sql().
 
     $fullname  = $DB->sql_fullname();
 
@@ -607,6 +610,7 @@ function get_course($courseid, $clone = true) {
  * @return array Array of courses
  */
 function get_courses($categoryid="all", $sort="c.sortorder ASC", $fields="c.*") {
+    // TODO MDL-36208 case-insensitive order by.
 
     global $USER, $CFG, $DB;
 
@@ -680,6 +684,7 @@ function get_courses($categoryid="all", $sort="c.sortorder ASC", $fields="c.*") 
 function get_courses_page($categoryid="all", $sort="c.sortorder ASC", $fields="c.*",
                           &$totalcount, $limitfrom="", $limitnum="") {
     global $USER, $CFG, $DB;
+    // TODO MDL-36208 case-insensitive order by.
 
     $params = array();
 
@@ -747,6 +752,7 @@ function get_courses_page($categoryid="all", $sort="c.sortorder ASC", $fields="c
 function get_courses_search($searchterms, $sort, $page, $recordsperpage, &$totalcount,
                             $requiredcapabilities = array()) {
     global $CFG, $DB;
+    // TODO MDL-36208 case-insensitive order by or use users_order_by_sql().
 
     if ($DB->sql_regex_supported()) {
         $REGEXP    = $DB->sql_regex(true);
@@ -1172,6 +1178,7 @@ function get_my_remotehosts() {
 function get_scales_menu($courseid=0) {
     global $DB;
 
+    // TODO MDL-36208 case-insensitive order by and use proper course name for lists.
     $sql = "SELECT id, name
               FROM {scale}
              WHERE courseid = 0 or courseid = ?

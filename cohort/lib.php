@@ -286,6 +286,7 @@ function cohort_get_available_cohorts($currentcontext, $withmembers = 0, $offset
     }
 
     if ($withmembers) {
+        // TODO MDL-36208 case-insensitive order by.
         $sql = "SELECT " . str_replace('c.', 'cohort.', $fieldssql) . "
                   FROM {cohort} cohort
                   JOIN (SELECT $subfields
@@ -294,6 +295,7 @@ function cohort_get_available_cohorts($currentcontext, $withmembers = 0, $offset
                         ) s ON cohort.id = s.id
               ORDER BY cohort.name, cohort.idnumber";
     } else {
+        // TODO MDL-36208 case-insensitive order by.
         $sql = "SELECT $fieldssql
                   FROM {cohort} c $fromsql
                  WHERE $wheresql
@@ -384,6 +386,7 @@ function cohort_get_cohorts($contextid, $page = 0, $perpage = 25, $search = '') 
     $sql = " FROM {cohort}
              WHERE contextid = :contextid";
     $params = array('contextid' => $contextid);
+    // TODO MDL-36208 case-insensitive order by.
     $order = " ORDER BY name ASC, idnumber ASC";
 
     if (!empty($search)) {
@@ -438,6 +441,7 @@ function cohort_get_all_cohorts($page = 0, $perpage = 25, $search = '') {
         $totalcohorts = $DB->count_records_sql($countfields . $sql . $wheresql, $params);
     }
 
+    // TODO MDL-36208 case-insensitive order by.
     $order = " ORDER BY c.name ASC, c.idnumber ASC";
     $cohorts = $DB->get_records_sql($fields . $sql . $wheresql . $order, $params, $page*$perpage, $perpage);
 

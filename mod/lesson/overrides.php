@@ -85,6 +85,7 @@ if (!empty($orphaned)) {
 // Fetch all overrides.
 if ($groupmode) {
     $colname = get_string('group');
+    // TODO MDL-36208 case-insensitive order by.
     $sql = 'SELECT o.*, g.name
                 FROM {lesson_overrides} o
                 JOIN {groups} g ON o.groupid = g.id

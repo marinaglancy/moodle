@@ -3618,6 +3618,7 @@ function glossary_get_authors($glossary, $context, $limit, $from, $options = arr
                AND (ge.glossaryid = :gid1 OR ge.sourceglossaryid = :gid2)
                AND $approvedsql";
     $ordersql = " ORDER BY u.lastname, u.firstname";
+    // TODO MDL-36208 case-insensitive order by or use users_order_by_sql().
 
     $params['gid1'] = $glossary->id;
     $params['gid2'] = $glossary->id;
@@ -3744,6 +3745,7 @@ function glossary_get_search_terms_sql(array $terms, $fullsearch = true, $glossa
 function glossary_get_entries_by_search($glossary, $context, $query, $fullsearch, $order, $sort, $from, $limit,
                                         $options = array()) {
     global $DB, $USER;
+    // TODO MDL-36208 case-insensitive order by or use users_order_by_sql().
 
     // Remove too little terms.
     $terms = explode(' ', $query);
@@ -3779,6 +3781,7 @@ function glossary_get_entries_by_search($glossary, $context, $query, $fullsearch
     } else if ($order == 'UPDATE') {
         $sqlorderby = "ORDER BY ge.timemodified $sort";
     } else {
+        // TODO MDL-36208 case-insensitive order by.
         $sqlorderby = "ORDER BY ge.concept $sort";
     }
     $sqlorderby .= " , ge.id ASC"; // Sort on ID to avoid random ordering when entries share an ordering value.

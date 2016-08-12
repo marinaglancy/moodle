@@ -197,6 +197,7 @@ class course_publish_manager {
      */
     public function get_course_publications($courseid) {
         global $DB;
+        // TODO MDL-36208 case-insensitive order by.
         $sql = 'SELECT cp.id, cp.status, cp.timechecked, cp.timepublished, rh.hubname,
                        rh.huburl, cp.courseid, cp.enrollable, cp.hubcourseid
                 FROM {course_published} cp, {registration_hubs} rh

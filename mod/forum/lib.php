@@ -1824,6 +1824,7 @@ function forum_get_post_full($postid) {
  */
 function forum_get_all_discussion_posts($discussionid, $sort, $tracking=false) {
     global $CFG, $DB, $USER;
+    // TODO MDL-36208 case-insensitive order by.
 
     $tr_sel  = "";
     $tr_join = "";
@@ -2370,6 +2371,7 @@ function forum_get_firstpost_from_discussion($discussionid) {
  */
 function forum_count_discussion_replies($forumid, $forumsort="", $limit=-1, $page=-1, $perpage=0) {
     global $CFG, $DB;
+    // TODO MDL-36208 case-insensitive order by.
 
     if ($limit > 0) {
         $limitfrom = 0;

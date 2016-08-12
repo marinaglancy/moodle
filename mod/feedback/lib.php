@@ -2813,6 +2813,7 @@ function feedback_get_feedbacks_from_sitecourse_map($courseid) {
 function feedback_get_courses_from_sitecourse_map($feedbackid) {
     global $DB;
 
+    // TODO MDL-36208 case-insensitive order by.
     $sql = "SELECT c.id, c.fullname, c.shortname
               FROM {feedback_sitecourse_map} f, {course} c
              WHERE c.id = f.courseid
@@ -2933,6 +2934,7 @@ function feedback_send_email($cm, $feedback, $course, $user) {
     }
 
     if ($groupmode == SEPARATEGROUPS) {
+        // TODO MDL-36208 case-insensitive order by.
         $groups = $DB->get_records_sql_menu("SELECT g.name, g.id
                                                FROM {groups} g, {groups_members} m
                                               WHERE g.courseid = ?

@@ -622,6 +622,7 @@ class core_cohort_external extends external_api {
                 throw new required_capability_exception($context, 'moodle/cohort:view', 'nopermissions', '');
             }
 
+            // TODO MDL-36208 case-insensitive order by or use users_order_by_sql().
             $cohortmembers = $DB->get_records_sql("SELECT u.id FROM {user} u, {cohort_members} cm
                 WHERE u.id = cm.userid AND cm.cohortid = ?
                 ORDER BY lastname ASC, firstname ASC", array($cohort->id));

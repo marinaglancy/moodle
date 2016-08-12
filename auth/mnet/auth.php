@@ -670,6 +670,7 @@ class auth_plugin_mnet extends auth_plugin_base {
                 h.id != ?
             ORDER BY
                 h.name ASC";
+        // TODO MDL-36208 case-insensitive order by.
 
         $id_providers       = array();
         $service_providers  = array();

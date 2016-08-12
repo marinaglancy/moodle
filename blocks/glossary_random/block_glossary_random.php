@@ -103,6 +103,7 @@ class block_glossary_random extends block_base {
                     break;
 
                 case BGR_NEXTALPHA:
+                    // TODO MDL-36208 case-insensitive order by.
                     $orderby = 'concept ASC';
                     if (isset($this->config->previous)) {
                         $i = $this->config->previous + 1;

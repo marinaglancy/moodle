@@ -263,6 +263,7 @@ function groups_get_all_groups($courseid, $userid=0, $groupingid=0, $fields='g.*
 
     array_unshift($params, $courseid);
 
+    // TODO MDL-36208 case-insensitive order by.
     return $DB->get_records_sql("SELECT $fields
                                    FROM {groups} g $userfrom $groupingfrom
                                   WHERE g.courseid = ? $userwhere $groupingwhere
@@ -279,6 +280,7 @@ function groups_get_all_groups($courseid, $userid=0, $groupingid=0, $fields='g.*
  */
 function groups_get_my_groups() {
     global $DB, $USER;
+    // TODO MDL-36208 case-insensitive order by.
     return $DB->get_records_sql("SELECT *
                                    FROM {groups_members} gm
                                    JOIN {groups} g
@@ -426,6 +428,7 @@ function groups_has_membership($cm, $userid=null) {
 function groups_get_members($groupid, $fields='u.*', $sort='lastname ASC') {
     global $DB;
 
+    // TODO MDL-36208 case-insensitive order by or use users_order_by_sql().
     return $DB->get_records_sql("SELECT $fields
                                    FROM {user} u, {groups_members} gm
                                   WHERE u.id = gm.userid AND gm.groupid = ?
@@ -446,6 +449,7 @@ function groups_get_members($groupid, $fields='u.*', $sort='lastname ASC') {
 function groups_get_grouping_members($groupingid, $fields='u.*', $sort='lastname ASC') {
     global $DB;
 
+    // TODO MDL-36208 case-insensitive order by or use users_order_by_sql().
     return $DB->get_records_sql("SELECT $fields
                                    FROM {user} u
                                      INNER JOIN {groups_members} gm ON u.id = gm.userid
@@ -1011,6 +1015,7 @@ function groups_cache_groupdata($courseid, cache $cache = null) {
     if (!empty($groupings)) {
         // Finally get the mappings between the two.
         list($insql, $params) = $DB->get_in_or_equal(array_keys($groupings));
+        // TODO MDL-36208 case-insensitive order by.
         $mappings = $DB->get_records_sql("
                 SELECT gg.id, gg.groupingid, gg.groupid
                   FROM {groupings_groups} gg

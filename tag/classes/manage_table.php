@@ -149,6 +149,7 @@ class core_tag_manage_table extends table_sql {
 
         // Fetch the attempts.
         $sort = $this->get_sql_sort();
+        // TODO MDL-36208 case-insensitive order by.
         if ($sort) {
             $sort .= ", tg.name";
         } else {

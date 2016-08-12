@@ -2463,6 +2463,7 @@ function get_enrolled_users(context $context, $withcapability = '', $groupid = 0
              WHERE u.deleted = 0";
 
     if ($orderby) {
+        // TODO MDL-36208 case-insensitive order by.
         $sql = "$sql ORDER BY $orderby";
     } else {
         list($sort, $sortparams) = users_order_by_sql('u');
@@ -3306,6 +3307,7 @@ function get_user_roles(context $context, $userid = 0, $checkparentcontexts = tr
 
     array_unshift($params, $userid);
 
+    // TODO MDL-36208 case-insensitive order by or use users_order_by_sql().
     $sql = "SELECT ra.*, r.name, r.shortname
               FROM {role_assignments} ra, {role} r, {context} c
              WHERE ra.userid = ?
@@ -4014,6 +4016,7 @@ function get_users_by_capability(context $context, $capability, $fields = '', $s
             $joins
             $where
           ORDER BY $sort";
+    // TODO MDL-36208 case-insensitive order by or use users_order_by_sql().
 
     return $DB->get_records_sql($sql, $params, $limitfrom, $limitnum);
 }
@@ -4210,6 +4213,7 @@ function get_role_users($roleid, context $context, $parent = false, $fields = ''
     $fieldsarray = preg_split('/,\s*/', $fields);
     $addedfields = array();
     foreach ($sortarray as $sortfield) {
+        // TODO MDL-36208 will it work with case-insensitive stuff around sort fields?
         // Throw away any additional arguments to the sort (e.g. ASC/DESC).
         list ($sortfield) = explode(' ', $sortfield);
         if (!in_array($sortfield, $fieldsarray)) {
@@ -4318,6 +4322,7 @@ function get_user_capability_course($capability, $userid = null, $doanything = t
         }
     }
     if ($orderby) {
+        // TODO MDL-36208 case-insensitive order by make break this logic.
         $fields = explode(',', $orderby);
         $orderby = '';
         foreach($fields as $field) {
@@ -7524,6 +7529,7 @@ function get_sorted_contexts($select, $params = array()) {
     //TODO: we should probably rewrite all the code that is using this thing, the trouble is we MUST NOT modify the context instances...
 
     global $DB;
+    // TODO MDL-36208 case-insensitive order by or use users_order_by_sql().
     if ($select) {
         $select = 'WHERE ' . $select;
     }

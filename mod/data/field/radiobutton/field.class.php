@@ -83,6 +83,7 @@ class data_field_radiobutton extends data_field_base {
      function display_search_field($value = '') {
         global $CFG, $DB;
 
+        // TODO MDL-36208 case-insensitive order by.
         $varcharcontent = $DB->sql_compare_text('content', 255);
         $used = $DB->get_records_sql(
             "SELECT DISTINCT $varcharcontent AS content

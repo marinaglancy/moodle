@@ -524,6 +524,7 @@ function portfolio_instances($visibleonly=true, $useronly=true) {
             )';
         $values = array_merge($values, array($USER->id, 'visible', 0));
     }
+    // TODO MDL-36208 case-insensitive order by.
     $sql .= ' ORDER BY name';
 
     $instances = array();

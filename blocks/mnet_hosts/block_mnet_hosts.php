@@ -129,6 +129,7 @@ class block_mnet_hosts extends block_list {
              ORDER BY
                  a.display_name,
                  h.name";
+        // TODO MDL-36208 case-insensitive order by.
 
         $hosts = $DB->get_records_sql($sql, array($CFG->mnet_localhost_id, $CFG->mnet_all_hosts_id));
 

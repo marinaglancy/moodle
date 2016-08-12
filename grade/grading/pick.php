@@ -191,6 +191,7 @@ if ($tokens) {
     $sql .= " AND ((" . join(")\n OR (", $subsql) . "))";
 }
 
+// TODO MDL-36208 case-insensitive order by.
 $sql .= " ORDER BY gd.name";
 
 $rs = $DB->get_recordset_sql($sql, $params);

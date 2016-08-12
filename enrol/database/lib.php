@@ -846,6 +846,7 @@ class enrol_database_plugin extends enrol_plugin {
             }
         }
         $where = $where ? "WHERE ".implode(" AND ", $where) : "";
+        // TODO MDL-36208 case-insensitive order by.
         $sort = $sort ? "ORDER BY $sort" : "";
         $distinct = $distinct ? "DISTINCT" : "";
         $sql = "SELECT $distinct $fields

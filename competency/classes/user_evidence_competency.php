@@ -91,6 +91,7 @@ class user_evidence_competency extends persistent {
      */
     public static function get_competencies_by_userevidenceid($userevidenceid) {
         global $DB;
+        // TODO MDL-36208 case-insensitive order by.
         $sql = "SELECT c.*
                   FROM {" . self::TABLE . "} uec
                   JOIN {" . competency::TABLE . "} c

@@ -93,6 +93,7 @@ $sql = "SELECT b.userid, b.dateissued, b.uniquehash, $namefields
         ON b.userid = u.id
     WHERE b.badgeid = :badgeid AND u.deleted = 0
     ORDER BY $sortby $sorthow";
+// TODO MDL-36208 case-insensitive order by.
 
 $totalcount = $DB->count_records('badge_issued', array('badgeid' => $badge->id));
 

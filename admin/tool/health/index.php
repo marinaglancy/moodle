@@ -516,6 +516,7 @@ class problem_000015 extends problem_base {
     }
     function description() {
         global $DB;
+        // TODO MDL-36208 case-insensitive order by.
         $problemcategories = $DB->get_records_sql("
             SELECT qc.id, qc.name, qc.contextid, (SELECT COUNT(1) FROM {question} q WHERE q.category = qc.id) AS numquestions
             FROM {question_categories} qc

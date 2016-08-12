@@ -253,6 +253,7 @@ class course_enrolment_manager {
                            )
                      WHERE $filtersql
                   ORDER BY $sort $direction";
+            // TODO MDL-36208 case-insensitive order by.
             $this->users[$key] = $DB->get_records_sql($sql, $params, $page*$perpage, $perpage);
         }
         return $this->users[$key];
@@ -358,6 +359,7 @@ class course_enrolment_manager {
                    WHERE ctx.id $ctxcondition AND
                          ue.id IS NULL
                 ORDER BY $sort $direction, ctx.depth DESC";
+            // TODO MDL-36208 case-insensitive order by.
             $this->otherusers[$key] = $DB->get_records_sql($sql, $params, $page*$perpage, $perpage);
         }
         return $this->otherusers[$key];

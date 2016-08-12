@@ -523,6 +523,7 @@ class tool_customlang_translator implements renderable {
             $params['link'] = '%\_link';
         }
 
+        // TODO MDL-36208 case-insensitive order by.
         $osql = " ORDER BY c.name, s.stringid";
 
         $this->numofrows = $DB->count_records_sql($csql.$sql, $params);

@@ -787,6 +787,7 @@ function groups_get_potential_members($courseid, $roleid = null, $source = null,
        $sourcejoin
             $where
           ORDER BY $orderby";
+    // TODO MDL-36208 case-insensitive order by or use users_order_by_sql().
 
     return $DB->get_records_sql($sql, $params);
 

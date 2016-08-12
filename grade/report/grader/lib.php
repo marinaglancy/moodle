@@ -477,6 +477,7 @@ class grade_report_grader extends grade_report {
                    $this->userwheresql
                    $this->groupwheresql
               ORDER BY $sort";
+        // TODO MDL-36208 case-insensitive order by.
         $studentsperpage = $this->get_students_per_page();
         $this->users = $DB->get_records_sql($sql, $params, $studentsperpage * $this->page, $studentsperpage);
 

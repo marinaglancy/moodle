@@ -1245,6 +1245,7 @@ abstract class moodle_database {
             $sql .= " WHERE $select";
         }
         if ($sort) {
+            // TODO MDL-36208 case-insensitive order by.
             $sql .= " ORDER BY $sort";
         }
         return $this->get_recordset_sql($sql, $params, $limitfrom, $limitnum);
@@ -1351,6 +1352,7 @@ abstract class moodle_database {
             $select = "WHERE $select";
         }
         if ($sort) {
+            // TODO MDL-36208 case-insensitive order by.
             $sort = " ORDER BY $sort";
         }
         return $this->get_records_sql("SELECT $fields FROM {" . $table . "} $select $sort", $params, $limitfrom, $limitnum);

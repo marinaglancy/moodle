@@ -687,6 +687,7 @@ class blog_listing {
 
         $sql = ($count) ? 'SELECT COUNT(*)' : 'SELECT ' . $requiredfields;
         $sql .= " FROM $tablessql WHERE " . implode(' AND ', $conditions);
+        // TODO MDL-36208 case-insensitive order by.
         $sql .= ($count) ? '' : " ORDER BY $sort";
 
         return array('sql' => $sql, 'params' => $params);

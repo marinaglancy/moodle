@@ -138,6 +138,7 @@ class block_blog_tags extends block_base {
         $sql .= "
                GROUP BY t.id, t.isstandard, t.name, t.rawname
                ORDER BY ct DESC, t.name ASC";
+        // TODO MDL-36208 case-insensitive order by (actually t.name is already lower-case).
 
         if ($tags = $DB->get_records_sql($sql, null, 0, $this->config->numberoftags)) {
 

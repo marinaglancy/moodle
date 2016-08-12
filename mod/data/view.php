@@ -557,9 +557,11 @@ if ($showactivity) {
 
             switch ($sort) {
                 case DATA_LASTNAME:
+                    // TODO MDL-36208 case-insensitive order by or use users_order_by_sql().
                     $ordering = "u.lastname $order, u.firstname $order";
                     break;
                 case DATA_FIRSTNAME:
+                    // TODO MDL-36208 case-insensitive order by or use users_order_by_sql().
                     $ordering = "u.firstname $order, u.lastname $order";
                     break;
                 case DATA_APPROVED:

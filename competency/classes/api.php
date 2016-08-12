@@ -1350,6 +1350,7 @@ class api {
                     ON u.id = uc.userid
                  WHERE (uc.status = :waitingforreview
                     OR (uc.status = :inreview AND uc.reviewerid = :reviewerid))";
+        // TODO MDL-36208 case-insensitive order by.
         $ordersql = " ORDER BY c.shortname ASC";
         $params = array(
             'inreview' => user_competency::STATUS_IN_REVIEW,

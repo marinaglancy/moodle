@@ -166,6 +166,7 @@ class graded_users_iterator {
             $order   = "usrt ASC";
 
         } else {
+            // TODO MDL-36208 case-insensitive order by.
             $ofields = ", u.$this->sortfield1 AS usrt1";
             $order   = "usrt1 $this->sortorder1";
             if (!empty($this->sortfield2)) {

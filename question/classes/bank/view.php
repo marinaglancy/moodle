@@ -377,6 +377,7 @@ class view {
         $sorts = array();
         foreach ($this->sort as $sort => $order) {
             list($colname, $subsort) = $this->parse_subsort($sort);
+            // TODO MDL-36208 case-insensitive order by.
             $sorts[] = $this->requiredcolumns[$colname]->sort_expression($order < 0, $subsort);
         }
 

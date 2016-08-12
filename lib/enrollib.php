@@ -523,6 +523,7 @@ function enrol_add_course_navigation(navigation_node $coursenode, $course) {
  */
 function enrol_get_my_courses($fields = NULL, $sort = 'visible DESC,sortorder ASC', $limit = 0) {
     global $DB, $USER;
+    // TODO MDL-36208 case-insensitive order by.
 
     // Guest account does not have any courses
     if (isguestuser() or !isloggedin()) {
@@ -780,6 +781,7 @@ function enrol_user_sees_own_courses($user = null) {
  */
 function enrol_get_all_users_courses($userid, $onlyactive = false, $fields = NULL, $sort = 'visible DESC,sortorder ASC') {
     global $DB;
+    // TODO MDL-36208 case-insensitive order by.
 
     // Guest account does not have any courses
     if (isguestuser($userid) or empty($userid)) {

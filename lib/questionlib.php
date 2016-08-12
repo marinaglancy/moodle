@@ -723,6 +723,7 @@ function question_preload_questions($questionids = null, $extrafields = '', $joi
     }
 
     if ($orderby) {
+        // TODO MDL-36208 case-insensitive order by.
         $orderby = 'ORDER BY ' . $orderby;
     }
 
@@ -1064,6 +1065,7 @@ function question_make_default_categories($contexts) {
  */
 function get_categories_for_contexts($contexts, $sortorder = 'parent, sortorder, name ASC') {
     global $DB;
+    // TODO MDL-36208 case-insensitive order by.
     return $DB->get_records_sql("
             SELECT c.*, (SELECT count(1) FROM {question} q
                         WHERE c.id = q.category AND q.hidden='0' AND q.parent='0') AS questioncount

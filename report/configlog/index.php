@@ -98,9 +98,11 @@ $table->attributes['class'] = 'admintable generaltable';
 $table->data  = array();
 
 if ($sort == 'firstname' or $sort == 'lastname') {
+    // TODO MDL-36208 case-insensitive order by or use users_order_by_sql().
     $orderby = "u.$sort $dir";
 } else if ($sort == 'value' or $sort == 'oldvalue') {
     // cross-db text-compatible sorting.
+    // TODO MDL-36208 case-insensitive order by.
     $orderby = $DB->sql_order_by_text("cl.$sort", 255) . ' ' . $dir;
 } else {
     $orderby = "cl.$sort $dir";

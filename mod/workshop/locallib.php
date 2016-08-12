@@ -918,6 +918,7 @@ class workshop {
      */
     public function get_published_submissions($orderby='finalgrade DESC') {
         global $DB;
+        // TODO MDL-36208 case-insensitive order by.
 
         $authorfields = user_picture::fields('u', null, 'authoridx', 'author');
         $sql = "SELECT s.id, s.authorid, s.timecreated, s.timemodified,
@@ -952,6 +953,7 @@ class workshop {
     public function get_examples_for_manager() {
         global $DB;
 
+        // TODO MDL-36208 case-insensitive order by.
         $sql = 'SELECT s.id, s.title,
                        a.id AS assessmentid, a.grade, a.gradinggrade
                   FROM {workshop_submissions} s
@@ -974,6 +976,7 @@ class workshop {
         if (empty($reviewerid)) {
             return false;
         }
+        // TODO MDL-36208 case-insensitive order by.
         $sql = 'SELECT s.id, s.title,
                        a.id AS assessmentid, a.grade, a.gradinggrade
                   FROM {workshop_submissions} s
@@ -1926,6 +1929,7 @@ class workshop {
             $params['workshopid1'] = $this->id;
             $params['workshopid2'] = $this->id;
             $sqlsort = array();
+            // TODO MDL-36208 case-insensitive order by or use users_order_by_sql().
             $sqlsortfields = array($sortby => $sorthow) + array('lastname' => 'ASC', 'firstname' => 'ASC', 'u.id' => 'ASC');
             foreach ($sqlsortfields as $sqlsortfieldname => $sqlsortfieldhow) {
                 $sqlsort[] = $sqlsortfieldname . ' ' . $sqlsortfieldhow;
