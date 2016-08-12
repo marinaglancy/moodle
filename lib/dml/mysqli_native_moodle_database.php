@@ -1554,6 +1554,41 @@ class mysqli_native_moodle_database extends moodle_database {
     }
 
     /**
+     * Constructs '=' or '<>' sql fragment ensuring that comparision is case-sensitive even on databases with possible case-insensitive collation
+     *
+     * @param string $fieldname Usually the name of the table column.
+     * @param string $value value for the comparision (only string, never an expression)
+     * @param int $type Parameter bounding type : SQL_PARAMS_QM or SQL_PARAMS_NAMED.
+     * @param string $prefix Named parameter placeholder prefix (a unique counter value is appended to each parameter name).
+     * @param bool $casesensitive Use case sensitive search when set to true (default).
+     * @param bool $accentsensitive Use accent sensitive search when set to true (default). (not all databases support accent insensitive)
+     * @param bool $equal True means we want to equate to the constructed expression, false means we don't want to equate to it.
+     * @return array A list containing the constructed sql fragment and an array of parameters.
+     */
+    public function sql_equals($fieldname, $value, $type = SQL_PARAMS_QM, $prefix = 'param',
+                               $casesensitive = true, $accentsensitive = true, $equal = true) {
+        if ($value === null || !$equal || !$casesensitive || !$accentsensitive) {
+            return parent::sql_equals($fieldname, $value, $type, $prefix, $casesensitive, $accentsensitive, $equal);
+        }
+
+        // We need to ensure that the field is exactly equal to the value but the current collation
+        // may be case-insensitive (no way to know for sure because it can be different for each column in each table).
+        // Build the query "field = ? AND field LIKE ? (CS)" - this will be faster than just using LIKE.
+        if ($type == SQL_PARAMS_QM) {
+            $sql = "$fieldname = ? AND " . $this->sql_like($fieldname, '?');
+            $params = [$value, $this->sql_like_escape($value)];
+        } else if ($type == SQL_PARAMS_NAMED) {
+            $param1 = $this->get_next_param_name($prefix);
+            $param2 = $this->get_next_param_name($prefix);
+            $sql = "$fieldname = :$param1 AND " . $this->sql_like($fieldname, ":$param2");
+            $params = [$param1 => $value, $param2 => $this->sql_like_escape($value)];
+        } else {
+            throw new dml_exception('typenotimplement');
+        }
+        return [$sql, $params];
+    }
+
+    /**
      * Returns the proper SQL to do CONCAT between the elements passed
      * Can take many parameters
      *

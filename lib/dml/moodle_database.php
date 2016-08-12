@@ -2083,6 +2083,106 @@ abstract class moodle_database {
     }
 
     /**
+     * Generates a unique name for an SQL parameter
+     * @param string $prefix
+     * @return string
+     */
+    protected function get_next_param_name($prefix = 'param') {
+        if (empty($prefix)) {
+            $prefix = 'param';
+        }
+        return $prefix . $this->inorequaluniqueindex++;
+    }
+
+    /**
+     * Constructs '=' or '<>' sql fragment that can compare case-sensitive or -insensitive
+     *
+     * Some databases like MySQL may have case-insensitive collation and this method should be used to ensure
+     * that SQL "WHERE fieldname='x'" does not return entries fieldname=='X', etc.
+     *
+     * Similarly this method can be used when we want to make sure that some field in unique in case-insensitive way
+     * (for example email address or username).
+     *
+     * @param string $fieldname Usually the name of the table column.
+     * @param string $value value for the comparision (only string, never an expression)
+     * @param int $type Parameter bounding type : SQL_PARAMS_QM or SQL_PARAMS_NAMED.
+     * @param string $prefix Named parameter placeholder prefix (a unique counter value is appended to each parameter name).
+     * @param bool $casesensitive Use case sensitive search when set to true (default).
+     * @param bool $accentsensitive Use accent sensitive search when set to true (default). (not all databases support accent insensitive)
+     * @param bool $equal True means we want to equate to the constructed expression, false means we don't want to equate to it.
+     * @return array A list containing the constructed sql fragment and an array of parameters.
+     */
+    public function sql_equals($fieldname, $value, $type = SQL_PARAMS_QM, $prefix = 'param', $casesensitive = true, $accentsensitive = true, $equal = true) {
+        if ($value === null) {
+            if ($equal) {
+                return ["$fieldname IS NULL", []];
+            } else {
+                return ["$fieldname IS NOT NULL", []];
+            }
+        }
+
+        if (!$casesensitive || !$accentsensitive || !$equal) {
+            // In either of these cases we can not use index on the given field (if it exists) so just use "like" method.
+            if ($type == SQL_PARAMS_QM) {
+                $param = '?';
+                $params = [$this->sql_like_escape($value)];
+            } else if ($type == SQL_PARAMS_NAMED) {
+                $param = $this->get_next_param_name($prefix);
+                $params = [$param => $this->sql_like_escape($value)];
+                $param = ':' . $param;
+            } else {
+                throw new dml_exception('typenotimplement');
+            }
+            $sql = $this->sql_like($fieldname, $param, $casesensitive, $accentsensitive, !$equal);
+            return [$sql, $params];
+        }
+
+        // By default assume that database is always case- and accent-insensitive and we can just use = or <> .
+        // Database engines that support case- or accent-sensitive collations must override this method.
+        $equalsign = $equal ? ' = ' : ' <> ';
+        if ($type == SQL_PARAMS_QM) {
+            $sql = "$fieldname $equalsign ?";
+            $params = [$value];
+        } else if ($type == SQL_PARAMS_NAMED) {
+            $param = $this->get_next_param_name($prefix);
+            $sql = "$fieldname $equalsign :$param";
+            $params = [$param => $value];
+        } else {
+            throw new dml_exception('typenotimplement');
+        }
+        return [$sql, $params];
+    }
+
+    /**
+     * Constructs sql fragment comparing fieldname to the string value using both '=' and case-sensitive LIKE statement
+     * Can be used in {@link sql_equals()} by the databases that support case-insensitive collations
+     *
+     * @param string $fieldname Usually the name of the table column.
+     * @param string $value value for the comparision (only string, never an expression)
+     * @param int $type Parameter bounding type : SQL_PARAMS_QM or SQL_PARAMS_NAMED.
+     * @param string $prefix Named parameter placeholder prefix (a unique counter value is appended to each parameter name).
+     * @return array A list containing the constructed sql fragment and an array of parameters.
+     */
+    protected function sql_equals_cs_using_like($fieldname, $value, $type = SQL_PARAMS_QM, $prefix = 'param') {
+        if ($value === null) {
+            return ["$fieldname IS NULL", []];
+        }
+
+        if ($type == SQL_PARAMS_QM) {
+            $sql = "$fieldname = ? AND " . $this->sql_like($fieldname, '?');
+            $params = [$value, $this->sql_like_escape($value)];
+        } else if ($type == SQL_PARAMS_NAMED) {
+            $param1 = $this->get_next_param_name($prefix);
+            $param2 = $this->get_next_param_name($prefix);
+            $sql = "$fieldname = :$param1 AND " . $this->sql_like($fieldname, ":$param2");
+            $params = [$param1 => $value, $param2 => $this->sql_like_escape($value)];
+        } else {
+            throw new dml_exception('typenotimplement');
+        }
+        return [$sql, $params];
+    }
+
+    /**
      * Returns the proper SQL to do CONCAT between the elements(fieldnames) passed.
      *
      * This function accepts variable number of string parameters.

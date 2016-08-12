@@ -5509,6 +5509,61 @@ class core_dml_testcase extends database_driver_testcase {
             $dbman->drop_table($table);
         }
     }
+
+    public function test_sql_equals() {
+        $DB = $this->tdb;
+        $dbman = $this->tdb->get_manager();
+
+        $table = $this->get_test_table('equalscs');
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('name', XMLDB_TYPE_CHAR, '255', null, null, null, '0');
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
+        $dbman->create_table($table);
+
+        $testvalues = [null, 'One', 'one', 'o%e', 'O%e', 'o_e', 'O_e'];
+
+        foreach ($testvalues as $value) {
+            $DB->insert_record($table->getName(), array('name' => $value), false);
+        }
+
+        // Test case-sensitive equals comparison.
+        foreach ($testvalues as $value) {
+            list($sql, $params) = $DB->sql_equals('name', $value);
+            $record = $DB->get_fieldset_select($table->getName(), 'name', $sql, $params);
+            $this->assertEquals([$value], array_values($record));
+
+            list($sql, $params) = $DB->sql_equals('name', $value, SQL_PARAMS_NAMED);
+            $record = $DB->get_fieldset_select($table->getName(), 'name', $sql, $params);
+            $this->assertEquals([$value], array_values($record));
+
+            $expectedvalues = array_values(array_diff($testvalues, [$value, null]));
+
+            list($sql, $params) = $DB->sql_equals('name', $value, SQL_PARAMS_QM, null, true, true, false);
+            $records = $DB->get_fieldset_select($table->getName(), 'name', $sql . ' ORDER BY id', $params);
+            $this->assertEquals($expectedvalues, array_values($records));
+
+            list($sql, $params) = $DB->sql_equals('name', $value, SQL_PARAMS_NAMED, null, true, true, false);
+            $records = $DB->get_fieldset_select($table->getName(), 'name', $sql . ' ORDER BY id', $params);
+            $this->assertEquals($expectedvalues, array_values($records));
+        }
+
+        // Test case-insensitive comparison.
+        // This is just a quick test, since the method fallsback to sql_like, the test for sql_like covers other cases.
+        list($sql, $params) = $DB->sql_equals('name', 'one', SQL_PARAMS_QM, null, false, false);
+        $records = $DB->get_fieldset_select($table->getName(), 'name', $sql . ' ORDER BY id', $params);
+        $this->assertEquals(['One', 'one'], array_values($records));
+
+        list($sql, $params) = $DB->sql_equals('name', 'one', SQL_PARAMS_NAMED, null, false, false);
+        $records = $DB->get_fieldset_select($table->getName(), 'name', $sql . ' ORDER BY id', $params);
+        $this->assertEquals(['One', 'one'], array_values($records));
+
+        list($sql, $params) = $DB->sql_equals('name', 'one', SQL_PARAMS_QM, null, false, false, false);
+        $records = $DB->get_fieldset_select($table->getName(), 'name', $sql . ' ORDER BY id', $params);
+        $this->assertEquals(['o%e', 'O%e', 'o_e', 'O_e'], array_values($records));
+
+        // Drop temporary tables.
+        $dbman->drop_table($table);
+    }
 }
 
 /**
