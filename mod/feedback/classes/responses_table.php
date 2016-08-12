@@ -281,7 +281,15 @@ class mod_feedback_responses_table extends table_sql {
 
             $tablecolumns[] = "val{$nr}";
             $itemobj = feedback_get_item_class($item->typ);
-            $tableheaders[] = $itemobj->get_display_name($item);
+            $columnheader = $itemobj->get_display_name($item);
+            if (!$this->is_downloading()) {
+                $columnheader = shorten_text($columnheader);
+            }
+            if (strval($item->label) !== '') {
+                $columnheader = get_string('nameandlabelformat', 'mod_feedback',
+                    (object)['label' => format_string($item->label), 'name' => $columnheader]);
+            }
+            $tableheaders[] = $columnheader;
         }
 
         // Add 'Delete entry' column.
