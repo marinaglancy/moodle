@@ -598,7 +598,7 @@ function lesson_add_header_buttons($cm, $context, $extraeditbuttons=false, $less
  * @return string $code the html code of media
  */
 function lesson_get_media_html($lesson, $context) {
-    global $CFG, $PAGE, $OUTPUT;
+    global $CFG;
     require_once("$CFG->libdir/resourcelib.php");
 
     // get the media file link
@@ -612,30 +612,7 @@ function lesson_get_media_html($lesson, $context) {
 
     $clicktoopen = html_writer::link($url, get_string('download'));
 
-    $mimetype = resourcelib_guess_url_mimetype($url);
-
-    $extension = resourcelib_get_extension($url->out(false));
-
-    $mediarenderer = $PAGE->get_renderer('core', 'media');
-    $embedoptions = array(
-        core_media::OPTION_TRUSTED => true,
-        core_media::OPTION_BLOCK => true
-    );
-
-    // find the correct type and print it out
-    if (in_array($mimetype, array('image/gif','image/jpeg','image/png'))) {  // It's an image
-        $code = resourcelib_embed_image($url, $title);
-
-    } else if ($mediarenderer->can_embed_url($url, $embedoptions)) {
-        // Media (audio/video) file.
-        $code = $mediarenderer->embed_url($url, $title, 0, 0, $embedoptions);
-
-    } else {
-        // anything else - just try object tag enlarged as much as possible
-        $code = resourcelib_embed_general($url, $title, $clicktoopen, $mimetype);
-    }
-
-    return $code;
+    return resourcelib_embed($url, $title, $clicktoopen, ['context' => $context, 'trusted' => true]);
 }
 
 /**

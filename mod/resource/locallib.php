@@ -61,41 +61,15 @@ function resource_redirect_if_migrated($oldid, $cmid) {
  * @return does not return
  */
 function resource_display_embed($resource, $cm, $course, $file) {
-    global $CFG, $PAGE, $OUTPUT;
+    global $CFG, $OUTPUT;
 
     $clicktoopen = resource_get_clicktoopen($file, $resource->revision);
 
     $context = context_module::instance($cm->id);
-    $path = '/'.$context->id.'/mod_resource/content/'.$resource->revision.$file->get_filepath().$file->get_filename();
-    $fullurl = file_encode_url($CFG->wwwroot.'/pluginfile.php', $path, false);
-    $moodleurl = new moodle_url('/pluginfile.php' . $path);
-
-    $mimetype = $file->get_mimetype();
+    $moodleurl = moodle_url::make_pluginfile_url($context->id, 'mod_resource', 'content', $resource->revision, $file->get_filepath(), $file->get_filename());
     $title    = $resource->name;
 
-    $extension = resourcelib_get_extension($file->get_filename());
-
-    $mediarenderer = $PAGE->get_renderer('core', 'media');
-    $embedoptions = array(
-        core_media::OPTION_TRUSTED => true,
-        core_media::OPTION_BLOCK => true,
-    );
-
-    if (file_mimetype_in_typegroup($mimetype, 'web_image')) {  // It's an image
-        $code = resourcelib_embed_image($fullurl, $title);
-
-    } else if ($mimetype === 'application/pdf') {
-        // PDF document
-        $code = resourcelib_embed_pdf($fullurl, $title, $clicktoopen);
-
-    } else if ($mediarenderer->can_embed_url($moodleurl, $embedoptions)) {
-        // Media (audio/video) file.
-        $code = $mediarenderer->embed_url($moodleurl, $title, 0, 0, $embedoptions);
-
-    } else {
-        // anything else - just try object tag enlarged as much as possible
-        $code = resourcelib_embed_general($fullurl, $title, $clicktoopen, $mimetype);
-    }
+    $code = resourcelib_embed($moodleurl, $title, $clicktoopen, ['context' => $context, 'trusted' => true]);
 
     resource_print_header($resource, $cm, $course);
     resource_print_heading($resource, $cm, $course);

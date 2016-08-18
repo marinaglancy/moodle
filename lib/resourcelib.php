@@ -209,14 +209,14 @@ function resourcelib_get_extension($fullurl) {
 
 /**
  * Returns image embedding html.
- * @param string $fullurl
+ * @param moodle_url|string $fullurl
  * @param string $title
  * @return string html
  */
 function resourcelib_embed_image($fullurl, $title) {
     $code = '';
     $code .= '<div class="resourcecontent resourceimg">';
-    $code .= "<img title=\"".s(strip_tags(format_string($title)))."\" class=\"resourceimage\" src=\"$fullurl\" alt=\"\" />";
+    $code .= html_writer::img($fullurl, '', ['title' => format_string($title, true, ['escape' => false]), 'class' => 'resourceimage']);
     $code .= '</div>';
 
     return $code;
@@ -224,9 +224,9 @@ function resourcelib_embed_image($fullurl, $title) {
 
 /**
  * Returns general link or pdf embedding html.
- * @param string $fullurl
+ * @param moodle_url|string $fullurl
  * @param string $title
- * @param string $clicktoopen
+ * @param string $clicktoopen fallback link if embedding fails
  * @return string html
  */
 function resourcelib_embed_pdf($fullurl, $title, $clicktoopen) {
@@ -249,9 +249,9 @@ EOT;
 
 /**
  * Returns general link or file embedding html.
- * @param string $fullurl
+ * @param moodle_url|string $fullurl
  * @param string $title
- * @param string $clicktoopen
+ * @param string $clicktoopen fallback link if embedding fails
  * @param string $mimetype
  * @return string html
  */
@@ -278,4 +278,34 @@ EOT;
     $PAGE->requires->js_init_call('M.util.init_maximised_embed', array('resourceobject'), true);
 
     return $code;
+}
+
+/**
+ * Guesses type of the file/url and generates HTML code for embedding it.
+ *
+ * @param moodle_url $url
+ * @param string $title raw (not formatted) title of the object
+ * @param string $clicktoopen fallback link if embedding fails
+ * @param array $formatoptions options to pass to format_text(), usually 'context' and 'trusted'
+ * @return string
+ */
+function resourcelib_embed(moodle_url $url, $title, $clicktoopen, $formatoptions) {
+    $mimetype = resourcelib_guess_url_mimetype($url);
+
+    // Find the correct type and print it out.
+    if (in_array($mimetype, array('image/gif', 'image/jpeg', 'image/png'))) {
+        // It's an image.
+        return resourcelib_embed_image($url, $title);
+    } else if ($mimetype === 'application/pdf') {
+        // PDF document
+        return resourcelib_embed_pdf($url, $title, $clicktoopen);
+    } else {
+        // Check if any of the enabled filters can convert the link to the embedded object.
+        $out = format_text(html_writer::link($url, $title), FORMAT_HTML, $formatoptions);
+        if (preg_match('/<(object|embed|iframe|video|audio)\b/i', $out)) {
+            return html_writer::tag('div', $out, array('class' => 'resourcecontent'));
+        }
+        // Fallback to the general embedding.
+        return resourcelib_embed_general($url, $title, $clicktoopen, $mimetype);
+    }
 }

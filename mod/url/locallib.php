@@ -293,35 +293,17 @@ function url_print_workaround($url, $cm, $course) {
  * @return does not return
  */
 function url_display_embed($url, $cm, $course) {
-    global $CFG, $PAGE, $OUTPUT;
+    global $OUTPUT;
 
-    $mimetype = resourcelib_guess_url_mimetype($url->externalurl);
     $fullurl  = url_get_full_url($url, $cm, $course);
     $title    = $url->name;
 
     $link = html_writer::tag('a', $fullurl, array('href'=>str_replace('&amp;', '&', $fullurl)));
     $clicktoopen = get_string('clicktoopen', 'url', $link);
     $moodleurl = new moodle_url($fullurl);
+    $context = context_module::instance($cm->id);
 
-    $extension = resourcelib_get_extension($url->externalurl);
-
-    $mediarenderer = $PAGE->get_renderer('core', 'media');
-    $embedoptions = array(
-        core_media::OPTION_TRUSTED => true,
-        core_media::OPTION_BLOCK => true
-    );
-
-    if (in_array($mimetype, array('image/gif','image/jpeg','image/png'))) {  // It's an image
-        $code = resourcelib_embed_image($fullurl, $title);
-
-    } else if ($mediarenderer->can_embed_url($moodleurl, $embedoptions)) {
-        // Media (audio/video) file.
-        $code = $mediarenderer->embed_url($moodleurl, $title, 0, 0, $embedoptions);
-
-    } else {
-        // anything else - just try object tag enlarged as much as possible
-        $code = resourcelib_embed_general($fullurl, $title, $clicktoopen, $mimetype);
-    }
+    $code = resourcelib_embed($moodleurl, $title, $clicktoopen, ['context' => $context, 'trusted' => true]);
 
     url_print_header($url, $cm, $course);
     url_print_heading($url, $cm, $course);

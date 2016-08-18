@@ -192,32 +192,37 @@ class core_medialib_testcase extends advanced_testcase {
         // All players are initially disabled, so mp4 cannot be rendered.
         $url = new moodle_url('http://example.org/test.mp4');
         $renderer = new core_media_renderer_test($PAGE, '');
-        $this->assertFalse($renderer->can_embed_url($url));
+        $this->assertFalse($renderer->can_embed_urls([$url]));
+        $this->assertDebuggingCalled();
 
         // Enable QT player.
         $CFG->core_media_enable_qt = true;
         filter_manager::reset_caches();
         $renderer = new core_media_renderer_test($PAGE, '');
-        $this->assertTrue($renderer->can_embed_url($url));
+        $this->assertTrue($renderer->can_embed_urls([$url]));
+        $this->assertDebuggingCalled();
 
         // QT + html5.
         $CFG->core_media_enable_html5video = true;
         filter_manager::reset_caches();
         $renderer = new core_media_renderer_test($PAGE, '');
-        $this->assertTrue($renderer->can_embed_url($url));
+        $this->assertTrue($renderer->can_embed_urls([$url]));
+        $this->assertDebuggingCalled();
 
         // Only html5.
         $CFG->core_media_enable_qt = false;
         filter_manager::reset_caches();
         $renderer = new core_media_renderer_test($PAGE, '');
-        $this->assertTrue($renderer->can_embed_url($url));
+        $this->assertTrue($renderer->can_embed_urls([$url]));
+        $this->assertDebuggingCalled();
 
         // Only WMP.
         $CFG->core_media_enable_html5video = false;
         $CFG->core_media_enable_wmp = true;
         filter_manager::reset_caches();
         $renderer = new core_media_renderer_test($PAGE, '');
-        $this->assertFalse($renderer->can_embed_url($url));
+        $this->assertFalse($renderer->can_embed_urls([$url]));
+        $this->assertDebuggingCalled();
     }
 
     /**
@@ -240,12 +245,14 @@ class core_medialib_testcase extends advanced_testcase {
         $renderer = new core_media_renderer_test($PAGE, '');
         $t = $renderer->embed_url($url, 0, 0, '',
                 array(core_media::OPTION_NO_LINK => true));
+        $this->assertDebuggingCalled();
         // Completely empty.
         $this->assertSame('', $t);
 
         // All plugins disabled but not NOLINK.
         $renderer = new core_media_renderer_test($PAGE, '');
         $t = $renderer->embed_url($url);
+        $this->assertDebuggingCalled();
         $this->assertContains($link, $t);
 
         // Enable media players that can play the same media formats. (ie. qt & html5video for mp4 files, etc.)
@@ -262,6 +269,7 @@ class core_medialib_testcase extends advanced_testcase {
             $url = new moodle_url('http://example.org/test.' . $format);
             $renderer = new core_media_renderer_test($PAGE, '');
             $textwithlink = $renderer->embed_url($url);
+            $this->assertDebuggingCalled();
 
             switch ($format) {
                 case 'mp3':
@@ -303,11 +311,13 @@ class core_medialib_testcase extends advanced_testcase {
         // Without any options...
         $url = new moodle_url('http://example.org/test.swf');
         $t = $renderer->embed_url($url);
+        $this->assertDebuggingCalled();
         $this->assertNotContains('</object>', $t);
 
         // ...and with the 'no it's safe, I checked it' option.
         $url = new moodle_url('http://example.org/test.swf');
         $t = $renderer->embed_url($url, '', 0, 0, array(core_media::OPTION_TRUSTED => true));
+        $this->assertDebuggingCalled();
         $this->assertContains('</object>', $t);
     }
 
@@ -335,46 +345,55 @@ class core_medialib_testcase extends advanced_testcase {
         // Format: mp3.
         $url = new moodle_url('http://example.org/test.mp3');
         $t = $renderer->embed_url($url);
+        $this->assertDebuggingCalled();
         $this->assertContains('core_media_mp3_', $t);
 
         // Format: flv.
         $url = new moodle_url('http://example.org/test.flv');
         $t = $renderer->embed_url($url);
+        $this->assertDebuggingCalled();
         $this->assertContains('core_media_flv_', $t);
 
         // Format: wmp.
         $url = new moodle_url('http://example.org/test.avi');
         $t = $renderer->embed_url($url);
+        $this->assertDebuggingCalled();
         $this->assertContains('6BF52A52-394A-11d3-B153-00C04F79FAA6', $t);
 
         // Format: rm.
         $url = new moodle_url('http://example.org/test.rm');
         $t = $renderer->embed_url($url);
+        $this->assertDebuggingCalled();
         $this->assertContains('CFCDAA03-8BE4-11cf-B84B-0020AFBBCCFA', $t);
 
         // Format: youtube.
         $url = new moodle_url('http://www.youtube.com/watch?v=vyrwMmsufJc');
         $t = $renderer->embed_url($url);
+        $this->assertDebuggingCalled();
         $this->assertContains('</iframe>', $t);
         $url = new moodle_url('http://www.youtube.com/v/vyrwMmsufJc');
         $t = $renderer->embed_url($url);
+        $this->assertDebuggingCalled();
         $this->assertContains('</iframe>', $t);
 
         // Format: youtube video within playlist.
         $url = new moodle_url('https://www.youtube.com/watch?v=dv2f_xfmbD8&index=4&list=PLxcO_MFWQBDcyn9xpbmx601YSDlDcTcr0');
         $t = $renderer->embed_url($url);
+        $this->assertDebuggingCalled();
         $this->assertContains('</iframe>', $t);
         $this->assertContains('list=PLxcO_MFWQBDcyn9xpbmx601YSDlDcTcr0', $t);
 
         // Format: youtube video with start time.
         $url = new moodle_url('https://www.youtube.com/watch?v=JNJMF1l3udM&t=1h11s');
         $t = $renderer->embed_url($url);
+        $this->assertDebuggingCalled();
         $this->assertContains('</iframe>', $t);
         $this->assertContains('start=3611', $t);
 
         // Format: youtube video within playlist with start time.
         $url = new moodle_url('https://www.youtube.com/watch?v=dv2f_xfmbD8&index=4&list=PLxcO_MFWQBDcyn9xpbmx601YSDlDcTcr0&t=1m5s');
         $t = $renderer->embed_url($url);
+        $this->assertDebuggingCalled();
         $this->assertContains('</iframe>', $t);
         $this->assertContains('list=PLxcO_MFWQBDcyn9xpbmx601YSDlDcTcr0', $t);
         $this->assertContains('start=65', $t);
@@ -382,33 +401,40 @@ class core_medialib_testcase extends advanced_testcase {
         // Format: youtube video with invalid parameter values (injection attempts).
         $url = new moodle_url('https://www.youtube.com/watch?v=dv2f_xfmbD8&index=4&list=PLxcO_">');
         $t = $renderer->embed_url($url);
+        $this->assertDebuggingCalled();
         $this->assertContains('</iframe>', $t);
         $this->assertNotContains('list=PLxcO_', $t); // We shouldn't get a list param as input was invalid.
         $url = new moodle_url('https://www.youtube.com/watch?v=JNJMF1l3udM&t=">');
         $t = $renderer->embed_url($url);
+        $this->assertDebuggingCalled();
         $this->assertContains('</iframe>', $t);
         $this->assertNotContains('start=', $t); // We shouldn't get a start param as input was invalid.
 
         // Format: youtube playlist.
         $url = new moodle_url('http://www.youtube.com/view_play_list?p=PL6E18E2927047B662');
         $t = $renderer->embed_url($url);
+        $this->assertDebuggingCalled();
         $this->assertContains('</iframe>', $t);
         $url = new moodle_url('http://www.youtube.com/playlist?list=PL6E18E2927047B662');
         $t = $renderer->embed_url($url);
+        $this->assertDebuggingCalled();
         $this->assertContains('</iframe>', $t);
         $url = new moodle_url('http://www.youtube.com/p/PL6E18E2927047B662');
         $t = $renderer->embed_url($url);
+        $this->assertDebuggingCalled();
         $this->assertContains('</iframe>', $t);
 
         // Format: vimeo.
         $url = new moodle_url('http://vimeo.com/1176321');
         $t = $renderer->embed_url($url);
+        $this->assertDebuggingCalled();
         $this->assertContains('</iframe>', $t);
 
         // Format: html5audio.
         $this->pretend_to_be_firefox();
         $url = new moodle_url('http://example.org/test.ogg');
         $t = $renderer->embed_url($url);
+        $this->assertDebuggingCalled();
         $this->assertContains('</audio>', $t);
     }
 
@@ -429,6 +455,7 @@ class core_medialib_testcase extends advanced_testcase {
         // Format: mp3.
         $url = new moodle_url('http://example.org/pluginfile.php?file=x/y/z/test.mp3');
         $t = $renderer->embed_url($url);
+        $this->assertDebuggingCalled();
         $this->assertContains('core_media_mp3_', $t);
     }
 
@@ -449,12 +476,14 @@ class core_medialib_testcase extends advanced_testcase {
         // Embed that does match something should still include the link too.
         $url = new moodle_url('http://example.org/test.ogg');
         $t = $renderer->embed_url($url, '', 0, 0, $options);
+        $this->assertDebuggingCalled();
         $this->assertContains('</audio>', $t);
         $this->assertContains('mediafallbacklink', $t);
 
         // Embed that doesn't match something should be totally blank.
         $url = new moodle_url('http://example.org/test.mp4');
         $t = $renderer->embed_url($url, '', 0, 0, $options);
+        $this->assertDebuggingCalled();
         $this->assertSame('', $t);
     }
 
@@ -477,17 +506,20 @@ class core_medialib_testcase extends advanced_testcase {
 
         // HTML5 default size - specifies core width and does not specify height.
         $t = $renderer->embed_url($url);
+        $this->assertDebuggingCalled();
         $this->assertContains('width="' . CORE_MEDIA_VIDEO_WIDTH . '"', $t);
         $this->assertNotContains('height', $t);
 
         // HTML5 specified size - specifies both.
         $t = $renderer->embed_url($url, '', '666', '101');
+        $this->assertDebuggingCalled();
         $this->assertContains('width="666"', $t);
         $this->assertContains('height="101"', $t);
 
         // HTML5 size specified in url, overrides call.
         $url = new moodle_url('http://example.org/test.mp4?d=123x456');
         $t = $renderer->embed_url($url, '', '666', '101');
+        $this->assertDebuggingCalled();
         $this->assertContains('width="123"', $t);
         $this->assertContains('height="456"', $t);
     }
@@ -509,10 +541,12 @@ class core_medialib_testcase extends advanced_testcase {
 
         // HTML5 default name - use filename.
         $t = $renderer->embed_url($url);
+        $this->assertDebuggingCalled();
         $this->assertContains('title="test.mp4"', $t);
 
         // HTML5 specified name - check escaping.
         $t = $renderer->embed_url($url, 'frog & toad');
+        $this->assertDebuggingCalled();
         $this->assertContains('title="frog &amp; toad"', $t);
     }
 

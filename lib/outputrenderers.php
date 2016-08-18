@@ -4709,6 +4709,8 @@ class core_media_renderer extends plugin_renderer_base {
      * URL by including ?d=100x100 at the end. If specified in the URL, this
      * will override the $width and $height parameters.
      *
+     * @deprecated since Moodle 3.2 - use format_text() or resourcelib_embed().
+     *
      * @param moodle_url $url Full URL of media file
      * @param string $name Optional user-readable name to display in download link
      * @param int $width Width in pixels (optional)
@@ -4719,6 +4721,8 @@ class core_media_renderer extends plugin_renderer_base {
     public function embed_url(moodle_url $url, $name = '', $width = 0, $height = 0,
             $options = array()) {
         global $PAGE;
+        debugging('Function core_media_renderer::embed_url() is deprecated. Please use format_text() or resourcelib_embed() instead.',
+            DEBUG_DEVELOPER);
 
         $context = $PAGE->context; // Using page context is not recommended, use the correct context here.
 
@@ -4822,6 +4826,8 @@ class core_media_renderer extends plugin_renderer_base {
      * @return bool True if file can be embedded
      */
     public function can_embed_url(moodle_url $url, $options = array()) {
+        debugging('Function core_media_renderer::can_embed_url() is deprecated. Please use format_text() or resourcelib_embed() instead.',
+            DEBUG_DEVELOPER);
         return $this->can_embed_urls(array($url), $options);
     }
 
@@ -4836,6 +4842,8 @@ class core_media_renderer extends plugin_renderer_base {
      */
     public function can_embed_urls(array $urls, $options = array()) {
         global $PAGE;
+        debugging('Function core_media_renderer::can_embed_urls() is deprecated. Please use format_text() or resourcelib_embed() instead.',
+            DEBUG_DEVELOPER);
 
         $context = $PAGE->context; // Using page context is not recommended, use the correct context here.
         $formatoptions = ['context' => $context];
