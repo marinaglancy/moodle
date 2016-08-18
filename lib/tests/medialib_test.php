@@ -27,6 +27,7 @@ defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
 require_once($CFG->libdir . '/medialib.php');
+require_once($CFG->libdir . '/filterlib.php');
 
 /**
  * Test script for media embedding.
@@ -60,6 +61,10 @@ class core_medialib_testcase extends advanced_testcase {
 
         $_SERVER = array('HTTP_USER_AGENT' => '');
         $this->pretend_to_be_safari();
+
+        // Enable media filter.
+        filter_manager::reset_caches();
+        filter_set_global_state('media', TEXTFILTER_ON);
     }
 
     /**
@@ -182,6 +187,7 @@ class core_medialib_testcase extends advanced_testcase {
      */
     public function test_can_embed_url() {
         global $CFG, $PAGE;
+        $PAGE->set_context(null);
 
         // All players are initially disabled, so mp4 cannot be rendered.
         $url = new moodle_url('http://example.org/test.mp4');
@@ -190,22 +196,26 @@ class core_medialib_testcase extends advanced_testcase {
 
         // Enable QT player.
         $CFG->core_media_enable_qt = true;
+        filter_manager::reset_caches();
         $renderer = new core_media_renderer_test($PAGE, '');
         $this->assertTrue($renderer->can_embed_url($url));
 
         // QT + html5.
         $CFG->core_media_enable_html5video = true;
+        filter_manager::reset_caches();
         $renderer = new core_media_renderer_test($PAGE, '');
         $this->assertTrue($renderer->can_embed_url($url));
 
         // Only html5.
         $CFG->core_media_enable_qt = false;
+        filter_manager::reset_caches();
         $renderer = new core_media_renderer_test($PAGE, '');
         $this->assertTrue($renderer->can_embed_url($url));
 
         // Only WMP.
         $CFG->core_media_enable_html5video = false;
         $CFG->core_media_enable_wmp = true;
+        filter_manager::reset_caches();
         $renderer = new core_media_renderer_test($PAGE, '');
         $this->assertFalse($renderer->can_embed_url($url));
     }
@@ -243,6 +253,7 @@ class core_medialib_testcase extends advanced_testcase {
         $CFG->core_media_enable_html5audio = true;
         $CFG->core_media_enable_mp3 = true;
         $CFG->core_media_enable_qt = true;
+        filter_manager::reset_caches();
 
         // Test media formats that can be played by 2 or more players.
         $mediaformats = array('mp3', 'm4a', 'mp4', 'm4v');
@@ -251,27 +262,18 @@ class core_medialib_testcase extends advanced_testcase {
             $url = new moodle_url('http://example.org/test.' . $format);
             $renderer = new core_media_renderer_test($PAGE, '');
             $textwithlink = $renderer->embed_url($url);
-            $textwithoutlink = $renderer->embed_url($url, 0, 0, '', array(core_media::OPTION_NO_LINK => true));
 
             switch ($format) {
                 case 'mp3':
                     $this->assertContains($mp3, $textwithlink);
                     $this->assertContains($html5audio, $textwithlink);
                     $this->assertContains($link, $textwithlink);
-
-                    $this->assertContains($mp3, $textwithoutlink);
-                    $this->assertContains($html5audio, $textwithoutlink);
-                    $this->assertNotContains($link, $textwithoutlink);
                     break;
 
                 case 'm4a':
                     $this->assertContains($qt, $textwithlink);
                     $this->assertContains($html5audio, $textwithlink);
                     $this->assertContains($link, $textwithlink);
-
-                    $this->assertContains($qt, $textwithoutlink);
-                    $this->assertContains($html5audio, $textwithoutlink);
-                    $this->assertNotContains($link, $textwithoutlink);
                     break;
 
                 case 'mp4':
@@ -279,10 +281,6 @@ class core_medialib_testcase extends advanced_testcase {
                     $this->assertContains($qt, $textwithlink);
                     $this->assertContains($html5video, $textwithlink);
                     $this->assertContains($link, $textwithlink);
-
-                    $this->assertContains($qt, $textwithoutlink);
-                    $this->assertContains($html5video, $textwithoutlink);
-                    $this->assertNotContains($link, $textwithoutlink);
                     break;
 
                 default:
@@ -297,7 +295,9 @@ class core_medialib_testcase extends advanced_testcase {
      */
     public function test_embed_url_swf() {
         global $CFG, $PAGE;
+        $CFG->enabletrusttext = true;
         $CFG->core_media_enable_swf = true;
+        filter_manager::reset_caches();
         $renderer = new core_media_renderer_test($PAGE, '');
 
         // Without any options...
@@ -439,6 +439,7 @@ class core_medialib_testcase extends advanced_testcase {
     public function test_embed_or_blank() {
         global $CFG, $PAGE;
         $CFG->core_media_enable_html5audio = true;
+        filter_manager::reset_caches();
         $this->pretend_to_be_firefox();
 
         $renderer = new core_media_renderer_test($PAGE, '');
@@ -470,6 +471,7 @@ class core_medialib_testcase extends advanced_testcase {
         // format, so let's just pick one to check the values get passed
         // through.
         $CFG->core_media_enable_html5video = true;
+        filter_manager::reset_caches();
         $renderer = new core_media_renderer_test($PAGE, '');
         $url = new moodle_url('http://example.org/test.mp4');
 
@@ -501,6 +503,7 @@ class core_medialib_testcase extends advanced_testcase {
         // As for size this could break in every format but I'm only testing
         // html5video.
         $CFG->core_media_enable_html5video = true;
+        filter_manager::reset_caches();
         $renderer = new core_media_renderer_test($PAGE, '');
         $url = new moodle_url('http://example.org/test.mp4');
 

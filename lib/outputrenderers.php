@@ -4718,18 +4718,30 @@ class core_media_renderer extends plugin_renderer_base {
      */
     public function embed_url(moodle_url $url, $name = '', $width = 0, $height = 0,
             $options = array()) {
+        global $PAGE;
 
-        // Get width and height from URL if specified (overrides parameters in
-        // function call).
-        $rawurl = $url->out(false);
-        if (preg_match('/[?#]d=([\d]{1,4}%?)x([\d]{1,4}%?)/', $rawurl, $matches)) {
-            $width = $matches[1];
-            $height = $matches[2];
-            $url = new moodle_url(str_replace($matches[0], '', $rawurl));
+        $context = $PAGE->context; // Using page context is not recommended, use the correct context here.
+
+        $formatoptions = ['context' => $context];
+        if (!empty($options[core_media::OPTION_TRUSTED])) {
+            $formatoptions['trusted'] = true;
         }
 
-        // Defer to array version of function.
-        return $this->embed_alternatives(array($url), $name, $width, $height, $options);
+        if (($width || $height) && !$url->param('d')) {
+            $url = new moodle_url($url, ['d' => "{$width}x{$height}"]);
+        }
+        $out = format_text(html_writer::link($url, $name), FORMAT_HTML, $formatoptions);
+        if (!preg_match('/<(object|embed|iframe|video|audio)\b/i', $out)) {
+            if (!empty($options[core_media::OPTION_FALLBACK_TO_BLANK]) || !empty($options[core_media::OPTION_NO_LINK])) {
+                $out = '';
+            } else {
+                $out = format_text(html_writer::link($url, $name, ['class' => 'mediafallbacklink']), FORMAT_HTML, $formatoptions);
+            }
+        }
+        if (!empty($options[core_media::OPTION_BLOCK]) && $out !== '') {
+            $out = html_writer::tag('div', $out, array('class' => 'resourcecontent'));
+        }
+        return $out;
     }
 
     /**
@@ -4823,14 +4835,19 @@ class core_media_renderer extends plugin_renderer_base {
      * @return bool True if file can be embedded
      */
     public function can_embed_urls(array $urls, $options = array()) {
-        // Check all players to see if any of them support it.
-        foreach ($this->get_players() as $player) {
-            // Link player (always last on list) doesn't count!
-            if ($player->get_rank() <= 0) {
-                break;
-            }
-            // First player that supports it, return true.
-            if ($player->list_supported_urls($urls, $options)) {
+        global $PAGE;
+
+        $context = $PAGE->context; // Using page context is not recommended, use the correct context here.
+        $formatoptions = ['context' => $context];
+        if (!empty($options[core_media::OPTION_TRUSTED])) {
+            $formatoptions['trusted'] = true;
+        }
+
+        foreach ($urls as $url) {
+            // Try applying filters to the link to this URL and check if any of the active filters is able
+            // to convert it to the embed code.
+            $formattedurl = format_text(html_writer::link($url, ''), FORMAT_HTML, $formatoptions);
+            if (preg_match('/<(object|embed|iframe|video|audio)\b/i', $formattedurl)) {
                 return true;
             }
         }
