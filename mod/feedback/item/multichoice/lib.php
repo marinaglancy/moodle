@@ -124,7 +124,7 @@ class feedback_item_multichoice extends feedback_item_base {
 
         $analysed_item = array();
         $analysed_item[] = $item->typ;
-        $analysed_item[] = $item->name;
+        $analysed_item[] = format_string($item->name);
 
         //get the possible answers
         $answers = null;
@@ -197,7 +197,7 @@ class feedback_item_multichoice extends feedback_item_base {
             for ($i = 0; $i < $sizeofvallist; $i++) {
                 for ($k = 0; $k < $sizeofpresentation; $k++) {
                     if ($vallist[$i] == ($k + 1)) {//Die Werte beginnen bei 1, das Array aber mit 0
-                        $printval .= trim($presentation[$k]) . chr(10);
+                        $printval .= trim(format_string($presentation[$k])) . chr(10);
                         break;
                     }
                 }
@@ -206,7 +206,7 @@ class feedback_item_multichoice extends feedback_item_base {
             $index = 1;
             foreach ($presentation as $pres) {
                 if ($value->value == $index) {
-                    $printval = $pres;
+                    $printval = format_string($pres);
                     break;
                 }
                 $index++;
@@ -231,7 +231,7 @@ class feedback_item_multichoice extends feedback_item_base {
         if ($analysed_item) {
             $itemname = $analysed_item[1];
             echo '<tr><th colspan="2" align="left">';
-            echo $itemnr.'&nbsp;('.$item->label.') '.$itemname;
+            echo $itemnr.'&nbsp;('.$item->label.') '.format_string($itemname);
             echo '</th></tr>';
 
             $analysed_vals = $analysed_item[2];
@@ -248,7 +248,7 @@ class feedback_item_multichoice extends feedback_item_base {
                 }
                 echo '<tr>';
                 echo '<td align="left" valign="top">
-                            -&nbsp;&nbsp;'.trim($val->answertext).':
+                            -&nbsp;&nbsp;'.trim(format_string($val->answertext)).':
                       </td>
                       <td align="left" style="width:'.FEEDBACK_MAX_PIX_LENGTH.';">
                         <img class="feedback_bar_image" alt="'.$intvalue.'" src="'.$pix.'" height="5" width="'.$pixwidth.'" />
@@ -269,7 +269,7 @@ class feedback_item_multichoice extends feedback_item_base {
 
         //frage schreiben
         $worksheet->write_string($row_offset, 0, $item->label, $xls_formats->head2);
-        $worksheet->write_string($row_offset, 1, $analysed_item[1], $xls_formats->head2);
+        $worksheet->write_string($row_offset, 1, format_string($analysed_item[1]), $xls_formats->head2);
         if (is_array($data)) {
             $sizeofdata = count($data);
             for ($i = 0; $i < $sizeofdata; $i++) {
@@ -277,7 +277,7 @@ class feedback_item_multichoice extends feedback_item_base {
 
                 $worksheet->write_string($row_offset,
                                          $i + 2,
-                                         trim($analysed_data->answertext),
+                                         trim(format_string($analysed_data->answertext)),
                                          $xls_formats->head2);
 
                 $worksheet->write_number($row_offset + 1,

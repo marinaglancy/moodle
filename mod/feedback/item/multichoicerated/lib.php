@@ -183,7 +183,7 @@ class feedback_item_multichoicerated extends feedback_item_base {
         foreach ($presentation as $pres) {
             if ($value->value == $index) {
                 $item_label = explode(FEEDBACK_MULTICHOICERATED_VALUE_SEP, $pres);
-                $printval = $item_label[1];
+                $printval = format_string($item_label[1]);
                 break;
             }
             $index++;
@@ -206,7 +206,7 @@ class feedback_item_multichoicerated extends feedback_item_base {
         $analysed_item = $this->get_analysed($item, $groupid, $courseid);
         if ($analysed_item) {
             echo '<tr><th colspan="2" align="left">';
-            echo $itemnr.'&nbsp;('.$item->label.') '.$analysed_item[1];
+            echo $itemnr.'&nbsp;('.$item->label.') '.format_string($analysed_item[1]);
             echo '</th></tr>';
             $analysed_vals = $analysed_item[2];
             $pixnr = 0;
@@ -221,7 +221,7 @@ class feedback_item_multichoicerated extends feedback_item_base {
                 $quotient = number_format(($val->quotient * 100), 2, $sep_dec, $sep_thous);
                 echo '<tr>';
                 echo '<td align="left" valign="top">';
-                echo '-&nbsp;&nbsp;'.trim($val->answertext).' ('.$val->value.'):</td>';
+                echo '-&nbsp;&nbsp;'.trim(format_string($val->answertext)).' ('.$val->value.'):</td>';
                 echo '<td align="left" style="width: '.FEEDBACK_MAX_PIX_LENGTH.'">';
                 echo '<img class="feedback_bar_image" alt="'.$intvalue.'" src="'.$pix.'" height="5" width="'.$pixwidth.'" />';
                 echo $val->answercount;
@@ -249,7 +249,7 @@ class feedback_item_multichoicerated extends feedback_item_base {
 
         //write the item
         $worksheet->write_string($row_offset, 0, $item->label, $xls_formats->head2);
-        $worksheet->write_string($row_offset, 1, $analysed_item[1], $xls_formats->head2);
+        $worksheet->write_string($row_offset, 1, format_string($analysed_item[1]), $xls_formats->head2);
         if (is_array($data)) {
             $avg = 0.0;
             $sizeofdata = count($data);
@@ -258,7 +258,7 @@ class feedback_item_multichoicerated extends feedback_item_base {
 
                 $worksheet->write_string($row_offset,
                                 $i + 2,
-                                trim($analysed_data->answertext).' ('.$analysed_data->value.')',
+                                trim(format_string($analysed_data->answertext)).' ('.$analysed_data->value.')',
                                 $xls_formats->value_bold);
 
                 $worksheet->write_number($row_offset + 1,

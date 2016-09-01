@@ -229,7 +229,7 @@ function feedback_excelprint_detailed_head(&$worksheet, $xls_formats, $items, $r
     $col_offset++;
 
     foreach ($items as $item) {
-        $worksheet->write_string($row_offset, $col_offset, $item->name, $xls_formats->head2);
+        $worksheet->write_string($row_offset, $col_offset, format_string($item->name), $xls_formats->head2);
         $worksheet->write_string($row_offset + 1, $col_offset, $item->label, $xls_formats->head2);
         $col_offset++;
     }

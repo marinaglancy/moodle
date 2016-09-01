@@ -167,7 +167,7 @@ class feedback_item_info extends feedback_item_base {
         $analysed_item = $this->get_analysed($item, $groupid, $courseid);
 
         $worksheet->write_string($row_offset, 0, $item->label, $xls_formats->head2);
-        $worksheet->write_string($row_offset, 1, $item->name, $xls_formats->head2);
+        $worksheet->write_string($row_offset, 1, format_string($item->name), $xls_formats->head2);
         $data = $analysed_item->data;
         if (is_array($data)) {
             $worksheet->write_string($row_offset, 2, $data[0]->show, $xls_formats->value_bold);
