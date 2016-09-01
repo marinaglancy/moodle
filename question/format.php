@@ -673,12 +673,15 @@ class qformat_default {
      * @return object question
      */
     protected function add_blank_combined_feedback($question) {
+        $question->correctfeedback = [];
         $question->correctfeedback['text'] = '';
         $question->correctfeedback['format'] = $question->questiontextformat;
         $question->correctfeedback['files'] = array();
+        $question->partiallycorrectfeedback = [];
         $question->partiallycorrectfeedback['text'] = '';
         $question->partiallycorrectfeedback['format'] = $question->questiontextformat;
         $question->partiallycorrectfeedback['files'] = array();
+        $question->incorrectfeedback = [];
         $question->incorrectfeedback['text'] = '';
         $question->incorrectfeedback['format'] = $question->questiontextformat;
         $question->incorrectfeedback['files'] = array();
