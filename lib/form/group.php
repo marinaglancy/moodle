@@ -41,6 +41,8 @@ class MoodleQuickForm_group extends HTML_QuickForm_group{
     /** @var string html for help button, if empty then no help */
     var $_helpbutton='';
 
+    protected $_mform = null;
+
     /**
      * constructor
      *
@@ -106,5 +108,26 @@ class MoodleQuickForm_group extends HTML_QuickForm_group{
                 $element->setHiddenLabel(true);
             }
         }
+    }
+
+    function setCaller($caller) {
+        if ($caller && $caller instanceof MoodleQuickForm) {
+            $this->_mform = $caller;
+        }
+    }
+
+    /**
+     * Called by HTML_QuickForm whenever form event is made on this element
+     *
+     * @param     string $event Name of event
+     * @param     mixed $arg event arguments
+     * @param     object $caller calling object
+     * @since     1.0
+     * @access    public
+     * @return    void
+     */
+    function onQuickFormEvent($event, $arg, &$caller) {
+        $this->setCaller($caller);
+        return parent::onQuickFormEvent($event, $arg, $caller);
     }
 }

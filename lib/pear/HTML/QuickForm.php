@@ -545,7 +545,7 @@ class HTML_QuickForm extends HTML_Common {
     function &createElement($elementType)
     {
         $args    =  func_get_args();
-        $element =& HTML_QuickForm::_loadElement('createElement', $elementType, array_slice($args, 1));
+        $element = self::_loadElement('createElement', $elementType, array_slice($args, 1));
         return $element;
     } // end func createElement
 
