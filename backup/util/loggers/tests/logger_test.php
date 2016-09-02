@@ -352,7 +352,7 @@ class backup_logger_testcase extends basic_testcase {
 class mock_base_logger1 extends base_logger {
 
     protected function action($message, $level, $options = null) {
-        return $message * $level; // Simply return that, for testing
+        return floatval($message) * $level; // Simply return that, for testing
     }
     public function get_levelstr($level) {
         return parent::get_levelstr($level);
@@ -366,7 +366,7 @@ class mock_base_logger1 extends base_logger {
 class mock_base_logger2 extends base_logger {
 
     protected function action($message, $level, $options = null) {
-        return $message + $level; // Simply return that, for testing
+        return floatval($message) + $level; // Simply return that, for testing
     }
 }
 
