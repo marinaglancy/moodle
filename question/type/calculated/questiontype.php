@@ -278,12 +278,13 @@ class qtype_calculated extends question_type {
                 $datasetdef->category = 0;
                 $todo = 'create';
             } else if ($dataset->status == 'shared') {
+                list($sqlname, $paramsname) = $DB->sql_equals('name', $name);
                 if ($sharedatasetdefs = $DB->get_records_select(
                     'question_dataset_definitions',
                     "type = '1'
-                    AND name = ?
+                    AND $sqlname
                     AND category = ?
-                    ORDER BY id DESC ", array($dataset->name, $question->category)
+                    ORDER BY id DESC ", array_merge($paramsname, [$question->category])
                 )) { // So there is at least one.
                     $sharedatasetdef = array_shift($sharedatasetdefs);
                     if ($sharedatasetdef->options ==  $datasetdef->options) {// Identical so use it.
@@ -1399,11 +1400,12 @@ class qtype_calculated extends question_type {
                 // By first creating the datasetdefinition above we
                 // can manage to automatically take care of
                 // some possible realtime concurrence.
+                list($sqlname, $paramsname) = $DB->sql_equals('name', $datasetdef->name);
                 if ($olderdatasetdefs = $DB->get_records_select('question_dataset_definitions',
-                        "type = ? AND name = ? AND category = ? AND id < ?
+                        "type = ? AND $sqlname AND category = ? AND id < ?
                         ORDER BY id DESC",
-                        array($datasetdef->type, $datasetdef->name,
-                                $datasetdef->category, $datasetdef->id))) {
+                        array_merge([$datasetdef->type], $paramsname,
+                                [$datasetdef->category, $datasetdef->id]))) {
 
                     while ($olderdatasetdef = array_shift($olderdatasetdefs)) {
                         $DB->delete_records('question_dataset_definitions',
@@ -1482,10 +1484,11 @@ class qtype_calculated extends question_type {
             $currentdatasetdef->type = '0';
         } else {
             // Construct question local options.
+            list($sqlname, $paramsname) = $DB->sql_equals('a.name', $name);
             $sql = "SELECT a.*
                 FROM {question_dataset_definitions} a, {question_datasets} b
-               WHERE a.id = b.datasetdefinition AND a.type = '1' AND b.question = ? AND a.name = ?";
-            $currentdatasetdef = $DB->get_record_sql($sql, array($form->id, $name));
+               WHERE a.id = b.datasetdefinition AND a.type = '1' AND b.question = ? AND $sqlname";
+            $currentdatasetdef = $DB->get_record_sql($sql, array_merge([$form->id], $paramsname));
             if (!$currentdatasetdef) {
                 $currentdatasetdef = new stdClass();
                 $currentdatasetdef->type = '0';
@@ -1499,6 +1502,7 @@ class qtype_calculated extends question_type {
             }
         }
         // Construct question category options.
+        list($sqlname, $paramsname) = $DB->sql_equals('a.name', $name);
         $categorydatasetdefs = $DB->get_records_sql(
             "SELECT b.question, a.*
             FROM {question_datasets} b,
@@ -1506,7 +1510,7 @@ class qtype_calculated extends question_type {
             WHERE a.id = b.datasetdefinition
             AND a.type = '1'
             AND a.category = ?
-            AND a.name = ?", array($form->category, $name));
+            AND $sqlname", array_merge([$form->category], $paramsname));
         $type = 1;
         $key = "{$type}-{$form->category}-{$name}";
         if (!empty($categorydatasetdefs)) {
