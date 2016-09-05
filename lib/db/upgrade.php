@@ -6362,10 +6362,6 @@ WHERE gradeitemid IS NOT NULL AND grademax IS NOT NULL");
             $table->add_key('attemptstepid', XMLDB_KEY_FOREIGN, array('attemptstepid'),
                     'question_attempt_steps', array('id'));
 
-            // Adding indexes to table question_attempt_step_data
-            $table->add_index('attemptstepid-name', XMLDB_INDEX_UNIQUE,
-                    array('attemptstepid', 'name'));
-
             // Launch create table for question_attempt_step_data
             $dbman->create_table($table);
         }

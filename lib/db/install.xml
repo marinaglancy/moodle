@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="lib/db" VERSION="20111216" COMMENT="XMLDB file for core Moodle tables"
+<XMLDB PATH="lib/db" VERSION="20160905" COMMENT="XMLDB file for core Moodle tables"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../lib/xmldb/xmldb.xsd"
 >
@@ -1399,9 +1399,6 @@
         <KEY NAME="primary" TYPE="primary" FIELDS="id" NEXT="attemptstepid"/>
         <KEY NAME="attemptstepid" TYPE="foreign" FIELDS="attemptstepid" REFTABLE="question_attempt_steps" REFFIELDS="id" PREVIOUS="primary"/>
       </KEYS>
-      <INDEXES>
-        <INDEX NAME="attemptstepid-name" UNIQUE="true" FIELDS="attemptstepid, name"/>
-      </INDEXES>
     </TABLE>
     <TABLE NAME="question_states" COMMENT="Stores user responses to an attempt, and percentage grades" PREVIOUS="question_attempt_step_data" NEXT="question_sessions">
       <FIELDS>
