@@ -41,6 +41,9 @@ class MoodleQuickForm_group extends HTML_QuickForm_group{
     /** @var string html for help button, if empty then no help */
     var $_helpbutton='';
 
+    /** @var MoodleQuickForm */
+    protected $_mform = null;
+
     /**
      * constructor
      *
@@ -106,5 +109,50 @@ class MoodleQuickForm_group extends HTML_QuickForm_group{
                 $element->setHiddenLabel(true);
             }
         }
+    }
+
+    /**
+     * Stores the form this element was added to
+     * This object is later used by {@link MoodleQuickForm_group::createElement()}
+     * @since Moodle 3.1.3
+     * @param null|MoodleQuickForm e$mform
+     */
+    public function setMoodleForm($mform) {
+        if ($mform && $mform instanceof MoodleQuickForm) {
+            $this->_mform = $mform;
+        }
+    }
+
+    /**
+     * Called by HTML_QuickForm whenever form event is made on this element
+     *
+     * If this function is overridden and parent is not called the element must be responsible for
+     * storing the MoodleQuickForm object, see {@link MoodleQuickForm_group::setMoodleForm()}
+     *
+     * @param     string $event Name of event
+     * @param     mixed $arg event arguments
+     * @param     object $caller calling object
+     * @since     1.0
+     * @access    public
+     * @return    void
+     */
+    function onQuickFormEvent($event, $arg, &$caller) {
+        $this->setMoodleForm($caller);
+        return parent::onQuickFormEvent($event, $arg, $caller);
+    }
+
+    /**
+     * Creates an element to add to the group
+     * Expects the same arguments as MoodleQuickForm::createElement()
+     * @since Moodle 3.1.3
+     */
+    function createElement() {
+        if (!$this->_mform) {
+            // Fallback to the old way of calling createElement - note, this will throw exceptions on PHP 7.1 !
+            $element = @call_user_func_array(['MoodleQuickForm', 'createElement'], func_get_args());
+            debugging('You can not call createElement() on the group element that was not yet added to a form.', DEBUG_DEVELOPER);
+            return $element;
+        }
+        return call_user_func_array([$this->_mform, 'createElement'], func_get_args());
     }
 }
