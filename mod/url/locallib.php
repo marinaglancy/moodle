@@ -305,10 +305,10 @@ function url_display_embed($url, $cm, $course) {
 
     $extension = resourcelib_get_extension($url->externalurl);
 
-    $mediarenderer = $PAGE->get_renderer('core', 'media');
+    $mediarenderer = core_media_manager::instance();
     $embedoptions = array(
-        core_media::OPTION_TRUSTED => true,
-        core_media::OPTION_BLOCK => true
+        core_media_manager::OPTION_TRUSTED => true,
+        core_media_manager::OPTION_BLOCK => true
     );
 
     if (in_array($mimetype, array('image/gif','image/jpeg','image/png'))) {  // It's an image
