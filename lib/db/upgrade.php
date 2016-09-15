@@ -2177,5 +2177,42 @@ function xmldb_main_upgrade($oldversion) {
         upgrade_main_savepoint(true, 2016082200.00);
     }
 
+    if ($oldversion < 2016091500.02) {
+
+        // Convert hardcoded media players to the settings of the new media player plugin type.
+        $oldplayers = ['vimeo' => 'vimeo', 'youtube' => 'youtubevideo', 'youtube_playlist' => 'youtubeplaylist',
+            'mp3' => 'flowplayer', 'flv' => 'flowplayer', 'wmp' => 'wmp', 'html5video' => 'html5video', 'rm' => 'realplayer',
+            'swf' => 'swf', 'html5audio' => 'html5audio', 'qt' => 'quicktime'];
+        $enabledplugins = [];
+        $flowplayer = ['mp3' => 0, 'flv' => 0];
+        foreach ($oldplayers as $oldplayer => $pluginname) {
+            $settingname = 'core_media_enable_'.$oldplayer;
+            if ($oldplayer === 'youtube_playlist') {
+                $settingname = 'core_media_enable_youtube';
+            }
+            if (!empty($CFG->$settingname)) {
+                $enabledplugins[$pluginname] = $pluginname;
+                if ($pluginname === 'flowplayer') {
+                    $flowplayer[$oldplayer] = 1;
+                }
+            }
+        }
+        set_config('media_plugins_sortorder', join(',', $enabledplugins));
+
+        // Configure flowplayer extensions.
+        set_config('mp3', 'media_flowplayer', $flowplayer['mp3']);
+        set_config('flv', 'media_flowplayer', $flowplayer['flv']);
+
+        // Unset old settings.
+        foreach ($oldplayers as $oldplayer => $pluginname) {
+            //unset_config('core_media_enable_'.$oldplayer);
+        }
+
+        // TODO process CORE_MEDIA_VIDEO_WIDTH and CORE_MEDIA_VIDEO_HEIGHT from config.php
+
+        // Savepoint reached.
+        upgrade_main_savepoint(true, 2016091500.02);
+    }
+
     return true;
 }

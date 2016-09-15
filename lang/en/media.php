@@ -49,3 +49,5 @@ $string['sitevimeo'] = 'Vimeo';
 $string['sitevimeo_desc'] = 'Vimeo video sharing site.';
 $string['siteyoutube'] = 'YouTube';
 $string['siteyoutube_desc'] = 'YouTube video sharing site, video and playlist links supported.';
+
+$string['managemediaplayers'] = 'Manage media players';

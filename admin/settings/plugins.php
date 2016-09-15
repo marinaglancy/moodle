@@ -205,6 +205,22 @@ if ($hassiteconfig) {
         $plugin->load_settings($ADMIN, 'filtersettings', $hassiteconfig);
     }
 
+    // Media players.
+    $ADMIN->add('modules', new admin_category('mediaplayers', new lang_string('type_media_plural', 'plugin')));
+    $temp = new admin_settingpage('managemediaplayers', new lang_string('managemediaplayers', 'media'));
+    $temp->add(new admin_setting_managemediaplayers());
+    $ADMIN->add('mediaplayers', $temp);
+
+    //$temp = new admin_externalpage('enroltestsettings', get_string('testsettings', 'core_enrol'), new moodle_url("/enrol/test_settings.php"), 'moodle/site:config', true);
+    //$ADMIN->add('enrolments', $temp);
+
+    $plugins = core_plugin_manager::instance()->get_plugins_of_type('media');
+    core_collator::asort_objects_by_property($plugins, 'displayname');
+    foreach ($plugins as $plugin) {
+        /** @var \core\plugininfo\enrol $plugin */
+        $plugin->load_settings($ADMIN, 'mediaplayers', $hassiteconfig);
+    }
+
     // Data format settings.
     $ADMIN->add('modules', new admin_category('dataformatsettings', new lang_string('dataformats')));
     $temp = new admin_settingpage('managedataformats', new lang_string('managedataformats'));

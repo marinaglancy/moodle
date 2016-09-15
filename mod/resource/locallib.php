@@ -75,10 +75,10 @@ function resource_display_embed($resource, $cm, $course, $file) {
 
     $extension = resourcelib_get_extension($file->get_filename());
 
-    $mediarenderer = $PAGE->get_renderer('core', 'media');
+    $mediarenderer = core_media_manager::instance();
     $embedoptions = array(
-        core_media::OPTION_TRUSTED => true,
-        core_media::OPTION_BLOCK => true,
+        core_media_helper::OPTION_TRUSTED => true,
+        core_media_helper::OPTION_BLOCK => true,
     );
 
     if (file_mimetype_in_typegroup($mimetype, 'web_image')) {  // It's an image

@@ -42,7 +42,7 @@ defined('MOODLE_INTERNAL') || die();
 class filter_mediaplugin extends moodle_text_filter {
     /** @var bool True if currently filtering trusted text */
     private $trusted;
-    /** @var core_media_renderer Media renderer */
+    /** @var core_media_manager Media renderer */
     private $mediarenderer;
     /** @var string Partial regex pattern indicating possible embeddable content */
     private $embedmarkers;
@@ -61,7 +61,7 @@ class filter_mediaplugin extends moodle_text_filter {
         }
 
         if (!$this->mediarenderer) {
-            $this->mediarenderer = $PAGE->get_renderer('core', 'media');
+            $this->mediarenderer = core_media_manager::instance();
             $this->embedmarkers = $this->mediarenderer->get_embeddable_markers();
         }
 
@@ -137,19 +137,19 @@ class filter_mediaplugin extends moodle_text_filter {
         }
 
         // Split provided URL into alternatives.
-        $urls = core_media::split_alternatives($matches[1], $width, $height);
+        $urls = core_media_helper::split_alternatives($matches[1], $width, $height);
 
         $options = array();
 
         // Allow SWF (or not).
         if ($this->trusted) {
-            $options[core_media::OPTION_TRUSTED] = true;
+            $options[core_media_helper::OPTION_TRUSTED] = true;
         }
 
         // We could test whether embed is possible using can_embed, but to save
         // time, let's just embed it with the 'fallback to blank' option which
         // does most of the same stuff anyhow.
-        $options[core_media::OPTION_FALLBACK_TO_BLANK] = true;
+        $options[core_media_helper::OPTION_FALLBACK_TO_BLANK] = true;
 
         // NOTE: Options are not passed through from filter because the 'embed'
         // code does not recognise filter options (it's a different kind of

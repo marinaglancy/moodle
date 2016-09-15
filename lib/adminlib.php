@@ -7129,6 +7129,192 @@ class admin_page_managefilters extends admin_externalpage {
     }
 }
 
+/**
+ * Special class for enrol plugins management.
+ *
+ * @copyright 2016 Marina Glancy
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class admin_setting_managemediaplayers extends admin_setting {
+    /**
+     * Calls parent::__construct with specific arguments
+     */
+    public function __construct() {
+        $this->nosave = true;
+        parent::__construct('managemediaplayers', get_string('managemediaplayers', 'media'), '', '');
+    }
+
+    /**
+     * Always returns true, does nothing
+     *
+     * @return true
+     */
+    public function get_setting() {
+        return true;
+    }
+
+    /**
+     * Always returns true, does nothing
+     *
+     * @return true
+     */
+    public function get_defaultsetting() {
+        return true;
+    }
+
+    /**
+     * Always returns '', does not write anything
+     *
+     * @return string Always returns ''
+     */
+    public function write_setting($data) {
+        // do not write any setting
+        return '';
+    }
+
+    /**
+     * Checks if $query is one of the available enrol plugins
+     *
+     * @param string $query The string to search for
+     * @return bool Returns true if found, false if not
+     */
+    public function is_related($query) {
+        if (parent::is_related($query)) {
+            return true;
+        }
+
+        $query = core_text::strtolower($query);
+        $plugins = core_plugin_manager::instance()->get_plugins_of_type('media');
+        foreach ($plugins as $name => $plugin) {
+            $localised = $plugin->displayname;
+            if (strpos(core_text::strtolower($name), $query) !== false) {
+                return true;
+            }
+            if (strpos(core_text::strtolower($localised), $query) !== false) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Builds the XHTML to display the control
+     *
+     * @param string $data Unused
+     * @param string $query
+     * @return string
+     */
+    public function output_html($data, $query='') {
+        global $CFG, $OUTPUT, $DB, $PAGE;
+
+        // Display strings.
+        $strup        = get_string('up');
+        $strdown      = get_string('down');
+        $strsettings  = get_string('settings');
+        $strenable    = get_string('enable');
+        $strdisable   = get_string('disable');
+        $struninstall = get_string('uninstallplugin', 'core_admin');
+        $strversion   = get_string('version');
+
+        $pluginmanager = core_plugin_manager::instance();
+
+        $plugins = $pluginmanager->get_plugins_of_type('media');
+        $enabledplugins = $pluginmanager->get_enabled_plugins('media');
+
+        //$return = $OUTPUT->heading(get_string('actenrolshhdr', 'enrol'), 3, 'main', true); // TODO string
+        $return = $OUTPUT->box_start('generalbox mediaplayersui');
+
+        $table = new html_table();
+        $table->head  = array(get_string('name'), $strversion, $strenable, $strup.'/'.$strdown, $strsettings, $struninstall);
+        $table->colclasses = array('leftalign', 'centeralign', 'centeralign', 'centeralign', 'centeralign', 'centeralign');
+        $table->id = 'mediaplayerplugins';
+        $table->attributes['class'] = 'admintable generaltable';
+        $table->data  = array();
+
+        // Iterate through enrol plugins and add to the display table.
+        $updowncount = 1;
+        $url = new moodle_url('/admin/media.php', array('sesskey' => sesskey()));
+        $printed = array();
+        $spacer = $OUTPUT->pix_icon('spacer', '', 'moodle', array('class' => 'iconsmall'));
+
+        foreach ($plugins as $name => $plugin) {
+            $url->param('media', $name);
+            $plugininfo = $pluginmanager->get_plugin_info('media_'.$name);
+            $version = $plugininfo->versiondb;
+
+            // Hide/show links.
+            $class = '';
+            if ($plugininfo->is_enabled() && $plugininfo->is_installed_and_upgraded()) {
+                $hideshow = html_writer::link(new moodle_url($url, array('action' => 'disable')),
+                    $OUTPUT->pix_icon('t/hide', $strdisable, 'moodle', array('class' => 'iconsmall')));
+                $enabled = true;
+                $displayname = $plugin->displayname;
+            } else if ($plugininfo->is_installed_and_upgraded()) {
+                $hideshow = html_writer::link(new moodle_url($url, array('action' => 'enable')),
+                    $OUTPUT->pix_icon('t/show', $strenable, 'moodle', array('class' => 'iconsmall')));
+                $enabled = false;
+                $displayname = $plugin->displayname;
+                $class = 'dimmed_text';
+            } else {
+                $hideshow = '';
+                $enabled = false;
+                $displayname = '<span class="notifyproblem">'.$name.'</span>';
+            }
+            if ($PAGE->theme->resolve_image_location('icon', 'media_' . $name, false)) {
+                $icon = $OUTPUT->pix_icon('icon', '', 'media_' . $name, array('class' => 'icon pluginicon'));
+            } else {
+                $icon = $OUTPUT->pix_icon('spacer', '', 'moodle', array('class' => 'icon pluginicon noicon'));
+            }
+
+            // Up/down link (only if enrol is enabled).
+            $updown = '';
+            if ($enabled) {
+                if ($updowncount > 1) {
+                    $updown = html_writer::link(new moodle_url($url, array('action' => 'up')),
+                        $OUTPUT->pix_icon('t/up', $strup, 'moodle', array('class' => 'iconsmall')));
+                } else {
+                    $updown = $spacer;
+                }
+                if ($updowncount < count($enabledplugins)) {
+                    $updown .= html_writer::link(new moodle_url($url, array('action' => 'down')),
+                        $OUTPUT->pix_icon('t/down', $strdown, 'moodle', array('class' => 'iconsmall')));
+                } else {
+                    $updown .= $spacer;
+                }
+                ++$updowncount;
+            }
+
+            $uninstall = '';
+            $status = $plugininfo->get_status();
+            if ($status === core_plugin_manager::PLUGIN_STATUS_MISSING) {
+                $uninstall = get_string('status_missing', 'core_plugin');
+            } else if ($status === core_plugin_manager::PLUGIN_STATUS_NEW) {
+                $uninstall = get_string('status_new', 'core_plugin');
+            } else if ($uninstallurl = $pluginmanager->get_uninstall_url('media_'.$name, 'manage')) {
+                $uninstall = html_writer::link($uninstallurl, $struninstall);
+            }
+
+            $settings = '';
+            if ($plugininfo->get_settings_url()) {
+                $settings = html_writer::link($plugininfo->get_settings_url(), $strsettings);
+            }
+
+            // Add a row to the table.
+            $row = new html_table_row(array($icon.$displayname, $version, $hideshow, $updown, $settings, $uninstall));
+            if ($class) {
+                $row->attributes['class'] = $class;
+            }
+            $table->data[] = $row;
+
+            $printed[$name] = true;
+        }
+
+        $return .= html_writer::table($table);
+        //$return .= get_string('configenrolplugins', 'enrol').'<br />'.get_string('tablenosave', 'admin');
+        $return .= $OUTPUT->box_end();
+        return highlight($query, $return);
+    }
+}
 
 /**
  * Initialise admin page - this function does require login and permission

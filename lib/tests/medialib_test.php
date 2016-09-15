@@ -98,11 +98,11 @@ class core_medialib_testcase extends advanced_testcase {
      * Test for core_media::get_filename.
      */
     public function test_get_filename() {
-        $this->assertSame('frog.mp4', core_media::get_filename(new moodle_url(
+        $this->assertSame('frog.mp4', core_media_helper::get_filename(new moodle_url(
                 '/pluginfile.php/312/mod_page/content/7/frog.mp4')));
         // This should work even though slasharguments is true, because we want
         // it to support 'legacy' links if somebody toggles the option later.
-        $this->assertSame('frog.mp4', core_media::get_filename(new moodle_url(
+        $this->assertSame('frog.mp4', core_media_helper::get_filename(new moodle_url(
                 '/pluginfile.php?file=/312/mod_page/content/7/frog.mp4')));
     }
 
@@ -110,13 +110,13 @@ class core_medialib_testcase extends advanced_testcase {
      * Test for core_media::get_extension.
      */
     public function test_get_extension() {
-        $this->assertSame('mp4', core_media::get_extension(new moodle_url(
+        $this->assertSame('mp4', core_media_helper::get_extension(new moodle_url(
                 '/pluginfile.php/312/mod_page/content/7/frog.mp4')));
-        $this->assertSame('', core_media::get_extension(new moodle_url(
+        $this->assertSame('', core_media_helper::get_extension(new moodle_url(
                 '/pluginfile.php/312/mod_page/content/7/frog')));
-        $this->assertSame('mp4', core_media::get_extension(new moodle_url(
+        $this->assertSame('mp4', core_media_helper::get_extension(new moodle_url(
                 '/pluginfile.php?file=/312/mod_page/content/7/frog.mp4')));
-        $this->assertSame('', core_media::get_extension(new moodle_url(
+        $this->assertSame('', core_media_helper::get_extension(new moodle_url(
                 '/pluginfile.php?file=/312/mod_page/content/7/frog')));
     }
 
@@ -229,7 +229,7 @@ class core_medialib_testcase extends advanced_testcase {
         // All plugins disabled, NOLINK option.
         $renderer = new core_media_renderer_test($PAGE, '');
         $t = $renderer->embed_url($url, 0, 0, '',
-                array(core_media::OPTION_NO_LINK => true));
+                array(core_media_helper::OPTION_NO_LINK => true));
         // Completely empty.
         $this->assertSame('', $t);
 
@@ -251,7 +251,7 @@ class core_medialib_testcase extends advanced_testcase {
             $url = new moodle_url('http://example.org/test.' . $format);
             $renderer = new core_media_renderer_test($PAGE, '');
             $textwithlink = $renderer->embed_url($url);
-            $textwithoutlink = $renderer->embed_url($url, 0, 0, '', array(core_media::OPTION_NO_LINK => true));
+            $textwithoutlink = $renderer->embed_url($url, 0, 0, '', array(core_media_helper::OPTION_NO_LINK => true));
 
             switch ($format) {
                 case 'mp3':
@@ -307,7 +307,7 @@ class core_medialib_testcase extends advanced_testcase {
 
         // ...and with the 'no it's safe, I checked it' option.
         $url = new moodle_url('http://example.org/test.swf');
-        $t = $renderer->embed_url($url, '', 0, 0, array(core_media::OPTION_TRUSTED => true));
+        $t = $renderer->embed_url($url, '', 0, 0, array(core_media_helper::OPTION_TRUSTED => true));
         $this->assertContains('</object>', $t);
     }
 
@@ -443,7 +443,7 @@ class core_medialib_testcase extends advanced_testcase {
 
         $renderer = new core_media_renderer_test($PAGE, '');
 
-        $options = array(core_media::OPTION_FALLBACK_TO_BLANK => true);
+        $options = array(core_media_helper::OPTION_FALLBACK_TO_BLANK => true);
 
         // Embed that does match something should still include the link too.
         $url = new moodle_url('http://example.org/test.ogg');
@@ -519,7 +519,7 @@ class core_medialib_testcase extends advanced_testcase {
     public function test_split_alternatives() {
         // Single URL - identical moodle_url.
         $mp4 = 'http://example.org/test.mp4';
-        $result = core_media::split_alternatives($mp4, $w, $h);
+        $result = core_media_helper::split_alternatives($mp4, $w, $h);
         $this->assertEquals($mp4, $result[0]->out(false));
 
         // Width and height weren't specified.
@@ -528,20 +528,20 @@ class core_medialib_testcase extends advanced_testcase {
 
         // Two URLs - identical moodle_urls.
         $webm = 'http://example.org/test.webm';
-        $result = core_media::split_alternatives("$mp4#$webm", $w, $h);
+        $result = core_media_helper::split_alternatives("$mp4#$webm", $w, $h);
         $this->assertEquals($mp4, $result[0]->out(false));
         $this->assertEquals($webm, $result[1]->out(false));
 
         // Two URLs plus dimensions.
         $size = 'd=400x280';
-        $result = core_media::split_alternatives("$mp4#$webm#$size", $w, $h);
+        $result = core_media_helper::split_alternatives("$mp4#$webm#$size", $w, $h);
         $this->assertEquals($mp4, $result[0]->out(false));
         $this->assertEquals($webm, $result[1]->out(false));
         $this->assertEquals(400, $w);
         $this->assertEquals(280, $h);
 
         // Two URLs plus legacy dimensions (use last one).
-        $result = core_media::split_alternatives("$mp4?d=1x1#$webm?$size", $w, $h);
+        $result = core_media_helper::split_alternatives("$mp4?d=1x1#$webm?$size", $w, $h);
         $this->assertEquals($mp4, $result[0]->out(false));
         $this->assertEquals($webm, $result[1]->out(false));
         $this->assertEquals(400, $w);
@@ -664,7 +664,7 @@ class core_media_player_test extends core_media_player {
 /**
  * Media renderer override for testing purposes.
  */
-class core_media_renderer_test extends core_media_renderer {
+class core_media_renderer_test extends core_media_manager {
     /**
      * Access list of players as string, shortening it by getting rid of
      * repeated text.

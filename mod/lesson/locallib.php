@@ -616,10 +616,10 @@ function lesson_get_media_html($lesson, $context) {
 
     $extension = resourcelib_get_extension($url->out(false));
 
-    $mediarenderer = $PAGE->get_renderer('core', 'media');
+    $mediarenderer = core_media_manager::instance();
     $embedoptions = array(
-        core_media::OPTION_TRUSTED => true,
-        core_media::OPTION_BLOCK => true
+        core_media_helper::OPTION_TRUSTED => true,
+        core_media_helper::OPTION_BLOCK => true
     );
 
     // find the correct type and print it out
