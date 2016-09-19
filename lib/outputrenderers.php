@@ -4629,14 +4629,13 @@ class core_media_renderer extends plugin_renderer_base {
     private $embeddablemarkers;
 
     /**
-     * Constructor requires medialib.php.
+     * Constructor
      *
      * This is needed in the constructor (not later) so that you can use the
      * constants and static functions that are defined in core_media class
      * before you call renderer functions.
      */
     public function __construct() {
-        //require_once($CFG->libdir . '/medialib.php');
         debugging('Class core_media_renderer is deprecated, please use core_media_manager::instance()', DEBUG_DEVELOPER);
     }
 

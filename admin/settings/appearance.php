@@ -193,7 +193,7 @@ preferences,moodle|/user/preferences.php|preferences',
     $ADMIN->add('appearance', new admin_externalpage('resetemoticons', new lang_string('emoticonsreset', 'admin'),
         new moodle_url('/admin/resetemoticons.php'), 'moodle/site:config', true));
 
-
+/*
     // The "media" subpage.
     $temp = new admin_settingpage('mediasettings', get_string('mediasettings', 'core_media'));
 
@@ -234,7 +234,7 @@ preferences,moodle|/user/preferences.php|preferences',
             get_string('legacyreal', 'core_media'), get_string('legacyreal_desc', 'core_media'), 1));
 
     $ADMIN->add('appearance', $temp);
-
+*/
 
     // "documentation" settingpage
     $temp = new admin_settingpage('documentation', new lang_string('moodledocs'));

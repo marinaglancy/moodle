@@ -106,13 +106,23 @@ abstract class core_media_player {
      * a particular effect on the rank of a couple of plugins, rather than
      * letting users generally alter rank.
      *
-     * Note: Within medialib.php, players are listed in rank order (highest
-     * rank first).
-     *
      * @return int Rank (higher is better)
      */
-    public abstract function get_rank();
-    // TODO
+    public function get_rank() {
+        global $CFG;
+
+        // TODO deprecate
+        $enabled = array_reverse(explode(',', $CFG->media_plugins_sortorder));
+
+        if ($enabled && preg_match('/^media_(.*)_plugin$/', get_class($this), $matches)) {
+            $pos = array_search($matches[1], $enabled);
+            if ($pos !== false) {
+                return $pos + 1;
+            }
+        }
+
+        return -1;
+    }
 
     /**
      * @return bool True if player is enabled
@@ -121,20 +131,13 @@ abstract class core_media_player {
         global $CFG;
 
         // TODO deprecate?
+        $enabled = explode(',', $CFG->media_plugins_sortorder);
 
-        // With the class core_media_player_html5video it is enabled
-        // based on $CFG->core_media_enable_html5video.
-        if (preg_match('/^media_(.*)_plugin$/', get_class($this), $matches)) {
-            $setting = $matches[1];
-            return !empty($CFG->{'core_media_enable_'.$setting});
+        if ($enabled && preg_match('/^media_(.*)_plugin$/', get_class($this), $matches)) {
+            return in_array($matches[1], $enabled);
         }
-    }
 
-    public function get_plugin_name() {
-        if (preg_match('/^media_(.*)_plugin$/', get_class($this), $matches)) {
-            return get_string('pluginname', 'media_'. $matches[1]);
-        }
-        return get_class($this);
+        return false;
     }
 
     /**
@@ -148,7 +151,7 @@ abstract class core_media_player {
         $extensions = $this->get_supported_extensions();
         $result = array();
         foreach ($urls as $url) {
-            if (in_array(core_media_helper::get_extension($url), $extensions)) {
+            if (in_array(core_media_manager::instance()->get_extension($url), $extensions)) {
                 $result[] = $url;
             }
         }
@@ -170,7 +173,7 @@ abstract class core_media_player {
 
         // Get filename of first URL.
         $url = reset($urls);
-        $name = core_media_helper::get_filename($url);
+        $name = core_media_manager::instance()->get_filename($url);
 
         // If there is more than one url, strip the extension as we could be
         // referring to a different one or several at once.
@@ -188,6 +191,7 @@ abstract class core_media_player {
      * @return int Negative if A should go before B, positive for vice versa
      */
     public static function compare_by_rank(core_media_player $a, core_media_player $b) {
+        // TODO deprecate
         return $b->get_rank() - $a->get_rank();
     }
 

@@ -307,8 +307,8 @@ function url_display_embed($url, $cm, $course) {
 
     $mediarenderer = core_media_manager::instance();
     $embedoptions = array(
-        core_media_helper::OPTION_TRUSTED => true,
-        core_media_helper::OPTION_BLOCK => true
+        core_media_manager::OPTION_TRUSTED => true,
+        core_media_manager::OPTION_BLOCK => true
     );
 
     if (in_array($mimetype, array('image/gif','image/jpeg','image/png'))) {  // It's an image

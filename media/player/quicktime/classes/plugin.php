@@ -43,7 +43,7 @@ class media_quicktime_plugin extends core_media_player {
         $size = 'width="' . $width . '" height="' . ($height + 15) . '"';
 
         // MIME type for object tag.
-        $mimetype = core_media_helper::get_mimetype($firsturl);
+        $mimetype = core_media_manager::instance()->get_mimetype($firsturl);
 
         $fallback = core_media_player::PLACEHOLDER;
 
@@ -80,10 +80,6 @@ OET;
 
     public function get_supported_extensions() {
         return array('mpg', 'mpeg', 'mov', 'mp4', 'm4v', 'm4a');
-    }
-
-    public function get_rank() {
-        return 10;
     }
 }
 

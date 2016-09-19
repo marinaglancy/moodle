@@ -41,16 +41,8 @@ $PAGE->set_heading($SITE->fullname);
 print $OUTPUT->header();
 
 // Hack setup to enable all players.
-$CFG->core_media_enable_youtube    = 1;
-$CFG->core_media_enable_vimeo      = 1;
-$CFG->core_media_enable_mp3        = 1;
-$CFG->core_media_enable_flv        = 1;
-$CFG->core_media_enable_swf        = 1;
-$CFG->core_media_enable_html5audio = 1;
-$CFG->core_media_enable_html5video = 1;
-$CFG->core_media_enable_qt         = 1;
-$CFG->core_media_enable_wmp        = 1;
-$CFG->core_media_enable_rm         = 1;
+$CFG->media_plugins_sortorder = 'vimeo,youtubevideo,youtubeplaylist,flowplayer,html5audio,html5video,swf,quicktime,realplayer,wmp';
+core_media_manager::reset_caches();
 
 $CFG->filter_mediaplugin_enable_youtube    = 1;
 $CFG->filter_mediaplugin_enable_vimeo      = 1;

@@ -73,9 +73,5 @@ OET;
     public function get_supported_extensions() {
         return array('ra', 'ram', 'rm', 'rv');
     }
-
-    public function get_rank() {
-        return 40;
-    }
 }
 

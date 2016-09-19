@@ -39,7 +39,7 @@ class media_flowplayer_plugin extends core_media_player {
         // enters two mp3 files as alternatives).
         $url = reset($urls);
 
-        if (strtolower(pathinfo($url->get_path(false), PATHINFO_EXTENSION)) === 'mp3') {
+        if (core_media_manager::instance()->get_extension($url) === 'mp3') {
 
             // Unique id even across different http requests made at the same time
             // (for AJAX, iframes).
@@ -56,7 +56,7 @@ class media_flowplayer_plugin extends core_media_player {
             // note: use 'small' size unless embedding in block mode.
             $output .= html_writer::script(js_writer::function_call(
                 'M.util.add_audio_player', array($id, $url->out(false),
-                empty($options[core_media_helper::OPTION_BLOCK]))));
+                empty($options[core_media_manager::OPTION_BLOCK]))));
 
             return $output;
 
@@ -87,11 +87,15 @@ class media_flowplayer_plugin extends core_media_player {
 
     public function get_supported_extensions() {
         $config = get_config('media_flowplayer');
-        return array('mp3', 'flv', 'f4v');
-    }
-
-    public function get_rank() {
-        return 80;
+        $rv = [];
+        if ($config->mp3) {
+            $rv[] = 'mp3';
+        }
+        if ($config->flv) {
+            $rv[] = 'flv';
+            $rv[] = 'f4v';
+        }
+        return $rv;
     }
 }
 

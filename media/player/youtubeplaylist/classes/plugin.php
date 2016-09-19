@@ -32,11 +32,6 @@ defined('MOODLE_INTERNAL') || die();
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class media_youtubeplaylist_plugin extends core_media_player_external {
-    public function is_enabled() {
-        global $CFG;
-        // Use the youtube on/off flag.
-        return $CFG->core_media_enable_youtube;
-    }
 
     protected function embed_external(moodle_url $url, $name, $width, $height, $options) {
         $site = $this->matches[1];
@@ -63,12 +58,6 @@ OET;
         // Middle bit: either view_play_list?p= or p/ (doesn't work on youtube) or playlist?list=.
         $middle = '(?:view_play_list\?p=|p/|playlist\?list=)([a-z0-9\-_]+)';
         return $start . $middle . core_media_player_external::END_LINK_REGEX_PART;
-    }
-
-    public function get_rank() {
-        // I decided to make the link-embedding ones (that don't handle file
-        // formats) have ranking in the 1000 range.
-        return 1000;
     }
 
     public function get_embeddable_markers() {

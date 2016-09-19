@@ -35,12 +35,4 @@ OET;
         $middle = '([0-9]+)';
         return $start . $middle . core_media_player_external::END_LINK_REGEX_PART;
     }
-
-    public function get_rank() {
-        return 1010;
-    }
-
-    public function get_embeddable_markers() {
-        return array('vimeo.com/');
-    }
 }

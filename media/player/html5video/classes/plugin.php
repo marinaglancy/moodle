@@ -42,7 +42,7 @@ class media_html5video_plugin extends core_media_player {
         // Build array of source tags.
         $sources = array();
         foreach ($urls as $url) {
-            $mimetype = core_media_helper::get_mimetype($url);
+            $mimetype = core_media_manager::instance()->get_mimetype($url);
             $source = html_writer::empty_tag('source', array('src' => $url, 'type' => $mimetype));
             if ($mimetype === 'video/mp4') {
                 if ($oldandroid) {
@@ -106,7 +106,7 @@ OET;
         $extensions = $this->get_supported_extensions();
         $result = array();
         foreach ($urls as $url) {
-            $ext = core_media_helper::get_extension($url);
+            $ext = core_media_manager::instance()->get_extension($url);
             if (in_array($ext, $extensions)) {
                 // Unfortunately html5 video does not handle fallback properly.
                 // https://www.w3.org/Bugs/Public/show_bug.cgi?id=10975
@@ -137,7 +137,22 @@ OET;
         return $result;
     }
 
-    public function get_rank() {
-        return 50;
+    /**
+     * Utility function that sets width and height to defaults if not specified
+     * as a parameter to the function (will be specified either if, (a) the calling
+     * code passed it, or (b) the URL included it).
+     * @param int $width Width passed to function (updated with final value)
+     * @param int $height Height passed to function (updated with final value)
+     */
+    protected static function pick_video_size(&$width, &$height) {
+        if (!$width) {
+            if (!defined('CORE_MEDIA_VIDEO_WIDTH')) {
+                // Default video width if no width is specified; some players may do something
+                // more intelligent such as use real video width.
+                // May be defined in config.php if required.
+                define('CORE_MEDIA_VIDEO_WIDTH', 400);
+            }
+            $width = CORE_MEDIA_VIDEO_WIDTH;
+        }
     }
 }

@@ -53,7 +53,7 @@ class media_wmp_plugin extends core_media_player {
         }
 
         // MIME type for object tag.
-        $mimetype = core_media_helper::get_mimetype($firsturl);
+        $mimetype = core_media_manager::instance()->get_mimetype($firsturl);
 
         $fallback = core_media_player::PLACEHOLDER;
 
@@ -95,9 +95,5 @@ OET;
 
     public function get_supported_extensions() {
         return array('wmv', 'avi');
-    }
-
-    public function get_rank() {
-        return 60;
     }
 }

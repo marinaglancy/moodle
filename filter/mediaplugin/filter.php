@@ -42,10 +42,6 @@ defined('MOODLE_INTERNAL') || die();
 class filter_mediaplugin extends moodle_text_filter {
     /** @var bool True if currently filtering trusted text */
     private $trusted;
-    /** @var core_media_manager Media renderer */
-    private $mediarenderer;
-    /** @var string Partial regex pattern indicating possible embeddable content */
-    private $embedmarkers;
 
     public function filter($text, array $options = array()) {
         global $CFG, $PAGE;
@@ -60,11 +56,6 @@ class filter_mediaplugin extends moodle_text_filter {
             return $text;
         }
 
-        if (!$this->mediarenderer) {
-            $this->mediarenderer = core_media_manager::instance();
-            $this->embedmarkers = $this->mediarenderer->get_embeddable_markers();
-        }
-
         // Check SWF permissions.
         $this->trusted = !empty($options['noclean']) or !empty($CFG->allowobjectembed);
 
@@ -76,7 +67,8 @@ class filter_mediaplugin extends moodle_text_filter {
         }
 
         // Regex to find media extensions in an <a> tag.
-        $re = '~<a\s[^>]*href="([^"]*(?:' .  $this->embedmarkers . ')[^"]*)"[^>]*>([^>]*)</a>~is';
+        $embedmarkers = core_media_manager::instance()->get_embeddable_markers();
+        $re = '~<a\s[^>]*href="([^"]*(?:' .  $embedmarkers . ')[^"]*)"[^>]*>([^>]*)</a>~is';
 
         $newtext = '';
         $validtag = '';
@@ -124,6 +116,8 @@ class filter_mediaplugin extends moodle_text_filter {
      * @return string
      */
     private function callback(array $matches) {
+        $mediamanager = core_media_manager::instance();
+
         global $CFG, $PAGE;
         // Check if we ignore it.
         if (preg_match('/class="[^"]*nomediaplugin/i', $matches[0])) {
@@ -137,24 +131,24 @@ class filter_mediaplugin extends moodle_text_filter {
         }
 
         // Split provided URL into alternatives.
-        $urls = core_media_helper::split_alternatives($matches[1], $width, $height);
+        $urls = $mediamanager->split_alternatives($matches[1], $width, $height);
 
         $options = array();
 
         // Allow SWF (or not).
         if ($this->trusted) {
-            $options[core_media_helper::OPTION_TRUSTED] = true;
+            $options[core_media_manager::OPTION_TRUSTED] = true;
         }
 
         // We could test whether embed is possible using can_embed, but to save
         // time, let's just embed it with the 'fallback to blank' option which
         // does most of the same stuff anyhow.
-        $options[core_media_helper::OPTION_FALLBACK_TO_BLANK] = true;
+        $options[core_media_manager::OPTION_FALLBACK_TO_BLANK] = true;
 
         // NOTE: Options are not passed through from filter because the 'embed'
         // code does not recognise filter options (it's a different kind of
         // option-space) as it can be used in non-filter situations.
-        $result = $this->mediarenderer->embed_alternatives($urls, $name, $width, $height, $options);
+        $result = $mediamanager->embed_alternatives($urls, $name, $width, $height, $options);
 
         // If something was embedded, return it, otherwise return original.
         if ($result !== '') {

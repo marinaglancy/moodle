@@ -83,13 +83,9 @@ OET;
 
     public function list_supported_urls(array $urls, array $options = array()) {
         // Not supported unless the creator is trusted.
-        if (empty($options[core_media_helper::OPTION_TRUSTED])) {
+        if (empty($options[core_media_manager::OPTION_TRUSTED])) {
             return array();
         }
         return parent::list_supported_urls($urls, $options);
-    }
-
-    public function get_rank() {
-        return 30;
     }
 }

@@ -38,7 +38,7 @@ class media_html5audio_plugin extends core_media_player {
         // Build array of source tags.
         $sources = array();
         foreach ($urls as $url) {
-            $mimetype = core_media_helper::get_mimetype($url);
+            $mimetype = core_media_manager::instance()->get_mimetype($url);
             $sources[] = html_writer::empty_tag('source', array('src' => $url, 'type' => $mimetype));
         }
 
@@ -71,7 +71,7 @@ OET;
         $extensions = $this->get_supported_extensions();
         $result = array();
         foreach ($urls as $url) {
-            $ext = core_media_helper::get_extension($url);
+            $ext = core_media_manager::instance()->get_extension($url);
             if (in_array($ext, $extensions)) {
                 if ($ext === 'ogg' || $ext === 'oga') {
                     // Formats .ogg and .oga are not supported in IE, Edge, or Safari.
@@ -101,10 +101,6 @@ OET;
             }
         }
         return $result;
-    }
-
-    public function get_rank() {
-        return 20;
     }
 }
 

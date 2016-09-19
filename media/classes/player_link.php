@@ -11,14 +11,14 @@
 class core_media_player_link extends core_media_player {
     public function embed($urls, $name, $width, $height, $options) {
         // If link is turned off, return empty.
-        if (!empty($options[core_media_helper::OPTION_NO_LINK])) {
+        if (!empty($options[core_media_manager::OPTION_NO_LINK])) {
             return '';
         }
 
         // Build up link content.
         $output = '';
         foreach ($urls as $url) {
-            $title = core_media_helper::get_filename($url);
+            $title = core_media_manager::instance()->get_filename($url);
             $printlink = html_writer::link($url, $title, array('class' => 'mediafallbacklink'));
             if ($output) {
                 // Where there are multiple available formats, there are fallback links
@@ -41,6 +41,8 @@ class core_media_player_link extends core_media_player {
     }
 
     public function get_rank() {
+
+        // TODO deprecate
         return 0;
     }
 }

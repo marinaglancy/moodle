@@ -119,12 +119,6 @@ OET;
         return $start . $middle . core_media_player_external::END_LINK_REGEX_PART;
     }
 
-    public function get_rank() {
-        // I decided to make the link-embedding ones (that don't handle file
-        // formats) have ranking in the 1000 range.
-        return 1001;
-    }
-
     public function get_embeddable_markers() {
         return array('youtube.com', 'youtube-nocookie.com', 'youtu.be', 'y2u.be');
     }

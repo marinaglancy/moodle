@@ -37,17 +37,8 @@ class filter_mediaplugin_testcase extends advanced_testcase {
         $this->resetAfterTest(true);
 
         // we need to enable the plugins somehow
-        $CFG->core_media_enable_youtube    = 1;
-        $CFG->core_media_enable_vimeo      = 1;
-        $CFG->core_media_enable_mp3        = 1;
-        $CFG->core_media_enable_flv        = 1;
-        $CFG->core_media_enable_swf        = 1;
-        $CFG->core_media_enable_html5audio = 1;
-        $CFG->core_media_enable_html5video = 1;
-        $CFG->core_media_enable_qt         = 1;
-        $CFG->core_media_enable_wmp        = 1;
-        $CFG->core_media_enable_rm         = 1;
-
+        $CFG->media_plugins_sortorder = 'vimeo,youtubevideo,youtubeplaylist,flowplayer,wmp,html5video,realplayer,swf,html5audio,quicktime';
+        core_media_manager::reset_caches();
 
         $filterplugin = new filter_mediaplugin(null, array());
 
