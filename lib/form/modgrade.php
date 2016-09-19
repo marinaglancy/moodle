@@ -61,7 +61,7 @@ class MoodleQuickForm_modgrade extends MoodleQuickForm_group {
     public $currentscaleid = null;
 
     /** @var string $currentgradetype The current gradetype - can either be 'none', 'scale', or 'point' */
-    public $currentgradetype = 'none';
+    public $currentgradetype = null;
 
     /** @var boolean $useratings Set to true if the activity is using ratings, false otherwise */
     public $useratings = false;
@@ -197,7 +197,7 @@ class MoodleQuickForm_modgrade extends MoodleQuickForm_group {
         // Add elements.
         if ($this->isupdate && $this->hasgrades) {
             // Set a message so the user knows why they can not alter the grade type or scale.
-            if ($this->currentgradetype == 'scale') {
+            if ($this->currentgradetype === 'scale') {
                 $gradesexistmsg = get_string('modgradecantchangegradetyporscalemsg', 'grades');
             } else {
                 $gradesexistmsg = get_string('modgradecantchangegradetypemsg', 'grades');
@@ -215,7 +215,7 @@ class MoodleQuickForm_modgrade extends MoodleQuickForm_group {
         $this->_elements[] = $this->createFormElement('static', 'gradetypespacer', '', '<br />');
 
         // Only show the grade scale select box when applicable.
-        if (!$this->isupdate || !$this->hasgrades || $this->currentgradetype == 'scale') {
+        if (!$this->isupdate || !$this->hasgrades || $this->currentgradetype === 'scale') {
             $label = html_writer::tag('label', $this->scaleformelement->getLabel(),
                 array('for' => $this->scaleformelement->getAttribute('id')));
             $this->_elements[] = $this->createFormElement('static', 'scalelabel', '', $label);
@@ -223,7 +223,7 @@ class MoodleQuickForm_modgrade extends MoodleQuickForm_group {
             $this->_elements[] = $this->createFormElement('static', 'scalespacer', '', '<br />');
         }
 
-        if ($this->isupdate && $this->hasgrades && $this->canrescale && $this->currentgradetype == 'point') {
+        if ($this->isupdate && $this->hasgrades && $this->canrescale && $this->currentgradetype === 'point') {
             // We need to know how to apply any changes to maxgrade - ie to either update, or don't touch exising grades.
             $label = html_writer::tag('label', $rescalegradesselect->getLabel(),
                 array('for' => $rescalegradesselect->getAttribute('id')));
@@ -234,7 +234,7 @@ class MoodleQuickForm_modgrade extends MoodleQuickForm_group {
         }
 
         // Only show the max points form element when applicable.
-        if (!$this->isupdate || !$this->hasgrades || $this->currentgradetype == 'point') {
+        if (!$this->isupdate || !$this->hasgrades || $this->currentgradetype === 'point') {
             $label = html_writer::tag('label', $this->maxgradeformelement->getLabel(),
                 array('for' => $this->maxgradeformelement->getAttribute('id')));
             $this->_elements[] = $this->createFormElement('static', 'pointlabel', '', $label);
@@ -283,7 +283,7 @@ class MoodleQuickForm_modgrade extends MoodleQuickForm_group {
     protected function process_value($type='none', $scale=null, $point=null, $rescalegrades=null) {
         global $COURSE;
         $val = 0;
-        if ($this->isupdate && $this->hasgrades && $this->canrescale && $this->currentgradetype == 'point' && empty($rescalegrades)) {
+        if ($this->isupdate && $this->hasgrades && $this->canrescale && $this->currentgradetype === 'point' && empty($rescalegrades)) {
             // If the maxgrade field is disabled with javascript, no value is sent with the form and mform assumes the default.
             // If the user was forced to choose a rescale option - and they haven't - prevent any changes to the max grade.
             return (string)unformat_float($this->currentgrade);
@@ -329,6 +329,24 @@ class MoodleQuickForm_modgrade extends MoodleQuickForm_group {
         $maxgrade = (int)get_config('core', 'gradepointmax');
         $isintlike = ((string)(int)$val === $val) ? true : false;
         return ($isintlike === true && $val > 0 && $val <= $maxgrade) ? true : false;
+    }
+
+    /**
+     * Returns the current grade set for the activity.
+     * @param int $default will be returned if no current grade is set (for example when creating activity)
+     * @return int|null
+     */
+    protected function get_current_grade_value($default = null) {
+        if ($this->currentgradetype === 'scale') {
+            return -1 * ((int)$this->currentscaleid);
+        }
+        if ($this->currentgradetype === 'point') {
+            return unformat_float($this->currentgrade);
+        }
+        if ($this->currentgradetype === 'none') {
+            return 0;
+        }
+        return $default;
     }
 
     /**
@@ -481,7 +499,8 @@ class MoodleQuickForm_modgrade extends MoodleQuickForm_group {
                         // When there is submitted data let parent::onQuickFormEvent() process it.
                         break;
                     }
-                    $value = $this->_findValue($caller->_defaultValues);
+                    // If current grade exists, ignore default value and use current grade.
+                    $value = $this->get_current_grade_value($this->_findValue($caller->_defaultValues));
                 }
 
                 if (!is_null($value) && !is_scalar($value)) {
