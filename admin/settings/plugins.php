@@ -208,6 +208,8 @@ if ($hassiteconfig) {
     // Media players.
     $ADMIN->add('modules', new admin_category('mediaplayers', new lang_string('type_media_plural', 'plugin')));
     $temp = new admin_settingpage('managemediaplayers', new lang_string('managemediaplayers', 'media'));
+    $temp->add(new admin_setting_heading('mediaformats', get_string('mediaformats', 'core_media'),
+        format_text(get_string('mediaformats_desc', 'core_media'), FORMAT_MARKDOWN)));
     $temp->add(new admin_setting_managemediaplayers());
     $ADMIN->add('mediaplayers', $temp);
 

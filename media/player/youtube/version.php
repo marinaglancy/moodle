@@ -17,7 +17,7 @@
 /**
  * Version details
  *
- * @package   media_youtubeplaylist
+ * @package   media_youtube
  * @copyright 2016 Marina Glancy
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -26,4 +26,4 @@ defined('MOODLE_INTERNAL') || die();
 
 $plugin->version   = 2016052300;        // The current plugin version (Date: YYYYMMDDXX)
 $plugin->requires  = 2016051900;        // Requires this Moodle version
-$plugin->component = 'media_youtubeplaylist'; // Full name of the plugin (used for diagnostics)
+$plugin->component = 'media_youtube'; // Full name of the plugin (used for diagnostics)

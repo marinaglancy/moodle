@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -28,3 +27,4 @@ $string['configmp3'] = 'Files with extension *.mp3. Plays audio using Flowplayer
 $string['flv'] = 'Flash video';
 $string['mp3'] = 'MP3 audio';
 $string['pluginname'] = 'Flowplayer';
+$string['pluginname_help'] = 'Plays video and audio files using Flowplayer, requires Flash plugin and javascript.';

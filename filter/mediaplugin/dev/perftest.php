@@ -42,7 +42,7 @@ print $OUTPUT->header();
 
 // Enable all players.
 $enabledmediaplugins = \core\plugininfo\media::get_enabled_plugins();
-\core\plugininfo\media::set_enabled_plugins('vimeo,youtubevideo,youtubeplaylist,flowplayer,html5audio,html5video,swf,quicktime,realplayer,wmp');
+\core\plugininfo\media::set_enabled_plugins('vimeo,youtube,flowplayer,html5audio,html5video,swf,quicktime,realplayer,wmp');
 
 // Create plugin.
 $filterplugin = new filter_mediaplugin(null, array());

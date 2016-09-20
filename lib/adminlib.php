@@ -7244,21 +7244,24 @@ class admin_setting_managemediaplayers extends admin_setting {
 
             // Hide/show links.
             $class = '';
-            if ($plugininfo->is_enabled() && $plugininfo->is_installed_and_upgraded()) {
-                $hideshow = html_writer::link(new moodle_url($url, array('action' => 'disable')),
-                    $OUTPUT->pix_icon('t/hide', $strdisable, 'moodle', array('class' => 'iconsmall')));
-                $enabled = true;
-                $displayname = $plugin->displayname;
-            } else if ($plugininfo->is_installed_and_upgraded()) {
-                $hideshow = html_writer::link(new moodle_url($url, array('action' => 'enable')),
-                    $OUTPUT->pix_icon('t/show', $strenable, 'moodle', array('class' => 'iconsmall')));
-                $enabled = false;
-                $displayname = $plugin->displayname;
-                $class = 'dimmed_text';
-            } else {
+            if (!$plugininfo->is_installed_and_upgraded()) {
                 $hideshow = '';
                 $enabled = false;
                 $displayname = '<span class="notifyproblem">'.$name.'</span>';
+            } else {
+                $enabled = $plugininfo->is_enabled();
+                if ($enabled) {
+                    $hideshow = html_writer::link(new moodle_url($url, array('action' => 'disable')),
+                        $OUTPUT->pix_icon('t/hide', $strdisable, 'moodle', array('class' => 'iconsmall')));
+                } else  {
+                    $hideshow = html_writer::link(new moodle_url($url, array('action' => 'enable')),
+                        $OUTPUT->pix_icon('t/show', $strenable, 'moodle', array('class' => 'iconsmall')));
+                    $class = 'dimmed_text';
+                }
+                $displayname = $plugin->displayname;
+                if (get_string_manager()->string_exists('pluginname_help', 'media_' . $name)) {
+                    $displayname .= '&nbsp;' . $OUTPUT->help_icon('pluginname', 'media_' . $name);
+                }
             }
             if ($PAGE->theme->resolve_image_location('icon', 'media_' . $name, false)) {
                 $icon = $OUTPUT->pix_icon('icon', '', 'media_' . $name, array('class' => 'icon pluginicon'));

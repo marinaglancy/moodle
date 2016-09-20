@@ -288,7 +288,7 @@ class core_medialib_testcase extends advanced_testcase {
         global $CFG;
 
         // Enable all players and get renderer.
-        \core\plugininfo\media::set_enabled_plugins('youtubevideo,youtubeplaylist,vimeo,html5audio,html5video,flowplayer,wmp,realplayer');
+        \core\plugininfo\media::set_enabled_plugins('youtube,vimeo,html5audio,html5video,flowplayer,wmp,realplayer');
         $manager = core_media_manager::instance();
 
         // Check each format one at a time. This is a basic check to be sure

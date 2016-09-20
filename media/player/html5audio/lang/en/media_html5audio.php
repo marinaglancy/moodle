@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -23,4 +22,5 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$string['pluginname'] = 'html5audio';
+$string['pluginname'] = 'HTML 5 audio';
+$string['pluginname_help'] = 'Audio files with extension *.ogg, *.aac and *.mp3. Used primarily for mobile devices. (Format support depends on browser.)';

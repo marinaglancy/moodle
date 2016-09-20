@@ -15,53 +15,90 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Main class for component 'media_youtubevideo'
+ * Main class for component 'media_youtube'
  *
- * @package   media_youtubevideo
- * @copyright 2011 The Open University
+ * @package   media_youtube
+ * @copyright 2016 Marina Glancy
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-
 /**
- * Player that creates youtubevideo embedding.
+ * Player that creates youtube embedding.
  *
- * @copyright 2011 The Open University
- * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package   media_youtube
+ * @author    2011 The Open University
+ * @copyright 2016 Marina Glancy
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class media_youtubevideo_plugin extends core_media_player_external {
+class media_youtube_plugin extends core_media_player_external {
+    protected $isplaylist = false;
+
+    public function list_supported_urls(array $urls, array $options = array()) {
+        // These only work with a SINGLE url (there is no fallback).
+        if (count($urls) == 1) {
+            $url = reset($urls);
+
+            // Check against regex.
+            if (preg_match($this->get_regex(), $url->out(false), $this->matches)) {
+                $this->isplaylist = false;
+                return array($url);
+            }
+
+            // Check against playlist regex.
+            if (preg_match($this->get_regex_playlist(), $url->out(false), $this->matches)) {
+                $this->isplaylist = true;
+                return array($url);
+            }
+        }
+
+        return array();
+    }
+
     protected function embed_external(moodle_url $url, $name, $width, $height, $options) {
-        $videoid = end($this->matches);
 
         $info = trim($name);
         if (empty($info) or strpos($info, 'http') === 0) {
-            $info = get_string('siteyoutube', 'core_media');
+            $info = get_string('pluginname', 'media_youtube');
         }
         $info = s($info);
 
         self::pick_video_size($width, $height);
 
-        $params = '';
-        $start = self::get_start_time($url);
-        if ($start > 0) {
-            $params .= "start=$start&amp;";
-        }
+        if ($this->isplaylist) {
 
-        $listid = $url->param('list');
-        // Check for non-empty but valid playlist ID.
-        if (!empty($listid) && !preg_match('/[^a-zA-Z0-9\-_]/', $listid)) {
-            // This video is part of a playlist, and we want to embed it as such.
-            $params .= "list=$listid&amp;";
-        }
+            $site = $this->matches[1];
+            $playlist = $this->matches[3];
 
-        return <<<OET
+            return <<<OET
+<span class="mediaplugin mediaplugin_youtube">
+<iframe width="$width" height="$height" src="https://$site/embed/videoseries?list=$playlist" frameborder="0" allowfullscreen="1"></iframe>
+</span>
+OET;
+        } else {
+
+            $videoid = end($this->matches);
+            $params = '';
+            $start = self::get_start_time($url);
+            if ($start > 0) {
+                $params .= "start=$start&amp;";
+            }
+
+            $listid = $url->param('list');
+            // Check for non-empty but valid playlist ID.
+            if (!empty($listid) && !preg_match('/[^a-zA-Z0-9\-_]/', $listid)) {
+                // This video is part of a playlist, and we want to embed it as such.
+                $params .= "list=$listid&amp;";
+            }
+
+            return <<<OET
 <span class="mediaplugin mediaplugin_youtube">
 <iframe title="$info" width="$width" height="$height"
   src="https://www.youtube.com/embed/$videoid?{$params}rel=0&amp;wmode=transparent" frameborder="0" allowfullscreen="1"></iframe>
 </span>
 OET;
+        }
 
     }
 
@@ -116,6 +153,14 @@ OET;
         $start = '~^https?://(www\.)?(' . $link . '|' . $shortlink . ')';
         // Middle bit: Video key value
         $middle = '([a-z0-9\-_]+)';
+        return $start . $middle . core_media_player_external::END_LINK_REGEX_PART;
+    }
+
+    protected function get_regex_playlist() {
+        // Initial part of link.
+        $start = '~^https?://(www\.youtube(-nocookie)?\.com)/';
+        // Middle bit: either view_play_list?p= or p/ (doesn't work on youtube) or playlist?list=.
+        $middle = '(?:view_play_list\?p=|p/|playlist\?list=)([a-z0-9\-_]+)';
         return $start . $middle . core_media_player_external::END_LINK_REGEX_PART;
     }
 

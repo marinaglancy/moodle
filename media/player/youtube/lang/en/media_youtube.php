@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -16,11 +15,12 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Strings for component 'media_youtubeplaylist'
+ * Strings for component 'media_youtube'
  *
- * @package   media_youtubeplaylist
+ * @package   media_youtube
  * @copyright 2016 Marina Glancy
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$string['pluginname'] = 'youtubeplaylist';
+$string['pluginname'] = 'YouTube';
+$string['pluginname_help'] = 'YouTube video sharing site, video and playlist links supported.';

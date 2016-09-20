@@ -37,7 +37,7 @@ class filter_mediaplugin_testcase extends advanced_testcase {
         $this->resetAfterTest(true);
 
         // we need to enable the plugins somehow
-        $CFG->media_plugins_sortorder = 'vimeo,youtubevideo,youtubeplaylist,flowplayer,wmp,html5video,realplayer,swf,html5audio,quicktime';
+        $CFG->media_plugins_sortorder = 'vimeo,youtube,flowplayer,wmp,html5video,realplayer,swf,html5audio,quicktime';
         core_media_manager::reset_caches();
 
         $filterplugin = new filter_mediaplugin(null, array());

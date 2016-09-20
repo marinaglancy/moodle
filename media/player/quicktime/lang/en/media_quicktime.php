@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -23,4 +22,6 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$string['pluginname'] = 'qt';
+$string['pluginname'] = 'QuickTime player';
+$string['pluginname_help'] = 'Files with extension *.mov, *.mp4, *.m4a and *.mpg. Requires QuickTime player or codecs.<br>
+This player is not frequently used on the Web and requires browser plugin that is not commonly installed.';

@@ -2180,16 +2180,12 @@ function xmldb_main_upgrade($oldversion) {
     if ($oldversion < 2016091500.02) {
 
         // Convert hardcoded media players to the settings of the new media player plugin type.
-        $oldplayers = ['vimeo' => 'vimeo', 'youtube' => 'youtubevideo', 'youtube_playlist' => 'youtubeplaylist',
-            'mp3' => 'flowplayer', 'flv' => 'flowplayer', 'wmp' => 'wmp', 'html5video' => 'html5video', 'rm' => 'realplayer',
-            'swf' => 'swf', 'html5audio' => 'html5audio', 'qt' => 'quicktime'];
+        $oldplayers = ['vimeo' => 'vimeo', 'youtube' => 'youtube', 'mp3' => 'flowplayer', 'flv' => 'flowplayer', 'wmp' => 'wmp',
+            'html5video' => 'html5video', 'rm' => 'realplayer', 'swf' => 'swf', 'html5audio' => 'html5audio', 'qt' => 'quicktime'];
         $enabledplugins = [];
         $flowplayer = ['mp3' => 0, 'flv' => 0];
         foreach ($oldplayers as $oldplayer => $pluginname) {
             $settingname = 'core_media_enable_'.$oldplayer;
-            if ($oldplayer === 'youtube_playlist') {
-                $settingname = 'core_media_enable_youtube';
-            }
             if (!empty($CFG->$settingname)) {
                 $enabledplugins[$pluginname] = $pluginname;
                 if ($pluginname === 'flowplayer') {
