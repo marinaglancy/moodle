@@ -1,14 +1,43 @@
 <?php
-
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Renderer for media files.
+ * Main class for managing core filters
+ *
+ * @package   core_media
+ * @copyright 2016 Marina Glancy
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+defined('MOODLE_INTERNAL') || die();
+
+/**
+ * Manager for media files.
  *
  * Used in file resources, media filter, and any other places that need to
  * output embedded media.
  *
- * @copyright 2011 The Open University
- * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * Usage:
+ * $manager = core_media_manager::instance();
+ *
+ *
+ * @package   core_media
+ * @copyright 2016 Marina Glancy
+ * @author    2011 The Open University
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class core_media_manager {
     /**
@@ -53,11 +82,18 @@ class core_media_manager {
 
     /** @var array Array of available 'player' objects */
     private $players;
+
     /** @var string Regex pattern for links which may contain embeddable content */
     private $embeddablemarkers;
 
-    static $instance;
+    /** @var core_media_manager caches a singleton instance */
+    static protected $instance;
 
+    /**
+     * Returns a singleton instance of a manager
+     *
+     * @return core_media_manager
+     */
     public static function instance() {
         if (self::$instance === null) {
            self::$instance = new self();
@@ -65,6 +101,9 @@ class core_media_manager {
         return self::$instance;
     }
 
+    /**
+     * Resets cached singleton instance. To be used after $CFG->media_plugins_sortorder is modified
+     */
     public static function reset_caches() {
         self::$instance = null;
     }
@@ -76,16 +115,15 @@ class core_media_manager {
      * The list is in rank order (highest first) and does not include players
      * which are disabled.
      *
-     * @return array Array of core_media_player objects in rank order
+     * @param bool $withlinkfallback whether to include the pseudo plugin implementing the link fallback
+     * @return core_media_player[] Array of core_media_player objects in rank order
      */
-    protected function get_players() {
-        global $CFG;
-
+    protected function get_players($withlinkfallback = true) {
         // Save time by only building the list once.
         if (!$this->players) {
             // Get raw list of players.
             $allplayers = $this->get_players_raw();
-            $sortorder = !empty($CFG->media_plugins_sortorder) ? explode(',', $CFG->media_plugins_sortorder) : [];
+            $sortorder = \core\plugininfo\media::get_enabled_plugins();
 
             $this->players = [];
             foreach ($sortorder as $key) {
@@ -93,6 +131,9 @@ class core_media_manager {
             }
 
             $this->players[] = new core_media_player_link();
+        }
+        if (!$withlinkfallback) {
+            return array_slice($this->players, 0, -1);
         }
         return $this->players;
     }
@@ -187,7 +228,7 @@ class core_media_manager {
     public function embed_alternatives($alternatives, $name = '', $width = 0, $height = 0,
                                        $options = array()) {
 
-        // Get list of player plugins (will also require the library).
+        // Get list of player plugins.
         $players = $this->get_players();
 
         // Set up initial text which will be replaced by first player that
@@ -198,7 +239,7 @@ class core_media_manager {
         foreach ($players as $player) {
             // Option: When no other player matched, don't do the default link player.
             if (!empty($options[self::OPTION_FALLBACK_TO_BLANK]) &&
-                $player->get_rank() === 0 && $out === core_media_player::PLACEHOLDER) {
+                    ($player instanceof core_media_player_link) && ($out === core_media_player::PLACEHOLDER)) {
                 continue;
             }
 
@@ -246,11 +287,7 @@ class core_media_manager {
      */
     public function can_embed_urls(array $urls, $options = array()) {
         // Check all players to see if any of them support it.
-        foreach ($this->get_players() as $player) {
-            // Link player (always last on list) doesn't count!
-            if ($player->get_rank() <= 0) {
-                break;
-            }
+        foreach ($this->get_players(false) as $player) {
             // First player that supports it, return true.
             if ($player->list_supported_urls($urls, $options)) {
                 return true;

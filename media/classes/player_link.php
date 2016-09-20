@@ -35,14 +35,25 @@ class core_media_player_link extends core_media_player {
         return $urls;
     }
 
+    /**
+     * Returns if the current player is enabled.
+     *
+     * @deprecated since Moodle 3.2
+     * @return bool True if player is enabled
+     */
     public function is_enabled() {
-        // Cannot be disabled.
+        debugging('Function core_media_player::is_enabled() is deprecated without replacement', DEBUG_DEVELOPER);
         return true;
     }
 
+    /**
+     * Gets the ranking of this player comparing to other players.
+     *
+     * @deprecated since Moodle 3.2
+     * @return int Rank (higher is better)
+     */
     public function get_rank() {
-
-        // TODO deprecate
+        debugging('Function core_media_player::get_rank() is deprecated without replacement', DEBUG_DEVELOPER);
         return 0;
     }
 }

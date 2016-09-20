@@ -90,29 +90,16 @@ abstract class core_media_player {
     }
 
     /**
-     * Gets the ranking of this player. This is an integer used to decide which
-     * player to use (after applying other considerations such as which ones
-     * the user has disabled).
+     * Gets the ranking of this player comparing to other players.
      *
-     * Rank must be unique (no two players should have the same rank).
-     *
-     * Rank zero has a special meaning, indicating that this 'player' does not
-     * really embed the video.
-     *
-     * Rank is not a user-configurable value because it needs to be defined
-     * carefully in order to ensure that the embedding fallbacks actually work.
-     * It might be possible to have some user options which affect rank, but
-     * these would be best defined as e.g. checkboxes in settings that have
-     * a particular effect on the rank of a couple of plugins, rather than
-     * letting users generally alter rank.
-     *
+     * @deprecated since Moodle 3.2
      * @return int Rank (higher is better)
      */
     public function get_rank() {
-        global $CFG;
+        debugging('Function core_media_player::get_rank() is deprecated without replacement', DEBUG_DEVELOPER);
 
-        // TODO deprecate
-        $enabled = array_reverse(explode(',', $CFG->media_plugins_sortorder));
+        $sortorder = \core\plugininfo\media::get_enabled_plugins();
+        $enabled = array_reverse(array_values($sortorder));
 
         if ($enabled && preg_match('/^media_(.*)_plugin$/', get_class($this), $matches)) {
             $pos = array_search($matches[1], $enabled);
@@ -125,16 +112,18 @@ abstract class core_media_player {
     }
 
     /**
+     * Returns if the current player is enabled.
+     *
+     * @deprecated since Moodle 3.2
      * @return bool True if player is enabled
      */
     public function is_enabled() {
-        global $CFG;
+        debugging('Function core_media_player::is_enabled() is deprecated without replacement', DEBUG_DEVELOPER);
 
-        // TODO deprecate?
-        $enabled = explode(',', $CFG->media_plugins_sortorder);
+        $enabled = \core\plugininfo\media::get_enabled_plugins();
 
         if ($enabled && preg_match('/^media_(.*)_plugin$/', get_class($this), $matches)) {
-            return in_array($matches[1], $enabled);
+            return array_key_exists($matches[1], $enabled);
         }
 
         return false;
@@ -186,12 +175,13 @@ abstract class core_media_player {
 
     /**
      * Compares by rank order, highest first. Used for sort functions.
+     * @deprecated since Moodle 3.2
      * @param core_media_player $a Player A
      * @param core_media_player $b Player B
      * @return int Negative if A should go before B, positive for vice versa
      */
     public static function compare_by_rank(core_media_player $a, core_media_player $b) {
-        // TODO deprecate
+        debugging('Function core_media_player::compare_by_rank() is deprecated without replacement', DEBUG_DEVELOPER);
         return $b->get_rank() - $a->get_rank();
     }
 

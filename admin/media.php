@@ -40,7 +40,7 @@ require_capability('moodle/site:config', context_system::instance());
 require_sesskey();
 
 $plugins = core_plugin_manager::instance()->get_plugins_of_type('media');
-$sortorder = !empty($CFG->media_plugins_sortorder) ? explode(',', $CFG->media_plugins_sortorder) : [];
+$sortorder = array_values(\core\plugininfo\media::get_enabled_plugins());
 
 $return = new moodle_url('/admin/settings.php', array('section' => 'managemediaplayers'));
 
@@ -52,16 +52,14 @@ switch ($action) {
     case 'disable':
         if (in_array($media, $sortorder)) {
             $sortorder = array_diff($sortorder, [$media]);
-            set_config('media_plugins_sortorder', join(',', $sortorder));
-            core_plugin_manager::reset_caches();
+            \core\plugininfo\media::set_enabled_plugins($sortorder);
         }
         break;
 
     case 'enable':
         if (!in_array($media, $sortorder)) {
             $sortorder[] = $media;
-            set_config('media_plugins_sortorder', join(',', $sortorder));
-            core_plugin_manager::reset_caches();
+            \core\plugininfo\media::set_enabled_plugins($sortorder);
         }
         break;
 
@@ -70,8 +68,7 @@ switch ($action) {
             $tmp = $sortorder[$pos - 1];
             $sortorder[$pos - 1] = $sortorder[$pos];
             $sortorder[$pos] = $tmp;
-            set_config('media_plugins_sortorder', join(',', $sortorder));
-            core_plugin_manager::reset_caches();
+            \core\plugininfo\media::set_enabled_plugins($sortorder);
         }
         break;
 
@@ -80,8 +77,7 @@ switch ($action) {
             $tmp = $sortorder[$pos + 1];
             $sortorder[$pos + 1] = $sortorder[$pos];
             $sortorder[$pos] = $tmp;
-            set_config('media_plugins_sortorder', join(',', $sortorder));
-            core_plugin_manager::reset_caches();
+            \core\plugininfo\media::set_enabled_plugins($sortorder);
         }
         break;
 }

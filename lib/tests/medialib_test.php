@@ -41,8 +41,7 @@ class core_medialib_testcase extends advanced_testcase {
         $this->resetAfterTest();
 
         // Consistent initial setup: all players disabled.
-        $CFG->media_plugins_sortorder = '';
-        core_media_manager::reset_caches();
+        \core\plugininfo\media::set_enabled_plugins('');
 
         $_SERVER = array('HTTP_USER_AGENT' => '');
         $this->pretend_to_be_safari();
@@ -139,12 +138,12 @@ class core_medialib_testcase extends advanced_testcase {
         $this->assertSame('link', $manager->get_players_test());
 
         // A couple enabled, check the order.
-        $CFG->media_plugins_sortorder = 'flowplayer,html5audio';
+        \core\plugininfo\media::set_enabled_plugins('flowplayer,html5audio');
         $manager = new core_media_manager_test();
         $this->assertSame('flowplayer, html5audio, link', $manager->get_players_test());
 
         // Test QT and HTML5 media order.
-        $CFG->media_plugins_sortorder = 'html5video,html5audio,quicktime';
+        \core\plugininfo\media::set_enabled_plugins('html5video,html5audio,quicktime');
         $manager = new core_media_manager_test();
         $this->assertSame('html5video, html5audio, quicktime, link', $manager->get_players_test());
     }
@@ -161,26 +160,22 @@ class core_medialib_testcase extends advanced_testcase {
         $this->assertFalse($manager->can_embed_url($url));
 
         // Enable QT player.
-        $CFG->media_plugins_sortorder = 'quicktime';
-        core_media_manager::reset_caches();
+        \core\plugininfo\media::set_enabled_plugins('quicktime');
         $manager = core_media_manager::instance();
         $this->assertTrue($manager->can_embed_url($url));
 
         // QT + html5.
-        $CFG->media_plugins_sortorder = 'html5video,quicktime';
-        core_media_manager::reset_caches();
+        \core\plugininfo\media::set_enabled_plugins('html5video,quicktime');
         $manager = core_media_manager::instance();
         $this->assertTrue($manager->can_embed_url($url));
 
         // Only html5.
-        $CFG->media_plugins_sortorder = 'html5video';
-        core_media_manager::reset_caches();
+        \core\plugininfo\media::set_enabled_plugins('html5video');
         $manager = core_media_manager::instance();
         $this->assertTrue($manager->can_embed_url($url));
 
         // Only WMP.
-        $CFG->media_plugins_sortorder = 'wmp';
-        core_media_manager::reset_caches();
+        \core\plugininfo\media::set_enabled_plugins('wmp');
         $manager = core_media_manager::instance();
         $this->assertFalse($manager->can_embed_url($url));
     }
@@ -202,8 +197,7 @@ class core_medialib_testcase extends advanced_testcase {
         $url = new moodle_url('http://example.org/test.mp4');
 
         // All plugins disabled, NOLINK option.
-        $CFG->media_plugins_sortorder = '';
-        core_media_manager::reset_caches();
+        \core\plugininfo\media::set_enabled_plugins('');
         $manager = core_media_manager::instance();
         $t = $manager->embed_url($url, 0, 0, '',
                 array(core_media_manager::OPTION_NO_LINK => true));
@@ -211,15 +205,13 @@ class core_medialib_testcase extends advanced_testcase {
         $this->assertSame('', $t);
 
         // All plugins disabled but not NOLINK.
-        $CFG->media_plugins_sortorder = '';
-        core_media_manager::reset_caches();
+        \core\plugininfo\media::set_enabled_plugins('');
         $manager = core_media_manager::instance();
         $t = $manager->embed_url($url);
         $this->assertContains($link, $t);
 
         // Enable media players that can play the same media formats. (ie. qt & html5video for mp4 files, etc.)
-        $CFG->media_plugins_sortorder = 'html5video,html5audio,flowplayer,quicktime';
-        core_media_manager::reset_caches();
+        \core\plugininfo\media::set_enabled_plugins('html5video,html5audio,flowplayer,quicktime');
         $manager = core_media_manager::instance();
 
         // Test media formats that can be played by 2 or more players.
@@ -274,8 +266,7 @@ class core_medialib_testcase extends advanced_testcase {
      */
     public function test_embed_url_swf() {
         global $CFG;
-        $CFG->media_plugins_sortorder = 'swf';
-        core_media_manager::reset_caches();
+        \core\plugininfo\media::set_enabled_plugins('swf');
         $manager = core_media_manager::instance();
 
         // Without any options...
@@ -297,8 +288,7 @@ class core_medialib_testcase extends advanced_testcase {
         global $CFG;
 
         // Enable all players and get renderer.
-        $CFG->media_plugins_sortorder = 'youtubevideo,youtubeplaylist,vimeo,html5audio,html5video,flowplayer,wmp,realplayer';
-        core_media_manager::reset_caches();
+        \core\plugininfo\media::set_enabled_plugins('youtubevideo,youtubeplaylist,vimeo,html5audio,html5video,flowplayer,wmp,realplayer');
         $manager = core_media_manager::instance();
 
         // Check each format one at a time. This is a basic check to be sure
@@ -396,8 +386,7 @@ class core_medialib_testcase extends advanced_testcase {
         // links created using previous setting.
 
         // Enable MP3 and get renderer.
-        $CFG->media_plugins_sortorder = 'flowplayer';
-        core_media_manager::reset_caches();
+        \core\plugininfo\media::set_enabled_plugins('flowplayer');
         $manager = core_media_manager::instance();
 
         // Format: mp3.
@@ -412,8 +401,7 @@ class core_medialib_testcase extends advanced_testcase {
      */
     public function test_embed_or_blank() {
         global $CFG;
-        $CFG->media_plugins_sortorder = 'html5audio';
-        core_media_manager::reset_caches();
+        \core\plugininfo\media::set_enabled_plugins('html5audio');
         $manager = core_media_manager::instance();
         $this->pretend_to_be_firefox();
 
@@ -443,8 +431,7 @@ class core_medialib_testcase extends advanced_testcase {
         // in several different ways, but I'm too lazy to test it in every
         // format, so let's just pick one to check the values get passed
         // through.
-        $CFG->media_plugins_sortorder = 'html5video';
-        core_media_manager::reset_caches();
+        \core\plugininfo\media::set_enabled_plugins('html5video');
         $manager = core_media_manager::instance();
         $url = new moodle_url('http://example.org/test.mp4');
 
@@ -475,8 +462,7 @@ class core_medialib_testcase extends advanced_testcase {
 
         // As for size this could break in every format but I'm only testing
         // html5video.
-        $CFG->media_plugins_sortorder = 'html5video';
-        core_media_manager::reset_caches();
+        \core\plugininfo\media::set_enabled_plugins('html5video');
         $manager = core_media_manager::instance();
         $url = new moodle_url('http://example.org/test.mp4');
 
@@ -543,7 +529,7 @@ class core_medialib_testcase extends advanced_testcase {
         );
 
         // Enable html5 and flv (flowplayer first).
-        $CFG->media_plugins_sortorder = 'flowplayer,html5video';
+        \core\plugininfo\media::set_enabled_plugins('flowplayer,html5video');
         $manager = core_media_manager::instance();
 
         // Result should contain HTML5 with two sources + FLV.

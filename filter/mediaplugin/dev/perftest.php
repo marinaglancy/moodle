@@ -36,24 +36,13 @@ if (!is_siteadmin()) {
 
 // Set up page.
 $PAGE->set_context(context_system::instance());
-$PAGE->set_url(new moodle_url('/filter/mediaplugin/perftest.php'));
+$PAGE->set_url(new moodle_url('/filter/mediaplugin/dev/perftest.php'));
 $PAGE->set_heading($SITE->fullname);
 print $OUTPUT->header();
 
-// Hack setup to enable all players.
-$CFG->media_plugins_sortorder = 'vimeo,youtubevideo,youtubeplaylist,flowplayer,html5audio,html5video,swf,quicktime,realplayer,wmp';
-core_media_manager::reset_caches();
-
-$CFG->filter_mediaplugin_enable_youtube    = 1;
-$CFG->filter_mediaplugin_enable_vimeo      = 1;
-$CFG->filter_mediaplugin_enable_mp3        = 1;
-$CFG->filter_mediaplugin_enable_flv        = 1;
-$CFG->filter_mediaplugin_enable_swf        = 1;
-$CFG->filter_mediaplugin_enable_html5audio = 1;
-$CFG->filter_mediaplugin_enable_html5video = 1;
-$CFG->filter_mediaplugin_enable_qt         = 1;
-$CFG->filter_mediaplugin_enable_wmp        = 1;
-$CFG->filter_mediaplugin_enable_rm         = 1;
+// Enable all players.
+$enabledmediaplugins = \core\plugininfo\media::get_enabled_plugins();
+\core\plugininfo\media::set_enabled_plugins('vimeo,youtubevideo,youtubeplaylist,flowplayer,html5audio,html5video,swf,quicktime,realplayer,wmp');
 
 // Create plugin.
 $filterplugin = new filter_mediaplugin(null, array());
@@ -159,6 +148,8 @@ foreach ($linksamples as $sample) {
     $filterplugin->filter($sample);
 }
 filter_mediaplugin_perf_stop('One link (mp3)');
+
+\core\plugininfo\media::set_enabled_plugins($enabledmediaplugins);
 
 // End page.
 echo html_writer::end_tag('ul');

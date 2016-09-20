@@ -118,4 +118,24 @@ class media extends base {
         }
         return $sortedplugins;
     }
+
+    /**
+     * Set the list of enabled media players in the specified sort order
+     * To be used when changing settings or in unit tests
+     * @param string|array $list list of plugin names without frankenstyle prefix - comma-separated string or an array
+     */
+    public static function set_enabled_plugins($list) {
+        if (empty($list)) {
+            $list = [];
+        } else if (!is_array($list)) {
+            $list = explode(',', $list);
+        }
+        if ($list) {
+            $plugins = \core_plugin_manager::instance()->get_installed_plugins('media');
+            $list = array_intersect($list, array_keys($plugins));
+        }
+        set_config('media_plugins_sortorder', join(',', $list));
+        \core_plugin_manager::reset_caches();
+        \core_media_manager::reset_caches();
+    }
 }
