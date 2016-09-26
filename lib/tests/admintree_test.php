@@ -322,4 +322,23 @@ class core_admintree_testcase extends advanced_testcase {
         $setting->write_setting('/mm/nn');
         $this->assertSame('', get_config('abc_cde', 'execpath'));
     }
+
+    /**
+     * Test the admin_setting_filetypes class.
+     */
+    public function test_filetypes_setting() {
+        $this->resetAfterTest();
+
+        set_config('typelist', null, 'abc_cde');
+        $setting = new admin_setting_filetypes('abc_cde/typelist', 'some desc', '', null);
+
+        // Check for valid types saved.
+        $return = $setting->write_setting('document;application/pdf');
+        $this->assertSame('', $return);
+        $this->assertSame('document;application/pdf', get_config('abc_cde', 'typelist'));
+
+        // Check for a validation error.
+        $return = $setting->write_setting('document;application/pdf;nonsense/nonsense');
+        $this->assertSame(get_string('validateerror', 'admin'), $return);
+    }
 }

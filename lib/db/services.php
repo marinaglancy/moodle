@@ -414,6 +414,15 @@ $functions = array(
         'ajax' => true,
         'services' => array(MOODLE_OFFICIAL_MOBILE_SERVICE),
     ),
+    'core_get_form_file_types_and_groups' => array(
+        'classname'     => 'core_external',
+        'methodname'    => 'get_form_file_types_and_groups',
+        'classpath'     => 'lib/external/externallib.php',
+        'description'   => 'Fetches file types and type groups for the filetypes form element.',
+        'type'          => 'read',
+        'loginrequired' => false,
+        'ajax'          => true,
+    ),
     'core_get_fragment' => array(
         'classname' => 'core_external',
         'methodname' => 'get_fragment',

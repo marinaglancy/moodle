@@ -201,4 +201,23 @@ class core_external_testcase extends externallib_advanced_testcase {
         $res = external_api::clean_returnvalue(core_external::update_inplace_editable_returns(), $res);
         $this->assertEquals('new tag name', $res['value']);
     }
+
+    /**
+     * Test get_form_file_types_and_groups()
+     */
+    public function test_get_form_file_types_and_groups() {
+        $this->resetAfterTest();
+
+        $result = core_external::get_form_file_types_and_groups(array('application/pdf', 'web_file'));
+        $result = external_api::clean_returnvalue(core_external::get_form_file_types_and_groups_returns(), $result);
+
+        $this->assertArrayHasKey('typegroups', $result);
+        $this->assertArrayHasKey('alltypes', $result);
+
+        $this->assertNotEmpty($result['typegroups']);
+        $this->assertNotEmpty($result['alltypes']);
+
+        $this->assertArrayHasKey('id', $result['typegroups'][0]);
+        $this->assertArrayHasKey('id', $result['alltypes'][0]);
+    }
 }
