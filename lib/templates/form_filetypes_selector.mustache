@@ -1,0 +1,88 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template core/form_filetypes_selector
+
+    Template to present the file types and groups selector.
+
+    Classes required for JS:
+    * none
+
+    Data attributes required for JS:
+    * none
+
+    Context variables required for this template:
+    * groups
+
+    Example context (json):
+    {
+        "groups": [
+            {
+                "groupkey": "web_file",
+                "isoption": true,
+                "selected": true,
+                "name": "Web files",
+                "extlist": ".css .html .xhtml .htm .js",
+                "types": [
+                    {
+                        "typekey": "text/css",
+                        "selected": false,
+                        "name": "Cascading Style-Sheet",
+                        "extlist": ".css"
+                    }
+                ]
+            },
+            {
+                "groupkey": "web_audio",
+                "isoption": false,
+                "selected": false,
+                "name": "Web-safe audio files",
+                "extlist": null,
+                "types": [
+                    {
+                        "typekey": "audio/mp3",
+                        "selected": false,
+                        "name": "Audio file (MP3)",
+                        "extlist": ".mp3"
+                    }
+                ]
+            }
+        ]
+    }
+}}
+<div class="form-filetypes-selector">
+{{#groups}}
+    <div class="filetypegroup {{#selected}}selected{{/selected}}">
+        <label>
+            {{#isoption}}
+                <input type="checkbox" value="{{groupkey}}" {{#selected}}checked{{/selected}}>
+            {{/isoption}}
+            {{> core/form_filetypes_type}}
+        </label>
+        <ul>
+            {{#types}}
+                <li>
+                    <label>
+                        <input type="checkbox" value="{{typekey}}" {{#selected}}checked{{/selected}}>
+                        {{> core/form_filetypes_type}}
+                    </label>
+                </li>
+            {{/types}}
+        </ul>
+    </div>
+{{/groups}}
+</div>

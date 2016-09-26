@@ -25,6 +25,7 @@
 
 $string['addfields'] = 'Add {$a} field(s) to form';
 $string['advancedelement'] = 'Advanced element';
+$string['choosetypes'] = 'Choose types...';
 $string['close'] = 'Close';
 $string['day'] = 'Day';
 $string['display'] = 'Display';
@@ -54,11 +55,13 @@ $string['nosuggestions'] = 'No suggestions';
 $string['novalue'] = 'Nothing entered';
 $string['novalueclicktoset'] = 'Click to enter text';
 $string['optional'] = 'Optional';
+$string['otherfiles'] = 'Other files';
 $string['othersettings'] = 'Other settings';
 $string['passwordunmaskedithint'] = 'Edit password';
 $string['passwordunmaskrevealhint'] = 'Reveal';
 $string['passwordunmaskinstructions'] = 'Press enter to save changes';
 $string['requiredelement'] = 'Required field';
+$string['savechoices'] = 'Save choices';
 $string['security'] = 'Security';
 $string['selectallornone'] = 'Select all/none';
 $string['selected'] = 'Selected';

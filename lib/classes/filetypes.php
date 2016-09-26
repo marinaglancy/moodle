@@ -274,7 +274,8 @@ abstract class core_filetypes {
             'xfdf' => array('type' => 'application/vnd.adobe.xfdf', 'icon' => 'pdf'),
 
             'xls' => array('type' => 'application/vnd.ms-excel', 'icon' => 'spreadsheet', 'groups' => array('spreadsheet')),
-            'xlsx' => array('type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'icon' => 'spreadsheet', 'groups' => array('spreadsheet')),
+            'xlsx' => array('type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                    'icon' => 'spreadsheet', 'groups' => array('spreadsheet')),
             'xlsm' => array('type' => 'application/vnd.ms-excel.sheet.macroEnabled.12',
                     'icon' => 'spreadsheet', 'groups' => array('spreadsheet')),
             'xltx' => array('type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.template',
