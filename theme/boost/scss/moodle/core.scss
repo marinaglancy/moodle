@@ -1099,6 +1099,7 @@ tr.flagged-tag a {
     #filterform {
         @extend .card;
         display: inline-block;
+        padding: 9px;
 
         .fitem {
             display: inline-block;
@@ -1124,6 +1125,7 @@ tr.flagged-tag a {
             clear: none;
             width: auto;
             margin: 0;
+            padding: 0;
         }
 
         select,
