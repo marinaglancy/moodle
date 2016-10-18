@@ -437,28 +437,26 @@ class workshop {
             $extensions = preg_split('/[\s,;:"\']+/', $extensions, null, PREG_SPLIT_NO_EMPTY);
         }
 
+        $normalized = [];
         foreach ($extensions as $i => $extension) {
-            $extension = str_replace('*.', '', $extension);
+            $extension = str_replace('*.', '.', $extension);
             $extension = strtolower($extension);
-            $extension = ltrim($extension, '.');
             $extension = trim($extension);
-            $extensions[$i] = $extension;
-        }
-
-        foreach ($extensions as $i => $extension) {
-            if (strpos($extension, '*') !== false or strpos($extension, '?') !== false) {
-                unset($extensions[$i]);
+            if (substr($extension, 0, 1) !== '.') {
+                $match = file_get_typegroup('extension', '.' . $extension);
+                if ($match && count($match) == 1 && $match[0] === '.' . $extension) {
+                    // This is an extension with forgotten dot.
+                    $extension = '.' . $extension;
+                }
+            } else {
+                $extension = '.' . ltrim($extension, '.');
+            }
+            if (strlen(trim($extension, '.')) && strpos($extension, '*') === false && strpos($extension, '?') === false) {
+                $normalized[$extension] = $extension;
             }
         }
 
-        $extensions = array_filter($extensions, 'strlen');
-        $extensions = array_keys(array_flip($extensions));
-
-        foreach ($extensions as $i => $extension) {
-            $extensions[$i] = '.'.$extension;
-        }
-
-        return $extensions;
+        return array_values($normalized);
     }
 
     /**
@@ -471,63 +469,7 @@ class workshop {
 
         $extensions = self::normalize_file_extensions($extensions);
 
-        foreach ($extensions as $i => $extension) {
-            $extensions[$i] = ltrim($extension, '.');
-        }
-
         return implode(', ', $extensions);
-    }
-
-    /**
-     * Check given file types and return invalid/unknown ones.
-     *
-     * Empty whitelist is interpretted as "any extension is valid".
-     *
-     * @param string|array $extensions list of file extensions
-     * @param string|array $whitelist list of valid extensions
-     * @return array list of invalid extensions not found in the whitelist
-     */
-    public static function invalid_file_extensions($extensions, $whitelist) {
-
-        $extensions = self::normalize_file_extensions($extensions);
-        $whitelist = self::normalize_file_extensions($whitelist);
-
-        if (empty($extensions) or empty($whitelist)) {
-            return array();
-        }
-
-        // Return those items from $extensions that are not present in $whitelist.
-        return array_keys(array_diff_key(array_flip($extensions), array_flip($whitelist)));
-    }
-
-    /**
-     * Is the file have allowed to be uploaded to the workshop?
-     *
-     * Empty whitelist is interpretted as "any file type is allowed" rather
-     * than "no file can be uploaded".
-     *
-     * @param string $filename the file name
-     * @param string|array $whitelist list of allowed file extensions
-     * @return false
-     */
-    public static function is_allowed_file_type($filename, $whitelist) {
-
-        $whitelist = self::normalize_file_extensions($whitelist);
-
-        if (empty($whitelist)) {
-            return true;
-        }
-
-        $haystack = strrev(trim(strtolower($filename)));
-
-        foreach ($whitelist as $extension) {
-            if (strpos($haystack, strrev($extension)) === 0) {
-                // The file name ends with the extension.
-                return true;
-            }
-        }
-
-        return false;
     }
 
     ////////////////////////////////////////////////////////////////////////////////
