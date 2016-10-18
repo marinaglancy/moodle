@@ -79,7 +79,7 @@ class filetypes {
     /**
      * Constructor
      *
-     * @param array $limitto if not empty, the mimetypes and/or groups to restrict to
+     * @param array $limitto if not empty, the extensions and/or groups to restrict to
      */
     public function __construct($limitto = array()) {
         // Initialise the types and groups, lexically sorted.
@@ -96,9 +96,9 @@ class filetypes {
                 'extlist' => implode(' ', file_get_typegroup('extension', $group)),
                 'isoption' => !$limitto || in_array($group, $limitto),
             );
-            foreach (file_get_typegroup('type', $group) as $type) {
-                if ($this->typegroups[$group]->isoption || in_array($type, $limitto)) {
-                    $this->add_type($type, $group);
+            foreach (file_get_typegroup('extension', $group) as $extension) {
+                if ($this->typegroups[$group]->isoption || in_array($extension, $limitto)) {
+                    $this->add_type($extension, $group);
                 }
             }
 
@@ -143,21 +143,20 @@ class filetypes {
 
     /**
      * Add a type to a type group.
-     * @param string $type mime type
+     * @param string $ext file extension without leading dot
      * @param string $group group identifier
      */
-    private function add_type($type, $group) {
-        $exts = file_get_typegroup('extension', $type);
+    private function add_type($ext, $group) {
         $mtype = array(
-            'filename' => '.'.$exts[0],
-            'mimetype' => $type,
+            'filename' => '.'.$ext,
+            'mimetype' => file_get_typegroup('type', 'file.'.$ext),
         );
         $a = new stdClass();
-        $a->extlist = implode(' ', $exts);
+        $a->extlist = $ext;
         $a->name = get_mimetype_description($mtype);
 
-        $this->alltypes[$type] = $a;
-        $this->typegroups[$group]->types[] = $type;
+        $this->alltypes[$ext] = $a;
+        $this->typegroups[$group]->types[] = $ext;
     }
 
     /**
@@ -167,11 +166,14 @@ class filetypes {
     private function get_all_typegroups() {
         $typegroups = array();
         $other = array();
-        foreach (core_filetypes::get_types() as $info) {
+        foreach (core_filetypes::get_types() as $extension => $info) {
+            if ($extension === 'xxx') {
+                continue;
+            }
             if (!empty($info['groups'])) {
                 $typegroups = array_merge($typegroups, $info['groups']);
             } else {
-                $other[] = $info['type'];
+                $other[] = '.' . $extension;
             }
         }
         return array(array_unique($typegroups), array_unique($other));
