@@ -86,8 +86,12 @@ class filetypes {
         list ($groups, $other) = $this->get_all_typegroups();
 
         foreach ($groups as $group) {
+            $groupname = $group;
+            if (get_string_manager()->string_exists("group:$group", 'mimetypes')) {
+                $groupname = get_string("group:$group", 'mimetypes');
+            }
             $this->typegroups[$group] = (object)array(
-                'name' => get_string("group:$group", 'mimetypes'),
+                'name' => $groupname,
                 'types' => array(),
                 'extlist' => implode(' ', file_get_typegroup('extension', $group)),
                 'isoption' => !$limitto || in_array($group, $limitto),
