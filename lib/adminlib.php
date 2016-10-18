@@ -9855,7 +9855,9 @@ class admin_setting_filetypes extends admin_setting {
         $alltypes = $types->get_alltypes();
         $typegroups = $types->get_typegroups();
 
-        foreach (explode(';', $data) as $type) {
+        $types = preg_split('/\s*,\s*/', trim(strtolower($data)), -1, PREG_SPLIT_NO_EMPTY);
+
+        foreach ($types as $type) {
             if (!isset($alltypes[$type]) && !isset($typegroups[$type])) {
                 return get_string('validateerror', 'admin');
             }
@@ -9923,7 +9925,9 @@ class admin_setting_filetypes extends admin_setting {
         $alltypes = $types->get_alltypes();
         $tplcontext = array('items' => array());
 
-        foreach (explode(';', $value) as $val) {
+        $types = preg_split('/\s*,\s*/', trim(strtolower($value)), -1, PREG_SPLIT_NO_EMPTY);
+
+        foreach ($types as $val) {
             if (isset($alltypes[$val])) {
                 $tplcontext['items'][] = $alltypes[$val];
             } else if (isset($typegroups[$val])) {

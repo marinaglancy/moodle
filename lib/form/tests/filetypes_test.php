@@ -50,12 +50,12 @@ class core_form_filetypes_testcase extends basic_testcase {
      * Test fetching a single file type.
      */
     public function test_specific_type() {
-        $types = new core_form\filetypes(array('application/pdf'));
+        $types = new core_form\filetypes(array('.pdf'));
         $this->assertEquals(
             array(
                 'document' => (object)array(
                     'name' => 'Document files',
-                    'types' => array('application/pdf'),
+                    'types' => array('.pdf'),
                     'isoption' => false,
                     // Note: extlist is not returned in this situation.
                 )
@@ -64,7 +64,7 @@ class core_form_filetypes_testcase extends basic_testcase {
         );
         $this->assertEquals(
             array(
-                'application/pdf' => (object)array(
+                '.pdf' => (object)array(
                     'name' => 'PDF document',
                     'extlist' => '.pdf',
                 )
@@ -85,7 +85,7 @@ class core_form_filetypes_testcase extends basic_testcase {
         $this->assertNotEmpty($alltypes);
 
         $this->assertArrayHasKey('document', $typegroups);
-        $this->assertArrayHasKey('application/pdf', $alltypes);
+        $this->assertArrayHasKey('.pdf', $alltypes);
 
         // When fetching a full type group, we expect to see the extensions list,
         // and that it be a choosable option.
@@ -101,8 +101,8 @@ class core_form_filetypes_testcase extends basic_testcase {
         $mform = $form->getform();
         $el = $mform->addElement('filetypes', 'testel', null, null);
 
-        $values = array('testel' => array('value' => 'document;application/pdf;nonsense/nonsense'));
-        $this->assertEquals('document;application/pdf', $el->exportValue($values));
+        $values = array('testel' => array('value' => 'document,.pdf,.nonsense'));
+        $this->assertEquals('document,.pdf', $el->exportValue($values));
     }
 
     /**
@@ -111,10 +111,10 @@ class core_form_filetypes_testcase extends basic_testcase {
     public function test_formelem_limited() {
         $form = new temp_form_filetypes();
         $mform = $form->getform();
-        $el = $mform->addElement('filetypes', 'testel', null, array('application/pdf'));
+        $el = $mform->addElement('filetypes', 'testel', null, array('.pdf'));
 
-        $values = array('testel' => array('value' => 'document;application/pdf;nonsense/nonsense'));
-        $this->assertEquals('application/pdf', $el->exportValue($values));
+        $values = array('testel' => array('value' => 'document,.pdf,.nonsense'));
+        $this->assertEquals('.pdf', $el->exportValue($values));
     }
 
 }

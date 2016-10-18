@@ -116,8 +116,8 @@ class MoodleQuickForm_filetypes extends MoodleQuickForm_group {
         $value = array();
         $formval = $this->_elements['value']->exportValue($submitValues[$this->getName()], false);
         if ($formval) {
-            $formval = str_replace(' ', '', $formval);
-            foreach (explode(';', $formval) as $type) {
+            $types = preg_split('/\s*,\s*/', trim(strtolower($formval)), -1, PREG_SPLIT_NO_EMPTY);
+            foreach ($types as $type) {
                 // Return only the groups and types we know of.
                 if (isset($alltypes[$type])) {
                     $value[] = $type;
@@ -129,7 +129,7 @@ class MoodleQuickForm_filetypes extends MoodleQuickForm_group {
             }
         }
 
-        $value = implode(';', $value);
+        $value = implode(',', $value);
         return $this->_prepareValue($value, $assoc);
     }
 
@@ -205,7 +205,8 @@ class MoodleQuickForm_filetypes extends MoodleQuickForm_group {
         $alltypes = $this->typeinfo->get_alltypes();
         $tplcontext = array('items' => array());
 
-        foreach (explode(';', $value) as $val) {
+        $types = preg_split('/\s*,\s*/', trim(strtolower($value)), -1, PREG_SPLIT_NO_EMPTY);
+        foreach ($types as $val) {
             if (isset($alltypes[$val])) {
                 $tplcontext['items'][] = $alltypes[$val];
             } else if (isset($typegroups[$val])) {
