@@ -175,12 +175,14 @@ XPATH
 .//*
 [%fieldFilterWithPlaceholder%][%notFieldTypeFilter%][%fieldMatchWithPlaceholder%]
 |
-.//label[%tagTextMatch%]//.//*[%fieldFilterWithPlaceholder%][%notFieldTypeFilter%]
+.//label[count(input|select)=1][%tagTextMatch%]//.//*[%fieldFilterWithPlaceholder%][%notFieldTypeFilter%]
 |
 .//*
 [%fieldFilterWithoutPlaceholder%][%notFieldTypeFilter%][%fieldMatchWithoutPlaceholder%]
 |
-.//label[%tagTextMatch%]//.//*[%fieldFilterWithoutPlaceholder%][%notFieldTypeFilter%]
+.//label[count(input|select)=1][%tagTextMatch%]//.//*[%fieldFilterWithoutPlaceholder%][%notFieldTypeFilter%]
+|
+.//label[count(input|select)=1][contains(normalize-space(string(descendant-or-self::text())), %locator%)]/*[%fieldFilterWithPlaceholder%]
 XPATH
         ,
             'filemanager' => <<<XPATH
