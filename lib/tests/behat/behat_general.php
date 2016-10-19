@@ -338,6 +338,20 @@ class behat_general extends behat_base {
     }
 
     /**
+     * Generic click action. Click on the nth element of the specified type.
+     *
+     * @When /^I click on instance "(?P<num_number>\d+)" of "(?P<element_string>(?:[^"]|\\")*)" "(?P<selector_string>[^"]*)"$/
+     * @param string $num Which instance to return (counting from 1)
+     * @param string $element Element we look for
+     * @param string $selectortype The type of what we look for
+     */
+    public function i_click_on_nth($num, $element, $selectortype) {
+        $node = $this->get_selected_node($selectortype, $element, $num - 1);
+        $this->ensure_node_is_visible($node);
+        $node->click();
+    }
+
+    /**
      * Sets the focus and takes away the focus from an element, generating blur JS event.
      *
      * @When /^I take focus off "(?P<element_string>(?:[^"]|\\")*)" "(?P<selector_string>[^"]*)"$/
@@ -398,6 +412,23 @@ class behat_general extends behat_base {
         $this->ensure_node_is_visible($node);
         $node->click();
     }
+
+    /**
+     * Click on the nth element of the specified type which is located inside the second element.
+     *
+     * @When /^I click on "(?P<element_string>(?:[^"]|\\")*)" "(?P<selector_string>[^"]*)" in instance "(?P<num_number>\d+)" of the "(?P<element_container_string>(?:[^"]|\\")*)" "(?P<text_selector_string>[^"]*)"$/
+     * @param string $element Element we look for
+     * @param string $selectortype The type of what we look for
+     * @param int    $num Which instance of the container to return (counting from 1)
+     * @param string $nodeelement Element we look in
+     * @param string $nodeselectortype The type of selector where we look in
+     */
+    public function i_click_on_in_the_nth($element, $selectortype, $num, $nodeelement, $nodeselectortype) {
+        $node = $this->get_node_in_container($selectortype, $element, $nodeselectortype, $nodeelement, $num - 1);
+        $this->ensure_node_is_visible($node);
+        $node->click();
+    }
+
 
     /**
      * Drags and drops the specified element to the specified container. This step does not work in all the browsers, consider it experimental.

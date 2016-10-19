@@ -100,7 +100,7 @@ class behat_base extends Behat\MinkExtension\Context\RawMinkContext {
      * @param int $timeout Forces a specific time out (in seconds).
      * @return NodeElement
      */
-    protected function find($selector, $locator, $exception = false, $node = false, $timeout = false) {
+    protected function find($selector, $locator, $exception = false, $node = false, $timeout = false, $returnindex = 0) {
 
         // Throw exception, so dev knows it is not supported.
         if ($selector === 'named') {
@@ -111,7 +111,7 @@ class behat_base extends Behat\MinkExtension\Context\RawMinkContext {
 
         // Returns the first match.
         $items = $this->find_all($selector, $locator, $exception, $node, $timeout);
-        return count($items) ? reset($items) : null;
+        return count($items) ? $items[$returnindex] : null;
     }
 
     /**
@@ -242,10 +242,13 @@ class behat_base extends Behat\MinkExtension\Context\RawMinkContext {
 
         // Only the named selector identifier.
         $cleanname = substr($name, 5);
+        $returnindex = isset($arguments[1]) ? $arguments[1] : 0;
 
         // All named selectors shares the interface.
-        if (count($arguments) !== 1) {
-            throw new coding_exception('The "' . $cleanname . '" named selector needs the locator as it\'s single argument');
+        if (count($arguments) > 2) {
+            throw new coding_exception(
+                'The "' . $cleanname . '" named selector needs the locator as its first argument and an option index to return as' .
+                    ' its second argument');
         }
 
         // Redirecting execution to the find method with the specified selector.
@@ -254,7 +257,11 @@ class behat_base extends Behat\MinkExtension\Context\RawMinkContext {
             array(
                 $cleanname,
                 behat_context_helper::escape($arguments[0])
-            )
+            ),
+                           false,
+                           false,
+                           false,
+                           $returnindex
         );
     }
 
@@ -367,13 +374,13 @@ class behat_base extends Behat\MinkExtension\Context\RawMinkContext {
      * @param string $element
      * @return NodeElement
      */
-    protected function get_selected_node($selectortype, $element) {
+    protected function get_selected_node($selectortype, $element, $returnindex = 0) {
 
         // Getting Mink selector and locator.
         list($selector, $locator) = $this->transform_selector($selectortype, $element);
 
         // Returns the NodeElement.
-        return $this->find($selector, $locator);
+        return $this->find($selector, $locator, false, false, false, $returnindex);
     }
 
     /**
@@ -384,13 +391,13 @@ class behat_base extends Behat\MinkExtension\Context\RawMinkContext {
      * @param string $element
      * @return NodeElement
      */
-    protected function get_text_selector_node($selectortype, $element) {
+    protected function get_text_selector_node($selectortype, $element, $returnindex = 0) {
 
         // Getting Mink selector and locator.
         list($selector, $locator) = $this->transform_text_selector($selectortype, $element);
 
         // Returns the NodeElement.
-        return $this->find($selector, $locator);
+        return $this->find($selector, $locator, null, null, null, $returnindex);
     }
 
     /**
@@ -403,10 +410,10 @@ class behat_base extends Behat\MinkExtension\Context\RawMinkContext {
      * @param mixed $containerelement The container locator.
      * @return NodeElement
      */
-    protected function get_node_in_container($selectortype, $element, $containerselectortype, $containerelement) {
+    protected function get_node_in_container($selectortype, $element, $containerselectortype, $containerelement, $returnindex = 0) {
 
         // Gets the container, it will always be text based.
-        $containernode = $this->get_text_selector_node($containerselectortype, $containerelement);
+        $containernode = $this->get_text_selector_node($containerselectortype, $containerelement, $returnindex);
 
         list($selector, $locator) = $this->transform_selector($selectortype, $element);
 

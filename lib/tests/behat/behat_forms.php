@@ -191,6 +191,20 @@ class behat_forms extends behat_base {
     }
 
     /**
+     * Sets the specified value to the field.
+     *
+     * @Given /^I set instance "(?P<num_number>\d+)" of the field "(?P<field_string>(?:[^"]|\\")*)" to "(?P<value_string>(?:[^"]|\\")*)"$/
+     * @throws ElementNotFoundException Thrown by behat_base::find
+     * @param string $num
+     * @param string $field
+     * @param string $value
+     * @return void
+     */
+    public function i_set_the_nth_field_to($num, $field, $value) {
+        $this->set_field_value($field, $value, $num - 1);
+    }
+
+    /**
      * Press the key in the field to trigger the javascript keypress event
      *
      * Note that the character key will not actually be typed in the input field
@@ -259,6 +273,31 @@ class behat_forms extends behat_base {
 
         // Get the field.
         $formfield = behat_field_manager::get_form_field_from_label($field, $this);
+
+        // Checks if the provided value matches the current field value.
+        if (!$formfield->matches($value)) {
+            $fieldvalue = $formfield->get_value();
+            throw new ExpectationException(
+                'The \'' . $field . '\' value is \'' . $fieldvalue . '\', \'' . $value . '\' expected' ,
+                $this->getSession()
+            );
+        }
+    }
+
+    /**
+     * Checks, the field matches the value. More info in http://docs.moodle.org/dev/Acceptance_testing#Providing_values_to_steps.
+     *
+     * @Then /^instance "(?P<num_number>\d+)" of the field "(?P<field_string>(?:[^"]|\\")*)" matches value "(?P<value_string>(?:[^"]|\\")*)"$/
+     * @throws ElementNotFoundException Thrown by behat_base::find
+     * @param int $num
+     * @param string $field
+     * @param string $value
+     * @return void
+     */
+    public function the_nth_field_matches_value($num, $field, $value) {
+
+        // Get the field.
+        $formfield = behat_field_manager::get_form_field_from_label($field, $this, $num - 1);
 
         // Checks if the provided value matches the current field value.
         if (!$formfield->matches($value)) {
@@ -481,13 +520,13 @@ class behat_forms extends behat_base {
      *
      * @param string $fieldlocator The pointer to the field, it will depend on the field type.
      * @param string $value
+     * @param int $matchnum Which instance of $fieldlocator to set
      * @return void
      */
-    protected function set_field_value($fieldlocator, $value) {
-
+    protected function set_field_value($fieldlocator, $value, $matchnum = 0) {
         // We delegate to behat_form_field class, it will
         // guess the type properly as it is a select tag.
-        $field = behat_field_manager::get_form_field_from_label($fieldlocator, $this);
+        $field = behat_field_manager::get_form_field_from_label($fieldlocator, $this, $matchnum);
         $field->set_value($value);
     }
 
