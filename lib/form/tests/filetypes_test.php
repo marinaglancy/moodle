@@ -111,7 +111,7 @@ class core_form_filetypes_testcase extends basic_testcase {
     public function test_formelem_limited() {
         $form = new temp_form_filetypes();
         $mform = $form->getform();
-        $el = $mform->addElement('filetypes', 'testel', null, array('.pdf'));
+        $el = $mform->addElement('filetypes', 'testel', null, ['filetypes' => array('.pdf')]);
 
         $values = array('testel' => array('value' => 'document,.pdf,.nonsense'));
         $this->assertEquals('.pdf', $el->exportValue($values));

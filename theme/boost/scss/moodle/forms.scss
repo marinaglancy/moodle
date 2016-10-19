@@ -436,6 +436,9 @@ fieldset.coursesearchbox label {
         max-width: 80%;
         text-align: right;
     }
+    &.allselected .filetypegroup:not([data-groupkey='*']) {
+        display: none;
+    }
 }
 .settingsform input.form-filetypes-value,
 .mform .form-filetypes-value input {

@@ -41,7 +41,7 @@ class MoodleQuickForm_filetypes extends MoodleQuickForm_group {
     /**
      * @var array The system selected file type choices.
      */
-    private $filetypes;
+    private $filetypes = [];
 
     /**
      * @var core_form\filetypes  Provides information about the type and group options.
@@ -49,14 +49,21 @@ class MoodleQuickForm_filetypes extends MoodleQuickForm_group {
     private $typeinfo;
 
     /**
+     * @var bool Allow selection of 'All file types' (will be stored as '*').
+     */
+    private $allowall = true;
+
+    /**
      * Constructor
      *
      * @param string $elementName Element's name
      * @param mixed $elementLabel Label(s) for an element
-     * @param mixed $filetypes A non-empty set of filetypes to choose from as an array, anything else for all
+     * @param mixed $options element options:
+     *   'filetypes': Set of filetypes to choose from as an array, default - no restriction; example ['filetypes' => ['web_image']]
+     *   'allowall': Allow to select 'All file types', default - true when no filetypes specified. When filetypes are specified it is N/A.
      * @param mixed $attributes Either a typical HTML attribute string or an associative array
      */
-    public function __construct($elementName = null, $elementLabel = null, $filetypes = null, $attributes = null) {
+    public function __construct($elementName = null, $elementLabel = null, $options = null, $attributes = null) {
         parent::__construct($elementName, $elementLabel, null, '', true);
         $this->_persistantFreeze = true;
         $this->_type = 'filetypes';
@@ -64,12 +71,25 @@ class MoodleQuickForm_filetypes extends MoodleQuickForm_group {
         $this->setAttributes(array('name' => $elementName));    // Necessary when frozen.
         $this->updateAttributes($attributes);
 
-        if (is_array($filetypes) && $filetypes) {
-            $this->filetypes = $filetypes;
-        } else {
-            $this->filetypes = array();
+        if (is_array($options) && $options) {
+            if (array_key_exists('filetypes', $options) && is_array($options['filetypes'])) {
+                $this->filetypes = $options['filetypes'];
+            }
+            if (!$this->filetypes && array_key_exists('allowall', $options)) {
+                $this->allowall = (bool)$options['allowall'];
+            }
         }
-        $this->typeinfo = new core_form\filetypes($this->filetypes);
+    }
+
+    /**
+     * Retrieves instance of filetypes class
+     * @return \core_form\filetypes
+     */
+    private function get_typeinfo() {
+        if ($this->typeinfo === null) {
+            $this->typeinfo = new core_form\filetypes($this->filetypes, $this->allowall);
+        }
+        return $this->typeinfo;
     }
 
     /**
@@ -110,8 +130,9 @@ class MoodleQuickForm_filetypes extends MoodleQuickForm_group {
      * @return array
      */
     public function exportValue(&$submitValues, $assoc = false) {
-        $typegroups = $this->typeinfo->get_typegroups();
-        $alltypes = $this->typeinfo->get_alltypes();
+        $typeinfo = $this->get_typeinfo();
+        $typegroups = $typeinfo->get_typegroups();
+        $alltypes = $typeinfo->get_alltypes();
 
         $value = array();
         $formval = $this->_elements['value']->exportValue($submitValues[$this->getName()], false);
@@ -119,7 +140,11 @@ class MoodleQuickForm_filetypes extends MoodleQuickForm_group {
             $types = preg_split('/\s*,\s*/', trim(strtolower($formval)), -1, PREG_SPLIT_NO_EMPTY);
             foreach ($types as $type) {
                 // Return only the groups and types we know of.
-                if (isset($alltypes[$type])) {
+                if ($type === '*' && $this->allowall) {
+                    // "All file types" selected, ignore any other selection.
+                    $value = ['*'];
+                    break;
+                } else if (isset($alltypes[$type])) {
                     $value[] = $type;
                 } else if (isset($typegroups[$type])) {
                     if (!empty($typegroups[$type]->isoption)) {
@@ -151,7 +176,8 @@ class MoodleQuickForm_filetypes extends MoodleQuickForm_group {
             array(
                 $this->getAttribute('id'),
                 $this->getLabel(),
-                $this->filetypes
+                $this->filetypes,
+                $this->allowall
             )
         );
         if ($this->_flagFrozen) {
@@ -201,8 +227,9 @@ class MoodleQuickForm_filetypes extends MoodleQuickForm_group {
     private function render_label($value) {
         global $OUTPUT;
 
-        $typegroups = $this->typeinfo->get_typegroups();
-        $alltypes = $this->typeinfo->get_alltypes();
+        $typeinfo = $this->get_typeinfo();
+        $typegroups = $typeinfo->get_typegroups();
+        $alltypes = $typeinfo->get_alltypes();
         $tplcontext = array('items' => array());
 
         $types = preg_split('/\s*,\s*/', trim(strtolower($value)), -1, PREG_SPLIT_NO_EMPTY);

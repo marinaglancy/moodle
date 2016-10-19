@@ -80,8 +80,9 @@ class filetypes {
      * Constructor
      *
      * @param array $limitto if not empty, the extensions and/or groups to restrict to
+     * @param bool $allowall allow selection of "All file types"
      */
-    public function __construct($limitto = array()) {
+    public function __construct($limitto = array(), $allowall = true) {
         // Initialise the types and groups, lexically sorted.
         list ($groups, $other) = $this->get_all_typegroups();
 
@@ -116,6 +117,16 @@ class filetypes {
         }
 
         core_collator::asort_objects_by_property($this->typegroups, 'name', core_collator::SORT_NATURAL);
+
+        // Add 'All file types' pseudo-group.
+        if ($allowall && !$limitto) {
+            $this->typegroups = ['*' => (object)[
+                'name' => get_string('allfiletypes', 'form'),
+                'types' => [],
+                'extlist' => '',
+                'isoption' => true
+            ]] + $this->typegroups;
+        }
 
         if ($other) {
             // Add the ungrouped types to an 'other' group at the end of the list.

@@ -229,13 +229,13 @@ class core_filetypes_testcase extends advanced_testcase {
         // Change a standard filetype, then change it back.
         core_filetypes::update_type('asm', 'asm', 'text/plain', 'document');
         $this->assertObjectHasAttribute('customfiletypes', $CFG);
-        core_filetypes::update_type('asm', 'asm', 'text/plain', 'sourcecode');
+        core_filetypes::update_type('asm', 'asm', 'text/plain', 'sourcecode', ['sourcecode']);
         $this->assertObjectNotHasAttribute('customfiletypes', $CFG);
 
         // Delete a standard filetype, then add it back (the same).
         core_filetypes::delete_type('asm');
         $this->assertObjectHasAttribute('customfiletypes', $CFG);
-        core_filetypes::add_type('asm', 'text/plain', 'sourcecode');
+        core_filetypes::add_type('asm', 'text/plain', 'sourcecode', ['sourcecode']);
         $this->assertObjectNotHasAttribute('customfiletypes', $CFG);
 
         // Revert a changed type.
