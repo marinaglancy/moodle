@@ -480,6 +480,7 @@ class core_external extends external_api {
                     VALUE_DEFAULT,
                     array()
                 ),
+                'allowall' => new external_value(PARAM_BOOL, 'Allow to select all file types', VALUE_DEFAULT, true),
                 'lang' => new external_value(PARAM_LANG, 'lang', VALUE_DEFAULT, null),
             )
         );
@@ -489,10 +490,11 @@ class core_external extends external_api {
      * Loads file type groups and file types.
      *
      * @param string $filetypes Filters the result set to the types/groups given.
+     * @param bool $allowall Allow to select all file types
      * @param string $lang The language for translation.
      * @return array typegroups and alltypes, each an array
      */
-    public static function get_form_file_types_and_groups($filetypes, $lang = null) {
+    public static function get_form_file_types_and_groups($filetypes, $allowall = true, $lang = null) {
         if (empty($lang)) {
             $lang = current_language();
         }
@@ -501,13 +503,14 @@ class core_external extends external_api {
             self::get_form_file_types_and_groups_parameters(),
             array(
                 'filetypes' => $filetypes,
+                'allowall' => $allowall,
                 'lang' => $lang,
             )
         );
 
         force_current_language($lang);
 
-        $types = new core_form\filetypes($filetypes);
+        $types = new core_form\filetypes($filetypes, $allowall);
         $return = array(
             'typegroups' => array(),
             'alltypes' => array(),

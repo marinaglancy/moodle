@@ -64,9 +64,9 @@
         ]
     }
 }}
-<div class="form-filetypes-selector">
+<div class="form-filetypes-selector {{#allselected}}allselected{{/allselected}}">
 {{#groups}}
-    <div class="filetypegroup {{#selected}}selected{{/selected}}">
+    <div class="filetypegroup {{#selected}}selected{{/selected}}" data-groupkey="{{groupkey}}">
         <label>
             {{#isoption}}
                 <input type="checkbox" value="{{groupkey}}" {{#selected}}checked{{/selected}}>

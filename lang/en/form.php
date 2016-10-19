@@ -24,6 +24,7 @@
  */
 
 $string['addfields'] = 'Add {$a} field(s) to form';
+$string['allfiletypes'] = 'All file types';
 $string['advancedelement'] = 'Advanced element';
 $string['choosetypes'] = 'Choose types...';
 $string['close'] = 'Close';
