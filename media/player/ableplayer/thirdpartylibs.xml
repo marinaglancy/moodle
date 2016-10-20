@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<libraries>
+    <library>
+        <location>amd/src</location>
+        <name>Able player</name>
+        <license>MIT</license>
+        <version>3.0</version>
+        <licenseversion></licenseversion>
+    </library>
+</libraries>

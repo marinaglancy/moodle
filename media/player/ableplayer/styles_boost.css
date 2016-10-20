@@ -1,0 +1,15 @@
+/*
+ * Resolve conflicts between moodle standard themes and ableplayer CSS.
+ */
+
+.able * {
+    box-sizing: content-box;
+}
+
+.mediaplugin .able-player {
+    text-align: left;
+}
+
+.course-content li.section li.activity .able-player ul {
+    list-style: none;
+}
