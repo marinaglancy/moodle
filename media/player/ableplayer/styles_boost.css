@@ -1,0 +1,11 @@
+/*
+ * Resolve conflicts between moodle standard themes and ableplayer CSS.
+ */
+
+.able * {
+    box-sizing: content-box;
+}
+
+.able-controller .able-seekbar {
+    text-align: left;
+}
