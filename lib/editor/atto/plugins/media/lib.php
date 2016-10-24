@@ -28,9 +28,85 @@
 function atto_media_strings_for_js() {
     global $PAGE;
 
-    $PAGE->requires->strings_for_js(array('createmedia',
-                                          'enterurl',
+    $PAGE->requires->strings_for_js(array('add',
+                                          'addcaptionstrack',
+                                          'addchapterstrack',
+                                          'adddescriptionstrack',
+                                          'addmetadatatrack',
+                                          'addsource',
+                                          'addsubtitlestrack',
+                                          'addtrack',
+                                          'addvideosource',
+                                          'addaudiosource',
+                                          'advancedsettings',
+                                          'audio',
+                                          'audiosourcelabel',
+                                          'autoplay',
+                                          'browserepositories',
+                                          'browserepositories',
+                                          'captions',
+                                          'captionssourcelabel',
+                                          'chapters',
+                                          'chapterssourcelabel',
+                                          'controls',
+                                          'createmedia',
+                                          'default',
+                                          'descriptions',
+                                          'descriptionssourcelabel',
+                                          'displayoptions',
                                           'entername',
-                                          'browserepositories'),
+                                          'entername',
+                                          'entersource',
+                                          'enterurl',
+                                          'height',
+                                          'kind',
+                                          'label',
+                                          'languagesavailable',
+                                          'languagesinstalled',
+                                          'link',
+                                          'loop',
+                                          'metadata',
+                                          'metadatasourcelabel',
+                                          'mute',
+                                          'poster',
+                                          'posterheight',
+                                          'posterwidth',
+                                          'remove',
+                                          'size',
+                                          'srclang',
+                                          'subtitles',
+                                          'subtitlessourcelabel',
+                                          'track',
+                                          'tracks',
+                                          'video',
+                                          'videosourcelabel',
+                                          'width'),
                                     'atto_media');
+}
+
+/**
+ * Sends the parameters to the JS module.
+ *
+ * @return array
+ */
+function atto_media_params_for_js() {
+    $langsinstalled = get_string_manager()->get_list_of_translations(true);
+    $langsavailable = get_string_manager()->get_list_of_languages();
+    $langs = ['langs' => ['installed' => [], 'available' => []]];
+
+    foreach ($langsinstalled as $code => $name) {
+        $langs['langs']['installed'][] = [
+            'lang' => $name,
+            'code' => $code
+        ];
+    }
+
+    foreach ($langsavailable as $code => $name) {
+        // See MDL-50829 for an explanation of this lrm thing.
+        $lrm = json_decode('"\u200E"');
+        $langs['langs']['available'][] = [
+            'lang' => $name . ' ' . $lrm . '(' . $code . ')' . $lrm, 'code' => $code];
+    }
+
+    return $langs;
 }

@@ -1,0 +1,8 @@
+fieldset input[size].atto_media_url_entry {
+    width: 372px;
+}
+
+.atto_form.atto_media .atto_media_track_lang_entry,
+.atto_form.atto_media .atto_media_track_label_entry {
+    width: 152px;
+}
