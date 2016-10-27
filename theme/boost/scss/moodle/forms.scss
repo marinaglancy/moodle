@@ -397,6 +397,87 @@ fieldset.coursesearchbox label {
     font-size: large;
 }
 
+.moodle-dialogue-base .moodle-dialogue.form-filetypes-chooser {
+    .moodle-dialogue-bd {
+        overflow-y: scroll;
+        height: 30em;
+    }
+    .moodle-dialogue-content .moodle-dialogue-ft {
+        text-align: center;
+    }
+}
+.form-filetypes-selector {
+    .filetypegroup > label {
+        font-weight: bold;
+    }
+    .filetypegroup ul {
+        list-style: none;
+        margin-bottom: 0;
+    }
+    .filetypegroup.selected ul {
+        display: none;
+    }
+    .filetypegroup > label .extlist {
+        display: none;
+        font-weight: normal;
+    }
+    .filetypegroup.selected > label .extlist {
+        display: inline;
+    }
+    label {
+        clear: right;
+        display: block;
+    }
+    .extlist {
+        /*rtl:ignore*/
+        direction: ltr;
+        float: right;
+        color: #888;
+        max-width: 80%;
+        text-align: right;
+    }
+    &.allselected .filetypegroup:not([data-groupkey='*']) {
+        display: none;
+    }
+}
+.settingsform input.form-filetypes-value,
+.mform .form-filetypes-value input {
+    /*rtl:ignore*/
+    direction: ltr;
+}
+.settingsform input.form-filetypes-choose,
+.mform .form-filetypes-choose,
+.jsenabled .settingsform input.form-filetypes-value,
+.jsenabled .mform .form-filetypes-value {
+    display: none;
+}
+.jsenabled .settingsform input.form-filetypes-choose {
+    display: inline-block;
+}
+.jsenabled .mform .form-filetypes-choose {
+    display: block;
+}
+.form-filetypes-label {
+    ul {
+        width: 30em;
+        list-style: none;
+        margin-left: 0;
+        margin-right: 0;
+        padding-left: 0;
+    }
+    li {
+        clear: right;
+    }
+    li .extlist {
+        /*rtl:ignore*/
+        direction: ltr;
+        float: right;
+        color: #888;
+        max-width: 80%;
+        text-align: right;
+    }
+}
+
 select[multiple] {
     overflow: auto;
 }

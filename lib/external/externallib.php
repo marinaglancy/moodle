@@ -465,4 +465,101 @@ class core_external extends external_api {
 
         return \core\notification::fetch_as_array($PAGE->get_renderer('core'));
     }
+
+    /**
+     * Returns description of get_form_file_types_and_groups() parameters.
+     *
+     * @return external_function_parameters
+     */
+    public static function get_form_file_types_and_groups_parameters() {
+        return new external_function_parameters(
+            array(
+                'filetypes' => new external_multiple_structure(
+                    new external_value(PARAM_RAW),
+                    'The file types and groups to limit to',
+                    VALUE_DEFAULT,
+                    array()
+                ),
+                'allowall' => new external_value(PARAM_BOOL, 'Allow to select all file types', VALUE_DEFAULT, true),
+                'lang' => new external_value(PARAM_LANG, 'lang', VALUE_DEFAULT, null),
+            )
+        );
+    }
+
+    /**
+     * Loads file type groups and file types.
+     *
+     * @param string $filetypes Filters the result set to the types/groups given.
+     * @param bool $allowall Allow to select all file types
+     * @param string $lang The language for translation.
+     * @return array typegroups and alltypes, each an array
+     */
+    public static function get_form_file_types_and_groups($filetypes, $allowall = true, $lang = null) {
+        if (empty($lang)) {
+            $lang = current_language();
+        }
+
+        $params = self::validate_parameters(
+            self::get_form_file_types_and_groups_parameters(),
+            array(
+                'filetypes' => $filetypes,
+                'allowall' => $allowall,
+                'lang' => $lang,
+            )
+        );
+
+        force_current_language($lang);
+
+        $types = new core_form\filetypes($filetypes, $allowall);
+        $return = array(
+            'typegroups' => array(),
+            'alltypes' => array(),
+        );
+
+        // Put the array keys into the objects since they are stripped by
+        // external service response processing.
+        foreach ($types->get_typegroups() as $key => $obj) {
+            $obj->id = $key;
+            $return['typegroups'][] = $obj;
+        }
+        foreach ($types->get_alltypes() as $key => $obj) {
+            $obj->id = $key;
+            $return['alltypes'][] = $obj;
+        }
+
+        return $return;
+    }
+
+    /**
+     * Returns description of get_form_file_types_and_groups() result value.
+     *
+     * @return external_description
+     */
+    public static function get_form_file_types_and_groups_returns() {
+        $type = new external_single_structure(
+            array(
+                'id' => new external_value(PARAM_RAW, 'The mimetype'),
+                'name' => new external_value(PARAM_RAW, 'The mimetype name'),
+                'extlist' => new external_value(PARAM_RAW, 'List of all file extensions for the mimetype'),
+            )
+        );
+
+        $typegroup = new external_single_structure(
+            array(
+                'id' => new external_value(PARAM_RAW, 'The type group identifier'),
+                'name' => new external_value(PARAM_RAW, 'The type group name'),
+                'types' => new external_multiple_structure(new external_value(PARAM_RAW), 'The mimetypes in the group'),
+                'extlist' => new external_value(PARAM_RAW, 'List of all file extensions in the group', VALUE_OPTIONAL),
+                'isoption' => new external_value(PARAM_BOOL, 'Whether the group itself is a selectable option',
+                    VALUE_DEFAULT, false),
+            )
+        );
+
+        return new external_single_structure(
+            array(
+                'typegroups' => new external_multiple_structure($typegroup, 'Type groups'),
+                'alltypes' => new external_multiple_structure($type, 'All mime types'),
+            )
+        );
+    }
 }

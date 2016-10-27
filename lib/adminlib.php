@@ -10023,3 +10023,166 @@ class admin_setting_searchsetupinfo extends admin_setting {
     }
 
 }
+
+/**
+ * Administration setting to choose file types.
+ *
+ * @copyright 2016 Jonathon Fowler <fowlerj@usq.edu.au>
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class admin_setting_filetypes extends admin_setting {
+
+    /**
+     * @var array The system selected file type choices.
+     */
+    private $filetypes = [];
+
+    /**
+     * @var bool Allow selection of 'All file types' (will be stored as '*').
+     */
+    private $allowall = true;
+
+    /**
+     * Constructor
+     * @param string $name unique ascii name, either 'mysetting' for settings that in config,
+     *                     or 'myplugin/mysetting' for ones in config_plugins.
+     * @param string $visiblename localised name
+     * @param string $description localised long description
+     * @param mixed $defaultsetting string or array depending on implementation
+     * @param array $filetypes list of allowed file types to select from, for example ['web_image', '.pdf'], empty means no restriction
+     * @param bool $allowall allow to select "All file types", N/A if $filetypes was specified
+     */
+    public function __construct($name, $visiblename, $description, $defaultsetting, $filetypes = null, $allowall = true) {
+        parent::__construct($name, $visiblename, $description, $defaultsetting);
+        if (is_array($filetypes)) {
+            $this->filetypes = $filetypes;
+        }
+        $this->allowall = (bool)$allowall;
+    }
+
+    /**
+     * Return the current setting(s)
+     *
+     * @return string Current setting
+     */
+    public function get_setting() {
+        return $this->config_read($this->name);
+    }
+
+    /**
+     * Store the setting
+     *
+     * @param string $data the setting
+     * @return string empty string if ok, string error message otherwise
+     */
+    public function write_setting($data) {
+        $data = str_replace(' ', '', $data);
+        $validated = $this->validate($data);
+        if ($validated !== true) {
+            return $validated;
+        }
+        if ($this->config_write($this->name, $data)) {
+            return '';
+        } else {
+            return get_string('errorsetting', 'admin');
+        }
+    }
+
+    /**
+     * Validate data before storage
+     * @param string $data
+     * @return mixed true if ok string if error found
+     */
+    public function validate($data) {
+        if ($data === '') {
+            return true;
+        }
+
+        $types = new core_form\filetypes($this->filetypes, $this->allowall);
+        $alltypes = $types->get_alltypes();
+        $typegroups = $types->get_typegroups();
+
+        $types = preg_split('/\s*,\s*/', trim(strtolower($data)), -1, PREG_SPLIT_NO_EMPTY);
+
+        foreach ($types as $type) {
+            if (!isset($alltypes[$type]) && !isset($typegroups[$type])) {
+                return get_string('validateerror', 'admin');
+            }
+            if (isset($typegroups[$type]) && empty($typegroups[$type]->isoption)) {
+                return get_string('validateerror', 'admin');
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Return XHTML field(s) for options
+     *
+     * @param string $data the setting value
+     * @param string $query search query to be highlighted
+     * @return string XHTML string for the fields and wrapping div(s)
+     */
+    public function output_html($data, $query='') {
+        global $OUTPUT, $PAGE;
+
+        $out = html_writer::start_div();
+        $out .= html_writer::tag('div', $this->render_label($data), array(
+            'id' => $this->get_id() . '_label',
+            'class' => 'form-filetypes'
+        ));
+        $out .= html_writer::empty_tag('input', array(
+            'type' => 'button',
+            'class' => 'form-filetypes-choose',
+            'id' => $this->get_id() . '_choose',
+            'value' => get_string('choosetypes', 'form')
+        ));
+        $out .= html_writer::empty_tag('input', array(
+            'type' => 'text',
+            'class' => 'form-filetypes-value',
+            'id' => $this->get_id(),
+            'name' => $this->get_full_name(),
+            'value' => s($data),
+        ));
+        $out .= html_writer::end_div();
+
+        $PAGE->requires->strings_for_js(array('savechoices', 'noselection'), 'form');
+        $PAGE->requires->js_call_amd('core/form-filetypes', 'initialise',
+            array(
+                $this->get_id(),
+                $this->visiblename,
+                $this->filetypes,
+                $this->allowall
+            )
+        );
+
+        $default = $this->get_defaultsetting();
+        return format_admin_setting($this, $this->visiblename, $out, $this->description, false, '', $default, $query);
+    }
+
+    /**
+     * Generate the display label contents.
+     *
+     * @param string $value  the ;-delimited value set.
+     * @return string  the HTML markup.
+     */
+    private function render_label($value) {
+        global $OUTPUT;
+
+        $types = new core_form\filetypes($this->filetypes, $this->allowall);
+        $typegroups = $types->get_typegroups();
+        $alltypes = $types->get_alltypes();
+        $tplcontext = array('items' => array());
+
+        $types = preg_split('/\s*,\s*/', trim(strtolower($value)), -1, PREG_SPLIT_NO_EMPTY);
+
+        foreach ($types as $val) {
+            if (isset($alltypes[$val])) {
+                $tplcontext['items'][] = $alltypes[$val];
+            } else if (isset($typegroups[$val])) {
+                $tplcontext['items'][] = $typegroups[$val];
+            }
+        }
+
+        return $OUTPUT->render_from_template('core/form_filetypes_label', $tplcontext);
+    }
+}

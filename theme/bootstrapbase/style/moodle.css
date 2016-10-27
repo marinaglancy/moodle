@@ -14319,6 +14319,87 @@ input[size] {
   padding: 0.5em;
   font-size: large;
 }
+.moodle-dialogue-base .moodle-dialogue.form-filetypes-chooser .moodle-dialogue-bd {
+  overflow-y: scroll;
+  height: 30em;
+}
+.moodle-dialogue-base .moodle-dialogue.form-filetypes-chooser .moodle-dialogue-content .moodle-dialogue-ft {
+  text-align: center;
+}
+.form-filetypes-selector .filetypegroup > label {
+  font-weight: bold;
+}
+.form-filetypes-selector .filetypegroup ul {
+  list-style: none;
+  margin-bottom: 0;
+}
+.form-filetypes-selector .filetypegroup.selected ul {
+  display: none;
+}
+.form-filetypes-selector .filetypegroup > label .extlist {
+  display: none;
+  font-weight: normal;
+}
+.form-filetypes-selector .filetypegroup.selected > label .extlist {
+  display: inline;
+}
+.form-filetypes-selector label {
+  clear: right;
+}
+.form-filetypes-selector .extlist {
+  float: right;
+  color: #888;
+  max-width: 80%;
+  text-align: right;
+}
+.form-filetypes-selector.allselected .filetypegroup:not([data-groupkey='*']) {
+  display: none;
+}
+.dir-rtl .form-filetypes-selector label {
+  clear: left;
+}
+.dir-rtl .form-filetypes-selector .extlist {
+  direction: ltr;
+  float: left;
+  text-align: left;
+}
+.dir-rtl .settingsform input.form-filetypes-value,
+.dir-rtl .mform input.form-filetypes-value {
+  direction: ltr;
+}
+.settingsform input.form-filetypes-choose,
+.mform input.form-filetypes-choose,
+.jsenabled .settingsform input.form-filetypes-value,
+.jsenabled .mform input.form-filetypes-value {
+  display: none;
+}
+.jsenabled .settingsform input.form-filetypes-choose,
+.jsenabled .mform input.form-filetypes-choose {
+  display: inline-block;
+}
+.form-filetypes-label ul {
+  width: 30em;
+  list-style: none;
+  margin-left: 0;
+  margin-right: 0;
+}
+.form-filetypes-label li {
+  clear: right;
+}
+.form-filetypes-label li .extlist {
+  float: right;
+  color: #888;
+  max-width: 80%;
+  text-align: right;
+}
+.dir-rtl .form-filetypes-label li {
+  clear: left;
+}
+.dir-rtl .form-filetypes-label li .extlist {
+  direction: ltr;
+  float: left;
+  text-align: left;
+}
 textarea[data-auto-rows] {
   overflow-x: hidden;
 }
