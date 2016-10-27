@@ -62,9 +62,6 @@ class media_html5video_testcase extends advanced_testcase {
      */
     public function test_supported_extensions() {
         $nativeextensions = file_get_typegroup('extension', 'html_video');
-        array_walk($nativeextensions, function(&$ext) {
-            $ext = substr($ext, 1);
-        });
 
         // Make sure that the list of extensions from the setting is exactly the same as html_video group.
         $player = new media_html5video_plugin();

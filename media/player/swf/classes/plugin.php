@@ -79,7 +79,7 @@ OET;
     }
 
     public function get_supported_extensions() {
-        return array('swf');
+        return array('.swf');
     }
 
     public function list_supported_urls(array $urls, array $options = array()) {

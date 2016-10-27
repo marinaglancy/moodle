@@ -2305,9 +2305,9 @@ function xmldb_main_upgrade($oldversion) {
             'vimeo' => null,
             'youtube' => null,
             'mp3' => ['.mp3'],
-            'html5video' => ['.mov', '.mp4', '.m4v', '.mpeg', '.mpe', '.mpg', '.ogv', '.webm'],
+            'html5video' => ['html_video'],
             'flv' => ['.flv', '.f4v'],
-            'html5audio' => ['.aac', '.flac', '.mp3', '.m4a', '.oga', '.ogg', '.wav'],
+            'html5audio' => ['html_audio'],
             'swf' => null,
         ];
 

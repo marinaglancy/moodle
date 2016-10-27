@@ -80,12 +80,13 @@ abstract class core_media_player {
     /**
      * Gets the list of file extensions supported by this media player.
      *
-     * Note: This is only required for the default implementation of
-     * list_supported_urls. If you override that function to determine
+     * Note: This is only required for the default implementations of
+     * list_supported_urls(), get_embeddable_markers() and supports().
+     * If you override these functions to determine
      * supported URLs in some way other than by extension, then this function
      * is not necessary.
      *
-     * @return array Array of strings (extension not including dot e.g. 'mp3')
+     * @return array Array of strings (extension not including dot e.g. '.mp3')
      */
     public function get_supported_extensions() {
         return array();
@@ -98,20 +99,15 @@ abstract class core_media_player {
      * For example if this player supports FLV and F4V files then it should add
      * '.flv' and '.f4v' to the array. (The check is not case-sensitive.)
      *
-     * Default handling calls the get_supported_extensions function and adds
-     * a dot to each of those values, so players only need to override this
-     * if they don't implement get_supported_extensions.
+     * Default handling calls the get_supported_extensions function, so players
+     * only need to override this if they don't implement get_supported_extensions.
      *
      * This is used to improve performance when matching links in the media filter.
      *
      * @return array Array of keywords to add to the embeddable markers list
      */
     public function get_embeddable_markers() {
-        $markers = array();
-        foreach ($this->get_supported_extensions() as $extension) {
-            $markers[] = '.' . $extension;
-        }
-        return $markers;
+        return $this->get_supported_extensions();
     }
 
     /**
@@ -190,7 +186,8 @@ abstract class core_media_player {
         $extensions = $this->get_supported_extensions();
         $result = array();
         foreach ($urls as $url) {
-            if (in_array(core_media_manager::instance()->get_extension($url), $extensions)) {
+            $ext = core_media_manager::instance()->get_extension($url);
+            if (in_array('.' . $ext, $extensions) || in_array($ext, $extensions)) {
                 $result[] = $url;
             }
         }

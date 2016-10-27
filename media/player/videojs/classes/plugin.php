@@ -191,22 +191,15 @@ class media_videojs_plugin extends core_media_player_native {
 
     public function get_supported_extensions() {
         if ($this->extensions === null) {
-            $extensions = explode(',', get_config('media_videojs', 'videoextensions') . ',' .
-                get_config('media_videojs', 'audioextensions'));
-            $this->extensions = [];
-            $nativeextensions = null;
-            if (!get_config('media_videojs', 'useflash')) {
+            $filetypes = preg_split('/\s*,\s*/',
+                strtolower(trim(get_config('media_videojs', 'videoextensions') . ',' .
+                get_config('media_videojs', 'audioextensions'))));
+            $this->extensions = file_get_typegroup('extension', $filetypes);
+            if ($this->extensions && !get_config('media_videojs', 'useflash')) {
                 // If Flash is disabled only return extensions natively supported by browsers.
                 $nativeextensions = array_merge(file_get_typegroup('extension', 'html_video'),
                     file_get_typegroup('extension', 'html_audio'));
-            }
-            foreach ($extensions as $ext) {
-                // Trim and remove extra characters, for example leading dot.
-                // If Flash is not used, filter to only supported extensions.
-                $ext = strtolower(clean_param(trim($ext), PARAM_ALPHANUM));
-                if ($ext && ($nativeextensions === null || in_array('.' . $ext, $nativeextensions))) {
-                    $this->extensions[] = $ext;
-                }
+                $this->extensions = array_intersect($this->extensions, $nativeextensions);
             }
         }
         return $this->extensions;
@@ -241,7 +234,7 @@ class media_videojs_plugin extends core_media_player_native {
         $extensions = $this->get_supported_extensions();
         foreach ($urls as $url) {
             $ext = core_media_manager::instance()->get_extension($url);
-            if (in_array($ext, $extensions)) {
+            if (in_array('.' . $ext, $extensions)) {
                 $result[] = $url;
             }
         }

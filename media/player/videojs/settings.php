@@ -26,27 +26,17 @@ defined('MOODLE_INTERNAL') || die();
 
 if ($ADMIN->fulltree) {
 
-    $extensions = file_get_typegroup('extension', 'html_video');
-    array_walk($extensions, function(&$e) {
-        // Remove leading .
-        $e = substr($e, 1);
-    });
-    $extensions[] = 'flv';
-    $extensions[] = 'f4v';
-
-    $settings->add(new admin_setting_configtext('media_videojs/videoextensions',
+    $settings->add(new admin_setting_filetypes('media_videojs/videoextensions',
         new lang_string('videoextensions', 'media_videojs'),
-        new lang_string('configvideoextensions', 'media_videojs'), join(', ', $extensions)));
+        new lang_string('configvideoextensions', 'media_videojs'),
+        'html_video, .flv, .f4v',
+        ['video', 'html_video']));
 
-    $extensions = file_get_typegroup('extension', 'html_audio');
-    array_walk($extensions, function(&$e) {
-        // Remove leading .
-        $e = substr($e, 1);
-    });
-
-    $settings->add(new admin_setting_configtext('media_videojs/audioextensions',
+    $settings->add(new admin_setting_filetypes('media_videojs/audioextensions',
         new lang_string('audioextensions', 'media_videojs'),
-        new lang_string('configaudioextensions', 'media_videojs'), join(', ', $extensions)));
+        new lang_string('configaudioextensions', 'media_videojs'),
+        'html_audio',
+        ['audio', 'html_audio']));
 
     $settings->add(new admin_setting_configcheckbox('media_videojs/useflash',
         new lang_string('useflash', 'media_videojs'),

@@ -76,12 +76,7 @@ OET;
     }
 
     public function get_supported_extensions() {
-        $extensions = file_get_typegroup('extension', 'html_audio');
-        array_walk($extensions, function(&$e) {
-            // Trim and remove extra characters, for example leading dot.
-            $e = substr($e, 1);
-        });
-        return $extensions;
+        return file_get_typegroup('extension', 'html_audio');
     }
 
     public function list_supported_urls(array $urls, array $options = array()) {
@@ -89,7 +84,7 @@ OET;
         $result = array();
         foreach ($urls as $url) {
             $ext = core_media_manager::instance()->get_extension($url);
-            if (in_array($ext, $extensions) && core_useragent::supports_html5($ext)) {
+            if (in_array('.' . $ext, $extensions) && core_useragent::supports_html5($ext)) {
                 // Unfortunately html5 video does not handle fallback properly.
                 // https://www.w3.org/Bugs/Public/show_bug.cgi?id=10975
                 // That means we need to do browser detect and not use html5 on
