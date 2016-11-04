@@ -76,11 +76,7 @@ class media_youtube_plugin extends core_media_player_external {
             $site = $this->matches[1];
             $playlist = $this->matches[3];
 
-            return <<<OET
-<span class="mediaplugin mediaplugin_youtube">
-<iframe width="$width" height="$height" src="https://$site/embed/videoseries?list=$playlist" frameborder="0" allowfullscreen="1"></iframe>
-</span>
-OET;
+            $href = "https://$site/embed/videoseries?list=$playlist";
         } else {
 
             $videoid = end($this->matches);
@@ -96,14 +92,18 @@ OET;
                 // This video is part of a playlist, and we want to embed it as such.
                 $params .= "list=$listid&amp;";
             }
-
-            return <<<OET
-<span class="mediaplugin mediaplugin_youtube">
-<iframe title="$info" width="$width" height="$height"
-  src="https://www.youtube.com/embed/$videoid?{$params}rel=0&amp;wmode=transparent" frameborder="0" allowfullscreen="1"></iframe>
-</span>
-OET;
+            $href = "https://www.youtube.com/embed/$videoid?{$params}rel=0&amp;wmode=transparent";
         }
+
+        return <<<OET
+<div class="mediaplugin mediaplugin_youtube">
+<div style="max-width:{$width}px;max-height:{$height}px;"">
+<div class="video-container">
+  <iframe title="$info" src="$href" frameborder="0" allowfullscreen="1"></iframe>
+</div>
+</div>
+</div>
+OET;
 
     }
 

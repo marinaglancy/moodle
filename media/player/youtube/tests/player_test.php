@@ -135,12 +135,12 @@ class media_youtube_testcase extends advanced_testcase {
 
         $this->assertRegExp('~mediaplugin_youtube~', $content);
         $this->assertRegExp('~</iframe>~', $content);
-        $this->assertRegExp('~width="' . $CFG->media_default_width . '" height="' .
-            $CFG->media_default_height . '"~', $content);
+        $this->assertRegExp('~max-width:' . $CFG->media_default_width . 'px;max-height:' .
+            $CFG->media_default_height . 'px;~', $content);
 
         // Repeat sending the specific size to the manager.
         $content = $manager->embed_url($url, 'New file', 123, 50, $embedoptions);
-        $this->assertRegExp('~width="123" height="50"~', $content);
+        $this->assertRegExp('~max-width:123px;max-height:50px;~', $content);
     }
 
     /**
@@ -156,8 +156,8 @@ class media_youtube_testcase extends advanced_testcase {
 
         $this->assertRegExp('~mediaplugin_youtube~', $content);
         $this->assertRegExp('~</iframe>~', $content);
-        $this->assertRegExp('~width="' . $CFG->media_default_width . '" height="' .
-            $CFG->media_default_height . '"~', $content);
+        $this->assertRegExp('~max-width:' . $CFG->media_default_width . 'px;max-height:' .
+            $CFG->media_default_height . 'px~', $content);
     }
 
     /**
@@ -175,8 +175,8 @@ class media_youtube_testcase extends advanced_testcase {
 
         $this->assertRegExp('~mediaplugin_youtube~', $content);
         $this->assertRegExp('~</iframe>~', $content);
-        $this->assertRegExp('~width="' . $CFG->media_default_width . '" height="' .
-            $CFG->media_default_height . '"~', $content);
+        $this->assertRegExp('~max-width:' . $CFG->media_default_width . 'px;max-height:' .
+            $CFG->media_default_height . 'px~', $content);
         // Video tag, unsupported text and tracks are removed.
         $this->assertNotRegExp('~</video>~', $content);
         $this->assertNotRegExp('~<source\b~', $content);
@@ -188,6 +188,6 @@ class media_youtube_testcase extends advanced_testcase {
         $content = format_text($text, FORMAT_HTML);
         $this->assertRegExp('~mediaplugin_youtube~', $content);
         $this->assertRegExp('~</iframe>~', $content);
-        $this->assertRegExp('~width="123" height="35"~', $content);
+        $this->assertRegExp('~max-width:123px;max-height:35px;~', $content);
     }
 }
