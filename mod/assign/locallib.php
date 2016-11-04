@@ -1521,7 +1521,7 @@ class assign {
 
             if ($submitted && ($submissioninfo->stime >= $submissioninfo->gtime ||
                     empty($submissioninfo->gtime) ||
-                    $submissioninfo->grade === null)) {
+                    $submissioninfo->grade === null || $submissioninfo->grade == -1)) {
                 $requiregrading = true;
             }
 
@@ -1746,7 +1746,7 @@ class assign {
                         s.assignment = :assignid AND
                         s.timemodified IS NOT NULL AND
                         s.status = :submitted AND
-                        (s.timemodified >= g.timemodified OR g.timemodified IS NULL OR g.grade IS NULL)';
+                        (s.timemodified >= g.timemodified OR g.timemodified IS NULL OR g.grade IS NULL OR g.grade = -1)';
 
         return $DB->count_records_sql($sql, $params);
     }
