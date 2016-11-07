@@ -93,7 +93,7 @@ document.getElementById('$id').addEventListener('click', function() {
 OET;
         }
 
-        $fallback = core_media_player::PLACEHOLDER;
+        $fallback = self::fallback_to_link($urls, $name, $options);
         return <<<OET
 <span class="mediaplugin mediaplugin_html5video">
 <video $idtag controls="true" $size preload="metadata" title="$title">

@@ -160,7 +160,8 @@ class media_videojs_plugin extends core_media_player_native {
         } else {
             // Create <video> or <audio> tag with necessary attributes and all sources.
             $attributes += ['preload' => 'auto', 'controls' => 'true', 'title' => $title];
-            $text = html_writer::tag($isaudio ? 'audio' : 'video', $sources . self::PLACEHOLDER, $attributes);
+            $link = self::fallback_to_link($urls, $name, $options);
+            $text = html_writer::tag($isaudio ? 'audio' : 'video', $sources . $link, $attributes);
         }
 
         // Limit the width of the video if width is specified.

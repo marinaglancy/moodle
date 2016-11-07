@@ -45,7 +45,7 @@ class media_swf_plugin extends core_media_player {
         $firsturl = reset($urls);
         $url = $firsturl->out(true);
 
-        $fallback = core_media_player::PLACEHOLDER;
+        $fallback = self::fallback_to_link($urls, $name, $options);
         $output = <<<OET
 <span class="mediaplugin mediaplugin_swf">
   <object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" width="$width" height="$height">
