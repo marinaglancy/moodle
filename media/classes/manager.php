@@ -258,7 +258,7 @@ class core_media_manager {
 
         if (empty($options[self::OPTION_FALLBACK_TO_BLANK]) || $out !== core_media_player::PLACEHOLDER) {
             // Fallback to the link. Exception: in case of OPTION_FALLBACK_TO_BLANK and no other player matched do not fallback.
-            $text = $this->fallback_to_link($alternatives, $name, $options);
+            $text = core_media_player::fallback_to_link($alternatives, $name, $options);
             $out = str_replace(core_media_player::PLACEHOLDER, $text, $out);
         }
 
@@ -268,39 +268,6 @@ class core_media_manager {
             $out = html_writer::tag('div', $out, array('class' => 'resourcecontent'));
         }
         return $out;
-    }
-
-    /**
-     * Returns links to the specified URLs unless OPTION_NO_LINK is passed.
-     *
-     * @param array $urls URLs of media files
-     * @param string $name Display name; '' to use default
-     * @param array $options Options array
-     * @return string HTML code for embed
-     */
-    protected function fallback_to_link($urls, $name, $options) {
-        // If link is turned off, return empty.
-        if (!empty($options[core_media_manager::OPTION_NO_LINK])) {
-            return '';
-        }
-
-        // Build up link content.
-        $output = '';
-        foreach ($urls as $url) {
-            if (strval($name) !== '' && $output === '') {
-                $title = $name;
-            } else {
-                $title = core_media_manager::instance()->get_filename($url);
-            }
-            $printlink = html_writer::link($url, $title, array('class' => 'mediafallbacklink'));
-            if ($output) {
-                // Where there are multiple available formats, there are fallback links
-                // for all formats, separated by /.
-                $output .= ' / ';
-            }
-            $output .= $printlink;
-        }
-        return $output;
     }
 
     /**

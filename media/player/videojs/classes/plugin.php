@@ -159,8 +159,12 @@ class media_videojs_plugin extends core_media_player_native {
             $text = self::replace_sources($text, $sources);
         } else {
             // Create <video> or <audio> tag with necessary attributes and all sources.
+            // We don't want the fallback to another player because list_supported_urls() is already quite smart,
+            // therefore we call self::fallback_to_link() and not self::PLACEHOLDER.
+            // Otherwise we could end up with nested <audio> or <video> tags.
             $attributes += ['preload' => 'auto', 'controls' => 'true', 'title' => $title];
-            $text = html_writer::tag($isaudio ? 'audio' : 'video', $sources . self::PLACEHOLDER, $attributes);
+            $link = self::fallback_to_link($urls, $name, $options);
+            $text = html_writer::tag($isaudio ? 'audio' : 'video', $sources . $link, $attributes);
         }
 
         // Limit the width of the video if width is specified.

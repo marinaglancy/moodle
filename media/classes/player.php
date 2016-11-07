@@ -246,4 +246,37 @@ abstract class core_media_player {
             $height = $CFG->media_default_height;
         }
     }
+
+    /**
+     * Returns links to the specified URLs unless OPTION_NO_LINK is passed.
+     *
+     * @param array $urls URLs of media files
+     * @param string $name Display name; '' to use default
+     * @param array $options Options array
+     * @return string HTML code for embed
+     */
+    public static function fallback_to_link($urls, $name, $options) {
+        // If link is turned off, return empty.
+        if (!empty($options[core_media_manager::OPTION_NO_LINK])) {
+            return '';
+        }
+
+        // Build up link content.
+        $output = '';
+        foreach ($urls as $url) {
+            if (strval($name) !== '' && $output === '') {
+                $title = $name;
+            } else {
+                $title = core_media_manager::instance()->get_filename($url);
+            }
+            $printlink = html_writer::link($url, $title, array('class' => 'mediafallbacklink'));
+            if ($output) {
+                // Where there are multiple available formats, there are fallback links
+                // for all formats, separated by /.
+                $output .= ' / ';
+            }
+            $output .= $printlink;
+        }
+        return $output;
+    }
 }
