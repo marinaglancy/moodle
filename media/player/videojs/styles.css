@@ -1304,6 +1304,8 @@ video::-webkit-media-text-track-display {
 
 /* Modifications of player made by Moodle: */
 
+/* Audio: https://github.com/videojs/video.js/issues/2777 */
+
 /* Audio: Remove big play button (leave only the button in controls). */
 .video-js.vjs-audio .vjs-big-play-button {
   display: none;
@@ -1322,4 +1324,13 @@ video::-webkit-media-text-track-display {
 /* In case of error reset height to the default (otherwise no aspect ratio is available and height becomes 0). */
 .video-js.vjs-error {
   height: 150px;
+}
+
+/* Hide native controls that iPhone displays despite any settings.
+   Reported as https://github.com/videojs/video.js/issues/3762 */
+.video-js video::-webkit-media-controls-panel,
+.video-js video::-webkit-media-controls-panel-container,
+.video-js video::-webkit-media-controls-start-playback-button {
+  display:none !important;
+  -webkit-appearance: none;
 }

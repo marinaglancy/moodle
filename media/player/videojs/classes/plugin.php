@@ -109,6 +109,12 @@ class media_videojs_plugin extends core_media_player_native {
             $isaudio = false; // Just in case.
         }
 
+        if (core_useragent::is_ios()) {
+            // Avoid double "play" button on iOS. This does not work, see https://github.com/videojs/video.js/issues/3762
+            // Additional custom CSS hiding browser native controls in styles.css .
+            $datasetup[] = '"nativeControlsForTouch": false';
+        }
+
         // Add a language.
         if ($this->language) {
             $datasetup[] = '"language": "' . $this->language . '"';

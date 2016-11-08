@@ -16,6 +16,9 @@ Instructions to import VideoJS player into Moodle:
    Search for other relative URLs in this file.
    Add stylelint-disable in the beginning.
    Add "Modifications of player made by Moodle" to the end of the styles file.
+   Check status of tickets:
+   https://github.com/videojs/video.js/issues/2777
+   https://github.com/videojs/video.js/issues/3762
 5. copy 'LICENSE' and 'lang/' into 'videojs/' subfolder
 6. search source code of video.js for the path to video-js.swf,
    download it and store in this folder
