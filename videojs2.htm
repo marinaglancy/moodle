@@ -1,0 +1,59 @@
+<html>
+<head>
+    <link href="http://vjs.zencdn.net/5.11.9/video-js.css" rel="stylesheet">
+    <style>
+        video::-webkit-media-controls-panel,
+        video::-webkit-media-controls-panel-container,
+        video::-webkit-media-controls-start-playback-button {
+            display:none !important;
+            -webkit-appearance: none;
+        }
+    </style>
+</head>
+
+<body>
+<h2>Video.JS 5.11.9</h2>
+<p>This is a sample file to demonstrate double controls in videos on iPhone. This file includes custom CSS:</p>
+<pre>
+video::-webkit-media-controls-panel,
+video::-webkit-media-controls-panel-container,
+video::-webkit-media-controls-start-playback-button {
+  display:none !important;
+  -webkit-appearance: none;
+ }
+</pre>
+
+<p>Do the following (on iPhone):
+
+<ul>
+    <li>Play video clicking on play button, it will open in fullscreen</li>
+    <li>Exit full screen, video will continue playing inline</li>
+    <li>Click on the video</li>
+    <li>Now you can see video.js controls but you also see native controls</li>
+    <li>You can resume video - it will play inline without opening full screen</li>
+</ul>
+
+<p>This means that videos CAN play inline on iPhone, the only problem is now to make it not enter fullscreen when play button is clicked for the first time</p>
+
+<p>See <a href="videojs1.htm">here</a> for an example without custom CSS that hides </p>
+
+<p>Example 1. Without specifying nativeControlsForTouch:false and with a poster</p>
+<video id="my-video" class="video-js" controls preload="auto" width="640" height="460" poster="wwa.jpg" data-setup="{}">
+    <source src="http://prototype.moodle.net/media/pluginfile.php/59/mod_label/intro/wwa.mp4" type="video/mp4">
+</video>
+<p>Example 2. Without specifying nativeControlsForTouch:false and without a poster</p>
+<video id="my-video" class="video-js" controls preload="auto" width="640" height="460" data-setup="{}">
+    <source src="http://prototype.moodle.net/media/pluginfile.php/59/mod_label/intro/wwa.mp4" type="video/mp4">
+</video>
+<p>Example 3. With specifying nativeControlsForTouch:false and with a poster</p>
+<video id="my-video" class="video-js" controls preload="auto" width="640" height="460" poster="wwa.jpg" data-setup="{&quot;nativeControlsForTouch&quot;:false}">
+    <source src="http://prototype.moodle.net/media/pluginfile.php/59/mod_label/intro/wwa.mp4" type="video/mp4">
+</video>
+<p>Example 4. With specifying nativeControlsForTouch:false and without a poster</p>
+<video id="my-video" class="video-js" controls preload="auto" width="640" height="460" data-setup="{&quot;nativeControlsForTouch&quot;:false}">
+    <source src="http://prototype.moodle.net/media/pluginfile.php/59/mod_label/intro/wwa.mp4" type="video/mp4">
+</video>
+
+<script src="http://vjs.zencdn.net/5.11.9/video.js"></script>
+</body>
+</html>
