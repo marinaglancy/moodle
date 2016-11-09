@@ -1123,8 +1123,8 @@ class core_useragent {
         if ($extension === 'wav' && self::is_ie()) {
             return false;
         }
-        // Aac is not supported in IE below 11.0.
-        if ($extension === 'aac' && (self::is_ie() && !self::check_ie_version('11.0'))) {
+        // Aac is not supported in IE or Edge.
+        if ($extension === 'aac' && (self::is_ie() || self::is_edge())) {
             return false;
         }
         // Mpeg is not supported in IE below 10.0.
