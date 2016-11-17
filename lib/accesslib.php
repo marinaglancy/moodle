@@ -366,7 +366,8 @@ function has_capability($capability, context $context, $user = null, $doanything
     global $USER, $CFG, $SCRIPT, $ACCESSLIB_PRIVATE;
 
     if (during_initial_install()) {
-        if ($SCRIPT === "/$CFG->admin/index.php" or $SCRIPT === "/$CFG->admin/cli/install.php" or $SCRIPT === "/$CFG->admin/cli/install_database.php") {
+        if ($SCRIPT === "/$CFG->admin/index.php" or $SCRIPT === "/$CFG->admin/cli/install.php" or $SCRIPT === "/$CFG->admin/cli/install_database.php"
+                or $SCRIPT === "/$CFG->admin/tool/behat/cli/util.php" or $SCRIPT === "/$CFG->admin/tool/behat/cli/util_single_run.php") {
             // we are in an installer - roles can not work yet
             return true;
         } else {
