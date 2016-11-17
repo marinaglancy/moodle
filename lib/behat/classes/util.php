@@ -74,6 +74,8 @@ class behat_util extends testing_util {
             behat_error(BEHAT_EXITCODE_INSTALLED);
         }
 
+        define('BEHAT_INSTALL', 1);
+
         // New dataroot.
         self::reset_dataroot();
 
@@ -122,6 +124,8 @@ class behat_util extends testing_util {
 
         // Stores the database contents for fast reset.
         self::store_database_state();
+
+        define('BEHAT_INSTALL', 0);
     }
 
     /**
