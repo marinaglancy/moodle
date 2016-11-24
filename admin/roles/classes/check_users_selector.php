@@ -62,8 +62,8 @@ class core_role_check_users_selector extends user_selector_base {
 
         list($wherecondition, $params) = $this->search_sql($search, 'u');
 
-        $fields      = 'SELECT ' . $this->required_fields_sql('u');
-        $countfields = 'SELECT COUNT(1)';
+        $fields      = 'SELECT DISTINCT ' . $this->required_fields_sql('u');
+        $countfields = 'SELECT COUNT(DISTINCT u.id)';
 
         $coursecontext = $this->accesscontext->get_course_context(false);
 
