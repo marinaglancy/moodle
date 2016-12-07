@@ -57,6 +57,20 @@ class behat_blocks extends behat_base {
     }
 
     /**
+     * Adds the selected block if it is not already present. Editing mode must be previously enabled.
+     *
+     * @Given /^I add the "(?P<block_name_string>(?:[^"]|\\")*)" block if not present$/
+     * @param string $blockname
+     */
+    public function i_add_the_block_if_not_present($blockname) {
+        try {
+            $this->get_text_selector_node('block', $blockname);
+        } catch (ElementNotFoundException $e) {
+            $this->execute('behat_blocks::i_add_the_block', [$blockname]);
+        }
+    }
+
+    /**
      * Docks a block. Editing mode should be previously enabled.
      *
      * @Given /^I dock "(?P<block_name_string>(?:[^"]|\\")*)" block$/
