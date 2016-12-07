@@ -1,4 +1,4 @@
-@core @core_course
+@core @core_course @xxx
 Feature: Role assignments can be made at the category level
   In order to grant a user different capabilities
   As a user
@@ -25,7 +25,7 @@ Feature: Role assignments can be made at the category level
     And I log in as "manager"
     And I follow "Courses"
     When I follow "Cat 1"
-    Then I should see "Assign roles"
+    Then "Assign roles" "link" should exist in current page administration
 
   @javascript
   Scenario: A user with a category role cannot assign roles if there are no roles to assign
@@ -39,4 +39,4 @@ Feature: Role assignments can be made at the category level
     And I log in as "manager"
     And I follow "Courses"
     When I follow "Cat 1"
-    Then I should not see "Assign roles"
+    Then "Assign roles" "link" should not exist in current page administration
