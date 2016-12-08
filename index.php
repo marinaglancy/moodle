@@ -27,6 +27,7 @@ if (!file_exists('./config.php')) {
     die;
 }
 
+
 require_once('config.php');
 require_once($CFG->dirroot .'/course/lib.php');
 require_once($CFG->libdir .'/filelib.php');

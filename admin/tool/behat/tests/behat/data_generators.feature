@@ -43,7 +43,7 @@ Feature: Set up contextual data for tests
     And I follow "Miscellaneous"
     And I should see "Course 3"
 
-  @javascript
+  @javascript @xxx
   Scenario: Add a bunch of groups and groupings
     Given the following "courses" exist:
       | fullname | shortname |
@@ -59,8 +59,7 @@ Feature: Set up contextual data for tests
     When I log in as "admin"
     And I am on site homepage
     And I follow "Course 1"
-    And I expand "Users" node
-    And I follow "Groups"
+    And I navigate to "Users > Groups" in current page administration
     Then I should see "Group 1"
     And I should see "Group 2"
     And I follow "Groupings"

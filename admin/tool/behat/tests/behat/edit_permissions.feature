@@ -44,6 +44,7 @@ Feature: Edit capabilities
     And "mod/forum:editanypost" capability has "Prevent" permission
     And "mod/forum:addquestion" capability has "Allow" permission
 
+    @xxx
   Scenario: Module capabilities overrides
     Given I log in as "teacher1"
     And I follow "Course 1"
@@ -52,7 +53,7 @@ Feature: Edit capabilities
       | Forum name | I'm the name |
       | Description | I'm the introduction |
     And I follow "I'm the name"
-    And I navigate to "Permissions" node in "Forum administration"
+    And And I navigate to "Permissions" in current page administration
     And I override the system permissions of "Student" role with:
       | mod/forum:deleteanypost | Prohibit |
       | mod/forum:editanypost | Prevent |
