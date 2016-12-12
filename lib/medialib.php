@@ -1196,11 +1196,6 @@ OET;
                     if (core_useragent::is_ie()) {
                         continue;
                     }
-                } else {
-                    // Format .aac is not supported in IE or Edge.
-                    if ($ext === 'aac' && (core_useragent::is_edge() || core_useragent::is_ie())) {
-                        continue;
-                    }
                 }
                 // Old Android versions (pre 2.3.3) 'support' audio tag but no codecs.
                 if (core_useragent::is_webkit_android() &&
