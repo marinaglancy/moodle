@@ -112,12 +112,19 @@ class restore_root_task extends restore_task {
         $users->get_ui()->set_changeable($changeable);
         $this->add_setting($users);
 
-        $rootenrolmanual = new restore_users_setting('enrol_migratetomanual', base_setting::IS_BOOLEAN, false);
-        $rootenrolmanual->set_ui(new backup_setting_ui_checkbox($rootenrolmanual, get_string('rootenrolmanual', 'backup')));
-        $rootenrolmanual->get_ui()->set_changeable(enrol_is_enabled('manual'));
-        $rootenrolmanual->get_ui()->set_changeable($changeable);
-        $this->add_setting($rootenrolmanual);
-        $users->add_dependency($rootenrolmanual);
+        // Restore enrolment methods? They can be restored independently from users. If users are restored but enrolment
+        // methods are not, users will be restored with manual enrolments.
+        $enrolments = new restore_users_setting('enrolments', base_setting::IS_BOOLEAN, true);
+        $enrolments->set_ui(new backup_setting_ui_checkbox($enrolments, get_string('rootsettingenrolments', 'backup')));
+        $enrolments->set_help('rootsettingenrolments', 'backup');
+        $enrolments->get_ui()->set_changeable(enrol_is_enabled('manual'));
+        if ($this->get_target() == backup::TARGET_CURRENT_ADDING || $this->get_target() == backup::TARGET_EXISTING_ADDING) {
+            // Enrolment methods can not be restored when merging into existing course.
+            $enrolments->set_value(false);
+            $enrolments->set_status(backup_setting::LOCKED_BY_CONFIG);
+            $enrolments->set_visibility(backup_setting::HIDDEN);
+        }
+        $this->add_setting($enrolments);
 
         // Define role_assignments (dependent of users)
         $defaultvalue = false;                      // Safer default

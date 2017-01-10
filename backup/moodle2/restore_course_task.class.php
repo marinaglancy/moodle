@@ -77,7 +77,7 @@ class restore_course_task extends restore_task {
         if ($this->plan->get_mode() == backup::MODE_IMPORT) {
             // No need to do anything with enrolments.
 
-        } else if (!$this->get_setting_value('users') or $this->plan->get_mode() == backup::MODE_HUB) {
+        } else if (!$this->get_setting_value('enrolments') or $this->plan->get_mode() == backup::MODE_HUB) {
             if ($this->get_target() == backup::TARGET_CURRENT_ADDING or $this->get_target() == backup::TARGET_EXISTING_ADDING) {
                 // Keep current enrolments unchanged.
             } else {
