@@ -2203,7 +2203,8 @@ class restore_enrolments_structure_step extends restore_structure_step {
         $data->roleid   = $this->get_mappingid('role', $data->roleid);
         $data->courseid = $courserec->id;
 
-        if ($this->get_setting_value('enrol_migratetomanual')) {
+        if (!$this->get_setting_value('enrolments')) {
+            // Restore enrolments as manual enrolments.
             unset($data->sortorder); // Remove useless sortorder from <2.4 backups.
             if (!enrol_is_enabled('manual')) {
                 $this->set_mapping('enrol', $oldid, 0);
@@ -2224,7 +2225,7 @@ class restore_enrolments_structure_step extends restore_structure_step {
         } else {
             if (!enrol_is_enabled($data->enrol) or !isset($this->plugins[$data->enrol])) {
                 $this->set_mapping('enrol', $oldid, 0);
-                $message = "Enrol plugin '$data->enrol' data can not be restored because it is not enabled, use migration to manual enrolments";
+                $message = "Enrol plugin '$data->enrol' data can not be restored because it is not enabled, consider restoring without enrolment methods";
                 $this->log($message, backup::LOG_WARNING);
                 return;
             }
