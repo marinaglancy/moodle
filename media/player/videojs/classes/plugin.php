@@ -52,7 +52,7 @@ class media_videojs_plugin extends core_media_player_native {
      * @return string
      */
     public function embed($urls, $name, $width, $height, $options) {
-        global $CFG;
+        global $CFG, $PAGE;
         require_once($CFG->libdir . '/filelib.php');
 
         $sources = array();
@@ -104,6 +104,7 @@ class media_videojs_plugin extends core_media_player_native {
             $datasetup[] = '"sources": [{"type": "video/youtube", "src":"' . $urls[0] . '"}]';
             $sources = ''; // Do not specify <source> tags - it may confuse browser.
             $isaudio = false; // Just in case.
+            $PAGE->requires->js_amd_inline('require(["media_videojs/Youtube"])');
         }
 
         // Add a language.
@@ -344,9 +345,6 @@ $contents
 });
 EOT
         );
-
-        // Load Youtube JS.
-        $page->requires->js_amd_inline('require(["media_videojs/Youtube"])');
 
         // Load dynamic loader.
         $page->requires->js_call_amd('media_videojs/loader', 'setUp');

@@ -55,7 +55,13 @@ define(['jquery', 'media_videojs/video', 'core/event'], function($, videojs, Eve
                 var id = $(this).attr('id'),
                     config = $(this).data('setup');
 
-                videojs(id, config);
+                if (config.techOrder && config.techOrder.indexOf('youtube') !== -1) {
+                    require(['media_videojs/Youtube'], function() {
+                        videojs(id, config);
+                    });
+                } else {
+                    videojs(id, config);
+                }
             });
     };
 
