@@ -346,7 +346,9 @@ EOT
         );
 
         // Load Youtube JS.
-        $page->requires->js_amd_inline('require(["media_videojs/Youtube"])');
+        if (get_config('media_videojs', 'youtube')) {
+            $page->requires->js_amd_inline('require(["media_videojs/Youtube"])');
+        }
 
         // Load dynamic loader.
         $page->requires->js_call_amd('media_videojs/loader', 'setUp');
