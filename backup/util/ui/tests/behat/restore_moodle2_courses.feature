@@ -16,6 +16,8 @@ Feature: Restore Moodle 2 course backups
       | data | C3 | data1 | Test database name | Database description | 2 |
     And I log in as "admin"
     And I am on site homepage
+    And I follow "Course 2"
+    And I am on site homepage
     And I follow "Course 1"
     And I turn editing mode on
     And I add a "Forum" to section "1" and I fill the form with:
@@ -125,7 +127,8 @@ Feature: Restore Moodle 2 course backups
     And the field "Number of sections" matches value "15"
     And the field "Course layout" matches value "Show one section per page"
     And I press "Cancel"
-    And section "3" should be hidden
+    And section "3" should be visible
+    And "Test URL name" activity should be hidden
     And section "7" should be hidden
     And section "15" should be visible
     And I should see "Test URL name" in the "Topic 3" "section"
