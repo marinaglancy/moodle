@@ -1,0 +1,112 @@
+<?php
+
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ * Bulk activity completion manager class
+ *
+ * @package     core_completion
+ * @category    completion
+ * @copyright   2017 Adrian Greeve
+ * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+namespace core_completion;
+
+use stdClass;
+
+/**
+ * Bulk activity completion manager class
+ *
+ * @package     core_completion
+ * @category    completion
+ * @copyright   2017 Adrian Greeve
+ * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class manager {
+
+    protected $courseid;
+
+    public function __construct($courseid) {
+        $this->courseid = $courseid;
+    }
+
+    /**
+     * Gets the data (context) to be used with the bulkactivitycompletion template.
+     *
+     * @return stdClass data for use with the bulkactivitycompletion template.
+     */
+    public function get_activities_and_headings() {
+        global $OUTPUT;
+        $moduleinfo = get_fast_modinfo($this->courseid);
+        $sections = $moduleinfo->get_sections();
+        $data = new stdClass;
+        $data->courseid = $this->courseid;
+        $data->sesskey = sesskey();
+        $data->helpicon = $OUTPUT->help_icon('temphelp', 'moodle');
+        $data->sections = [];
+        foreach ($sections as $sectionnumber => $section) {
+            $sectioninfo = $moduleinfo->get_section_info($sectionnumber);
+
+            $sectionobject = new stdClass();
+            $sectionobject->sectionnumber = $sectionnumber;
+            $sectionobject->name = get_section_name($this->courseid, $sectioninfo);
+            $sectionobject->activities = [];
+
+            foreach ($section as $cmid) {
+                $mod = $moduleinfo->get_cm($cmid);
+                $moduleobject = new stdClass();
+                $moduleobject->cmid = $cmid;
+                $moduleobject->modname = $mod->get_formatted_name();
+                $moduleobject->icon = $mod->get_icon_url()->out();
+                $moduleobject->url = $mod->url;
+
+                // Get activity completion information.
+                $moduleobject->completionstatus = $this->get_completion_detail($mod->completion); // This is a placeholder only. Must be replaced later.
+
+                $sectionobject->activities[] = $moduleobject;
+            }
+            $data->sections[] = $sectionobject; 
+        }
+        return $data;
+    }
+
+    private function get_completion_detail($completionid) {
+        global $OUTPUT;
+        $string = [];
+        switch ($completionid) {
+            case 0:
+                $string['string'] = get_string('none');
+                break;
+
+            case 1:
+                $string['string'] = get_string('manual');
+                $string['icon'] = $OUTPUT->pix_url('i/completion-manual-enabled')->out();
+                break;
+
+            case 2:
+                $string['string'] = get_string('withconditions');
+                $string['icon'] = $OUTPUT->pix_url('i/completion-auto-enabled')->out();
+                break;
+
+            default:
+                $string['string'] = get_string('none');
+                break;
+        }
+        return $string;
+    }
+
+}
