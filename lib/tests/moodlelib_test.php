@@ -3448,4 +3448,72 @@ class core_moodlelib_testcase extends advanced_testcase {
         $CFG->mailprefix = 'mdl-';
         $this->assertEquals(1, validate_email(generate_email_processing_address(23, $modargs)));
     }
+
+    /**
+     * Test for method unserialize_safe()
+     */
+    public function test_unserialize_safe() {
+        $obj = ['a' => 'b', 'c' => [1, 2, 3]];
+        $s = serialize($obj);
+        echo "\n--------\n$s\n\n";
+        $decoded = unserialize_safe($s);
+        $this->assertEquals($obj, $decoded);
+        $decoded = unserialize_safe($s, ['allowed_classes' => false]);
+        $this->assertEquals($obj, $decoded);
+        $decoded = unserialize_safe($s, ['allowed_classes' => ['stdClass']]);
+        $this->assertEquals($obj, $decoded);
+
+        //print_r(unserialize_safe($s));
+        //print_r(unserialize_safe($s, ['allowed_classes' => false]));
+        //print_r(unserialize_safe($s, ['allowed_classes' => ['stdClass']]));
+
+        $obj = (object)['a' => 'b'];
+        $s = serialize($obj);
+        echo "\n--------\n$s\n\n";
+        $decoded = unserialize_safe($s);
+        $this->assertEquals($obj, $decoded);
+        $decoded = unserialize_safe($s, ['allowed_classes' => false]);
+        $this->assertEquals('__PHP_Incomplete_Class', get_class($decoded));
+        $decoded = unserialize_safe($s, ['allowed_classes' => ['stdClass']]);
+        $this->assertEquals($obj, $decoded);
+
+        //print_r(unserialize_safe($s));
+        //print_r(unserialize_safe($s, ['allowed_classes' => false]));
+        //print_r(unserialize_safe($s, ['allowed_classes' => ['stdClass']]));
+
+        $obj = new moodle_page();
+        $s = serialize($obj);
+        echo "\n--------\n$s\n\n";
+        $decoded = unserialize_safe($s);
+        $this->assertEquals($obj, $decoded);
+        $decoded = unserialize_safe($s, ['allowed_classes' => false]);
+        $this->assertEquals('__PHP_Incomplete_Class', get_class($decoded));
+        $decoded = unserialize_safe($s, ['allowed_classes' => ['stdClass']]);
+        $this->assertEquals('__PHP_Incomplete_Class', get_class($decoded));
+        $decoded = unserialize_safe($s, ['allowed_classes' => ['moodle_page']]);
+        $this->assertEquals($obj, $decoded);
+
+        //print_r(unserialize_safe($s));
+        //print_r(unserialize_safe($s, ['allowed_classes' => false]));
+        //print_r(unserialize_safe($s, ['allowed_classes' => ['stdClass']]));
+        //print_r(unserialize_safe($s, ['allowed_classes' => ['stdClass']]));
+        //print_r(unserialize_safe($s, ['allowed_classes' => ['moodle_page']]));
+
+        $obj = ['page' => new moodle_page()];
+        $s = serialize($obj);
+        echo "\n--------\n$s\n\n";
+        $decoded = unserialize_safe($s);
+        $this->assertEquals($obj, $decoded);
+        $decoded = unserialize_safe($s, ['allowed_classes' => false]);
+        $this->assertEquals('__PHP_Incomplete_Class', get_class($decoded['page']));
+        $decoded = unserialize_safe($s, ['allowed_classes' => ['stdClass']]);
+        $this->assertEquals('__PHP_Incomplete_Class', get_class($decoded['page']));
+        $decoded = unserialize_safe($s, ['allowed_classes' => ['moodle_page']]);
+        $this->assertEquals($obj, $decoded);
+
+        //print_r(unserialize_safe($s));
+        //print_r(unserialize_safe($s, ['allowed_classes' => false]));
+        //print_r(unserialize_safe($s, ['allowed_classes' => ['stdClass']]));
+        //print_r(unserialize_safe($s, ['allowed_classes' => ['moodle_page']]));
+    }
 }

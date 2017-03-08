@@ -9701,6 +9701,46 @@ function get_course_display_name_for_list($course) {
 }
 
 /**
+ * PHP 7 unserialize function for PHP 5.3 upwards.
+ * Added the $option argument (allowed_classes).
+ * See php unserialize manual for more detail.
+ * @param string $str
+ * @param array $options assoc array:
+ *      - allowed_classes : Either an array of class names which should be accepted,
+ *      FALSE to accept no classes, or TRUE to accept all classes. If this option
+ *      is defined and unserialize() encounters an object of a class that isn't to
+ *      be accepted, then the object will be instantiated as __PHP_Incomplete_Class
+ *      instead. Omitting this option is the same as defining it as TRUE: PHP will
+ *      attempt to instantiate objects of any class.
+ **/
+function unserialize_safe($str, $options = array()) {
+    if (version_compare(PHP_VERSION, '7.0.0', '>=')) {
+        return unserialize($str, $options);
+    }
+    $allowedclasses = isset($options['allowed_classes']) ?
+        $options['allowed_classes'] : true;
+    if (is_array($allowedclasses) || !$allowedclasses) {
+        $str = preg_replace_callback(
+            '/(?=^|:)(O|C):\d+:"([^"]*)":(\d+):{/',
+            function($matches) use ($allowedclasses) {
+                if (is_array($allowedclasses) &&
+                    in_array($matches[2], $allowedclasses)) {
+                    return $matches[0];
+                } else {
+                    return $matches[1].':22:"__PHP_Incomplete_Class":'.
+                        ($matches[3] + 1).
+                        ':{s:27:"__PHP_Incomplete_Class_Name";'.
+                        serialize($matches[2]);
+                }
+            },
+            $str
+        );
+    }
+    unset($allowedclasses);
+    return unserialize($str);
+}
+
+/**
  * The lang_string class
  *
  * This special class is used to create an object representation of a string request.
