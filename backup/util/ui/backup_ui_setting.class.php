@@ -712,8 +712,7 @@ class backup_setting_ui_defaultcustom extends backup_setting_ui_text {
         if (!is_array($attributes)) {
             $attributes = [];
         }
-        $attributes += ['defaultlabel' => get_string('keep', 'backup'),
-            'customlabel' => get_string('overwrite', 'backup'),
+        $attributes += ['customlabel' => get_string('overwrite', 'backup'),
             'type' => 'text'];
         parent::__construct($setting, $label, $attributes, $options);
     }

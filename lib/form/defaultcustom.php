@@ -71,8 +71,7 @@ class MoodleQuickForm_defaultcustom extends MoodleQuickForm_group {
             'type' => 'text', // Type of the element. Supported are 'text' and 'date_selector'.
             'defaultvalue' => null, // Value to be used when not overridden.
             'customvalue' => null, // Value to be used when overwriting.
-            'defaultlabel' => get_string('default', 'form'), // Label for customize select element 'default'.
-            'customlabel' => get_string('custom', 'form'), // Label for customize select element 'custom'.
+            'customlabel' => get_string('custom', 'form'), // Label for 'customize' checkbox
             // Other options are the same as the ones that can be passed to 'date_selector' element.
             'timezone' => 99,
             'startyear' => $calendartype->get_min_year(),
@@ -127,9 +126,7 @@ class MoodleQuickForm_defaultcustom extends MoodleQuickForm_group {
         if (!$this->has_customize_switch()) {
             $element = $this->createFormElement('hidden', 'customize', 1);
         } else {
-            $options = [0 => $this->_options['defaultlabel'], 1 => $this->_options['customlabel']];
-            $element = $this->createFormElement('select', 'customize', get_string('valuefor', 'form', $this->getLabel()), $options);
-            $element->setHiddenLabel(true);
+            $element = $this->createFormElement('checkbox', 'customize', '', $this->_options['customlabel']);
         }
         $this->_elements[] = $element;
 
@@ -185,11 +182,11 @@ class MoodleQuickForm_defaultcustom extends MoodleQuickForm_group {
             case 'createElement':
                 $rv = parent::onQuickFormEvent($event, $arg, $caller);
                 if ($this->_options['type'] === 'text') {
-                    $caller->disabledIf($arg[0] . '[value]', $arg[0] . '[customize]', 'eq', 0);
+                    $caller->disabledIf($arg[0] . '[value]', $arg[0] . '[customize]', 'notchecked');
                 } else {
-                    $caller->disabledIf($arg[0] . '[value][day]', $arg[0] . '[customize]', 'eq', 0);
-                    $caller->disabledIf($arg[0] . '[value][month]', $arg[0] . '[customize]', 'eq', 0);
-                    $caller->disabledIf($arg[0] . '[value][year]', $arg[0] . '[customize]', 'eq', 0);
+                    $caller->disabledIf($arg[0] . '[value][day]', $arg[0] . '[customize]', 'notchecked');
+                    $caller->disabledIf($arg[0] . '[value][month]', $arg[0] . '[customize]', 'notchecked');
+                    $caller->disabledIf($arg[0] . '[value][year]', $arg[0] . '[customize]', 'notchecked');
                 }
                 return $rv;
             case 'addElement':

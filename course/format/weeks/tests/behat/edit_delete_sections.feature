@@ -26,20 +26,20 @@ Feature: Sections can be edited and deleted in weeks format
 
   Scenario: View the default name of the general section in weeks format
     When I click on "Edit section" "link" in the "li#section-0" "css_element"
-    Then the field "Use as a value for Section name" matches value "Default"
+    Then the field "Custom" matches value "0"
     And the field "New value for Section name" matches value "General"
 
   Scenario: Edit the default name of the general section in weeks format
     When I click on "Edit section" "link" in the "li#section-0" "css_element"
     And I set the following fields to these values:
-      | Use as a value for Section name | Custom                      |
+      | Custom | 1                      |
       | New value for Section name      | This is the general section |
     And I press "Save changes"
     Then I should see "This is the general section" in the "li#section-0" "css_element"
 
   Scenario: View the default name of the second section in weeks format
     When I click on "Edit week" "link" in the "li#section-2" "css_element"
-    Then the field "Use as a value for Section name" matches value "Default"
+    Then the field "Custom" matches value "0"
     And the field "New value for Section name" matches value "8 May - 14 May"
 
   Scenario: Edit section summary in weeks format
@@ -53,7 +53,7 @@ Feature: Sections can be edited and deleted in weeks format
     Given I should see "8 May - 14 May" in the "li#section-2" "css_element"
     When I click on "Edit week" "link" in the "li#section-2" "css_element"
     And I set the following fields to these values:
-      | Use as a value for Section name | Custom                  |
+      | Custom | 1                  |
       | New value for Section name      | This is the second week |
     And I press "Save changes"
     Then I should see "This is the second week" in the "li#section-2" "css_element"

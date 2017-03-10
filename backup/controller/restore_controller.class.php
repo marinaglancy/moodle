@@ -518,6 +518,7 @@ class restore_controller extends base_controller {
      * Apply defaults from the global admin settings
      */
     protected function apply_defaults() {
+        $this->log('applying restore defaults', backup::LOG_DEBUG);
         restore_controller_dbops::apply_config_defaults($this);
         $this->set_status(backup::STATUS_CONFIGURED);
     }
