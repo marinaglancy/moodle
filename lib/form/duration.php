@@ -50,7 +50,7 @@ class MoodleQuickForm_duration extends MoodleQuickForm_group {
    protected $_options = array('optional' => false, 'defaultunit' => 60);
 
    /** @var array associative array of time units (days, hours, minutes, seconds) */
-   private $_units = null;
+   private static $_units = null;
 
    /**
     * constructor
@@ -99,9 +99,9 @@ class MoodleQuickForm_duration extends MoodleQuickForm_group {
      *
      * @return array unit length in seconds => string unit name.
      */
-    public function get_units() {
-        if (is_null($this->_units)) {
-            $this->_units = array(
+    public static function get_units() {
+        if (is_null(self::$_units)) {
+            self::$_units = array(
                 604800 => get_string('weeks'),
                 86400 => get_string('days'),
                 3600 => get_string('hours'),
@@ -109,7 +109,7 @@ class MoodleQuickForm_duration extends MoodleQuickForm_group {
                 1 => get_string('seconds'),
             );
         }
-        return $this->_units;
+        return self::$_units;
     }
 
     /**

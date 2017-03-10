@@ -68,10 +68,13 @@ class MoodleQuickForm_defaultcustom extends MoodleQuickForm_group {
 
         $calendartype = \core_calendar\type_factory::get_calendar_instance();
         $this->_options = [
-            'type' => 'text', // Type of the element. Supported are 'text' and 'date_selector'.
+            'type' => 'text', // Type of the element. Supported are 'text', 'date_selector' and 'duration'.
             'defaultvalue' => null, // Value to be used when not overridden.
             'customvalue' => null, // Value to be used when overwriting.
             'customlabel' => get_string('custom', 'form'), // Label for 'customize' checkbox
+            'autodetectdefault' => false, // If the same value was used in set_data() as 'defaultvalue' treat it as if it was "false" (default).
+            // Options for 'duration' element.
+            'defaultunit' => 60,
             // Other options are the same as the ones that can be passed to 'date_selector' element.
             'timezone' => 99,
             'startyear' => $calendartype->get_min_year(),
@@ -84,8 +87,8 @@ class MoodleQuickForm_defaultcustom extends MoodleQuickForm_group {
         if (is_array($options)) {
             foreach ($options as $name => $value) {
                 if (array_key_exists($name, $this->_options)) {
-                    if ($name === 'type' && !in_array($value, ['text', 'date_selector'])) {
-                        throw new coding_exception('Only text and date_selector elements are supported in ' . $this->_type);
+                    if ($name === 'type' && !in_array($value, ['text', 'date_selector', 'duration'])) {
+                        throw new coding_exception('Only text, date_selector and duration elements are supported in ' . $this->_type);
                     }
                     if ($name === 'optional' && $value) {
                         throw new coding_exception('Date selector can not be optional in ' . $this->_type);
@@ -108,6 +111,18 @@ class MoodleQuickForm_defaultcustom extends MoodleQuickForm_group {
             'day' => $currentdate['mday'],
             'month' => $currentdate['mon'],
             'year' => $currentdate['year']);
+    }
+
+    protected function seconds_to_duration_array($seconds) {
+        if ($seconds == 0) {
+            return array('number' => 0, 'timeunit' => $this->_options['defaultunit']);
+        }
+        foreach (MoodleQuickForm_duration::get_units() as $unit => $notused) {
+            if (fmod($seconds, $unit) == 0) {
+                return array('number' => $seconds / $unit, 'timeunit' => $unit);
+            }
+        }
+        return array('number' => $seconds, 'timeunit' => 1);
     }
 
     /**
@@ -135,6 +150,9 @@ class MoodleQuickForm_defaultcustom extends MoodleQuickForm_group {
                 get_string('newvaluefor', 'form', $this->getLabel()), $this->getAttributes());
             $element->setHiddenLabel(true);
         } else if ($this->_options['type'] === 'date_selector') {
+            $element = $this->createFormElement($this->_options['type'], 'value', '', $this->_options,
+                $this->getAttributes());
+        } else if ($this->_options['type'] === 'duration') {
             $element = $this->createFormElement($this->_options['type'], 'value', '', $this->_options,
                 $this->getAttributes());
         }
@@ -166,11 +184,14 @@ class MoodleQuickForm_defaultcustom extends MoodleQuickForm_group {
                     }
                 }
                 if (!is_array($value)) {
-                    $customize = ($value !== false || !$this->has_customize_switch());
+                    $customize = ($value !== false && !($this->_options['autodetectdefault'] && $value == $this->_options['defaultvalue']))
+                        || !$this->has_customize_switch();
                     if ($this->_options['type'] === 'text') {
                         $elementvalue = $customize ? $value : $this->_options['defaultvalue'];
-                    } else {
+                    } else if ($this->_options['type'] === 'date_selector')  {
                         $elementvalue = $this->timestamp_to_date_array($customize ? $value : $this->_options['defaultvalue']);
+                    } else if ($this->_options['type'] === 'duration') {
+                        $elementvalue = $this->seconds_to_duration_array($customize ? $value : $this->_options['defaultvalue']);
                     }
                     $value = [
                         'customize' => $customize,
@@ -183,10 +204,13 @@ class MoodleQuickForm_defaultcustom extends MoodleQuickForm_group {
                 $rv = parent::onQuickFormEvent($event, $arg, $caller);
                 if ($this->_options['type'] === 'text') {
                     $caller->disabledIf($arg[0] . '[value]', $arg[0] . '[customize]', 'notchecked');
-                } else {
+                } else if ($this->_options['type'] === 'date_selector')  {
                     $caller->disabledIf($arg[0] . '[value][day]', $arg[0] . '[customize]', 'notchecked');
                     $caller->disabledIf($arg[0] . '[value][month]', $arg[0] . '[customize]', 'notchecked');
                     $caller->disabledIf($arg[0] . '[value][year]', $arg[0] . '[customize]', 'notchecked');
+                } else if ($this->_options['type'] === 'duration') {
+                    $caller->disabledIf($arg[0] . '[value][timeunit]', $arg[0] . '[customize]', 'notchecked');
+                    $caller->disabledIf($arg[0] . '[value][number]', $arg[0] . '[customize]', 'notchecked');
                 }
                 return $rv;
             case 'addElement':
@@ -231,6 +255,9 @@ class MoodleQuickForm_defaultcustom extends MoodleQuickForm_group {
             if ($this->_options['type'] === 'date_selector') {
                 $defaultvalue = $this->timestamp_to_date_array($defaultvalue);
                 $customvalue = $this->timestamp_to_date_array($customvalue);
+            } else if ($this->_options['type'] === 'duration') {
+                $defaultvalue = $this->seconds_to_duration_array($defaultvalue);
+                $customvalue = $this->seconds_to_duration_array($customvalue);
             }
             $firstelement->updateAttributes(['data-defaultcustom' => 'true',
                 'data-type' => $this->_options['type'],

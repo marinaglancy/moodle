@@ -348,10 +348,6 @@ class mod_lesson_mod_form extends moodleform_mod {
             $defaultvalues['gradebetterthan'] = $conditions->gradebetterthan;
         }
 
-        // Set up the completion checkbox which is not part of standard data.
-        $defaultvalues['completiontimespentenabled'] =
-            !empty($defaultvalues['completiontimespent']) ? 1 : 0;
-
         if ($this->current->instance) {
             // Editing existing instance - copy existing files into draft area.
             $draftitemid = file_get_submitted_draft_itemid('mediafile');
@@ -390,18 +386,16 @@ class mod_lesson_mod_form extends moodleform_mod {
     public function add_completion_rules() {
         $mform = $this->_form;
 
-        $mform->addElement('checkbox', 'completionendreached', get_string('completionendreached', 'lesson'),
+        $mform->addElement('advcheckbox', 'completionendreached', get_string('completionendreached', 'lesson'),
                 get_string('completionendreached_desc', 'lesson'));
 
-        $group = array();
-        $group[] =& $mform->createElement('checkbox', 'completiontimespentenabled', '',
-                get_string('completiontimespent', 'lesson'));
-        $group[] =& $mform->createElement('duration', 'completiontimespent', '', array('optional' => false));
-        $mform->addGroup($group, 'completiontimespentgroup', get_string('completiontimespentgroup', 'lesson'), array(' '), false);
-        $mform->disabledIf('completiontimespent[number]', 'completiontimespentenabled', 'notchecked');
-        $mform->disabledIf('completiontimespent[timeunit]', 'completiontimespentenabled', 'notchecked');
+        $mform->addElement('defaultcustom', 'completiontimespent', get_string('completiontimespentgroup', 'lesson'),
+            ['defaultvalue' => 0, 'customvalue' => 0, 'customlabel' => get_string('completiontimespent', 'lesson'),
+            'type' => 'duration', 'autodetectdefault' => true], ['size' => 3]);
+        $mform->setDefault('completiontimespent', false);
+        $mform->setType('completiontimespent', PARAM_INT);
 
-        return array('completionendreached', 'completiontimespentgroup');
+        return array('completionendreached', 'completiontimespent');
     }
 
     /**
@@ -412,27 +406,6 @@ class mod_lesson_mod_form extends moodleform_mod {
      */
     public function completion_rule_enabled($data) {
         return !empty($data['completionendreached']) || $data['completiontimespent'] > 0;
-    }
-
-    public function get_data() {
-        $data = parent::get_data();
-        if (!$data) {
-            return false;
-        }
-        // Turn off completion setting if the checkbox is not ticked.
-        if (!empty($data->completionunlocked)) {
-            $autocompletion = !empty($data->completion) && $data->completion == COMPLETION_TRACKING_AUTOMATIC;
-            if (empty($data->completiontimespentenabled) || !$autocompletion) {
-                $data->completiontimespent = 0;
-            }
-        }
-        if (!empty($data->completionunlocked)) {
-            $autocompletion = !empty($data->completion) && $data->completion == COMPLETION_TRACKING_AUTOMATIC;
-            if (empty($data->completionendreached) || !$autocompletion) {
-                $data->completionendreached = 0;
-            }
-        }
-        return $data;
     }
 }
 

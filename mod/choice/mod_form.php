@@ -124,20 +124,6 @@ class mod_choice_mod_form extends moodleform_mod {
 
     }
 
-    function get_data() {
-        $data = parent::get_data();
-        if (!$data) {
-            return false;
-        }
-        // Set up completion section even if checkbox is not ticked
-        if (!empty($data->completionunlocked)) {
-            if (empty($data->completionsubmit)) {
-                $data->completionsubmit = 0;
-            }
-        }
-        return $data;
-    }
-
     /**
      * Enforce validation rules here
      *
@@ -160,7 +146,7 @@ class mod_choice_mod_form extends moodleform_mod {
     function add_completion_rules() {
         $mform =& $this->_form;
 
-        $mform->addElement('checkbox', 'completionsubmit', '', get_string('completionsubmit', 'choice'));
+        $mform->addElement('advcheckbox', 'completionsubmit', '', get_string('completionsubmit', 'choice'));
         return array('completionsubmit');
     }
 

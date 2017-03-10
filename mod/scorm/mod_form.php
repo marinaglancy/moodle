@@ -448,17 +448,6 @@ class mod_scorm_mod_form extends moodleform_mod {
                 $errors['timeclose'] = get_string('closebeforeopen', 'scorm');
             }
         }
-        if (!empty($data['completionstatusallscos'])) {
-            $requirestatus = false;
-            foreach (scorm_status_options(true) as $key => $value) {
-                if (!empty($data['completionstatusrequired'][$key])) {
-                    $requirestatus = true;
-                }
-            }
-            if (!$requirestatus) {
-                $errors['completionstatusallscos'] = get_string('youmustselectastatus', 'scorm');
-            }
-        }
 
         return $errors;
     }
@@ -529,6 +518,22 @@ class mod_scorm_mod_form extends moodleform_mod {
         $mform->addHelpButton('completionstatusallscos', 'completionstatusallscos', 'scorm');
         $mform->setDefault('completionstatusallscos', 0);
         $items[] = 'completionstatusallscos';
+
+        $this->_form->addFormRule(function($data, $files) {
+            $errors = [];
+            if (!empty($data['completionstatusallscos'])) {
+                $requirestatus = false;
+                foreach (scorm_status_options(true) as $key => $value) {
+                    if (!empty($data['completionstatusrequired'][$key])) {
+                        $requirestatus = true;
+                    }
+                }
+                if (!$requirestatus) {
+                    $errors['completionstatusallscos'] = get_string('youmustselectastatus', 'scorm');
+                }
+            }
+            return $errors;
+        });
 
         return $items;
     }
