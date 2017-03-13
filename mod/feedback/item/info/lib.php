@@ -16,9 +16,18 @@
 
 defined('MOODLE_INTERNAL') OR die('not allowed');
 require_once($CFG->dirroot.'/mod/feedback/item/feedback_item_class.php');
+require_once($CFG->libdir.'/formslib.php');
 
 class feedback_item_info extends feedback_item_base {
     protected $type = "info";
+
+    /**
+     * Constructor
+     */
+    public function __construct() {
+        $this->nameoptions = array('maxfiles' => EDITOR_UNLIMITED_FILES,
+                                           'trusttext' => true);
+    }
 
     /** Mode recording response time (for non-anonymous feedbacks only) */
     const MODE_RESPONSETIME = 1;
@@ -69,13 +78,31 @@ class feedback_item_info extends feedback_item_base {
         $presentationoptions[self::MODE_COURSE]  = get_string('course');
         $presentationoptions[self::MODE_CATEGORY]  = get_string('coursecategory');
 
-        //build the form
+        $this->context = context_module::instance($cm->id);
+
+        // Preparing the editor for new file-api.
+        $item->nameformat = FORMAT_HTML;
+        $item->nametrust = 1;
+
+        // Append editor context to presentation options, giving preference to existing context.
+        $this->nameoptions = array_merge(array('context' => $this->context),
+                                                 $this->nameoptions);
+        $item = file_prepare_standard_editor($item,
+                                            'name', // Name of the form element.
+                                            $this->nameoptions,
+                                            $this->context,
+                                            'mod_feedback',
+                                            'item', // The filearea.
+                                            $item->id);
+
+        // Build the form.
         $this->item_form = new feedback_info_form('edit_item.php',
                                                   array('item'=>$item,
                                                   'common'=>$commonparams,
                                                   'positionlist'=>$positionlist,
                                                   'position' => $position,
-                                                  'presentationoptions' => $presentationoptions));
+                                                  'presentationoptions' => $presentationoptions,
+                                                  'nameoptions' => $this->nameoptions));
     }
 
     public function save_item() {
@@ -97,6 +124,15 @@ class feedback_item_info extends feedback_item_base {
         } else {
             $DB->update_record('feedback_item', $item);
         }
+
+        $item = file_postupdate_standard_editor($item,
+                                                'name',
+                                                $this->nameoptions,
+                                                $this->context,
+                                                'mod_feedback',
+                                                'item',
+                                                $item->id);
+        $DB->update_record('feedback_item', $item);
 
         return $DB->get_record('feedback_item', array('id'=>$item->id));
     }

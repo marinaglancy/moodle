@@ -16,9 +16,18 @@
 
 defined('MOODLE_INTERNAL') OR die('not allowed');
 require_once($CFG->dirroot.'/mod/feedback/item/feedback_item_class.php');
+require_once($CFG->libdir.'/formslib.php');
 
 class feedback_item_textfield extends feedback_item_base {
     protected $type = "textfield";
+
+    /**
+     * Constructor
+     */
+    public function __construct() {
+        $this->nameoptions = array('maxfiles' => EDITOR_UNLIMITED_FILES,
+                                           'trusttext' => true);
+    }
 
     public function build_editform($item, $feedback, $cm) {
         global $DB, $CFG;
@@ -53,7 +62,7 @@ class feedback_item_textfield extends feedback_item_base {
         $item->itemsize = $itemsize;
         $item->itemmaxlength = $itemlength;
 
-        //all items for dependitem
+        // All items for dependitem.
         $feedbackitems = feedback_get_depend_candidates_for_item($feedback, $item);
         $commonparams = array('cmid' => $cm->id,
                              'id' => isset($item->id) ? $item->id : null,
@@ -61,11 +70,38 @@ class feedback_item_textfield extends feedback_item_base {
                              'items' => $feedbackitems,
                              'feedback' => $feedback->id);
 
-        //build the form
+        $this->context = context_module::instance($cm->id);
+
+        // Preparing the editor for new file-api.
+        $item->nameformat = FORMAT_HTML;
+        $item->nametrust = 1;
+
+        // Append editor context to presentation options, giving preference to existing context.
+        $this->nameoptions = array_merge(array('context' => $this->context),
+                                                 $this->nameoptions);
+        $item = file_prepare_standard_editor($item,
+                                            'name', // Name of the form element.
+                                            $this->nameoptions,
+                                            $this->context,
+                                            'mod_feedback',
+                                            'item', // The filearea.
+                                            $item->id);
+
+        // Build the form.
         $customdata = array('item' => $item,
                             'common' => $commonparams,
                             'positionlist' => $positionlist,
-                            'position' => $position);
+                            'position' => $position,
+                            'nameoptions' => $this->nameoptions);
+
+        $item = file_postupdate_standard_editor($item,
+                                                'name',
+                                                $this->nameoptions,
+                                                $this->context,
+                                                'mod_feedback',
+                                                'item',
+                                                $item->id);
+        $DB->update_record('feedback_item', $item);
 
         $this->item_form = new feedback_textfield_form('edit_item.php', $customdata);
     }

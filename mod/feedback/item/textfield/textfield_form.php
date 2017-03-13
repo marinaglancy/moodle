@@ -30,10 +30,8 @@ class feedback_textfield_form extends feedback_item_form {
         $mform->addElement('header', 'general', get_string($this->type, 'feedback'));
         $mform->addElement('advcheckbox', 'required', get_string('required', 'feedback'), '' , null , array(0, 1));
 
-        $mform->addElement('text',
-                            'name',
-                            get_string('item_name', 'feedback'),
-                            array('size'=>FEEDBACK_ITEM_NAME_TEXTBOX_SIZE, 'maxlength'=>255));
+        $mform->addElement('editor', 'name_editor', get_string('item_name', 'feedback'), null, $item->name);
+        $mform->setType('name_editor', PARAM_RAW);
         $mform->addElement('text',
                             'label',
                             get_string('item_label', 'feedback'),
