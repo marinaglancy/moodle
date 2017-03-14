@@ -1916,7 +1916,7 @@ class core_course_externallib_testcase extends externallib_advanced_testcase {
                 $adminoptions->{$option['name']} = $option['available'];
             }
             if ($course['id'] == SITEID) {
-                $this->assertCount(15, $course['options']);
+                $this->assertCount(16, $course['options']);
                 $this->assertFalse($adminoptions->update);
                 $this->assertFalse($adminoptions->filters);
                 $this->assertFalse($adminoptions->reports);
@@ -1931,8 +1931,9 @@ class core_course_externallib_testcase extends externallib_advanced_testcase {
                 $this->assertFalse($adminoptions->publish);
                 $this->assertFalse($adminoptions->reset);
                 $this->assertFalse($adminoptions->roles);
+                $this->assertFalse($adminoptions->editcompletion);
             } else {
-                $this->assertCount(14, $course['options']);
+                $this->assertCount(15, $course['options']);
                 $this->assertFalse($adminoptions->update);
                 $this->assertFalse($adminoptions->filters);
                 $this->assertFalse($adminoptions->reports);
@@ -1947,6 +1948,7 @@ class core_course_externallib_testcase extends externallib_advanced_testcase {
                 $this->assertFalse($adminoptions->publish);
                 $this->assertFalse($adminoptions->reset);
                 $this->assertFalse($adminoptions->roles);
+                $this->assertFalse($adminoptions->editcompletion);
             }
         }
     }
