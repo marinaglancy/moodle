@@ -65,40 +65,61 @@ class manager {
             $sectionobject = new stdClass();
             $sectionobject->sectionnumber = $sectionnumber;
             $sectionobject->name = get_section_name($this->courseid, $sectioninfo);
-            $sectionobject->activities = [];
-
-            foreach ($section as $cmid) {
-                $mod = $moduleinfo->get_cm($cmid);
-                $moduleobject = new stdClass();
-                $moduleobject->cmid = $cmid;
-                $moduleobject->modname = $mod->get_formatted_name();
-                $moduleobject->icon = $mod->get_icon_url()->out();
-                $moduleobject->url = $mod->url;
-
-                // Get activity completion information.
-                $moduleobject->completionstatus = $this->get_completion_detail($mod->completion); // This is a placeholder only. Must be replaced later.
-
-                $sectionobject->activities[] = $moduleobject;
-            }
-            $data->sections[] = $sectionobject; 
+            $activitiesdata = $this->get_activities($section, true);
+            $sectionobject->activities = $activitiesdata->activities;
+            $data->sections[] = $sectionobject;
         }
         return $data;
     }
 
-    private function get_completion_detail($completionid) {
+    /**
+     * Gets the data (context) to be used with the activityinstance template
+     *
+     * @param array $cmids list of course module ids
+     * @param bool $withcompletiondetails include completion details
+     * @return \stdClass
+     */
+    public function get_activities($cmids, $withcompletiondetails = false) {
+        $moduleinfo = get_fast_modinfo($this->courseid);
+        $activities = [];
+        foreach ($cmids as $cmid) {
+            $mod = $moduleinfo->get_cm($cmid);
+            if (!$mod->uservisible) {
+                continue;
+            }
+            $moduleobject = new stdClass();
+            $moduleobject->cmid = $cmid;
+            $moduleobject->modname = $mod->get_formatted_name();
+            $moduleobject->icon = $mod->get_icon_url()->out();
+            $moduleobject->url = $mod->url;
+            $moduleobject->canmanage = $withcompletiondetails && self::can_edit_bulk_completion($this->courseid, $mod);
+
+            // Get activity completion information.
+            if ($moduleobject->canmanage) {
+                $moduleobject->completionstatus = $this->get_completion_detail($mod); // This is a placeholder only. Must be replaced later.
+            } else {
+                $moduleobject->completionstatus = ['icon' => null, 'string' => null];
+            }
+
+            $activities[] = $moduleobject;
+        }
+        return (object)['activities' => $activities];
+    }
+
+    private function get_completion_detail(\cm_info $mod) {
         global $OUTPUT;
         $string = [];
-        switch ($completionid) {
-            case 0:
+        switch ($mod->completion) {
+            case COMPLETION_TRACKING_NONE:
                 $string['string'] = get_string('none');
                 break;
 
-            case 1:
+            case COMPLETION_TRACKING_MANUAL:
                 $string['string'] = get_string('manual');
                 $string['icon'] = $OUTPUT->pix_url('i/completion-manual-enabled')->out();
                 break;
 
-            case 2:
+            case COMPLETION_TRACKING_AUTOMATIC:
                 $string['string'] = get_string('withconditions');
                 $string['icon'] = $OUTPUT->pix_url('i/completion-auto-enabled')->out();
                 break;
@@ -129,4 +150,27 @@ class manager {
         return $data;
     }
 
+    /**
+     * Checks if current user can edit activity completion
+     *
+     * @param int|stdClass $courseorid
+     * @param \cm_info|null $cm if specified capability for a given coursemodule will be check,
+     *     if not specified capability to edit at least one activity is checked.
+     */
+    public static function can_edit_bulk_completion($courseorid, $cm = null) {
+        if ($cm) {
+            return $cm->uservisible && has_capability('moodle/course:manageactivities', $cm->context);
+        }
+        $coursecontext = context_course::instance(is_object($courseorid) ? $courseorid->id : $courseorid);
+        if (has_capability('moodle/course:manageactivities', $coursecontext)) {
+            return true;
+        }
+        $modinfo = get_fast_modinfo($courseorid);
+        foreach ($modinfo->cms as $mod) {
+            if ($mod->uservisible && has_capability('moodle/course:manageactivities', $mod->context)) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
