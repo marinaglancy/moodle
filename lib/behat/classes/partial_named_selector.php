@@ -167,6 +167,14 @@ XPATH
         , 'message_area_action' => <<<XPATH
 .//div[@data-region='messaging-area']/descendant::*[@data-action = %locator%]
 XPATH
+        , 'filemanager' => <<<XPATH
+.//*[@data-fieldtype = 'filemanager' or @data-fieldtype = 'filepicker']
+    /descendant::input[@id = //label[contains(normalize-space(string(.)), %locator%)]/@for]
+XPATH
+        , 'passwordunmask' => <<<XPATH
+.//*[@data-passwordunmask='wrapper']
+    /descendant::input[@id = %locator% or @id = //label[contains(normalize-space(string(.)), %locator%)]/@for]
+XPATH
     );
 
     protected static $customselectors = [
