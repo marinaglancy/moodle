@@ -1617,7 +1617,6 @@ function lesson_check_updates_since(cm_info $cm, $from, $filter = array()) {
 }
 
 /**
-<<<<<<< HEAD
  * Handles creating actions for events.
  *
  * @param calendar_event $event

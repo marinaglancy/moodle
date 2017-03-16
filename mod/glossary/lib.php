@@ -4171,7 +4171,6 @@ function forum_get_fontawesome_icon_map() {
 }
 
 /**
-<<<<<<< HEAD
  * Handles creating actions for events.
  *
  * @param calendar_event $event

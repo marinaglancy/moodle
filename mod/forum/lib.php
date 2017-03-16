@@ -8137,7 +8137,6 @@ function mod_forum_get_fontawesome_icon_map() {
 }
 
 /**
-<<<<<<< HEAD
  * Callback function that determines whether an action event should be showing its item count
  * based on the event type and the item count.
  *
