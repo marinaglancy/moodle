@@ -811,6 +811,39 @@ class sqlsrv_native_moodle_database extends moodle_database {
     }
 
     /**
+     * Get a number of records as a moodle_recordset which match a particular WHERE clause.
+     *
+     * If given, $select is used as the SELECT parameter in the SQL query,
+     * otherwise all records from the table are returned.
+     *
+     * Other arguments and the return type are like {@link function get_recordset}.
+     *
+     * @param string $table the table to query.
+     * @param string $select A fragment of SQL to be used in a where clause in the SQL call.
+     * @param array $params array of sql parameters
+     * @param string $sort an order to sort the results in (optional, a valid SQL ORDER BY parameter).
+     * @param string $fields a comma separated list of fields to return (optional, by default all fields are returned).
+     * @param int $limitfrom return a subset of records, starting at this point (optional).
+     * @param int $limitnum return a subset comprising this many records (optional, required if $limitfrom is set).
+     * @return moodle_recordset A moodle_recordset instance.
+     * @throws dml_exception A DML specific exception is thrown for any errors.
+     */
+    public function get_recordset_select($table, $select, array $params=null, $sort='', $fields='*', $limitfrom=0, $limitnum=0) {
+        $sql = "SELECT $fields FROM {".$table."}";
+        if ($this->temptables->is_temptable($table)) {
+            // Sqlsrv driver bug, see MDL-34744 .
+            $sql .= " WITH (NOLOCK)";
+        }
+        if ($select) {
+            $sql .= " WHERE $select";
+        }
+        if ($sort) {
+            $sql .= " ORDER BY $sort";
+        }
+        return $this->get_recordset_sql($sql, $params, $limitfrom, $limitnum);
+    }
+
+    /**
      * Get a number of records as a moodle_recordset using a SQL statement.
      *
      * Since this method is a little less readable, use of it should be restricted to
