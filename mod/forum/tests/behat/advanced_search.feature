@@ -18,22 +18,29 @@ Feature: The forum search allows users to perform advanced searches for forum po
       | teacher1 | C1 | editingteacher |
       | teacher2 | C1 | editingteacher |
       | student1 | C1 | student |
-    And I log in as "teacher1"
+    And the following "tags" exist:
+      | name         | isstandard  |
+      | SearchedTag  | 1           |
+    And I log in as "admin"
+    And I am on site homepage
     And I follow "Course 1"
     And I turn editing mode on
     And I add the "Latest announcements" block
     And I navigate to "Edit settings" node in "Course administration"
+    And I expand all fieldsets
     And I set the field "id_newsitems" to "1"
     And I press "Save and display"
     And I add a new topic to "Announcements" forum with:
-      | Subject | My subject |
-      | Message | My message |
+      | Subject | My subject  |
+      | Message | My message  |
+      | Tags    | SearchedTag |
     And I follow "Course 1"
     And I add a new topic to "Announcements" forum with:
       | Subject | My subjective|
       | Message | My long message |
     And I log out
 
+  @javascript
   Scenario: Perform an advanced search using any term
     Given I log in as "student1"
     And I follow "Course 1"
@@ -45,6 +52,7 @@ Feature: The forum search allows users to perform advanced searches for forum po
     Then I should see "My subject"
     And I should see "My subjective"
 
+  @javascript
   Scenario: Perform an advanced search avoiding words
     Given I log in as "student1"
     And I follow "Course 1"
@@ -57,6 +65,7 @@ Feature: The forum search allows users to perform advanced searches for forum po
     Then I should see "My subject"
     And I should not see "My subjective"
 
+  @javascript
   Scenario: Perform an advanced search using whole words
     Given database family used is one of the following:
       | mysql |
@@ -71,6 +80,7 @@ Feature: The forum search allows users to perform advanced searches for forum po
     Then I should see "My subject"
     And I should not see "My subjective"
 
+  @javascript
   Scenario: Perform an advanced search matching the subject
     Given I log in as "student1"
     And I follow "Course 1"
@@ -82,6 +92,7 @@ Feature: The forum search allows users to perform advanced searches for forum po
     Then I should not see "My message"
     And I should see "My subjective"
 
+  @javascript
   Scenario: Perform an advanced search matching the author
     Given I log in as "teacher2"
     And I follow "Course 1"
@@ -99,6 +110,7 @@ Feature: The forum search allows users to perform advanced searches for forum po
     Then I should see "Teacher TWO"
     And I should not see "Teacher ONE"
 
+  @javascript
   Scenario: Perform an advanced search with multiple words
     Given I log in as "student1"
     And I follow "Course 1"
@@ -109,3 +121,17 @@ Feature: The forum search allows users to perform advanced searches for forum po
     When I press "Search forums"
     Then I should not see "My message"
     And I should see "My subjective"
+
+  @javascript
+  Scenario: Perform an advanced search using tags
+    Given I log in as "student1"
+    And I follow "Course 1"
+    And I follow "Announcements"
+    And I press "Search forums"
+    And I should see "Advanced search"
+    And I set the field "Is tagged with" to "SearchedTag"
+    And I click on "[data-value='SearchedTag']" "css_element"
+    And I wait "20" seconds
+    When I press "Search forums"
+    Then I should see "My subject"
+    And I should not see "My subjective"
