@@ -84,6 +84,7 @@ class behat_partial_named_selector extends \Behat\Mink\Selector\PartialNamedSele
         'fieldset' => 'fieldset',
         'file' => 'file',
         'filemanager' => 'filemanager',
+        'passwordunmask' => 'passwordunmask',
         'link' => 'link',
         'link_or_button' => 'link_or_button',
         'list_item' => 'list_item',
