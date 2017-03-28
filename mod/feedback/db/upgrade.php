@@ -166,7 +166,7 @@ function xmldb_feedback_upgrade($oldversion) {
     // Automatically generated Moodle v3.2.0 release upgrade line.
     // Put any upgrade step following this.
 
-    if ($oldversion < 2016051106) {
+    if ($oldversion < 2017032800) {
 
         // Changing type of field itemtype on table tag_instance to char.
         $table = new xmldb_table('feedback_item');
@@ -175,7 +175,7 @@ function xmldb_feedback_upgrade($oldversion) {
         $dbman->change_field_type($table, $field);
 
         // Feedback savepoint reached.
-        upgrade_mod_savepoint(true, 2016051106, 'feedback');
+        upgrade_mod_savepoint(true, 2017032800, 'feedback');
     }
 
     return true;
