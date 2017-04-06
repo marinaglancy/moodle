@@ -133,4 +133,4 @@ Feature: Test creating different types of feedback questions for anonymous feedb
     And I show chart data for the "multichoice1" feedback
     And I should see "1 (50.00 %)" in the "option a" "table_row"
     And I should see "1 (50.00 %)" in the "option b" "table_row"
-    And I log out
+    And following "Export to Excel" should download between "7100" and "7200" bytes
