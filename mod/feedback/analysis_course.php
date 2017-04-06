@@ -87,7 +87,11 @@ if (has_capability('mod/feedback:viewreports', $context) && $feedbackstructure->
     echo $OUTPUT->container_start('form-buttons');
     $aurl = new moodle_url('/mod/feedback/analysis_to_excel.php',
         ['sesskey' => sesskey(), 'id' => $id, 'courseid' => (int)$courseid]);
-    echo $OUTPUT->single_button($aurl, get_string('export_to_excel', 'feedback'));
+    if (defined('BEHAT_SITE_RUNNING')) {
+        echo html_writer::link($aurl, get_string('export_to_excel', 'feedback'));
+    } else {
+        echo $OUTPUT->single_button($aurl, get_string('export_to_excel', 'feedback'));
+    }
     echo $OUTPUT->container_end();
 }
 

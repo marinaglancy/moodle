@@ -132,10 +132,10 @@ Feature: Test creating different types of feedback questions for non-anonymous f
     And I should see "hello" in the "(shorttext)" "table"
 
   Scenario: Create different types of questions in non-anonymous feedback with javascript disabled
-    And I log out
+    And following "Export to Excel" should download between "7100" and "7200" bytes
 
   @javascript
   Scenario: Create different types of questions in non-anonymous feedback with javascript enabled
     And I should see "1 (50.00 %)" in the "option a:" "table_row"
     And I should see "1 (50.00 %)" in the "option b:" "table_row"
-    And I log out
+    And following "Export to Excel" should download between "7100" and "7200" bytes
