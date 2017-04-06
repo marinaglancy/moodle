@@ -122,8 +122,11 @@ class MoodleExcelWorkbook {
             $filename = s($filename);
         }
 
-        header('Content-Type: '.$mimetype);
-        header('Content-Disposition: attachment;filename="'.$filename.'"');
+        if (!defined('BEHAT_SITE_RUNNING')) {
+            // Send download headers only if behat is not running, otherwise we can't test file contents in behat.
+            header('Content-Type: ' . $mimetype);
+            header('Content-Disposition: attachment;filename="' . $filename . '"');
+        }
 
         $objWriter = PHPExcel_IOFactory::createWriter($this->objPHPExcel, $this->type);
         $objWriter->save('php://output');
