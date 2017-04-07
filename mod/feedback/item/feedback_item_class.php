@@ -167,8 +167,69 @@ abstract class feedback_item_base {
      * @return string
      */
     public function get_display_name($item, $withpostfix = true) {
-        return format_text($item->name, FORMAT_HTML, array('noclean' => true, 'para' => false)) .
+        $name = $item->name;
+        if ($nameoptions = $this->get_name_editor_options($item)) {
+            $name = file_rewrite_pluginfile_urls($item->name, 'pluginfile.php',
+                $nameoptions['context']->id, 'mod_feedback',
+                $this->get_file_area($item), $item->id, $nameoptions);
+        }
+        return format_text($name, $item->nameformat, array('noclean' => true, 'para' => false)) .
                 ($withpostfix ? $this->get_display_name_postfix($item) : '');
+    }
+
+    /**
+     * Finds the context where current item lives
+     *
+     * We try to do it with least possible number of DB queries
+     *
+     * @param stdClass $item
+     * @return context
+     */
+    protected function get_context($item) {
+        global $DB, $PAGE;
+        if (empty($item->feedback) AND !empty($item->template)) {
+            $template = $DB->get_record('feedback_template', array('id' => $item->template));
+            if ($template->ispublic) {
+                $context = context_system::instance();
+            } else {
+                $context = context_course::instance($template->course);
+            }
+        } else if (!empty($item->cmid)) {
+            $context = context_module::instance($item->cmid);
+        } else if ($PAGE->cm && $PAGE->cm->instance == $item->feedback && $PAGE->cm->modname === 'feedback') {
+            $context = $PAGE->cm->context;
+        } else {
+            $cm = get_coursemodule_from_instance('feedback', $item->feedback);
+            $context = context_module::instance($cm->id);
+            $item->cmid = $cm->id;
+        }
+        return $context;
+    }
+
+    /**
+     * Finds the file area for files embedded in this item's name - "template" or "item"
+     *
+     * @param stdClass $item
+     * @return string
+     */
+    protected function get_file_area($item) {
+        if (!$item->feedback AND $item->template) {
+            return 'template';
+        } else {
+            return 'item';
+        }
+    }
+
+    /**
+     * Options for HTML editor for the 'name' element
+     *
+     * Items that do not want to have HTML editor for the name should return overwrite and return null
+     *
+     * @param stdClass $item
+     * @return array
+     */
+    protected function get_name_editor_options($item) {
+        return array('maxfiles' => EDITOR_UNLIMITED_FILES, 'trusttext' => true, 'context' => $this->get_context($item));
     }
 
     /**

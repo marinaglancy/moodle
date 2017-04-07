@@ -61,6 +61,7 @@ class mod_feedback_events_testcase extends advanced_testcase {
 
         $this->setAdminUser();
         $gen = $this->getDataGenerator();
+        $feedbackgenerator = $this->getDataGenerator()->get_plugin_generator('mod_feedback');
         $this->eventuser = $gen->create_user(); // Create a user.
         $course = $gen->create_course(); // Create a course.
         // Assign manager role, so user can see reports.
@@ -74,12 +75,7 @@ class mod_feedback_events_testcase extends advanced_testcase {
         $this->eventcm = get_coursemodule_from_instance('feedback', $this->eventfeedback->id, false, MUST_EXIST);
 
         // Create a feedback item.
-        $item = new stdClass();
-        $item->feedback = $this->eventfeedback->id;
-        $item->type = 'numeric';
-        $item->presentation = '0|0';
-        $itemid = $DB->insert_record('feedback_item', $item);
-        $this->eventfeedbackitem = $DB->get_record('feedback_item', array('id' => $itemid), '*', MUST_EXIST);
+        $this->eventfeedbackitem = $feedbackgenerator->create_item_numeric($feedback);
 
         // Create a response from a user.
         $response = new stdClass();

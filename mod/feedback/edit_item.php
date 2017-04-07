@@ -42,8 +42,9 @@ if ($itemid) {
     $item = null;
     list($course, $cm) = get_course_and_cm_from_cmid($cmid, 'feedback');
     $url = new moodle_url('/mod/feedback/edit_item.php', array('cmid' => $cm->id, 'typ' => $typ));
-    $item = (object)['id' => null, 'position' => -1, 'typ' => $typ, 'options' => ''];
+    $item = (object)['id' => null, 'position' => -1, 'typ' => $typ, 'options' => '', 'feedback' => $cm->instance];
 }
+$item->cmid = $cm->id;
 
 require_login($course, true, $cm);
 $context = context_module::instance($cm->id);

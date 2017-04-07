@@ -65,7 +65,8 @@ class feedback_item_textfield extends feedback_item_base {
         $customdata = array('item' => $item,
                             'common' => $commonparams,
                             'positionlist' => $positionlist,
-                            'position' => $position);
+                            'position' => $position,
+                            'nameoptions' => $this->get_name_editor_options($item));
 
         $this->item_form = new feedback_textfield_form('edit_item.php', $customdata);
     }
@@ -85,10 +86,19 @@ class feedback_item_textfield extends feedback_item_base {
 
         $item->hasvalue = $this->get_hasvalue();
         if (!$item->id) {
+            $item->name = '';
             $item->id = $DB->insert_record('feedback_item', $item);
-        } else {
-            $DB->update_record('feedback_item', $item);
         }
+
+        $nameeditoroptions = $this->get_name_editor_options($item);
+        $item = file_postupdate_standard_editor($item,
+            'name',
+            $nameeditoroptions,
+            $nameeditoroptions['context'],
+            'mod_feedback',
+            'item',
+            $item->id);
+        $DB->update_record('feedback_item', $item);
 
         return $DB->get_record('feedback_item', array('id'=>$item->id));
     }

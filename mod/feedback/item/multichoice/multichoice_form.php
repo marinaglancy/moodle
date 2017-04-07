@@ -21,9 +21,7 @@ class feedback_multichoice_form extends feedback_item_form {
 
     public function definition() {
         $item = $this->_customdata['item'];
-        $common = $this->_customdata['common'];
-        $positionlist = $this->_customdata['positionlist'];
-        $position = $this->_customdata['position'];
+        $nameoptions = $this->_customdata['nameoptions'];
 
         $mform =& $this->_form;
 
@@ -31,11 +29,7 @@ class feedback_multichoice_form extends feedback_item_form {
 
         $mform->addElement('advcheckbox', 'required', get_string('required', 'feedback'), '' , null , array(0, 1));
 
-        $mform->addElement('text',
-                            'name',
-                            get_string('item_name', 'feedback'),
-                            array('size' => FEEDBACK_ITEM_NAME_TEXTBOX_SIZE,
-                                  'maxlength' => 255));
+        $mform->addElement('editor', 'name_editor', get_string('item_name', 'feedback'), null, $nameoptions);
 
         $mform->addElement('text',
                             'label',

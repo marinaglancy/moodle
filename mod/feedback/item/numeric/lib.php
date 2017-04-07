@@ -68,7 +68,8 @@ class feedback_item_numeric extends feedback_item_base {
         $customdata = array('item' => $item,
                             'common' => $commonparams,
                             'positionlist' => $positionlist,
-                            'position' => $position);
+                            'position' => $position,
+                            'nameoptions' => $this->get_name_editor_options($item));
 
         $this->item_form = new feedback_numeric_form('edit_item.php', $customdata);
     }
@@ -88,10 +89,19 @@ class feedback_item_numeric extends feedback_item_base {
 
         $item->hasvalue = $this->get_hasvalue();
         if (!$item->id) {
+            $item->name = '';
             $item->id = $DB->insert_record('feedback_item', $item);
-        } else {
-            $DB->update_record('feedback_item', $item);
         }
+
+        $nameeditoroptions = $this->get_name_editor_options($item);
+        $item = file_postupdate_standard_editor($item,
+                                                'name',
+                                                $nameeditoroptions,
+                                                $nameeditoroptions['context'],
+                                                'mod_feedback',
+                                                'item',
+                                                $item->id);
+        $DB->update_record('feedback_item', $item);
 
         return $DB->get_record('feedback_item', array('id'=>$item->id));
     }
@@ -149,7 +159,7 @@ class feedback_item_numeric extends feedback_item_base {
             if (strval($item->label) !== '') {
                 echo '('. format_string($item->label).') ';
             }
-            echo format_text($item->name, FORMAT_HTML, array('noclean' => true, 'para' => false));
+            echo $this->get_display_name($item);
             echo '</th></tr>';
 
             foreach ($values->data as $value) {
