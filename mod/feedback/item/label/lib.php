@@ -20,17 +20,6 @@ require_once($CFG->libdir.'/formslib.php');
 
 class feedback_item_label extends feedback_item_base {
     protected $type = "label";
-    private $presentationoptions = null;
-    private $context;
-
-    /**
-     * Constructor
-     */
-    public function __construct() {
-        $this->presentationoptions = array('maxfiles' => EDITOR_UNLIMITED_FILES,
-                                           'trusttext'=>true);
-
-    }
 
     public function build_editform($item, $feedback, $cm) {
         global $DB, $CFG;
@@ -58,30 +47,12 @@ class feedback_item_label extends feedback_item_base {
                              'items'=>$feedbackitems,
                              'feedback'=>$feedback->id);
 
-        $this->context = context_module::instance($cm->id);
-
-        //preparing the editor for new file-api
-        $item->presentationformat = FORMAT_HTML;
-        $item->presentationtrust = 1;
-
-        // Append editor context to presentation options, giving preference to existing context.
-        $this->presentationoptions = array_merge(array('context' => $this->context),
-                                                 $this->presentationoptions);
-
-        $item = file_prepare_standard_editor($item,
-                                            'presentation', //name of the form element
-                                            $this->presentationoptions,
-                                            $this->context,
-                                            'mod_feedback',
-                                            'item', //the filearea
-                                            $item->id);
-
         //build the form
         $customdata = array('item' => $item,
                             'common' => $commonparams,
                             'positionlist' => $positionlist,
                             'position' => $position,
-                            'presentationoptions' => $this->presentationoptions);
+                            'nameoptions' => $this->get_name_editor_options($item));
 
         $this->item_form = new feedback_label_form('edit_item.php', $customdata);
     }
@@ -103,15 +74,15 @@ class feedback_item_label extends feedback_item_base {
 
         $item->hasvalue = $this->get_hasvalue();
         if (!$item->id) {
+            $item->name = '';
             $item->id = $DB->insert_record('feedback_item', $item);
-        } else {
-            $DB->update_record('feedback_item', $item);
         }
 
+        $nameoptions = $this->get_name_editor_options($item);
         $item = file_postupdate_standard_editor($item,
-                                                'presentation',
-                                                $this->presentationoptions,
-                                                $this->context,
+                                                'name',
+                                                $nameoptions,
+                                                $nameoptions['context'],
                                                 'mod_feedback',
                                                 'item',
                                                 $item->id);
@@ -122,105 +93,19 @@ class feedback_item_label extends feedback_item_base {
     }
 
     /**
-     * prepares the item for output or export to file
-     * @param stdClass $item
-     * @return string
-     */
-    private function print_item($item) {
-        global $DB, $CFG;
-
-        require_once($CFG->libdir . '/filelib.php');
-
-        //is the item a template?
-        if (!$item->feedback AND $item->template) {
-            $template = $DB->get_record('feedback_template', array('id'=>$item->template));
-            if ($template->ispublic) {
-                $context = context_system::instance();
-            } else {
-                $context = context_course::instance($template->course);
-            }
-            $filearea = 'template';
-        } else {
-            $cm = get_coursemodule_from_instance('feedback', $item->feedback);
-            $context = context_module::instance($cm->id);
-            $filearea = 'item';
-        }
-
-        $item->presentationformat = FORMAT_HTML;
-        $item->presentationtrust = 1;
-
-        $output = file_rewrite_pluginfile_urls($item->presentation,
-                                               'pluginfile.php',
-                                               $context->id,
-                                               'mod_feedback',
-                                               $filearea,
-                                               $item->id);
-
-        $formatoptions = array('overflowdiv'=>true, 'trusted'=>$CFG->enabletrusttext);
-        echo format_text($output, FORMAT_HTML, $formatoptions);
-    }
-
-    /**
-     * @param stdClass $item
-     * @param bool|true $withpostfix
-     * @return string
-     */
-    public function get_display_name($item, $withpostfix = true) {
-        return '';
-    }
-
-    /**
      * Adds an input element to the complete form
      *
      * @param stdClass $item
      * @param mod_feedback_complete_form $form
      */
     public function complete_form_element($item, $form) {
-        global $DB;
-        if (!$item->feedback AND $item->template) {
-            // This is a template.
-            $template = $DB->get_record('feedback_template', array('id' => $item->template));
-            if ($template->ispublic) {
-                $context = context_system::instance();
-            } else {
-                $context = context_course::instance($template->course);
-            }
-            $filearea = 'template';
-        } else {
-            // This is a question in the current feedback.
-            $context = $form->get_cm()->context;
-            $filearea = 'item';
-        }
-        $output = file_rewrite_pluginfile_urls($item->presentation, 'pluginfile.php',
-                $context->id, 'mod_feedback', $filearea, $item->id);
-        $formatoptions = array('overflowdiv' => true, 'noclean' => true);
-        $output = format_text($output, FORMAT_HTML, $formatoptions);
-        $output = html_writer::div($output, '', ['id' => 'feedback_item_' . $item->id]);
-
         $inputname = $item->typ . '_' . $item->id;
-
         $name = $this->get_display_name($item);
-        $form->add_form_element($item, ['static', $inputname, $name, $output], false, false);
+        $form->add_form_element($item, ['static', $inputname, $name, ''], false, false);
     }
 
     public function compare_value($item, $dbvalue, $dependvalue) {
         return false;
-    }
-
-    public function postupdate($item) {
-        global $DB;
-
-        $context = context_module::instance($item->cmid);
-        $item = file_postupdate_standard_editor($item,
-                                                'presentation',
-                                                $this->presentationoptions,
-                                                $context,
-                                                'mod_feedback',
-                                                'item',
-                                                $item->id);
-
-        $DB->update_record('feedback_item', $item);
-        return $item->id;
     }
 
     public function get_hasvalue() {

@@ -75,7 +75,8 @@ class feedback_item_info extends feedback_item_base {
                                                   'common'=>$commonparams,
                                                   'positionlist'=>$positionlist,
                                                   'position' => $position,
-                                                  'presentationoptions' => $presentationoptions));
+                                                  'presentationoptions' => $presentationoptions,
+                                                  'nameoptions' => $this->get_name_editor_options($item)));
     }
 
     public function save_item() {
@@ -93,10 +94,19 @@ class feedback_item_info extends feedback_item_base {
 
         $item->hasvalue = $this->get_hasvalue();
         if (!$item->id) {
+            $item->name = '';
             $item->id = $DB->insert_record('feedback_item', $item);
-        } else {
-            $DB->update_record('feedback_item', $item);
         }
+
+        $nameeditoroptions = $this->get_name_editor_options($item);
+        $item = file_postupdate_standard_editor($item,
+                                                'name',
+                                                $nameeditoroptions,
+                                                $nameeditoroptions['context'],
+                                                'mod_feedback',
+                                                'item',
+                                                $item->id);
+        $DB->update_record('feedback_item', $item);
 
         return $DB->get_record('feedback_item', array('id'=>$item->id));
     }
@@ -162,7 +172,7 @@ class feedback_item_info extends feedback_item_base {
             if (strval($item->label) !== '') {
                 echo '('. format_string($item->label).') ';
             }
-            echo format_text($item->name, FORMAT_HTML, array('noclean' => true, 'para' => false));
+            echo $this->get_display_name($item);
             echo '</th></tr>';
             $sizeofdata = count($data);
             for ($i = 0; $i < $sizeofdata; $i++) {

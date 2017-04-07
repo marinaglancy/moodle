@@ -88,7 +88,7 @@ class mod_feedback_generator extends testing_module_generator {
      *
      * @param object $feedback feedback record
      * @param array $record (optional) to override default values
-     * @return int
+     * @return stdClass
      */
     public function create_item_info($feedback, $record = array()) {
         global $DB, $CFG;
@@ -114,6 +114,10 @@ class mod_feedback_generator extends testing_module_generator {
             'options' => '',
         );
 
+        if (!isset($record['name_editor'])) {
+            $record['name_editor'] = array('text' => $record['name'], 'format' => FORMAT_HTML);
+        }
+
         $itemobj->set_data((object) $record);
         return $itemobj->save_item();
     }
@@ -123,7 +127,7 @@ class mod_feedback_generator extends testing_module_generator {
      *
      * @param object $feedback feedback record
      * @param array $record (optional) to override default values
-     * @return int
+     * @return stdClass
      */
     public function create_item_label($feedback, $record = array()) {
         global $DB, $CFG;
@@ -137,7 +141,6 @@ class mod_feedback_generator extends testing_module_generator {
             'id' => 0,
             'feedback' => $feedback->id,
             'template' => 0,
-            'name' => 'label',
             'label' => '',
             'presentation' => '',
             'typ' => 'label',
@@ -149,8 +152,8 @@ class mod_feedback_generator extends testing_module_generator {
             'options' => '',
         );
 
-        if (!isset($record['presentation_editor'])) {
-            $record['presentation_editor'] = array(
+        if (!isset($record['name_editor'])) {
+            $record['name_editor'] = array(
                 'text' => "The label $position text goes here",
                 'format' => FORMAT_HTML,
                 'itemid' => 0
@@ -166,7 +169,7 @@ class mod_feedback_generator extends testing_module_generator {
      *
      * @param object $feedback feedback record
      * @param array $record (optional) to override default values
-     * @return int
+     * @return stdClass
      */
     public function create_item_multichoice($feedback, $record = array()) {
         global $DB, $CFG;
@@ -197,6 +200,10 @@ class mod_feedback_generator extends testing_module_generator {
             'values' => "a\nb\nc\nd\ne"
         );
 
+        if (!isset($record['name_editor'])) {
+            $record['name_editor'] = array('text' => $record['name'], 'format' => FORMAT_HTML);
+        }
+
         $presentation = str_replace("\n", FEEDBACK_MULTICHOICE_LINE_SEP, trim($record['values']));
 
         if ($record['horizontal'] == 1 AND $record['subtype'] != 'd') {
@@ -213,7 +220,7 @@ class mod_feedback_generator extends testing_module_generator {
      *
      * @param object $feedback feedback record
      * @param array $record (optional) to override default values
-     * @return int
+     * @return stdClass
      */
     public function create_item_multichoicerated($feedback, $record = array()) {
         global $DB, $CFG;
@@ -244,6 +251,10 @@ class mod_feedback_generator extends testing_module_generator {
             'values' => "0/a\n1/b\n2/c\n3/d\n4/e"
         );
 
+        if (!isset($record['name_editor'])) {
+            $record['name_editor'] = array('text' => $record['name'], 'format' => FORMAT_HTML);
+        }
+
         $itemobj = new feedback_item_multichoicerated();
         $presentation = $itemobj->prepare_presentation_values_save(trim($record['values']),
             FEEDBACK_MULTICHOICERATED_VALUE_SEP2, FEEDBACK_MULTICHOICERATED_VALUE_SEP);
@@ -262,7 +273,7 @@ class mod_feedback_generator extends testing_module_generator {
      *
      * @param object $feedback feedback record
      * @param array $record (optional) to override default values
-     * @return int
+     * @return stdClass
      */
     public function create_item_numeric($feedback, $record = array()) {
         global $DB, $CFG;
@@ -290,6 +301,10 @@ class mod_feedback_generator extends testing_module_generator {
             'rangeto' => '-',
         );
 
+        if (!isset($record['name_editor'])) {
+            $record['name_editor'] = array('text' => $record['name'], 'format' => FORMAT_HTML);
+        }
+
         if ($record['rangefrom'] === '-' OR $record['rangeto'] === '-') {
             $record['presentation'] = $record['rangefrom'] . '|'. $record['rangeto'];
         } else if ($record['rangefrom'] > $record['rangeto']) {
@@ -307,7 +322,7 @@ class mod_feedback_generator extends testing_module_generator {
      *
      * @param object $feedback feedback record
      * @param array $record (optional) to override default values
-     * @return int
+     * @return stdClass
      */
     public function create_item_textarea($feedback, $record = array()) {
         global $DB, $CFG;
@@ -335,6 +350,10 @@ class mod_feedback_generator extends testing_module_generator {
             'itemheight' => '20',
         );
 
+        if (!isset($record['name_editor'])) {
+            $record['name_editor'] = array('text' => $record['name'], 'format' => FORMAT_HTML);
+        }
+
         $record['presentation'] = $record['itemwidth'] . '|'. $record['itemheight'];
 
         $itemobj->set_data((object) $record);
@@ -346,7 +365,7 @@ class mod_feedback_generator extends testing_module_generator {
      *
      * @param object $feedback feedback record
      * @param array $record (optional) to override default values
-     * @return int
+     * @return stdClass
      */
     public function create_item_textfield($feedback, $record = array()) {
         global $DB, $CFG;
@@ -373,6 +392,10 @@ class mod_feedback_generator extends testing_module_generator {
             'itemsize' => '20',
             'itemmaxlength' => '30',
         );
+
+        if (!isset($record['name_editor'])) {
+            $record['name_editor'] = array('text' => $record['name'], 'format' => FORMAT_HTML);
+        }
 
         $record['presentation'] = $record['itemsize'] . '|'. $record['itemmaxlength'];
 
