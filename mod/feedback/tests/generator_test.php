@@ -88,12 +88,12 @@ class mod_feedback_generator_testcase extends advanced_testcase {
             'format' => FORMAT_HTML,
             'itemid' => 0
         );
-        $item2 = $feedbackgenerator->create_item_label($feedback, array('presentation_editor' => $editor));
+        $item2 = $feedbackgenerator->create_item_label($feedback, array('name_editor' => $editor));
         $records = $DB->get_records('feedback_item', array('feedback' => $feedback->id), 'id');
         $this->assertCount(2, $records);
         $this->assertEquals($item1->id, $records[$item1->id]->id);
         $this->assertEquals($item2->id, $records[$item2->id]->id);
-        $this->assertEquals($editor['text'], $records[$item2->id]->presentation);
+        $this->assertEquals($editor['text'], $records[$item2->id]->name);
         $this->assertEquals('label', $records[$item1->id]->typ);
     }
 

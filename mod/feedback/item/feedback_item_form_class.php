@@ -123,5 +123,24 @@ abstract class feedback_item_form extends moodleform {
         }
         return $item;
     }
+
+    /**
+     * Sets the data for the form
+     *
+     * @param stdClass $item
+     */
+    public function set_data($item) {
+        if (isset($this->_customdata['nameoptions']) && isset($item->name) && isset($item->id)) {
+            $nameoptions = $this->_customdata['nameoptions'];
+            $item = file_prepare_standard_editor($item,
+                'name', // Name of the form element.
+                $nameoptions,
+                $nameoptions['context'],
+                'mod_feedback',
+                'item', // The filearea.
+                $item->id);
+        }
+        parent::set_data($item);
+    }
 }
 
