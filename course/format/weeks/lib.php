@@ -218,9 +218,9 @@ class format_weeks extends format_base {
      * Definitions of the additional options that this course format uses for course
      *
      * Weeks format uses the following options:
-     * - coursedisplay
-     * - hiddensections
      * - automaticenddate
+     * - hiddensections
+     * - coursedisplay
      *
      * @param bool $foreditform
      * @return array of options
@@ -230,6 +230,10 @@ class format_weeks extends format_base {
         if ($courseformatoptions === false) {
             $courseconfig = get_config('moodlecourse');
             $courseformatoptions = array(
+                'automaticenddate' => array(
+                    'default' => 1,
+                    'type' => PARAM_BOOL,
+                ),
                 'hiddensections' => array(
                     'default' => $courseconfig->hiddensections,
                     'type' => PARAM_INT,
@@ -237,15 +241,17 @@ class format_weeks extends format_base {
                 'coursedisplay' => array(
                     'default' => $courseconfig->coursedisplay,
                     'type' => PARAM_INT,
-                ),
-                'automaticenddate' => array(
-                    'default' => 1,
-                    'type' => PARAM_BOOL,
-                ),
+                )
             );
         }
         if ($foreditform && !isset($courseformatoptions['coursedisplay']['label'])) {
             $courseformatoptionsedit = array(
+                'automaticenddate' => array(
+                    'label' => new lang_string('automaticenddate', 'format_weeks'),
+                    'help' => 'automaticenddate',
+                    'help_component' => 'format_weeks',
+                    'element_type' => 'advcheckbox',
+                ),
                 'hiddensections' => array(
                     'label' => new lang_string('hiddensections'),
                     'help' => 'hiddensections',
@@ -269,12 +275,6 @@ class format_weeks extends format_base {
                     ),
                     'help' => 'coursedisplay',
                     'help_component' => 'moodle',
-                ),
-                'automaticenddate' => array(
-                    'label' => new lang_string('automaticenddate', 'format_weeks'),
-                    'help' => 'automaticenddate',
-                    'help_component' => 'format_weeks',
-                    'element_type' => 'advcheckbox',
                 )
             );
             $courseformatoptions = array_merge_recursive($courseformatoptions, $courseformatoptionsedit);
@@ -310,14 +310,8 @@ class format_weeks extends format_base {
             array_unshift($elements, $element);
         }
 
-        // Re-order things.
-        $mform->insertElementBefore($mform->removeElement('automaticenddate', false), 'idnumber');
+        // Don't enable the end date if we have selected to choose an automatic end date.
         $mform->disabledIf('enddate', 'automaticenddate', 'checked');
-        foreach ($elements as $key => $element) {
-            if ($element->getName() == 'automaticenddate') {
-                unset($elements[$key]);
-            }
-        }
 
         return $elements;
     }
