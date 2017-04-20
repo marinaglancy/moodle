@@ -506,7 +506,7 @@ class phpunit_util extends testing_util {
         // Start a sequence between 100000 and 199000 to ensure each call to init produces
         // different ids in the database.  This reduces the risk that hard coded values will
         // end up being placed in phpunit or behat test code.
-        $sequencestart = 100000 + mt_rand(0, 99) * 1000;
+        $sequencestart = 1;
 
         $data = preg_replace('|<!--@plugin_suites_start@-->.*<!--@plugin_suites_end@-->|s', $suites, $data, 1);
         $data = str_replace(

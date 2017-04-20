@@ -442,7 +442,7 @@ abstract class testing_util {
             $id = max($id, $lastrecord->id + 1);
         }
 
-        self::$sequencenextstartingid = $id + 1000;
+        self::$sequencenextstartingid = $id;
 
         self::$tablesequences[$table] = $id;
 
