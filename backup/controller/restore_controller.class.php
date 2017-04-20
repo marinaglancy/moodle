@@ -142,11 +142,11 @@ class restore_controller extends base_controller {
             // Load plan
             $this->load_plan();
 
-            // Apply all default settings (based on type/format/mode).
-            $this->apply_defaults();
-
             // Perform all initial security checks and apply (2nd param) them to settings automatically
             restore_check::check_security($this, true);
+
+            // Apply all default settings (based on type/format/mode).
+            $this->apply_defaults();
 
             if ($this->interactive == backup::INTERACTIVE_YES) {
                 $this->set_status(backup::STATUS_SETTING_UI);
