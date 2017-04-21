@@ -1058,6 +1058,11 @@ class cm_info implements IteratorAggregate {
     private $deletioninprogress;
 
     /**
+     * @var stdClass caches the record from the module instance table ('assign', 'forum', etc)
+     */
+    private $instancerecord;
+
+    /**
      * List of class read-only properties and their getter methods.
      * Used by magic functions __get(), __isset(), __empty()
      * @var array
@@ -1549,6 +1554,27 @@ class cm_info implements IteratorAggregate {
         }
 
         return $cmrecord;
+    }
+
+    /**
+     * Returns the record from the instance table ('assign', 'forum')
+     *
+     * This may perform a DB query on the first call
+     *
+     * @return stdClass record from the respective table.
+     *     If data is corrupted and record does not exist the exception will be thrown
+     */
+    public function get_instance_record() {
+        global $PAGE, $DB;
+        if ($this->instancerecord === null) {
+            if (isset($PAGE->cm) && $PAGE->cm->id == $this->id && $PAGE->activityrecord) {
+                // $PAGE can also cache instance record, retrieve it only once.
+                $this->instancerecord = $PAGE->activityrecord;
+            } else {
+                $this->instancerecord = $DB->get_record($this->modname, ['id' => $this->instance], '*', MUST_EXIST);
+            }
+        }
+        return $this->instancerecord;
     }
 
     // Set functions
