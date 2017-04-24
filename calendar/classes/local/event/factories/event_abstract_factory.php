@@ -107,6 +107,12 @@ abstract class event_abstract_factory implements event_factory_interface {
     }
 
     public function create_instance(\stdClass $dbrow) {
+        if (!empty($dbrow->modulename) && !empty($dbrow->instance) && empty($dbrow->courseid)) {
+            // Some events (for example user overrides) may contain module instance but not course id. Find course id.
+            $cm = calendar_get_module_cached($this->modulecachereference, $dbrow->modulename, $dbrow->instance);
+            $dbrow->courseid = $cm->course;
+        }
+
         $bailcheck = $this->bailoutcheck;
         $bail = $bailcheck($dbrow);
 
@@ -126,9 +132,8 @@ abstract class event_abstract_factory implements event_factory_interface {
         $module = null;
         $subscription = null;
 
-        if ($dbrow->courseid == 0 && !empty($dbrow->modulename)) {
-            $cm = get_coursemodule_from_instance($dbrow->modulename, $dbrow->instance);
-            $dbrow->courseid = get_course($cm->course)->id;
+        if (!empty($dbrow->modulename) && !empty($dbrow->instance)) {
+            $module = new module_std_proxy($dbrow->modulename, $dbrow->instance, $dbrow->courseid);
         }
 
         $course = new std_proxy($dbrow->courseid, function($id) {
@@ -146,20 +151,6 @@ abstract class event_abstract_factory implements event_factory_interface {
                 global $DB;
                 return $DB->get_record('user', ['id' => $id]);
             });
-        }
-
-        if ($dbrow->instance && !empty($dbrow->modulename)) {
-            $module = new module_std_proxy(
-                $dbrow->modulename,
-                $dbrow->instance,
-                function($modulename, $instance) {
-                    return calendar_get_module_cached(
-                        $this->modulecachereference,
-                        $modulename,
-                        $instance
-                    );
-                }
-            );
         }
 
         if ($dbrow->subscriptionid) {
