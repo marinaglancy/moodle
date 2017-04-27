@@ -115,6 +115,7 @@ class repository_user extends repository {
                             'author' => $child->get_author(),
                             'license' => $child->get_license(),
                             'isref' => $child->is_external_file(),
+                            'refcount' => $child->get_references_count(),
                             'source'=> $encodedpath,
                             'icon' => $OUTPUT->image_url(file_file_icon($child, 24))->out(false),
                             'thumbnail' => $OUTPUT->image_url(file_file_icon($child, 90))->out(false)

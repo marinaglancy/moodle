@@ -220,6 +220,7 @@ class repository_local extends repository {
             $node['author'] = $fileinfo->get_author();
             $node['license'] = $fileinfo->get_license();
             $node['isref'] = $fileinfo->is_external_file();
+            $node['refcount'] = $fileinfo->get_references_count();
             if ($fileinfo->get_status() == 666) {
                 $node['originalmissing'] = true;
             }

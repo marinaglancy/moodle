@@ -346,6 +346,15 @@ abstract class file_info {
     }
 
     /**
+     * How many files reference this one
+     *
+     * @return int
+     */
+    public function get_references_count() {
+        return 0;
+    }
+
+    /**
      * Returns file status flag.
      *
      * @return int 0 means file OK, anything else is a problem and file can not be used

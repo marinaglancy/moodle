@@ -123,6 +123,7 @@ class repository_coursefiles extends repository {
                         'datecreated' => $child->get_timecreated(),
                         'source'=> $encodedpath,
                         'isref' => $child->is_external_file(),
+                        'refcount' => $child->get_references_count(),
                         'thumbnail' => $OUTPUT->image_url(file_file_icon($child, 90))->out(false)
                     );
                     if ($child->get_status() == 666) {

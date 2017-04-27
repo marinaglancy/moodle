@@ -97,6 +97,7 @@ class repository_areafiles extends repository {
                 continue;
             }
             $fileurl = moodle_url::make_draftfile_url($itemid, $file->get_filepath(), $file->get_filename());
+            $source = @unserialize($file->get_source());
             $node = array(
                 'title' => $file->get_filename(),
                 'size' => $file->get_filesize(),
@@ -106,6 +107,7 @@ class repository_areafiles extends repository {
                 'author' => $file->get_author(),
                 'license' => $file->get_license(),
                 'isref' => $file->is_external_file(),
+                'refcount' => isset($source->original) ? $fs->search_references_count($source->original) : 0,
                 'iscontrolledlink' => $file->is_controlled_link(),
                 'icon' => $OUTPUT->image_url(file_file_icon($file, 24))->out(false),
                 'thumbnail' => $OUTPUT->image_url(file_file_icon($file, 90))->out(false)

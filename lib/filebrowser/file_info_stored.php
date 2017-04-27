@@ -319,6 +319,18 @@ class file_info_stored extends file_info {
     }
 
     /**
+     * How many files reference this one
+     *
+     * @return int
+     */
+    public function get_references_count() {
+        if (!$this->lf->is_directory() && !$this->lf->is_external_file()) {
+            return get_file_storage()->get_references_count_by_storedfile($this->lf);
+        }
+        return 0;
+    }
+
+    /**
      * Returns file status flag.
      *
      * @return int 0 means file OK, anything else is a problem and file can not be used
