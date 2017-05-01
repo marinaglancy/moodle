@@ -42,15 +42,13 @@ require_capability('mod/feedback:viewreports', $context);
 
 $feedback = $PAGE->activityrecord;
 
-feedback_load_feedback_items();
-
 // Buffering any output. This prevents some output before the excel-header will be send.
 ob_start();
 ob_end_clean();
 
 // Get the questions (item-names).
-$params = array('feedback' => $feedback->id, 'hasvalue' => 1);
-if (!$items = $DB->get_records('feedback_item', $params, 'position')) {
+$feedbackstructure = new mod_feedback_structure($feedback, $cm, $course->id);
+if (!$items = $feedbackstructure->get_items(true)) {
     print_error('no_items_available_yet', 'feedback', $cm->url);
 }
 
@@ -92,13 +90,11 @@ if ($completedscount > 0) {
         $xlsformats->head1);
 }
 
-if (is_array($items)) {
-    $rowoffset1++;
-    $worksheet1->write_string($rowoffset1,
-        0,
-        get_string('questions', 'feedback').': '. strval(count($items)),
-        $xlsformats->head1);
-}
+$rowoffset1++;
+$worksheet1->write_string($rowoffset1,
+    0,
+    get_string('questions', 'feedback').': '. strval(count($items)),
+    $xlsformats->head1);
 
 $rowoffset1 += 2;
 $worksheet1->write_string($rowoffset1, 0, get_string('item_label', 'feedback'), $xlsformats->head1);
