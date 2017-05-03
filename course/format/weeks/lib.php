@@ -231,7 +231,7 @@ class format_weeks extends format_base {
             $courseconfig = get_config('moodlecourse');
             $courseformatoptions = array(
                 'automaticenddate' => array(
-                    'default' => 1,
+                    // Actual default is '1' but do not define it here, since we need to calculate it for existing courses.
                     'type' => PARAM_BOOL,
                 ),
                 'hiddensections' => array(
@@ -283,6 +283,40 @@ class format_weeks extends format_base {
     }
 
     /**
+     * Returns the format options stored for this course or course section
+     *
+     * This method overrides parent method and calculates default value for 'automaticenddate' if it was not set
+     * for the existing course.
+     *
+     * @param null|int|stdClass|section_info $section if null the course format options will be returned
+     *     otherwise options for specified section will be returned. This can be either
+     *     section object or relative section number (field course_sections.section)
+     * @return array
+     */
+    public function get_format_options($section = null) {
+        $options = parent::get_format_options();
+        if ($section === null && $options['automaticenddate'] === null) {
+            // Instead of writing the upgrade script and doing difficult processing during restore we calculate
+            // the value of 'automaticenddate' course option on the first access to the course.
+            if ($this->courseid) {
+                // For existing course calculate the value - if course enddate is set it should be 0, otherwise 1.
+                if ($course = self::update_end_date($this->courseid, true)) {
+                    // This method did all the necessary DB updates, update the caches in this class too.
+                    if (isset($this->course)) {
+                        $this->course->enddate = $course->enddate;
+                        $this->course->automaticenddate = $course->automaticenddate;
+                    }
+                    $this->formatoptions[0]['automaticenddate'] = $options['automaticenddate'] = $course->automaticenddate;
+                }
+            } else {
+                // For the course that does not exist yet assume default '1'.
+                $options['automaticenddate'] = 1;
+            }
+        }
+        return $options;
+    }
+
+    /**
      * Adds format options elements to the course/section edit form.
      *
      * This function is called from {@link course_edit_form::definition_after_data()}.
@@ -308,6 +342,9 @@ class format_weeks extends format_base {
                 $mform->setDefault('numsections', $courseconfig->numsections);
             }
             array_unshift($elements, $element);
+
+            // For new courses default value for 'automaticenddate' should be 1.
+            $mform->setDefault('automaticenddate', 1);
         }
 
         // Don't enable the end date if we have selected to choose an automatic end date.
@@ -504,8 +541,13 @@ class format_weeks extends format_base {
      * events are triggered before the caches are reset.
      *
      * @param int $courseid
+     * @param bool $fixoption if course format option automaticenddate is not set calculate the default
+     *    for it and fix in the DB as well
+     * @return stdClass|false object representing the updated course with fields:
+     *    id, format, startdate, enddate, automaticenddate, lastsection
+     *    If course was not found or it is not in weeks format returns false
      */
-    public static function update_end_date($courseid) {
+    public static function update_end_date($courseid, $fixoption = false) {
         global $DB, $COURSE;
 
         // Use one DB query to retrieve necessary fields in course, value for automaticenddate and number of the last
@@ -513,7 +555,8 @@ class format_weeks extends format_base {
         $course = $DB->get_record_sql("SELECT
                 c.id, c.format, c.startdate, c.enddate, fo.value AS automaticenddate, MAX(s.section) AS lastsection
             FROM {course} c
-            LEFT JOIN {course_format_options} fo ON fo.courseid = c.id AND fo.format = c.format AND fo.name = :optionname
+            LEFT JOIN {course_format_options} fo ON fo.courseid = c.id AND fo.format = c.format
+                AND fo.name = :optionname AND fo.sectionid = 0
             LEFT JOIN {course_sections} s ON s.course = c.id
             WHERE c.format = :format AND c.id = :courseid
             GROUP BY c.id, c.format, c.startdate, c.enddate, fo.value",
@@ -521,17 +564,23 @@ class format_weeks extends format_base {
 
         if (!$course) {
             // Looks like it is a course in a different format, nothing to do here.
-            return;
+            return false;
         }
 
         // Create an instance of this class and mock the course object.
         $format = new format_weeks('weeks', $courseid);
         $format->course = $course;
 
-        // If automaticenddate is not specified take the default value.
+        // If automaticenddate is not specified calculate the default value and update it in the DB.
         if (!isset($course->automaticenddate)) {
-            $defaults = $format->course_format_options();
-            $course->automaticenddate = $defaults['automaticenddate'];
+            if (!$fixoption) {
+                // Do not do anything, we may be in the process of restore when not all data is available yet about the course.
+                return $course;
+            }
+            $course->automaticenddate = $course->enddate ? 0 : 1;
+            $DB->insert_record('course_format_options',
+                ['courseid' => $courseid, 'format' => 'weeks', 'sectionid' => 0,
+                    'name' => 'automaticenddate', 'value' => $course->automaticenddate]);
         }
 
         // Check that the course format for setting an automatic date is set.
@@ -541,12 +590,15 @@ class format_weeks extends format_base {
 
             // Set the course end date.
             if ($course->enddate != $dates->end) {
+                $course->enddate = $dates->end;
                 $DB->set_field('course', 'enddate', $dates->end, array('id' => $course->id));
                 if (isset($COURSE->id) && $COURSE->id == $courseid) {
                     $COURSE->enddate = $dates->end;
                 }
             }
         }
+
+        return $course;
     }
 }
 
