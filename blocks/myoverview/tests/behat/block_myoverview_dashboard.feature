@@ -32,7 +32,7 @@ Feature: The my overview block allows users to easily access their courses and s
     And I click on "Timeline" "link" in the "Course overview" "block"
     When I click on "Sort by dates" "link" in the "Course overview" "block"
     Then I should see "Next 7 days" in the "Course overview" "block"
-    And I should see "Choice Test choice 1 closes" in the "Course overview" "block"
+    And "Choice Test choice 1 closes" "link" should exist in the "Course overview" "block"
     And I should see "View choices" in the "Course overview" "block"
     And I should see "Feedback Test feedback 1 closes" in the "Course overview" "block"
     And I should see "Answer the questions" in the "Course overview" "block"
