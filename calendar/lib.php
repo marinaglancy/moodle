@@ -27,6 +27,8 @@ if (!defined('MOODLE_INTERNAL')) {
     die('Direct access to this script is forbidden.');    ///  It must be included from a Moodle page
 }
 
+use core_calendar\rrule_manager;
+
 /**
  *  These are read by the administration component to provide default values
  */
