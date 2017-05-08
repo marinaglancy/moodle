@@ -516,7 +516,8 @@ class format_weeks extends format_base {
 
         // Use one DB query to retrieve necessary fields in course, value for automaticenddate and number of the last
         // section. This query will also validate that the course is indeed in 'weeks' format.
-        $sql = "SELECT c.id, c.format, c.startdate, c.enddate, fo.value AS automaticenddate, MAX(s.section) AS lastsection
+        $insql = $DB->sql_substr('fo.value', 1, 1);
+        $sql = "SELECT c.id, c.format, c.startdate, c.enddate, MAX($insql) AS automaticenddate, MAX(s.section) AS lastsection
                   FROM {course} c
              LEFT JOIN {course_format_options} fo
                     ON fo.courseid = c.id
@@ -527,7 +528,7 @@ class format_weeks extends format_base {
                     ON s.course = c.id
                  WHERE c.format = :format
                    AND c.id = :courseid
-              GROUP BY c.id, c.format, c.startdate, c.enddate, fo.value";
+              GROUP BY c.id, c.format, c.startdate, c.enddate";
         $course = $DB->get_record_sql($sql,
             ['optionname' => 'automaticenddate', 'format' => 'weeks', 'courseid' => $courseid]);
 
@@ -541,9 +542,9 @@ class format_weeks extends format_base {
         $format->course = $course;
 
         // If automaticenddate is not specified take the default value.
-        if (!isset($course->automaticenddate)) {
+        if (!strlen($course->automaticenddate)) {
             $defaults = $format->course_format_options();
-            $course->automaticenddate = $defaults['automaticenddate'];
+            $course->automaticenddate = $defaults['automaticenddate']['default'];
         }
 
         // Check that the course format for setting an automatic date is set.
