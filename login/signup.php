@@ -97,5 +97,10 @@ $PAGE->set_heading($SITE->fullname);
 
 echo $OUTPUT->header();
 
-echo $OUTPUT->render($mform_signup);
+try {
+    echo $OUTPUT->render($mform_signup);
+} catch (moodle_exception $e) {
+    $mform_signup->display();
+}
+
 echo $OUTPUT->footer();
