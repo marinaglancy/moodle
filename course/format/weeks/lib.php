@@ -561,6 +561,28 @@ class format_weeks extends format_base {
                 }
             }
         }
+
+        // HACK FOR THE "MIDCOURSE" EVENT.
+        global $CFG;
+        require_once($CFG->dirroot.'/calendar/lib.php');
+        $midcoursedate = (int)(($course->enddate + $course->startdate)/2);
+
+        $searchdata = [
+            'courseid' => $course->id,
+            'eventtype' => 'format_weeks/mid'];
+        $updatedata = [
+            'timeduration' => 0,
+            'type' => CALENDAR_EVENT_TYPE_ACTION,  // If you change this to CALENDAR_EVENT_TYPE_STANDARD everything works.
+            'timesort' => $midcoursedate,
+            'timestart' => $midcoursedate,
+            'name' => 'Middle of the course'];
+        if ($event = $DB->get_record('event', $searchdata)) {
+            $event = calendar_event::load($event);
+            $event->update($updatedata, false);
+        } else {
+            $event = (object)($searchdata + $updatedata);
+            calendar_event::create($event, false);
+        }
     }
 }
 
@@ -581,4 +603,27 @@ function format_weeks_inplace_editable($itemtype, $itemid, $newvalue) {
             array($itemid, 'weeks'), MUST_EXIST);
         return course_get_format($section->course)->inplace_editable_update_section_name($section, $itemtype, $newvalue);
     }
+}
+
+/**
+ * This function receives a calendar event and returns the action associated with it, or null if there is none.
+ *
+ * This is used by block_myoverview in order to display the event appropriately. If null is returned then the event
+ * is not displayed on the block.
+ *
+ * @param calendar_event $event
+ * @param \core_calendar\action_factory $factory
+ * @return \core_calendar\local\event\entities\action_interface|null
+ */
+function format_weeks_core_calendar_provide_event_action(calendar_event $event,
+                                                           \core_calendar\action_factory $factory) {
+    global $CFG;
+    require_once($CFG->dirroot.'/course/lib.php');
+
+    return $factory->create_instance(
+        'Go learn!',
+        course_get_url($event->courseid),
+        1,
+        $event->timestart >= time()
+    );
 }
