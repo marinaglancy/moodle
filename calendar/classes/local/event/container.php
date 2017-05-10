@@ -256,6 +256,16 @@ class container {
                                 self::$actionfactory
                             ]
                         );
+                    } else if (preg_match('|^((.*?)_(.+))/.*|', $event->get_type(), $matches) &&
+                            \core_component::is_valid_plugin_name($matches[2], $matches[3])) {
+                        $action = component_callback(
+                            $matches[1],
+                            'core_calendar_provide_event_action',
+                            [
+                                $mapper->from_event_to_legacy_event($event),
+                                self::$actionfactory
+                            ]
+                        );
                     }
 
                     // If we get an action back, return an action event, otherwise
