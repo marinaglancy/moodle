@@ -178,10 +178,16 @@ class event_exporter extends exporter {
         $values = [];
         $event = $this->event;
         $context = $this->related['context'];
-        $modulename = $event->get_course_module()->get('modname');
-        $moduleid = $event->get_course_module()->get('id');
+        if ($moduleproxy = $event->get_course_module()) {
+            $modulename = $moduleproxy->get('modname');
+            $moduleid = $moduleproxy->get('id');
+            $url = new \moodle_url(sprintf('/mod/%s/view.php', $modulename), ['id' => $moduleid]);
+        } else {
+            global $CFG;
+            require_once($CFG->dirroot.'/course/lib.php');
+            $url = \course_get_url($this->related['course'] ?: SITEID);
+        }
         $timesort = $event->get_times()->get_sort_time()->getTimestamp();
-        $url = new \moodle_url(sprintf('/mod/%s/view.php', $modulename), ['id' => $moduleid]);
         $iconexporter = new event_icon_exporter($event, ['context' => $context]);
 
         $values['url'] = $url->out(false);
