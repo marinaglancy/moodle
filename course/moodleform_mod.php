@@ -179,6 +179,7 @@ abstract class moodleform_mod extends moodleform {
         $this->_features->showdescription   = plugin_supports('mod', $this->_modname, FEATURE_SHOW_DESCRIPTION, false);
         $this->_features->gradecat          = ($this->_features->outcomes or $this->_features->hasgrades);
         $this->_features->advancedgrading   = plugin_supports('mod', $this->_modname, FEATURE_ADVANCED_GRADING, false);
+        // TODO MDL-44078 FULLPLUGINNAME_rescale_activity_grades (mod).
         $this->_features->canrescale = (component_callback_exists('mod_' . $this->_modname, 'rescale_activity_grades') !== false);
     }
 
@@ -447,6 +448,7 @@ abstract class moodleform_mod extends moodleform {
     protected function plugin_extend_coursemodule_validation($data) {
         $errors = array();
 
+        // TODO MDL-44078 FULLPLUGINNAME_coursemodule_validation (loop:all).
         $callbacks = get_plugins_with_function('coursemodule_validation', 'lib.php');
         foreach ($callbacks as $type => $plugins) {
             foreach ($plugins as $plugin => $pluginfunction) {
@@ -734,6 +736,7 @@ abstract class moodleform_mod extends moodleform {
      * Plugins can extend the coursemodule settings form.
      */
     protected function plugin_extend_coursemodule_standard_elements() {
+        // TODO MDL-44078 FULLPLUGINNAME_coursemodule_standard_elements (loop:all).
         $callbacks = get_plugins_with_function('coursemodule_standard_elements', 'lib.php');
         foreach ($callbacks as $type => $plugins) {
             foreach ($plugins as $plugin => $pluginfunction) {

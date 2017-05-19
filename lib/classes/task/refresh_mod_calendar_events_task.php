@@ -59,6 +59,7 @@ class refresh_mod_calendar_events_task extends adhoc_task {
                 continue;
             }
             // Check if the plugin implements *_refresh_events() and call it when it does.
+            // TODO MDL-44078 FULLPLUGINNAME_refresh_events (mod:loop).
             if (component_callback_exists('mod_' . $plugin->name, 'refresh_events')) {
                 mtrace('Refreshing events for ' . $plugin->name);
                 component_callback('mod_' . $plugin->name, 'refresh_events');

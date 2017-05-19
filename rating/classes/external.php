@@ -101,6 +101,7 @@ class core_rating_external extends external_api {
                         'ratingarea' => $ratingarea,
                         'itemid' => $itemid,
                         'scaleid' => $scaleid);
+        // TODO MDL-44078 FULLPLUGINNAME_rating_can_see_item_ratings (*).
         if (!has_capability('moodle/rating:view', $context) ||
                 !component_callback($component, 'rating_can_see_item_ratings', array($callbackparams), true)) {
             throw new moodle_exception('noviewrate', 'rating');

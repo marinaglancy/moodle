@@ -171,6 +171,7 @@ class format_topics_testcase extends advanced_testcase {
         $section = $DB->get_record('course_sections', array('course' => $course->id, 'section' => 2));
 
         // Call callback format_topics_inplace_editable() directly.
+        // TODO MDL-44078 FULLPLUGINNAME_inplace_editable (*). Moodle 3.1. https://docs.moodle.org/dev/Inplace_editable
         $tmpl = component_callback('format_topics', 'inplace_editable', array('sectionname', $section->id, 'Rename me again'));
         $this->assertInstanceOf('core\output\inplace_editable', $tmpl);
         $res = $tmpl->export_for_template($PAGE->get_renderer('core'));

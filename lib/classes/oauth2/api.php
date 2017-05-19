@@ -257,6 +257,7 @@ class api {
     public static function get_system_scopes_for_issuer($issuer) {
         $scopes = $issuer->get('loginscopesoffline');
 
+        // TODO MDL-44078 FULLPLUGINNAME_oauth2_system_scopes (loop:all).
         $pluginsfunction = get_plugins_with_function('oauth2_system_scopes', 'lib.php');
         foreach ($pluginsfunction as $plugintype => $plugins) {
             foreach ($plugins as $pluginfunction) {

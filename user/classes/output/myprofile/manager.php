@@ -69,6 +69,7 @@ class manager {
         }
 
         // Plugins.
+        // TODO MDL-44078 FULLPLUGINNAME_myprofile_navigation (loop:all). TODO add to navigation API dev doc
         $pluginswithfunction = get_plugins_with_function('myprofile_navigation', 'lib.php');
         foreach ($pluginswithfunction as $plugins) {
             foreach ($plugins as $function) {

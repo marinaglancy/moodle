@@ -4047,6 +4047,7 @@ function delete_user(stdClass $user) {
     }
 
     // Allow plugins to use this user object before we completely delete it.
+    // TODO MDL-44078 FULLPLUGINNAME_pre_user_delete (loop:all).
     if ($pluginsfunction = get_plugins_with_function('pre_user_delete')) {
         foreach ($pluginsfunction as $plugintype => $plugins) {
             foreach ($plugins as $pluginfunction) {
@@ -4817,6 +4818,7 @@ function delete_course($courseorid, $showfeedback = true) {
     }
 
     // Allow plugins to use this course before we completely delete it.
+    // TODO MDL-44078 FULLPLUGINNAME_pre_course_delete (loop:all).
     if ($pluginsfunction = get_plugins_with_function('pre_course_delete')) {
         foreach ($pluginsfunction as $plugintype => $plugins) {
             foreach ($plugins as $pluginfunction) {
@@ -4944,7 +4946,7 @@ function remove_course_contents($courseid, $showfeedback = true, array $options 
 
             include_once("$moddir/lib.php");                 // Shows php warning only if plugin defective.
             // TODO MDL-44078 PLUGINNAME_delete_instance (mod) - replace with hook or plugininfo.
-            // TODO MDL-44078 PLUGINNAME_delete_course (mod) - replace with hook.
+            // TODO MDL-44078 PLUGINNAME_delete_course (mod) - deprecated.
             $moddelete = $modname .'_delete_instance';       // Delete everything connected to an instance.
             $moddeletecourse = $modname .'_delete_course';   // Delete other stray stuff (uncommon).
 

@@ -2321,6 +2321,7 @@ function blocks_delete_instance($instance, $nolongerused = false, $skipblockstab
     global $DB;
 
     // Allow plugins to use this block before we completely delete it.
+    // TODO MDL-44078 FULLPLUGINNAME_pre_block_delete (loop:all).
     if ($pluginsfunction = get_plugins_with_function('pre_block_delete')) {
         foreach ($pluginsfunction as $plugintype => $plugins) {
             foreach ($plugins as $pluginfunction) {

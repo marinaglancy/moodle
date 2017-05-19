@@ -100,6 +100,7 @@ class event_action_exporter extends exporter {
         $mapper = container::get_event_mapper();
         $calevent = $mapper->from_event_to_legacy_event($event);
         $params = [$calevent, $this->data->itemcount];
+        // TODO MDL-44078 FULLPLUGINNAME_core_calendar_event_action_shows_item_count (mod). Moodle 3.3
         $showitemcount = component_callback($component, $showitemcountcallback, $params, false);
 
         // Prepare other values data.

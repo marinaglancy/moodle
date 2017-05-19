@@ -540,6 +540,7 @@ class core_renderer extends renderer_base {
 
         // Give plugins an opportunity to add things like xml namespaces to the html element.
         // This function should return an array of html attribute names => values.
+
         $pluginswithfunction = get_plugins_with_function('add_htmlattributes', 'lib.php');
         foreach ($pluginswithfunction as $plugins) {
             foreach ($plugins as $function) {
@@ -583,6 +584,7 @@ class core_renderer extends renderer_base {
 
         // Give plugins an opportunity to add any head elements. The callback
         // must always return a string containing valid html head content.
+        // TODO MDL-44078 FULLPLUGINNAME_before_standard_html_head (loop:all).
         $pluginswithfunction = get_plugins_with_function('before_standard_html_head', 'lib.php');
         foreach ($pluginswithfunction as $plugins) {
             foreach ($plugins as $function) {
@@ -672,6 +674,7 @@ class core_renderer extends renderer_base {
 
         // Give plugins an opportunity to inject extra html content. The callback
         // must always return a string containing valid html.
+        // TODO MDL-44078 FULLPLUGINNAME_before_standard_top_of_body_html (loop:all).
         $pluginswithfunction = get_plugins_with_function('before_standard_top_of_body_html', 'lib.php');
         foreach ($pluginswithfunction as $plugins) {
             foreach ($plugins as $function) {
@@ -1055,6 +1058,7 @@ class core_renderer extends renderer_base {
 
         // Give plugins an opportunity touch things before the http headers are sent
         // such as adding additional headers. The return value is ignored.
+        // TODO MDL-44078 FULLPLUGINNAME_before_http_headers (loop:all).
         $pluginswithfunction = get_plugins_with_function('before_http_headers', 'lib.php');
         foreach ($pluginswithfunction as $plugins) {
             foreach ($plugins as $function) {
@@ -1174,6 +1178,7 @@ class core_renderer extends renderer_base {
         global $CFG, $DB, $PAGE;
 
         // Give plugins an opportunity to touch the page before JS is finalized.
+        // TODO MDL-44078 FULLPLUGINNAME_before_footer (loop:all).
         $pluginswithfunction = get_plugins_with_function('before_footer', 'lib.php');
         foreach ($pluginswithfunction as $plugins) {
             foreach ($plugins as $function) {
@@ -3169,6 +3174,7 @@ EOD;
     public function navbar_plugin_output() {
         $output = '';
 
+        // TODO MDL-44078 FULLPLUGINNAME_render_navbar_output (loop:all).
         if ($pluginsfunction = get_plugins_with_function('render_navbar_output')) {
             foreach ($pluginsfunction as $plugintype => $plugins) {
                 foreach ($plugins as $pluginfunction) {

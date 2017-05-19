@@ -763,6 +763,7 @@ class core_user {
         }
 
         // Plugins that may define their preferences.
+        // TODO MDL-44078 FULLPLUGINNAME_user_preferences (loop:*).
         if ($pluginsfunction = get_plugins_with_function('user_preferences')) {
             foreach ($pluginsfunction as $plugintype => $plugins) {
                 foreach ($plugins as $function) {

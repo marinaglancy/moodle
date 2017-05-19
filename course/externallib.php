@@ -2733,6 +2733,7 @@ class core_course_external extends external_api {
             }
 
             $overviews = array();
+            // TODO MDL-44078 (FULL)PLUGINNAME_print_overview (loop:mod) - deprecated.
             if ($modules = get_plugin_list_with_function('mod', 'print_overview')) {
                 foreach ($modules as $fname) {
                     $fname($courses, $overviews);

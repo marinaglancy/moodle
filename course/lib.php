@@ -667,10 +667,12 @@ function get_module_metadata($course, $modnames, $sectionreturn = null) {
         $defaultmodule->archetype = plugin_supports('mod', $modname, FEATURE_MOD_ARCHETYPE, MOD_ARCHETYPE_OTHER);
 
         // Legacy support for callback get_types() - do not use any more, use get_shortcuts() instead!
+        // TODO MDL-44078 FULLPLUGINNAME_get_types (mod). Deprecated, use get_shortcuts()
         $typescallbackexists = component_callback_exists($modname, 'get_types');
 
         // Each module can implement callback modulename_get_shortcuts() in its lib.php and return the list
         // of elements to be added to activity chooser.
+        // TODO MDL-44078 FULLPLUGINNAME_get_shortcuts (mod).
         $items = component_callback($modname, 'get_shortcuts', array($defaultmodule), null);
         if ($items !== null) {
             foreach ($items as $item) {
@@ -709,9 +711,9 @@ function get_module_metadata($course, $modnames, $sectionreturn = null) {
             debugging('Callback get_types() is found in module ' . $modname . ', this functionality is deprecated, ' .
                 'please use callback get_shortcuts() instead', DEBUG_DEVELOPER);
         }
+        // TODO MDL-44078 PLUGINNAME_get_types (mod) - deprecated.
         $types = component_callback($modname, 'get_types', array(), MOD_SUBTYPE_NO_CHILDREN);
         if ($types !== MOD_SUBTYPE_NO_CHILDREN) {
-            // TODO MDL-44078 PLUGINNAME_get_types (mod) - replace with hook or plugininfo.
             // Legacy support for deprecated callback get_types(). To be removed in Moodle 3.5. TODO MDL-53697.
             if (is_array($types) && count($types) > 0) {
                 $grouptitle = $modnamestr;
@@ -1132,6 +1134,7 @@ function course_delete_module($cmid, $async = false) {
     // Only use asynchronous deletion if at least one plugin returns true and if async deletion has been requested.
     // Both are checked because plugins should not be allowed to dictate the deletion behaviour, only support/decline it.
     // It's up to plugins to handle things like whether or not they are enabled.
+    // TODO MDL-44078 FULLPLUGINNAME_course_module_background_deletion_recommended (loop:all).
     if ($async && $pluginsfunction = get_plugins_with_function('course_module_background_deletion_recommended')) {
         foreach ($pluginsfunction as $plugintype => $plugins) {
             foreach ($plugins as $pluginfunction) {
@@ -1181,6 +1184,7 @@ function course_delete_module($cmid, $async = false) {
     }
 
     // Allow plugins to use this course module before we completely delete it.
+    // TODO MDL-44078 FULLPLUGINNAME_pre_course_module_delete (loop:all).
     if ($pluginsfunction = get_plugins_with_function('pre_course_module_delete')) {
         foreach ($pluginsfunction as $plugintype => $plugins) {
             foreach ($plugins as $pluginfunction) {
@@ -1474,6 +1478,7 @@ function course_delete_section($course, $section, $forcedeleteifnotempty = true,
     // Only use asynchronous deletion if at least one plugin returns true and if async deletion has been requested.
     // Both are checked because plugins should not be allowed to dictate the deletion behaviour, only support/decline it.
     // It's up to plugins to handle things like whether or not they are enabled.
+    // TODO MDL-44078 FULLPLUGINNAME_course_module_background_deletion_recommended (loop:all).
     if ($async && $pluginsfunction = get_plugins_with_function('course_module_background_deletion_recommended')) {
         foreach ($pluginsfunction as $plugintype => $plugins) {
             foreach ($plugins as $pluginfunction) {
@@ -3414,6 +3419,7 @@ function duplicate_module($course, $cm) {
         moveto_module($cm, $section, $newcm);
 
         // Update calendar events with the duplicated module.
+        // TODO MDL-44078 FULLPLUGINNAME_refresh_events (mod).
         $refresheventsfunction = $newcm->modname . '_refresh_events';
         if (function_exists($refresheventsfunction)) {
             call_user_func($refresheventsfunction, $newcm->course);
@@ -3950,6 +3956,7 @@ function course_check_updates($course, $tocheck, $filter = array()) {
     $modulescallbacksupport = array();
     $modinfo = get_fast_modinfo($course);
 
+    // TODO MDL-44078 (FULL)PLUGINNAME_check_updates_since (loop:mod) - replace with hook.
     $supportedplugins = get_plugin_list_with_function('mod', 'check_updates_since');
 
     // Check instances.

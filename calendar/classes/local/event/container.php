@@ -250,6 +250,7 @@ class container {
                     if ($event->get_course_module()) {
                         // TODO MDL-58866 Only activity modules currently support this callback.
                         // Any other event will not be displayed on the dashboard.
+                        // TODO MDL-44078 FULLPLUGINNAME_core_calendar_provide_event_action (mod). Moodle 3.3
                         $action = component_callback(
                             'mod_' . $event->get_course_module()->get('modname'),
                             'core_calendar_provide_event_action',
@@ -274,6 +275,7 @@ class container {
                     $eventvisible = null;
                     if ($event->get_course_module()) {
                         // TODO MDL-58866 Only activity modules currently support this callback.
+                        // TODO MDL-44078 FULLPLUGINNAME_core_calendar_is_event_visible (mod). Moodle 3.3
                         $eventvisible = component_callback(
                             'mod_' . $event->get_course_module()->get('modname'),
                             'core_calendar_is_event_visible',

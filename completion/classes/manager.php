@@ -180,6 +180,7 @@ class manager {
             }
 
             // Now, ask the module to provide descriptions for its custom conditional completion rules.
+            // TODO MDL-44078 FULLPLUGINNAME_get_completion_active_rule_descriptions (mod). Moodle 3.3
             if ($customruledescriptions = component_callback($moduledata->modname,
                 'get_completion_active_rule_descriptions', [$moduledata])) {
                 $activeruledescriptions = array_merge($activeruledescriptions, $customruledescriptions);

@@ -4337,6 +4337,7 @@ class settings_navigation extends navigation_node {
         }
 
         // Let plugins hook into course navigation.
+        // TODO MDL-44078 FULLPLUGINNAME_extend_navigation_course (loop:all).
         $pluginsfunction = get_plugins_with_function('extend_navigation_course', 'lib.php');
         foreach ($pluginsfunction as $plugintype => $plugins) {
             // Ignore the report plugin as it was already loaded above.
@@ -5068,6 +5069,7 @@ class settings_navigation extends navigation_node {
         }
 
         // Let plugins hook into category settings navigation.
+        // TODO MDL-44078 FULLPLUGINNAME_extend_navigation_category_settings (loop:all).
         $pluginsfunction = get_plugins_with_function('extend_navigation_category_settings', 'lib.php');
         foreach ($pluginsfunction as $plugintype => $plugins) {
             foreach ($plugins as $pluginfunction) {
@@ -5200,6 +5202,7 @@ class settings_navigation extends navigation_node {
         }
 
         // Let plugins hook into frontpage navigation.
+        // TODO MDL-44078 FULLPLUGINNAME_extend_navigation_frontpage (loop:all).
         $pluginsfunction = get_plugins_with_function('extend_navigation_frontpage', 'lib.php');
         foreach ($pluginsfunction as $plugintype => $plugins) {
             foreach ($plugins as $pluginfunction) {

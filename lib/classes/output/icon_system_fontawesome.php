@@ -390,6 +390,7 @@ class icon_system_fontawesome extends icon_system_font {
                 $this->map = $this->get_core_icon_map();
                 $callback = 'get_fontawesome_icon_map';
 
+                // TODO MDL-44078 FULLPLUGINNAME_get_fontawesome_icon_map (loop:all).
                 if ($pluginsfunction = get_plugins_with_function($callback)) {
                     foreach ($pluginsfunction as $plugintype => $plugins) {
                         foreach ($plugins as $pluginfunction) {

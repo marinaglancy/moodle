@@ -186,6 +186,7 @@ function add_moduleinfo($moduleinfo, $course, $mform = null) {
  * @return stdClass moduleinfo updated by plugins.
  */
 function plugin_extend_coursemodule_edit_post_actions($moduleinfo, $course) {
+    // TODO MDL-44078 FULLPLUGINNAME_coursemodule_edit_post_actions (loop:all).
     $callbacks = get_plugins_with_function('coursemodule_edit_post_actions', 'lib.php');
     foreach ($callbacks as $type => $plugins) {
         foreach ($plugins as $plugin => $pluginfunction) {
@@ -590,6 +591,7 @@ function update_moduleinfo($cm, $moduleinfo, $course, $mform = null) {
                 $newgradeitem->grademin,
                 $newgradeitem->grademax
             );
+            // TODO MDL-44078 FULLPLUGINNAME_rescale_activity_grades (mod).
             if (!component_callback('mod_' . $moduleinfo->modulename, 'rescale_activity_grades', $params)) {
                 print_error('cannotreprocessgrades', '', course_get_url($course, $cm->section), $moduleinfo->modulename);
             }

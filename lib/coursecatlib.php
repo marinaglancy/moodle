@@ -1667,6 +1667,7 @@ class coursecat implements renderable, cacheable_object, IteratorAggregate {
         $settimeout = core_php_time_limit::raise();
 
         // Allow plugins to use this category before we completely delete it.
+        // TODO MDL-44078 FULLPLUGINNAME_pre_course_category_delete (loop:all).
         if ($pluginsfunction = get_plugins_with_function('pre_course_category_delete')) {
             $category = $this->get_db_record();
             foreach ($pluginsfunction as $plugintype => $plugins) {

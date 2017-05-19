@@ -228,6 +228,7 @@ function lti_get_launch_data($instance) {
     // Allow request params to be updated by sub-plugins.
     $plugins = core_component::get_plugin_list('ltisource');
     foreach (array_keys($plugins) as $plugin) {
+        // TODO MDL-44078 FULLPLUGINNAME_before_launch (ltisource:loop).
         $pluginparams = component_callback('ltisource_'.$plugin, 'before_launch',
             array($instance, $endpoint, $requestparams), array());
 
@@ -706,6 +707,7 @@ function lti_build_content_item_selection_request($id, $course, moodle_url $retu
     // Allow request params to be updated by sub-plugins.
     $plugins = core_component::get_plugin_list('ltisource');
     foreach (array_keys($plugins) as $plugin) {
+        // TODO MDL-44078 FULLPLUGINNAME_before_launch (ltisource:loop).
         $pluginparams = component_callback('ltisource_' . $plugin, 'before_launch', [$instance, $toolurlout, $requestparams], []);
 
         if (!empty($pluginparams) && is_array($pluginparams)) {

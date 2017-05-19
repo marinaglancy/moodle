@@ -105,6 +105,8 @@ function report_participation_get_action_sql($action, $modname) {
     $postnames = array();
     include_once($CFG->dirroot.'/mod/' . $modname . '/lib.php');
 
+    // TODO MDL-44078 FULLPLUGINNAME_get_view_actions (mod).
+    // TODO MDL-44078 FULLPLUGINNAME_get_post_actions (mod).
     $viewfun = $modname.'_get_view_actions';
     $postfun = $modname.'_get_post_actions';
 

@@ -813,6 +813,7 @@ class grade_item extends grade_object {
 
             // Standardise score to the new grade range
             // NOTE: skip if the activity provides a manual rescaling option.
+            // TODO MDL-44078 FULLPLUGINNAME_rescale_activity_grades (mod).
             $manuallyrescale = (component_callback_exists('mod_' . $this->itemmodule, 'rescale_activity_grades') !== false);
             if (!$manuallyrescale && ($rawmin != $this->grademin or $rawmax != $this->grademax)) {
                 $rawgrade = grade_grade::standardise_score($rawgrade, $rawmin, $rawmax, $this->grademin, $this->grademax);
@@ -839,6 +840,7 @@ class grade_item extends grade_object {
 
             // Convert scale if needed
             // NOTE: skip if the activity provides a manual rescaling option.
+            // TODO MDL-44078 FULLPLUGINNAME_rescale_activity_grades (mod).
             $manuallyrescale = (component_callback_exists('mod_' . $this->itemmodule, 'rescale_activity_grades') !== false);
             if (!$manuallyrescale && ($rawmin != $this->grademin or $rawmax != $this->grademax)) {
                 // This should never happen because scales are locked if they are in use.

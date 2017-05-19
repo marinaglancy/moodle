@@ -3477,6 +3477,7 @@ class core_course_courselib_testcase extends advanced_testcase {
 
         // Non-core plugins might implement the 'course_module_adhoc_deletion_recommended' hook and spoil this test.
         // If at least one plugin still returns true, then skip this test.
+        // TODO MDL-44078 FULLPLUGINNAME_course_module_background_deletion_recommended (loop:all).
         if ($pluginsfunction = get_plugins_with_function('course_module_background_deletion_recommended')) {
             foreach ($pluginsfunction as $plugintype => $plugins) {
                 foreach ($plugins as $pluginfunction) {
@@ -3621,6 +3622,7 @@ class core_course_courselib_testcase extends advanced_testcase {
 
         // Non-core plugins might implement the 'course_module_adhoc_deletion_recommended' hook and spoil this test.
         // If at least one plugin still returns true, then skip this test.
+        // TODO MDL-44078 FULLPLUGINNAME_course_module_background_deletion_recommended (loop:all).
         if ($pluginsfunction = get_plugins_with_function('course_module_background_deletion_recommended')) {
             foreach ($pluginsfunction as $plugintype => $plugins) {
                 foreach ($plugins as $pluginfunction) {

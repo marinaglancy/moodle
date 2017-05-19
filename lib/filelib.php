@@ -4572,12 +4572,8 @@ function file_pluginfile($relativepath, $forcedownload, $preview = null, $offlin
     // ========================================================================================================================
     } else if ($component === 'question') {
         require_once($CFG->libdir . '/questionlib.php');
-<<<<<<< HEAD
-        question_pluginfile($course, $context, 'question', $filearea, $args, $forcedownload, $sendfileoptions);
-=======
         // TODO MDL-44078 COMPONENT_pluginfile (question) - replace with hook.
-        question_pluginfile($course, $context, 'question', $filearea, $args, $forcedownload);
->>>>>>> cde739a... MDL-44078 all callbacks in standard Moodle
+        question_pluginfile($course, $context, 'question', $filearea, $args, $forcedownload, $sendfileoptions);
         send_file_not_found();
 
     // ========================================================================================================================
