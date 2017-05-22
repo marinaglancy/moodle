@@ -22,6 +22,11 @@
 }}
 {{#text}}
 <div class="availabilityinfo {{classes}}">
-    <span class="label label-info">{{{text}}}</span>
+    {{#isrestriction}}
+        <span class="label label-info">{{#str}}restricted, core{{/str}}</span> {{{text}}}
+    {{/isrestriction}}
+    {{^isrestriction}}
+        <span class="label label-info">{{{text}}}</span>
+    {{/isrestriction}}
 </div>
 {{/text}}

@@ -729,6 +729,11 @@ class core_course_renderer extends plugin_renderer_base {
      */
     public function availability_info($text, $additionalclasses = '') {
         $data = ['text' => $text, 'classes' => $additionalclasses];
+        $classes = preg_split('/ +/', $additionalclasses, -1, PREG_SPLIT_NO_EMPTY);
+        if (!in_array('ishidden', $classes) && !in_array('isstealth', $classes)) {
+            // This is access restriction.
+            $data['isrestriction'] = 1;
+        }
         return $this->render_from_template('core/availability_info', $data);
     }
 
