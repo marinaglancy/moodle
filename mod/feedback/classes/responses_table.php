@@ -480,9 +480,19 @@ class mod_feedback_responses_table extends table_sql {
             return;
         }
 
+        $items = $this->feedbackstructure->get_items(true);
+
+        // Add a row with items labels.
+        if ($this->is_downloading()) {
+            $labelsrow = [];
+            foreach ($items as $nr => $item) {
+                $labelsrow['val' . $nr] = format_string($item->label);
+            }
+            $this->add_data_keyed($labelsrow);
+        }
+
         $columnsgroups = [];
         if ($this->hasmorecolumns) {
-            $items = $this->feedbackstructure->get_items(true);
             $notretrieveditems = array_slice($items, self::TABLEJOINLIMIT, $this->hasmorecolumns, true);
             $columnsgroups = array_chunk($notretrieveditems, self::TABLEJOINLIMIT, true);
         }
