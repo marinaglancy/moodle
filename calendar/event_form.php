@@ -71,8 +71,13 @@ class event_form extends moodleform {
 
             if (!empty($eventtypes->groups) && is_array($eventtypes->groups)) {
                 $groupoptions = array();
+                $formatoptions = array();
+                if (!empty($eventtypes->courses) && ($context = context_course::instance(key($eventtypes->courses), IGNORE_MISSING))) {
+                    $formatoptions['context'] = $context;
+                }
+                print_object($formatoptions);
                 foreach ($eventtypes->groups as $group) {
-                    $groupoptions[$group->id] = $group->name;
+                    $groupoptions[$group->id] = format_string($group->name, true, $formatoptions);
                 }
                 $mform->addElement('select', 'groupid', get_string('typegroup', 'calendar'), $groupoptions);
                 $mform->disabledIf('groupid', 'eventtype', 'noteq', 'group');
