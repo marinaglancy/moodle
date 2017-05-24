@@ -215,7 +215,11 @@ function feedback_pluginfile($course, $cm, $context, $filearea, $args, $forcedow
         $canload = false;
         //first check whether the user has the complete capability
         if (has_capability('mod/feedback:complete', $context)) {
-            $canload = true;
+            // Since Moodle 3.6 this capability may be given to guest user. Guest users can
+            // complete only anonymous feedbacks.
+            if ((isloggedin() && !isguestuser()) || ($feedback->anonymous == FEEDBACK_ANONYMOUS_YES)) {
+                $canload = true;
+            }
         }
 
         //now we check whether the user has the view capability
@@ -223,6 +227,7 @@ function feedback_pluginfile($course, $cm, $context, $filearea, $args, $forcedow
             $canload = true;
         }
 
+        // Legacy setting $CFG->feedback_allowfullanonymous
         //if the feedback is on frontpage and anonymous and the fullanonymous is allowed
         //so the file can be loaded too.
         if (isset($CFG->feedback_allowfullanonymous)

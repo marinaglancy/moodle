@@ -111,8 +111,8 @@ Feature: Anonymous feedback
 
   Scenario: Complete fully anonymous feedback on the front page as a guest
     And I log in as "admin"
-    And I set the following administration settings values:
-      | feedback_allowfullanonymous | 1 |
+    And I set the following system permissions of "Guest" role:
+      | mod/feedback:complete | Allow |
     And I log out
     When I follow "Site feedback"
     And I follow "Preview"
@@ -129,10 +129,9 @@ Feature: Anonymous feedback
   @javascript
   Scenario: Complete fully anonymous feedback and view analyze on the front page as a guest
     And I log in as "admin"
-    And I set the following administration settings values:
-      | feedback_allowfullanonymous | 1 |
     And I set the following system permissions of "Guest" role:
       | capability                   | permission |
+      | mod/feedback:complete        | Allow      |
       | mod/feedback:viewanalysepage | Allow      |
     And I log out
     When I follow "Site feedback"
@@ -243,6 +242,45 @@ Feature: Anonymous feedback
     And I should see "Anonymous entries (1)"
     And I should not see "Response number: 1"
     And I should see "Response number: 2"
+    And I log out
+
+  @javascript
+  Scenario: Guest can complete anonymous feedback in a course
+    When I log in as "teacher"
+    And I am on "Course 1" course homepage
+    And I navigate to "Enrolment methods" node in "Course administration > Users"
+    And I click on "Enable" "link" in the "Guest access" "table_row"
+    And I am on "Course 1" course homepage
+    And I follow "Course feedback"
+    And I navigate to "Permissions" in current page administration
+    And I override the system permissions of "Guest" role with:
+      | mod/feedback:complete | Allow |
+    And I follow "Course feedback"
+    And I click on "Edit questions" "link" in the "[role=main]" "css_element"
+    And I add a "Multiple choice" question to the feedback with:
+      | Question                       | Would you be interested in this course?           |
+      | Label                          | multichoice1                       |
+      | Multiple choice type           | Multiple choice - single answer    |
+      | Hide the "Not selected" option | Yes                                |
+      | Multiple choice values         | Yes\nNo\nI don't know              |
+    And I log out
+    And I am on site homepage
+    And I follow "Course 1"
+    And I press "Log in as a guest"
+    And I follow "Course feedback"
+    And I follow "Answer the questions..."
+    And I should see "Would you be interested in this course?"
+    And I set the following fields to these values:
+      | Yes | 1 |
+    And I press "Submit your answers"
+    And I log in as "teacher"
+    And I am on "Course 1" course homepage
+    And I follow "Course feedback"
+    And I navigate to "Show responses" in current page administration
+    Then I should not see "Username"
+    And I should see "Anonymous entries (1)"
+    And I follow "Response number: 1"
+    And I should not see "Username"
     And I log out
 
   Scenario: Collecting new non-anonymous feedback from a previously anonymous feedback activity

@@ -51,6 +51,7 @@ $string['completed'] = 'Completed';
 $string['completedon'] = 'Completed on {$a}';
 $string['completionsubmit'] = 'View as completed if the feedback is submitted';
 $string['configallowfullanonymous'] = 'If set to \'yes\', users can complete a feedback activity on the front page without being required to log in.';
+$string['configallowfullanonymous_legacy'] = '<b>This setting is deprecated!</b> Capability \'mod/feedback:complete\' may be given to guest role to allow the guests to complete anonymous feedbacks across the site. You only see this setting because it was set on this site before upgrade to Moodle 3.6.';
 $string['confirmdeleteentry'] = 'Are you sure you want to delete this entry?';
 $string['confirmdeleteitem'] = 'Are you sure you want to delete this element?';
 $string['confirmdeletetemplate'] = 'Are you sure you want to delete this template?';

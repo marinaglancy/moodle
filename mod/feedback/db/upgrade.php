@@ -78,5 +78,33 @@ function xmldb_feedback_upgrade($oldversion) {
     // Automatically generated Moodle v3.4.0 release upgrade line.
     // Put any upgrade step following this.
 
+    if ($oldversion < 2018051401) {
+
+        // From Moodle 3.6 capability 'mod/feedback:complete' can be given to guest role. Before 3.6 even if it was set
+        // to "allow", it did not apply. It is possible that administrator/teacher tried to set it, saw that it was not working
+        // but did not bother to unset it. In order to keep the existing functionality we need to unset it.
+
+        // Let's find the guest role same way as get_guest_role() does it but without calling API functions.
+        $role = null;
+        if (!empty($CFG->guestroleid)) {
+            $role = $DB->get_record('role', ['id' => $CFG->guestroleid]);
+        }
+        if (!$role) {
+            $role = $DB->get_record('role', ['archetype' => 'guest'], '*', IGNORE_MULTIPLE);
+        }
+        // Unset the CAP_ALLOW for the capability 'mod/feedback:complete' for this role in any context.
+        if ($role) {
+            $DB->delete_records('role_capabilities', ['capability' => 'mod/feedback:complete', 'roleid' => $role->id, 'permission' => 1]);
+        }
+
+        // Deprecate setting $CFG->feedback_allowfullanonymous . If it was not set before upgrade never show it in the settings.
+        if (!empty($CFG->feedback_allowfullanonymous)) {
+            set_config('feedback_show_allowfullanonymous', 1);
+        }
+
+        // Feedback savepoint reached.
+        upgrade_mod_savepoint(true, 2018051401, 'feedback');
+    }
+
     return true;
 }

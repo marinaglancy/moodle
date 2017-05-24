@@ -17,9 +17,13 @@
 defined('MOODLE_INTERNAL') || die;
 
 if ($ADMIN->fulltree) {
-    $options = array(0=>get_string('no'), 1=>get_string('yes'));
-    $str = get_string('configallowfullanonymous', 'feedback');
-    $settings->add(new admin_setting_configselect('feedback_allowfullanonymous',
-                                    get_string('allowfullanonymous', 'feedback'),
-                                    $str, 0, $options));
+    if (!empty($CFG->feedback_show_allowfullanonymous)) {
+        // Setting $CFG->feedback_allowfullanonymous is deprecated in Moodle 3.6 .
+        // It is not displayed at all on the sites that did not have it set before upgrade to Moodle 3.6.
+        $options = array(0 => get_string('no'), 1 => get_string('yes'));
+        $str = get_string('configallowfullanonymous', 'feedback') . '<br>' . get_string('configallowfullanonymous_legacy', 'feedback');
+        $settings->add(new admin_setting_configselect('feedback_allowfullanonymous',
+            get_string('allowfullanonymous', 'feedback'),
+            $str, 0, $options));
+    }
 }

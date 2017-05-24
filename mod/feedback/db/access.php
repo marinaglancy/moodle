@@ -56,7 +56,7 @@ $capabilities = array(
 
         'riskbitmask' => RISK_SPAM,
 
-        'captype' => 'write',
+        'captype' => 'guestwrite',
         'contextlevel' => CONTEXT_MODULE,
         'archetypes' => array(
             'frontpage' => CAP_ALLOW,

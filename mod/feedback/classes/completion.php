@@ -620,14 +620,19 @@ class mod_feedback_completion extends mod_feedback_structure {
 
         $context = context_module::instance($this->cm->id);
         if (has_capability('mod/feedback:complete', $context)) {
-            return true;
+            // Since Moodle 3.6 this capability may be given to guest user. Guest users can
+            // complete only anonymous feedbacks.
+            if ((isloggedin() && !isguestuser()) || ($this->feedback->anonymous == FEEDBACK_ANONYMOUS_YES)) {
+                return true;
+            }
         }
 
+        // Legacy setting $CFG->feedback_allowfullanonymous
+        // Guests are allowed to complete fully anonymous feedback without having 'mod/feedback:complete' capability.
         if (!empty($CFG->feedback_allowfullanonymous)
                     AND $this->feedback->course == SITEID
                     AND $this->feedback->anonymous == FEEDBACK_ANONYMOUS_YES
                     AND (!isloggedin() OR isguestuser())) {
-            // Guests are allowed to complete fully anonymous feedback without having 'mod/feedback:complete' capability.
             return true;
         }
 
