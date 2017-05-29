@@ -72,7 +72,7 @@ Feature: Exporting and importing feedbacks
     And I log out
 
   @javascript @_file_upload
-  Scenario: Import feedback deleting old items
+  Scenario: Import feedback in 200701 format deleting old items
     When I log in as "teacher"
     And I am on "Course 1" course homepage
     And I follow "Learning experience"
@@ -83,9 +83,9 @@ Feature: Exporting and importing feedbacks
       | Range to               | 100               |
     And I follow "Templates"
     And I follow "Import questions"
-    And I upload "mod/feedback/tests/fixtures/testexport.xml" file to "File" filemanager
+    And I upload "mod/feedback/tests/fixtures/testexport_200701.xml" file to "File" filemanager
     And I press "Yes"
-    And I click on "Edit questions" "link" in the "[role=main]" "css_element"
+    And I should see "Import successful"
     Then I should not see "Existing question"
     And I should see "this is an information question"
     And I should see "label text"
@@ -99,7 +99,7 @@ Feature: Exporting and importing feedbacks
     And I log out
 
   @javascript @_file_upload
-  Scenario: Import feedback appending new items
+  Scenario: Import feedback in 200701 format appending new items
     When I log in as "teacher"
     And I am on "Course 1" course homepage
     And I follow "Learning experience"
@@ -111,9 +111,9 @@ Feature: Exporting and importing feedbacks
     And I follow "Templates"
     And I follow "Import questions"
     And I set the field "Append new items" to "1"
-    And I upload "mod/feedback/tests/fixtures/testexport.xml" file to "File" filemanager
+    And I upload "mod/feedback/tests/fixtures/testexport_200701.xml" file to "File" filemanager
     And I press "Yes"
-    And I click on "Edit questions" "link" in the "[role=main]" "css_element"
+    And I should see "Import successful"
     Then I should see "Existing question"
     And "Existing question" "text" should appear before "this is an information question" "text"
     And I should see "this is an information question"

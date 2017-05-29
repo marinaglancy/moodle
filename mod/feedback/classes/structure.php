@@ -350,4 +350,25 @@ class mod_feedback_structure {
         }
         return $this->allcourses;
     }
+
+    /**
+     * Import feedback structure from XML file
+     *
+     * @param string $xmlcontent
+     * @param bool $deleteolditems
+     * @return bool
+     */
+    public function import($xmlcontent, $deleteolditems) {
+        global $CFG;
+        require_once $CFG->libdir."/xmlize.php";
+
+        $data = xmlize($xmlcontent, 0);
+        $version = intval($data['FEEDBACK']['@']['VERSION']);
+        if ($version == 200701) {
+            $import = new mod_feedback_import_legacy($this);
+            return $import->import($xmlcontent, $deleteolditems);
+        }
+
+        return false;
+    }
 }
