@@ -14,21 +14,16 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-defined('MOODLE_INTERNAL') OR die('not allowed');
-require_once($CFG->dirroot.'/mod/feedback/item/feedback_item_class.php');
-
 define('FEEDBACK_MULTICHOICE_TYPE_SEP', '>>>>>');
 define('FEEDBACK_MULTICHOICE_LINE_SEP', '|');
 define('FEEDBACK_MULTICHOICE_ADJUST_SEP', '<<<<<');
 define('FEEDBACK_MULTICHOICE_IGNOREEMPTY', 'i');
 define('FEEDBACK_MULTICHOICE_HIDENOSELECT', 'h');
 
-class feedback_item_multichoice extends feedback_item_base {
-    protected $type = "multichoice";
+class feedbackitem_multichoice_plugin extends mod_feedback_item_base {
 
     public function build_editform($item, $feedback, $cm) {
         global $DB, $CFG;
-        require_once('multichoice_form.php');
 
         //get the lastposition number of the feedback_items
         $position = $item->position;
@@ -66,7 +61,7 @@ class feedback_item_multichoice extends feedback_item_base {
                             'info' => $info,
                             'nameoptions' => $this->get_name_editor_options($item));
 
-        $this->item_form = new feedback_multichoice_form('edit_item.php', $customdata);
+        $this->item_form = new feedbackitem_multichoice_form('edit_item.php', $customdata);
     }
 
     public function save_item() {

@@ -14,15 +14,9 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-defined('MOODLE_INTERNAL') OR die('not allowed');
-require_once($CFG->dirroot.'/mod/feedback/item/feedback_item_class.php');
-
-class feedback_item_textfield extends feedback_item_base {
-    protected $type = "textfield";
-
+class feedbackitem_textarea_plugin extends mod_feedback_item_base {
     public function build_editform($item, $feedback, $cm) {
         global $DB, $CFG;
-        require_once('textfield_form.php');
 
         //get the lastposition number of the feedback_items
         $position = $item->position;
@@ -40,26 +34,29 @@ class feedback_item_textfield extends feedback_item_base {
 
         $item->presentation = empty($item->presentation) ? '' : $item->presentation;
 
-        $size_and_length = explode('|', $item->presentation);
+        $width_and_height = explode('|', $item->presentation);
 
-        if (isset($size_and_length[0]) AND $size_and_length[0] >= 5) {
-            $itemsize = $size_and_length[0];
+        if (isset($width_and_height[0]) AND $width_and_height[0] >= 5) {
+            $itemwidth = $width_and_height[0];
         } else {
-            $itemsize = 30;
+            $itemwidth = 30;
         }
 
-        $itemlength = isset($size_and_length[1]) ? $size_and_length[1] : 255;
-
-        $item->itemsize = $itemsize;
-        $item->itemmaxlength = $itemlength;
+        if (isset($width_and_height[1])) {
+            $itemheight = $width_and_height[1];
+        } else {
+            $itemheight = 5;
+        }
+        $item->itemwidth = $itemwidth;
+        $item->itemheight = $itemheight;
 
         //all items for dependitem
         $feedbackitems = feedback_get_depend_candidates_for_item($feedback, $item);
-        $commonparams = array('cmid' => $cm->id,
-                             'id' => isset($item->id) ? $item->id : null,
-                             'typ' => $item->typ,
-                             'items' => $feedbackitems,
-                             'feedback' => $feedback->id);
+        $commonparams = array('cmid'=>$cm->id,
+                             'id'=>isset($item->id) ? $item->id : null,
+                             'typ'=>$item->typ,
+                             'items'=>$feedbackitems,
+                             'feedback'=>$feedback->id);
 
         //build the form
         $customdata = array('item' => $item,
@@ -68,7 +65,7 @@ class feedback_item_textfield extends feedback_item_base {
                             'position' => $position,
                             'nameoptions' => $this->get_name_editor_options($item));
 
-        $this->item_form = new feedback_textfield_form('edit_item.php', $customdata);
+        $this->item_form = new feedbackitem_textarea_form('edit_item.php', $customdata);
     }
 
     public function save_item() {
@@ -92,17 +89,16 @@ class feedback_item_textfield extends feedback_item_base {
 
         $nameeditoroptions = $this->get_name_editor_options($item);
         $item = file_postupdate_standard_editor($item,
-            'name',
-            $nameeditoroptions,
-            $nameeditoroptions['context'],
-            'mod_feedback',
-            'item',
-            $item->id);
+                                                'name',
+                                                $nameeditoroptions,
+                                                $nameeditoroptions['context'],
+                                                'mod_feedback',
+                                                'item',
+                                                $item->id);
         $DB->update_record('feedback_item', $item);
 
         return $DB->get_record('feedback_item', array('id'=>$item->id));
     }
-
 
     /**
      * Helper function for collected data for exporting to excel
@@ -113,9 +109,10 @@ class feedback_item_textfield extends feedback_item_base {
      * @return stdClass
      */
     protected function get_analysed($item, $groupid = false, $courseid = false) {
+        global $DB;
 
         $analysed_val = new stdClass();
-        $analysed_val->data = null;
+        $analysed_val->data = array();
         $analysed_val->name = $item->name;
 
         $values = feedback_get_group_values($item, $groupid, $courseid);
@@ -134,6 +131,7 @@ class feedback_item_textfield extends feedback_item_base {
         if (!isset($value->value)) {
             return '';
         }
+
         return $value->value;
     }
 
@@ -150,9 +148,11 @@ class feedback_item_textfield extends feedback_item_base {
             echo '</th></tr>';
             foreach ($values as $value) {
                 $class = strlen(trim($value->value)) ? '' : ' class="isempty"';
-                echo '<tr'.$class.'><td colspan="2" class="singlevalue">';
+                echo '<tr'.$class.'>';
+                echo '<td colspan="2" class="singlevalue">';
                 echo str_replace("\n", '<br />', $value->value);
-                echo '</td></tr>';
+                echo '</td>';
+                echo '</tr>';
             }
             echo '</table>';
         }
@@ -168,7 +168,9 @@ class feedback_item_textfield extends feedback_item_base {
         $worksheet->write_string($row_offset, 1, $this->get_display_name($item, true, true), $xls_formats->head2);
         $data = $analysed_item->data;
         if (is_array($data)) {
-            $worksheet->write_string($row_offset, 2, htmlspecialchars_decode($data[0], ENT_QUOTES), $xls_formats->value_bold);
+            if (isset($data[0])) {
+                $worksheet->write_string($row_offset, 2, htmlspecialchars_decode($data[0], ENT_QUOTES), $xls_formats->value_bold);
+            }
             $row_offset++;
             $sizeofdata = count($data);
             for ($i = 1; $i < $sizeofdata; $i++) {
@@ -189,21 +191,14 @@ class feedback_item_textfield extends feedback_item_base {
     public function complete_form_element($item, $form) {
         $name = $this->get_display_name($item, true, $form->truncate_name());
         $inputname = $item->typ . '_' . $item->id;
-        list($size, $maxlength) = explode ("|", $item->presentation);
+        list($cols, $rows) = explode ("|", $item->presentation);
         $form->add_form_element($item,
-                ['text', $inputname, $name, ['maxlength' => $maxlength, 'size' => $size]]);
+            ['textarea', $inputname, $name, array('rows' => $rows, 'cols' => $cols)]);
         $form->set_element_type($inputname, PARAM_NOTAGS);
-
-        $form->add_element_rule($inputname, get_string('maximumchars', '', $maxlength), 'maxlength', $maxlength, 'client');
     }
 
-    /**
-     * Converts the value from complete_form data to the string value that is stored in the db.
-     * @param mixed $value element from mod_feedback_complete_form::get_data() with the name $item->typ.'_'.$item->id
-     * @return string
-     */
-    public function create_value($value) {
-        return s($value);
+    public function create_value($data) {
+        return s($data);
     }
 
     /**

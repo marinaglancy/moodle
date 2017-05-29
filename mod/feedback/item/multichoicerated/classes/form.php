@@ -14,10 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-require_once($CFG->dirroot.'/mod/feedback/item/feedback_item_form_class.php');
-
-class feedback_multichoice_form extends feedback_item_form {
-    protected $type = "multichoice";
+class feedbackitem_multichoicerated_form extends mod_feedback_item_form {
 
     public function definition() {
         $item = $this->_customdata['item'];
@@ -25,7 +22,7 @@ class feedback_multichoice_form extends feedback_item_form {
 
         $mform =& $this->_form;
 
-        $mform->addElement('header', 'general', 
+        $mform->addElement('header', 'general',
                 get_string('pluginname', 'feedbackitem_' . $this->type));
 
         $mform->addElement('advcheckbox', 'required', get_string('required', 'feedback'), '' , null , array(0, 1));
@@ -35,14 +32,13 @@ class feedback_multichoice_form extends feedback_item_form {
         $mform->addElement('text',
                             'label',
                             get_string('item_label', 'feedback'),
-                            array('size' => FEEDBACK_ITEM_LABEL_TEXTBOX_SIZE,
-                                  'maxlength' => 255));
+                            array('size'=>FEEDBACK_ITEM_LABEL_TEXTBOX_SIZE,
+                                  'maxlength'=>255));
 
         $mform->addElement('select',
                             'subtype',
-                            get_string('multichoicetype', 'feedbackitem_multichoice'),
+                            get_string('multichoicetype', 'feedbackitem_multichoicerated'),
                             array('r'=>get_string('radio', 'feedback'),
-                                  'c'=>get_string('check', 'feedback'),
                                   'd'=>get_string('dropdown', 'feedback')));
 
         $mform->addElement('select',
@@ -55,16 +51,22 @@ class feedback_multichoice_form extends feedback_item_form {
         $mform->addElement('selectyesno',
                            'hidenoselect',
                            get_string('hide_no_select_option', 'feedback'));
-        $mform->disabledIf('hidenoselect', 'subtype', 'ne', 'r');
+        $mform->disabledIf('hidenoselect', 'subtype', 'eq', 'd');
 
         $mform->addElement('selectyesno',
                            'ignoreempty',
                            get_string('do_not_analyse_empty_submits', 'feedback'));
+        $mform->disabledIf('ignoreempty', 'required', 'eq', '1');
 
-        $mform->addElement('textarea', 'values', get_string('multichoice_values', 'feedbackitem_multichoice'),
-            'wrap="virtual" rows="10" cols="65"');
+        $this->values = $mform->addElement('textarea',
+                            'values',
+                            get_string('multichoice_values', 'feedbackitem_multichoicerated'),
+                            'wrap="virtual" rows="10" cols="65"');
 
-        $mform->addElement('static', 'hint', '', get_string('use_one_line_for_each_value', 'feedback'));
+        $mform->addElement('static',
+                            'hint',
+                            '',
+                            get_string('use_one_line_for_each_value', 'feedback'));
 
         parent::definition();
         $this->set_data($item);
@@ -78,9 +80,7 @@ class feedback_multichoice_form extends feedback_item_form {
 
         $item->subtype = $info->subtype;
 
-        $itemvalues = str_replace(FEEDBACK_MULTICHOICE_LINE_SEP, "\n", $info->presentation);
-        $itemvalues = str_replace("\n\n", "\n", $itemvalues);
-        $item->values = $itemvalues;
+        $item->values = $info->values;
 
         return parent::set_data($item);
     }
@@ -90,23 +90,26 @@ class feedback_multichoice_form extends feedback_item_form {
             return false;
         }
 
-        $presentation = str_replace("\n", FEEDBACK_MULTICHOICE_LINE_SEP, trim($item->values));
+        $itemobj = new feedbackitem_multichoicerated_plugin();
+
+        $presentation = $itemobj->prepare_presentation_values_save(trim($item->values),
+                                                FEEDBACK_MULTICHOICERATED_VALUE_SEP2,
+                                                FEEDBACK_MULTICHOICERATED_VALUE_SEP);
         if (!isset($item->subtype)) {
             $subtype = 'r';
         } else {
             $subtype = substr($item->subtype, 0, 1);
         }
         if (isset($item->horizontal) AND $item->horizontal == 1 AND $subtype != 'd') {
-            $presentation .= FEEDBACK_MULTICHOICE_ADJUST_SEP.'1';
+            $presentation .= FEEDBACK_MULTICHOICERATED_ADJUST_SEP.'1';
         }
+        $item->presentation = $subtype.FEEDBACK_MULTICHOICERATED_TYPE_SEP.$presentation;
         if (!isset($item->hidenoselect)) {
             $item->hidenoselect = 1;
         }
         if (!isset($item->ignoreempty)) {
             $item->ignoreempty = 0;
         }
-
-        $item->presentation = $subtype.FEEDBACK_MULTICHOICE_TYPE_SEP.$presentation;
         return $item;
     }
 }

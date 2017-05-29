@@ -14,13 +14,9 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-require_once($CFG->dirroot.'/mod/feedback/item/feedback_item_form_class.php');
-
-class feedback_numeric_form extends feedback_item_form {
-    protected $type = "numeric";
+class feedbackitem_textfield_form extends mod_feedback_item_form {
 
     public function definition() {
-
         $item = $this->_customdata['item'];
         $nameoptions = $this->_customdata['nameoptions'];
 
@@ -36,17 +32,16 @@ class feedback_numeric_form extends feedback_item_form {
                             get_string('item_label', 'feedback'),
                             array('size'=>FEEDBACK_ITEM_LABEL_TEXTBOX_SIZE, 'maxlength'=>255));
 
-        $mform->addElement('text',
-                            'rangefrom',
-                            get_string('numeric_range_from', 'feedbackitem_numeric'),
-                            array('size'=>10, 'maxlength'=>10));
-        $mform->setType('rangefrom', PARAM_RAW);
+        $mform->addElement('select',
+                            'itemsize',
+                            get_string('textfield_size', 'feedbackitem_textfield'),
+                            array_slice(range(0, 255), 5, 255, true));
 
         $mform->addElement('text',
-                            'rangeto',
-                            get_string('numeric_range_to', 'feedbackitem_numeric'),
-                            array('size'=>10, 'maxlength'=>10));
-        $mform->setType('rangeto', PARAM_RAW);
+                            'itemmaxlength',
+                            get_string('textfield_maxlength', 'feedbackitem_textfield'));
+        $mform->setType('itemmaxlength', PARAM_INT);
+        $mform->addRule('itemmaxlength', null, 'numeric', null, 'client');
 
         parent::definition();
         $this->set_data($item);
@@ -58,27 +53,8 @@ class feedback_numeric_form extends feedback_item_form {
             return false;
         }
 
-        $num1 = unformat_float($item->rangefrom, true);
-        if ($num1 === false || $num1 === null) {
-            $num1 = '-';
-        }
-
-        $num2 = unformat_float($item->rangeto, true);
-        if ($num2 === false || $num2 === null) {
-            $num2 = '-';
-        }
-
-        if ($num1 === '-' OR $num2 === '-') {
-            $item->presentation = $num1 . '|'. $num2;
-            return $item;
-        }
-
-        if ($num1 > $num2) {
-            $item->presentation =  $num2 . '|'. $num1;
-        } else {
-            $item->presentation = $num1 . '|'. $num2;
-        }
+        $item->presentation = $item->itemsize . '|'. $item->itemmaxlength;
         return $item;
     }
-
 }
+

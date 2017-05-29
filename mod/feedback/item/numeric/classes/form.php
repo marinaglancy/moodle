@@ -16,10 +16,10 @@
 
 require_once($CFG->dirroot.'/mod/feedback/item/feedback_item_form_class.php');
 
-class feedback_textarea_form extends feedback_item_form {
-    protected $type = "textarea";
+class feedbackitem_numeric_form extends mod_feedback_item_form {
 
     public function definition() {
+
         $item = $this->_customdata['item'];
         $nameoptions = $this->_customdata['nameoptions'];
 
@@ -35,15 +35,17 @@ class feedback_textarea_form extends feedback_item_form {
                             get_string('item_label', 'feedback'),
                             array('size'=>FEEDBACK_ITEM_LABEL_TEXTBOX_SIZE, 'maxlength'=>255));
 
-        $mform->addElement('select',
-                            'itemwidth',
-                            get_string('textarea_width', 'feedbackitem_textarea'),
-                            array_slice(range(0, 80), 5, 80, true));
+        $mform->addElement('text',
+                            'rangefrom',
+                            get_string('numeric_range_from', 'feedbackitem_numeric'),
+                            array('size'=>10, 'maxlength'=>10));
+        $mform->setType('rangefrom', PARAM_RAW);
 
-        $mform->addElement('select',
-                            'itemheight',
-                            get_string('textarea_height', 'feedbackitem_textarea'),
-                            array_slice(range(0, 40), 5, 40, true));
+        $mform->addElement('text',
+                            'rangeto',
+                            get_string('numeric_range_to', 'feedbackitem_numeric'),
+                            array('size'=>10, 'maxlength'=>10));
+        $mform->setType('rangeto', PARAM_RAW);
 
         parent::definition();
         $this->set_data($item);
@@ -55,8 +57,27 @@ class feedback_textarea_form extends feedback_item_form {
             return false;
         }
 
-        $item->presentation = $item->itemwidth . '|'. $item->itemheight;
+        $num1 = unformat_float($item->rangefrom, true);
+        if ($num1 === false || $num1 === null) {
+            $num1 = '-';
+        }
+
+        $num2 = unformat_float($item->rangeto, true);
+        if ($num2 === false || $num2 === null) {
+            $num2 = '-';
+        }
+
+        if ($num1 === '-' OR $num2 === '-') {
+            $item->presentation = $num1 . '|'. $num2;
+            return $item;
+        }
+
+        if ($num1 > $num2) {
+            $item->presentation =  $num2 . '|'. $num1;
+        } else {
+            $item->presentation = $num1 . '|'. $num2;
+        }
         return $item;
     }
-}
 
+}

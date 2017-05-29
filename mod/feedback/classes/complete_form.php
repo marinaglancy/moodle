@@ -280,11 +280,9 @@ class mod_feedback_complete_form extends moodleform {
         if ($item->dependitem) {
             $class .= " feedback_is_dependent";
         }
-        if ($item->typ !== 'pagebreak') {
-            $itemobj = feedback_get_item_class($item->typ);
-            if ($itemobj->get_hasvalue()) {
-                $class .= " feedback_hasvalue";
-            }
+        $itemobj = feedback_get_item_class($item->typ);
+        if ($itemobj->get_hasvalue()) {
+            $class .= " feedback_hasvalue";
         }
         return $class;
     }
