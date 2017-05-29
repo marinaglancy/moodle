@@ -50,6 +50,10 @@ $formdata = $mform->get_data();
 if ($mform->is_cancelled()) {
     redirect('edit.php?id='.$id.'&do_show=templates');
 } else if ($data = $mform->get_data()) {
+    // Large exports are likely to take their time and memory.
+    core_php_time_limit::raise();
+    raise_memory_limit(MEMORY_EXTRA);
+
     $xmlcontent = $mform->get_file_content('choosefile');
     if ($feedbackstructure->import($xmlcontent, $data->deleteolditems)) {
         $editurl = new moodle_url('/mod/feedback/edit.php', array('id' => $cm->id));

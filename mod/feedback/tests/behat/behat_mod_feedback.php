@@ -203,9 +203,9 @@ class behat_mod_feedback extends behat_base {
         $itemmapping = array();
         $itemactual = reset($dataactual);
         foreach ($dataexpected as $idx => $itemexpected) {
-            // Map ITEMID and DEPENDITEM.
-            $itemmapping[intval($itemactual['#']['ITEMID'][0]['#'])] = intval($itemexpected['#']['ITEMID'][0]['#']);
-            $itemactual['#']['ITEMID'][0]['#'] = $itemexpected['#']['ITEMID'][0]['#'];
+            // Map ID and DEPENDITEM.
+            $itemmapping[intval($itemactual['@']['ID'])] = intval($itemexpected['@']['ID']);
+            $itemactual['@']['ID'] = $itemexpected['@']['ID'];
             $expecteddependitem = $actualdependitem = 0;
             if (isset($itemexpected['#']['DEPENDITEM'][0]['#'])) {
                 $expecteddependitem = intval($itemexpected['#']['DEPENDITEM'][0]['#']);

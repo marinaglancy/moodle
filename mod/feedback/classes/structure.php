@@ -369,6 +369,162 @@ class mod_feedback_structure {
             return $import->import($xmlcontent, $deleteolditems);
         }
 
-        return false;
+        if ($version < 201706) {
+            return false;
+        }
+
+        if (!isset($data['FEEDBACK']['#']['ITEMS'][0]['#']['ITEM'])) {
+            // Potentially broken structure of XML file.
+            return false;
+        }
+
+        // Perform import.
+        if ($deleteolditems) {
+            feedback_delete_all_items($this->get_feedback()->id);
+        }
+
+        $importeditems = $data['FEEDBACK']['#']['ITEMS'][0]['#']['ITEM'];
+        $idsmap = [];
+        $context = context_module::instance($this->get_cm()->id);
+        foreach ($importeditems as $importeditem) {
+            $typ = $importeditem['@']['TYPE'];
+            if (!$itemobj = feedback_get_item_class($typ, IGNORE_MISSING)) {
+                \core\notification::add(get_string('typenotfound', 'feedback', $typ), \core\output\notification::NOTIFY_ERROR);
+                continue;
+            }
+            if ($itemid = $itemobj->import($importeditem, $this->get_feedback(), $version, $idsmap)) {
+                // Save the map of ids in the export file and in the actual feedback (we need it to remap dependencies).
+                $idsmap[$importeditem['@']['ID']] = $itemid;
+                // Import files.
+                $this->import_files($importeditem, 'ITEMFILES', $context->id, 'item', $itemid);
+            }
+        }
+
+        // Reset items cache.
+        $this->allitems = null;
+
+        return true;
+    }
+
+    /**
+     * Returns string for an XML tag
+     *
+     * @param string $tagname
+     * @param string $contents
+     * @return string
+     */
+    protected function export_xml_tag($tagname, $contents) {
+        return "<$tagname>".preg_replace("/\r\n|\r/", "\n", s($contents))."</$tagname>\n";
+    }
+
+    /**
+     * Exports feedback to XML file
+     *
+     * @return string contents of the XML file
+     */
+    public function export() {
+        if ($this->is_empty()) {
+            return false;
+        }
+
+        $spacer = '  ';
+        $data = '<?xml version="1.0" encoding="UTF-8" ?>' . "\n";
+        $data .= '<FEEDBACK VERSION="201706" COMMENT="XML-Importfile for mod/feedback">' . "\n";
+        $data .= $spacer . '<ITEMS>'."\n";
+        $items = $this->get_items();
+        $context = context_module::instance($this->get_cm()->id);
+        foreach ($items as $item) {
+            $data .= $spacer.$spacer.'<ITEM ID="'.$item->id.'" TYPE="'.$item->typ.'">'."\n";
+            if (!$itemobj = feedback_get_item_class($item->typ, IGNORE_MISSING)) {
+                continue;
+            }
+            $exportvalues = $itemobj->prepare_for_export($item);
+            foreach ($exportvalues as $key => $value) {
+                $tag = core_text::strtoupper($key);
+                $data .= $spacer . $spacer . $spacer . $this->export_xml_tag($tag, $value);
+            }
+            $data .= $this->export_files($spacer . $spacer . $spacer, 'ITEMFILES', $context->id, 'item', $item->id);
+            $data .= $spacer . $spacer . '</ITEM>'."\n";
+        }
+        $data .= $spacer . '</ITEMS>'."\n";
+        $data .= '</FEEDBACK>' . "\n";
+
+        return $data;
+    }
+
+    /**
+     * Exports all files in the specified file area as an XML
+     *
+     * @param string $prefix prefix for each line of the XML file (spaces will be added for sub nodes)
+     * @param string $tag
+     * @param int $contextid
+     * @param string $filearea
+     * @param int $itemid
+     * @return string
+     */
+    protected function export_files($prefix, $tag, $contextid, $filearea, $itemid) {
+        $co = '';
+        $spacer = '  ';
+        $fs = get_file_storage();
+        if ($files = $fs->get_area_files($contextid, 'mod_feedback', $filearea, $itemid, 'itemid,filepath,filename', false)) {
+            $co .= $prefix."<$tag>\n";
+            foreach ($files as $file) {
+                $co .= $prefix.$spacer."<FILE>\n";
+                $co .= $prefix.$spacer.$spacer.$this->export_xml_tag('FILENAME', $file->get_filename());
+                $co .= $prefix.$spacer.$spacer.$this->export_xml_tag('FILEPATH', $file->get_filepath());
+                $co .= $prefix.$spacer.$spacer.$this->export_xml_tag('CONTENTS', base64_encode($file->get_content()));
+                $co .= $prefix.$spacer.$spacer.$this->export_xml_tag('FILEAUTHOR', $file->get_author());
+                $co .= $prefix.$spacer.$spacer.$this->export_xml_tag('FILELICENSE', $file->get_license());
+                $co .= $prefix.$spacer."</FILE>\n";
+            }
+            $co .= $prefix."</$tag>\n";
+        }
+        return $co;
+    }
+
+    /**
+     * Parses files from XML import and inserts them into file system
+     *
+     * @param array $xmlparent parent element in parsed XML tree
+     * @param string $tag
+     * @param int $contextid
+     * @param string $filearea
+     * @param int $itemid
+     * @return int number of files imported
+     */
+    protected function import_files($xmlparent, $tag, $contextid, $filearea, $itemid) {
+        global $USER, $CFG;
+        $count = 0;
+        if (empty($xmlparent['#'][$tag][0]['#']['FILE'])) {
+            return $count;
+        }
+
+        $fs = get_file_storage();
+        $files = $xmlparent['#'][$tag][0]['#']['FILE'];
+        foreach ($files as $file) {
+            $filerecord = array(
+                'contextid' => $contextid,
+                'component' => 'mod_feedback',
+                'filearea'  => $filearea,
+                'itemid'    => $itemid,
+                'filepath'  => $file['#']['FILEPATH'][0]['#'],
+                'filename'  => $file['#']['FILENAME'][0]['#'],
+                'userid'    => $USER->id
+            );
+            if (array_key_exists('FILEAUTHOR', $file['#'])) {
+                $filerecord['author'] = $file['#']['FILEAUTHOR'][0]['#'];
+            }
+            if (array_key_exists('FILELICENSE', $file['#'])) {
+                $license = $file['#']['FILELICENSE'][0]['#'];
+                require_once($CFG->libdir . "/licenselib.php");
+                if (license_manager::get_license_by_shortname($license)) {
+                    $filerecord['license'] = $license;
+                }
+            }
+            $content =  $file['#']['CONTENTS'][0]['#'];
+            $fs->create_file_from_string($filerecord, base64_decode($content));
+            $count++;
+        }
+        return $count;
     }
 }
