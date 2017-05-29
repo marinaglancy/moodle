@@ -147,7 +147,7 @@ if ($do_show == 'templates') {
     }
 
     if (has_capability('mod/feedback:edititems', $context)) {
-        $urlparams = array('action'=>'exportfile', 'id'=>$id);
+        $urlparams = array('id' => $id, 'sesskey' => sesskey());
         $exporturl = new moodle_url('/mod/feedback/export.php', $urlparams);
         $importurl = new moodle_url('/mod/feedback/import.php', array('id'=>$id));
         echo '<p>

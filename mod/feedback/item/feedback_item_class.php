@@ -346,6 +346,85 @@ abstract class feedback_item_base {
      * @since  Moodle 3.3
      */
     abstract public function get_analysed_for_external($item, $groupid = false, $courseid = false);
+
+    /**
+     * Prepares the item for export
+     *
+     * @param stdClass $item
+     * @return stdClass|array element ready to be exported, fields id and typ will be added automatically
+     */
+    public function prepare_for_export($item) {
+        static $fields = ['name', 'nameformat', 'label', 'presentation', 'options', 'required', 'dependitem', 'dependvalue'];
+        $item = array_intersect_key((array)$item, array_fill_keys($fields, 1));
+        if (empty($item['dependitem'])) {
+            unset($item['dependitem']);
+            unset($item['dependvalue']);
+        }
+        if (empty($item['required'])) {
+            unset($item['required']);
+        }
+        foreach (['presentation', 'label', 'options'] as $property) {
+            if (strval($item[$property]) === '') {
+                unset($item[$property]);
+            }
+        }
+        return $item;
+    }
+
+    /**
+     * Prepares a record to be inserted in the DB when importing feedback item
+     *
+     * @param array $data item data from the XML file, result of xmlize()
+     * @param stdClass $feedback
+     * @param int $version version of the export file
+     * @param array $idsmap map of item ids in the export file and in the current feedback (for restoring dependencies)
+     * @return stdClass|array
+     */
+    protected function prepare_for_import($data, $feedback, $version, $idsmap) {
+        static $fields = ['name', 'nameformat', 'label', 'presentation', 'options', 'required', 'dependitem', 'dependvalue'];
+        $item = (object)[
+            'typ' => $this->type,
+            'hasvalue' => $this->get_hasvalue(),
+        ];
+        foreach ($fields as $field) {
+            $tag = core_text::strtoupper($field);
+            if (array_key_exists($tag, $data['#'])) {
+                $item->$field = $data['#'][$tag][0]['#'];
+            }
+        }
+        if (!empty($item->dependitem) && array_key_exists($item->dependitem, $idsmap)) {
+            $item->dependitem = $idsmap[$item->dependitem];
+        } else {
+            unset($item->dependitem);
+            unset($item->dependvalue);
+        }
+        if (!isset($item->presentation)) {
+            $item->presentation = '';
+        }
+        return $item;
+    }
+
+    /**
+     * Imports a feedback item
+     *
+     * @param array $data item data from the XML file, result of xmlize()
+     * @param stdClass $feedback
+     * @param int $version version of the export file
+     * @param array $idsmap map of item ids in the export file and in the current feedback (for restoring dependencies)
+     * @return bool|int id of the new feedback item or false if nothing imported
+     */
+    public function import($data, $feedback, $version, $idsmap) {
+        global $DB;
+        if (!$item = $this->prepare_for_import($data, $feedback, $version, $idsmap)) {
+            return false;
+        }
+
+        $lastposition = $DB->count_records('feedback_item', array('feedback' => $feedback->id));
+        $item->position = $lastposition + 1;
+        $item->feedback = $feedback->id;
+        $item->template = 0;
+        return $DB->insert_record('feedback_item', $item);
+    }
 }
 
 //a dummy class to realize pagebreaks
@@ -431,5 +510,30 @@ class feedback_item_pagebreak extends feedback_item_base {
      */
     public function get_analysed_for_external($item, $groupid = false, $courseid = false) {
         return;
+    }
+
+    /**
+     * Prepares the item for export
+     *
+     * @param stdClass $item
+     * @return array
+     */
+    public function prepare_for_export($item) {
+        return [];
+    }
+
+    /**
+     * Imports a feedback item
+     *
+     * @param array $data item data from the XML file, result of xmlize()
+     * @param stdClass $feedback
+     * @param int $version version of the export file
+     * @param array $idsmap map of item ids in the export file and in the current feedback (for restoring dependencies)
+     * @return bool|int id of the new feedback item or false if nothing imported
+     */
+    public function import($data, $feedback, $version, $idsmap) {
+        global $CFG;
+        require_once($CFG->dirroot.'/mod/feedback/lib.php');
+        return feedback_create_pagebreak($feedback->id);
     }
 }
