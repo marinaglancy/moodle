@@ -103,9 +103,10 @@ class feedback_item_captcha extends feedback_item_base {
      *
      * @param stdClass $item
      * @param bool $withpostfix
+     * @param bool $truncated
      * @return string
      */
-    public function get_display_name($item, $withpostfix = true) {
+    public function get_display_name($item, $withpostfix = true, $truncated = false) {
         return get_string('captcha', 'feedback');
     }
 
@@ -116,7 +117,7 @@ class feedback_item_captcha extends feedback_item_base {
      * @param mod_feedback_complete_form $form
      */
     public function complete_form_element($item, $form) {
-        $name = $this->get_display_name($item);
+        $name = $this->get_display_name($item, true, $form->truncate_name());
         $inputname = $item->typ . '_' . $item->id;
 
         if ($form->get_mode() != mod_feedback_complete_form::MODE_COMPLETE) {

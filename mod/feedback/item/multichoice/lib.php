@@ -121,7 +121,7 @@ class feedback_item_multichoice extends feedback_item_base {
 
         $analysed_item = array();
         $analysed_item[] = $item->typ;
-        $analysed_item[] = format_string($item->name);
+        $analysed_item[] = $this->get_display_name($item, true, true);
 
         //get the possible answers
         $answers = null;
@@ -321,7 +321,7 @@ class feedback_item_multichoice extends feedback_item_base {
      */
     public function complete_form_element($item, $form) {
         $info = $this->get_info($item);
-        $name = $this->get_display_name($item);
+        $name = $this->get_display_name($item, true, $form->truncate_name());
         $class = 'multichoice-' . $info->subtype;
         $inputname = $item->typ . '_' . $item->id;
         $options = $this->get_options($item);
