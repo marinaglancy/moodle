@@ -289,11 +289,7 @@ class mod_feedback_responses_table extends table_sql {
 
             $tablecolumns[] = "val{$nr}";
             $itemobj = feedback_get_item_class($item->typ);
-            $header = (strlen($item->label) ? '('.$item->label.")\n" : '') .
-                shorten_text(trim(html_to_text($itemobj->get_display_name($item))));
-            if (!$this->is_downloading()) {
-                $header = text_to_html($header);
-            }
+            $header = (strlen($item->label) ? '('.$item->label.") " : '') . $itemobj->get_display_name($item, true, true);
             $tableheaders[] = $header;
         }
 

@@ -231,6 +231,15 @@ class mod_feedback_complete_form extends moodleform {
     }
 
     /**
+     * Is the question name need to be truncated in this form mode?
+     *
+     * @return bool
+     */
+    public function truncate_name() {
+        return $this->mode == mod_feedback_complete_form::MODE_EDIT;
+    }
+
+    /**
      * Returns whether the form is frozen, some items may prefer to change the element
      * type in case of frozen form. For example, text or textarea element does not look
      * nice when frozen

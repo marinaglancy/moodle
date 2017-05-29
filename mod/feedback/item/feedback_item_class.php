@@ -164,17 +164,23 @@ abstract class feedback_item_base {
      *
      * @param stdClass $item
      * @param bool $withpostfix
+     * @param bool $truncated
      * @return string
      */
-    public function get_display_name($item, $withpostfix = true) {
+    public function get_display_name($item, $withpostfix = true, $truncated = false) {
         $name = $item->name;
         if ($nameoptions = $this->get_name_editor_options($item)) {
             $name = file_rewrite_pluginfile_urls($item->name, 'pluginfile.php',
                 $nameoptions['context']->id, 'mod_feedback',
                 $this->get_file_area($item), $item->id, $nameoptions);
         }
-        return format_text($name, $item->nameformat, array('noclean' => true, 'para' => false)) .
-                ($withpostfix ? $this->get_display_name_postfix($item) : '');
+        $name = format_text($name, $item->nameformat, array('noclean' => true, 'para' => false));
+        $postfix = ($withpostfix ? $this->get_display_name_postfix($item) : '');
+        if ($truncated) {
+            return shorten_text(trim(html_to_text($name)), 72) . html_to_text($postfix);
+        } else {
+            return $name . $postfix;
+        }
     }
 
     /**

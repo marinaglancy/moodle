@@ -100,7 +100,7 @@ class feedback_item_label extends feedback_item_base {
      */
     public function complete_form_element($item, $form) {
         $inputname = $item->typ . '_' . $item->id;
-        $name = $this->get_display_name($item);
+        $name = $this->get_display_name($item, true, $form->truncate_name());
         $form->add_form_element($item, ['static', $inputname, $name, ''], false, false);
     }
 

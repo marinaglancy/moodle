@@ -171,7 +171,7 @@ class feedback_item_textarea extends feedback_item_base {
         $analysed_item = $this->get_analysed($item, $groupid, $courseid);
 
         $worksheet->write_string($row_offset, 0, $item->label, $xls_formats->head2);
-        $worksheet->write_string($row_offset, 1, $item->name, $xls_formats->head2);
+        $worksheet->write_string($row_offset, 1, $this->get_display_name($item, true, true), $xls_formats->head2);
         $data = $analysed_item->data;
         if (is_array($data)) {
             if (isset($data[0])) {
@@ -195,7 +195,7 @@ class feedback_item_textarea extends feedback_item_base {
      * @param mod_feedback_complete_form $form
      */
     public function complete_form_element($item, $form) {
-        $name = $this->get_display_name($item);
+        $name = $this->get_display_name($item, true, $form->truncate_name());
         $inputname = $item->typ . '_' . $item->id;
         list($cols, $rows) = explode ("|", $item->presentation);
         $form->add_form_element($item,

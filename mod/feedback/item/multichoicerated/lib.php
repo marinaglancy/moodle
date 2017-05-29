@@ -121,7 +121,7 @@ class feedback_item_multichoicerated extends feedback_item_base {
     protected function get_analysed($item, $groupid = false, $courseid = false) {
         $analysed_item = array();
         $analysed_item[] = $item->typ;
-        $analysed_item[] = $item->name;
+        $analysed_item[] = $this->get_display_name($item, true, true);
 
         //die moeglichen Antworten extrahieren
         $info = $this->get_info($item);
@@ -307,7 +307,7 @@ class feedback_item_multichoicerated extends feedback_item_base {
      */
     public function complete_form_element($item, $form) {
         $info = $this->get_info($item);
-        $name = $this->get_display_name($item);
+        $name = $this->get_display_name($item, true, $form->truncate_name());
         $class = 'multichoicerated-' . $info->subtype;
         $inputname = $item->typ . '_' . $item->id;
         $options = $this->get_options($item);
