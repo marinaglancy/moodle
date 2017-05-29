@@ -28,7 +28,7 @@ class feedbackitem_label_form extends mod_feedback_item_form {
         $mform->addElement('hidden', 'label', '');
         $mform->setType('label', PARAM_ALPHA);
 
-        $mform->addElement('header', 'general', get_string($this->type, 'feedback'));
+        $mform->addElement('header', 'general', get_string('pluginname', 'feedbackitem_label'));
         $mform->addElement('editor', 'name_editor', get_string('contents', 'feedbackitem_label'), null, $nameoptions);
 
         parent::definition();
