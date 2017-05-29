@@ -68,7 +68,7 @@ Feature: Exporting and importing feedbacks
       | Label                  | shorttext                   |
       | Maximum characters accepted | 200                    |
     And I follow "Templates"
-    Then following "Export questions" should export feedback identical to "mod/feedback/tests/fixtures/testexport.xml"
+    Then following "Export questions" should export feedback identical to "mod/feedback/tests/fixtures/testexport_201706.xml"
     And I log out
 
   @javascript @_file_upload
@@ -112,6 +112,62 @@ Feature: Exporting and importing feedbacks
     And I follow "Import questions"
     And I set the field "Append new items" to "1"
     And I upload "mod/feedback/tests/fixtures/testexport_200701.xml" file to "File" filemanager
+    And I press "Yes"
+    And I should see "Import successfully"
+    Then I should see "Existing question"
+    And "Existing question" "text" should appear before "this is an information question" "text"
+    And I should see "this is an information question"
+    And I should see "label text"
+    And I should see "this is a longer text answer"
+    And I should see "this is a multiple choice 1"
+    And I should see "this is a multiple choice 2"
+    And I should see "this is a multiple choice 3"
+    And I should see "this is a multiple choice rated"
+    And I should see "this is a numeric answer"
+    And I should see "this is a short text answer"
+    And I log out
+
+  @javascript @_file_upload
+  Scenario: Import feedback in 201706 format deleting old items
+    When I log in as "teacher"
+    And I am on "Course 1" course homepage
+    And I follow "Learning experience"
+    And I click on "Edit questions" "link" in the "[role=main]" "css_element"
+    And I add a "Numeric answer" question to the feedback with:
+      | Question               | Existing question |
+      | Label                  | numeric           |
+      | Range to               | 100               |
+    And I follow "Templates"
+    And I follow "Import questions"
+    And I upload "mod/feedback/tests/fixtures/testexport_201706.xml" file to "File" filemanager
+    And I press "Yes"
+    And I should see "Import successfully"
+    Then I should not see "Existing question"
+    And I should see "this is an information question"
+    And I should see "label text"
+    And I should see "this is a longer text answer"
+    And I should see "this is a multiple choice 1"
+    And I should see "this is a multiple choice 2"
+    And I should see "this is a multiple choice 3"
+    And I should see "this is a multiple choice rated"
+    And I should see "this is a numeric answer"
+    And I should see "this is a short text answer"
+    And I log out
+
+  @javascript @_file_upload
+  Scenario: Import feedback in 201706 format appending new items
+    When I log in as "teacher"
+    And I am on "Course 1" course homepage
+    And I follow "Learning experience"
+    And I click on "Edit questions" "link" in the "[role=main]" "css_element"
+    And I add a "Numeric answer" question to the feedback with:
+      | Question               | Existing question |
+      | Label                  | numeric           |
+      | Range to               | 100               |
+    And I follow "Templates"
+    And I follow "Import questions"
+    And I set the field "Append new items" to "1"
+    And I upload "mod/feedback/tests/fixtures/testexport_201706.xml" file to "File" filemanager
     And I press "Yes"
     And I should see "Import successfully"
     Then I should see "Existing question"

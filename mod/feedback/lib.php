@@ -1475,16 +1475,24 @@ function feedback_get_template_list($course, $onlyownorpublic = '') {
  * load the lib.php from item-plugin-dir and returns the instance of the itemclass
  *
  * @param string $typ
+ * @param int $strictness
  * @return feedback_item_base the instance of itemclass
  */
-function feedback_get_item_class($typ) {
+function feedback_get_item_class($typ, $strictness = MUST_EXIST) {
     global $CFG;
 
     //get the class of item-typ
     $itemclass = 'feedback_item_'.$typ;
     //get the instance of item-class
-    if (!class_exists($itemclass)) {
+    if (!class_exists($itemclass) && file_exists($CFG->dirroot.'/mod/feedback/item/'.$typ.'/lib.php')) {
         require_once($CFG->dirroot.'/mod/feedback/item/'.$typ.'/lib.php');
+    }
+    if (!class_exists($itemclass)) {
+        if ($strictness == MUST_EXIST) {
+            throw new moodle_exception('typenotfound', 'feedback', null, $typ);
+        } else {
+            return false;
+        }
     }
     return new $itemclass();
 }
@@ -3234,7 +3242,7 @@ function feedback_extend_settings_navigation(settings_navigation $settings,
         $questionnode->add(get_string('export_questions', 'feedback'),
                     new moodle_url('/mod/feedback/export.php',
                                     array('id' => $PAGE->cm->id,
-                                          'action' => 'exportfile')));
+                                          'sesskey' => sesskey())));
 
         $questionnode->add(get_string('import_questions', 'feedback'),
                     new moodle_url('/mod/feedback/import.php',

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<FEEDBACK VERSION="201706" COMMENT="XML-Importfile for mod/feedback">
+  <ITEMS>
+    <ITEM ID="328" TYPE="info">
+      <NAME>this is an information question</NAME>
+      <NAMEFORMAT>1</NAMEFORMAT>
+      <LABEL>info</LABEL>
+      <PRESENTATION>2</PRESENTATION>
+    </ITEM>
+    <ITEM ID="329" TYPE="label">
+      <NAME>label text</NAME>
+      <NAMEFORMAT>1</NAMEFORMAT>
+    </ITEM>
+    <ITEM ID="330" TYPE="textarea">
+      <NAME>this is a longer text answer</NAME>
+      <NAMEFORMAT>1</NAMEFORMAT>
+      <LABEL>longertext</LABEL>
+      <PRESENTATION>30|5</PRESENTATION>
+      <REQUIRED>1</REQUIRED>
+    </ITEM>
+    <ITEM ID="331" TYPE="multichoice">
+      <NAME>this is a multiple choice 1</NAME>
+      <NAMEFORMAT>1</NAMEFORMAT>
+      <LABEL>multichoice1</LABEL>
+      <PRESENTATION>r&gt;&gt;&gt;&gt;&gt;option a|option b|option c</PRESENTATION>
+    </ITEM>
+    <ITEM ID="332" TYPE="pagebreak">
+    </ITEM>
+    <ITEM ID="333" TYPE="multichoice">
+      <NAME>this is a multiple choice 2</NAME>
+      <NAMEFORMAT>1</NAMEFORMAT>
+      <LABEL>multichoice2</LABEL>
+      <PRESENTATION>c&gt;&gt;&gt;&gt;&gt;option d|option e|option f</PRESENTATION>
+      <DEPENDITEM>331</DEPENDITEM>
+      <DEPENDVALUE>option a</DEPENDVALUE>
+      <OPTIONS>h</OPTIONS>
+    </ITEM>
+    <ITEM ID="334" TYPE="multichoice">
+      <NAME>this is a multiple choice 3</NAME>
+      <NAMEFORMAT>1</NAMEFORMAT>
+      <LABEL>multichoice3</LABEL>
+      <PRESENTATION>d&gt;&gt;&gt;&gt;&gt;option g|option h|option i</PRESENTATION>
+    </ITEM>
+    <ITEM ID="335" TYPE="multichoicerated">
+      <NAME>this is a multiple choice rated</NAME>
+      <NAMEFORMAT>1</NAMEFORMAT>
+      <LABEL>multichoice4</LABEL>
+      <PRESENTATION>r&gt;&gt;&gt;&gt;&gt;0####option k|1####option l|5####option m</PRESENTATION>
+    </ITEM>
+    <ITEM ID="336" TYPE="numeric">
+      <NAME>this is a numeric answer</NAME>
+      <NAMEFORMAT>1</NAMEFORMAT>
+      <LABEL>numeric</LABEL>
+      <PRESENTATION>-|100</PRESENTATION>
+    </ITEM>
+    <ITEM ID="337" TYPE="textfield">
+      <NAME>this is a short text answer</NAME>
+      <NAMEFORMAT>1</NAMEFORMAT>
+      <LABEL>shorttext</LABEL>
+      <PRESENTATION>30|200</PRESENTATION>
+    </ITEM>
+  </ITEMS>
+</FEEDBACK>
