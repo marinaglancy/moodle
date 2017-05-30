@@ -15,18 +15,27 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Feedback version information
+ * Subplugin info class.
  *
- * @package mod_feedback
- * @author     Andreas Grabs
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package   mod_feedback
+ * @copyright 2017 Marina Glancy
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+namespace mod_feedback\plugininfo;
+
+use core\plugininfo\base;
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2017052900;       // The current module version (Date: YYYYMMDDXX)
-$plugin->requires  = 2017050500;    // Requires this Moodle version
-$plugin->component = 'mod_feedback';   // Full name of the plugin (used for diagnostics)
-$plugin->cron      = 0;
-
-$feedback_version_intern = 1; //this version is used for restore older backups
+/**
+ * Plugin type for feedback items
+ *
+ * @package   mod_feedback
+ * @copyright 2017 Marina Glancy
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class feedbackitem extends base {
+    public function is_uninstall_allowed() {
+        return true;
+    }
+}
