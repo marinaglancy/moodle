@@ -14,10 +14,9 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-require_once($CFG->dirroot.'/mod/feedback/item/feedback_item_form_class.php');
+defined('MOODLE_INTERNAL') || die();
 
-class feedback_label_form extends feedback_item_form {
-    protected $type = "label";
+class feedbackitem_label_form extends mod_feedback_item_form {
     private $area;
 
     public function definition() {

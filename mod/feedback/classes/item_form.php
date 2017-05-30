@@ -14,11 +14,32 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+defined('MOODLE_INTERNAL') || die();
+
+global $CFG;
 require_once($CFG->libdir.'/formslib.php');
 
 define('FEEDBACK_ITEM_NAME_TEXTBOX_SIZE', 80);
 define('FEEDBACK_ITEM_LABEL_TEXTBOX_SIZE', 20);
-abstract class feedback_item_form extends moodleform {
+
+/**
+ * Base class for forms in feedbackitem plugins
+ *
+ * @package   mod_feedback
+ * @copyright 2017 Marina Glancy
+ * @author    Andreas Grabs
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+abstract class mod_feedback_item_form extends moodleform {
+    protected $type;
+
+    public function __construct($action = null, $customdata = null, $method = 'post', $target = '', $attributes = null, $editable = true, $ajaxformdata = null) {
+        if (preg_match('/^feedbackitem_(.*)_form$/', get_class($this), $matches)) {
+            $this->type = $matches[1];
+        }
+        parent::__construct($action, $customdata, $method, $target, $attributes, $editable, $ajaxformdata);
+    }
+
     public function definition() {
         $item = $this->_customdata['item']; //the item object
 

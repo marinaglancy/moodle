@@ -14,11 +14,9 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-defined('MOODLE_INTERNAL') OR die('not allowed');
-require_once($CFG->dirroot.'/mod/feedback/item/feedback_item_class.php');
+defined('MOODLE_INTERNAL') || die();
 
-class feedback_item_info extends feedback_item_base {
-    protected $type = "info";
+class feedbackitem_info_plugin extends mod_feedback_item_base {
 
     /** Mode recording response time (for non-anonymous feedbacks only) */
     const MODE_RESPONSETIME = 1;
@@ -32,7 +30,6 @@ class feedback_item_info extends feedback_item_base {
 
     public function build_editform($item, $feedback, $cm) {
         global $DB, $CFG;
-        require_once('info_form.php');
 
         //get the lastposition number of the feedback_items
         $position = $item->position;
@@ -70,7 +67,7 @@ class feedback_item_info extends feedback_item_base {
         $presentationoptions[self::MODE_CATEGORY]  = get_string('coursecategory');
 
         //build the form
-        $this->item_form = new feedback_info_form('edit_item.php',
+        $this->item_form = new feedbackitem_info_form('edit_item.php',
                                                   array('item'=>$item,
                                                   'common'=>$commonparams,
                                                   'positionlist'=>$positionlist,

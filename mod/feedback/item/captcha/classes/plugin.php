@@ -14,11 +14,9 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-defined('MOODLE_INTERNAL') OR die('not allowed');
-require_once($CFG->dirroot.'/mod/feedback/item/feedback_item_class.php');
+defined('MOODLE_INTERNAL') || die();
 
-class feedback_item_captcha extends feedback_item_base {
-    protected $type = "captcha";
+class feedbackitem_captcha_plugin extends mod_feedback_item_base {
 
     public function build_editform($item, $feedback, $cm) {
         global $DB;

@@ -14,10 +14,9 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-require_once($CFG->dirroot.'/mod/feedback/item/feedback_item_form_class.php');
+defined('MOODLE_INTERNAL') || die();
 
-class feedback_textarea_form extends feedback_item_form {
-    protected $type = "textarea";
+class feedbackitem_textfield_form extends mod_feedback_item_form {
 
     public function definition() {
         $item = $this->_customdata['item'];
@@ -36,14 +35,15 @@ class feedback_textarea_form extends feedback_item_form {
                             array('size'=>FEEDBACK_ITEM_LABEL_TEXTBOX_SIZE, 'maxlength'=>255));
 
         $mform->addElement('select',
-                            'itemwidth',
-                            get_string('textarea_width', 'feedbackitem_textarea'),
-                            array_slice(range(0, 80), 5, 80, true));
+                            'itemsize',
+                            get_string('textfield_size', 'feedbackitem_textfield'),
+                            array_slice(range(0, 255), 5, 255, true));
 
-        $mform->addElement('select',
-                            'itemheight',
-                            get_string('textarea_height', 'feedbackitem_textarea'),
-                            array_slice(range(0, 40), 5, 40, true));
+        $mform->addElement('text',
+                            'itemmaxlength',
+                            get_string('textfield_maxlength', 'feedbackitem_textfield'));
+        $mform->setType('itemmaxlength', PARAM_INT);
+        $mform->addRule('itemmaxlength', null, 'numeric', null, 'client');
 
         parent::definition();
         $this->set_data($item);
@@ -55,7 +55,7 @@ class feedback_textarea_form extends feedback_item_form {
             return false;
         }
 
-        $item->presentation = $item->itemwidth . '|'. $item->itemheight;
+        $item->presentation = $item->itemsize . '|'. $item->itemmaxlength;
         return $item;
     }
 }

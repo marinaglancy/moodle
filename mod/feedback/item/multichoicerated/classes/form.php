@@ -14,10 +14,9 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-require_once($CFG->dirroot.'/mod/feedback/item/feedback_item_form_class.php');
+defined('MOODLE_INTERNAL') || die();
 
-class feedback_multichoicerated_form extends feedback_item_form {
-    protected $type = "multichoicerated";
+class feedbackitem_multichoicerated_form extends mod_feedback_item_form {
 
     public function definition() {
         $item = $this->_customdata['item'];
@@ -93,7 +92,7 @@ class feedback_multichoicerated_form extends feedback_item_form {
             return false;
         }
 
-        $itemobj = new feedback_item_multichoicerated();
+        $itemobj = new feedbackitem_multichoicerated_plugin();
 
         $presentation = $itemobj->prepare_presentation_values_save(trim($item->values),
                                                 FEEDBACK_MULTICHOICERATED_VALUE_SEP2,
