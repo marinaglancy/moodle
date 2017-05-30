@@ -590,6 +590,45 @@ class mod_feedback_external_testcase extends externallib_advanced_testcase {
         $this->assertEquals(2, $result['itemscount']);
         $this->assertCount(2, $result['itemsdata'][0]['data']); // There are 2 responses per item.
         $this->assertCount(2, $result['itemsdata'][1]['data']);
+        print_r($result);
+    }
+
+    /**
+     * Test get_analysis.
+     */
+    public function test_get_analysis_complete() {
+        // Create a very simple feedback.
+        $this->complete_basic_feedback();
+
+        // Retrieve analysis.
+        $this->setUser($this->teacher);
+        $result = mod_feedback_external::get_analysis($this->feedback->id);
+        $result = external_api::clean_returnvalue(mod_feedback_external::get_analysis_returns(), $result);
+
+        $v = json_encode(['value' => $this->course->shortname, 'show' => $this->course->shortname]);
+        $this->assertEquals([$v,$v], $result['itemsdata'][0]['data']);
+
+        sort($result['itemsdata'][1]['data']); // Avoid random factor.
+        $this->assertEquals([5,10], $result['itemsdata'][1]['data']);
+
+        $v0 = json_encode(['answertext' => 'a', 'answercount' => 0, 'quotient' => 0]);
+        $v1 = json_encode(['answertext' => 'b', 'answercount' => 1, 'quotient' => 0.5]);
+        $v2 = json_encode(['answertext' => 'c', 'answercount' => 1, 'quotient' => 0.5]);
+        $v3 = json_encode(['answertext' => 'd', 'answercount' => 0, 'quotient' => 0]);
+        $v4 = json_encode(['answertext' => 'e', 'answercount' => 0, 'quotient' => 0]);
+        $this->assertEquals([$v0,$v1,$v2,$v3,$v4], $result['itemsdata'][2]['data']);
+
+        $v0 = json_encode(['answertext' => 'a', 'answercount' => 0, 'avg' => 0, 'value' => '0', 'quotient' => 0]);
+        $v1 = json_encode(['answertext' => 'b', 'answercount' => 0, 'avg' => 0, 'value' => '1', 'quotient' => 0]);
+        $v2 = json_encode(['answertext' => 'c', 'answercount' => 0, 'avg' => 0, 'value' => '2', 'quotient' => 0]);
+        $v3 = json_encode(['answertext' => 'd', 'answercount' => 1, 'avg' => 1.5, 'value' => '3', 'quotient' => 0.5]);
+        $v4 = json_encode(['answertext' => 'e', 'answercount' => 1, 'avg' => 2, 'value' => '4', 'quotient' => 0.5]);
+        $this->assertEquals([$v0,$v1,$v2,$v3,$v4], $result['itemsdata'][3]['data']);
+
+        $this->assertEquals(['def','abc'], $result['itemsdata'][4]['data']);
+
+        sort($result['itemsdata'][5]['data']); // Avoid random factor.
+        $this->assertEquals(['long text 1','long text 2'], $result['itemsdata'][5]['data']);
     }
 
     /**
@@ -772,12 +811,25 @@ class mod_feedback_external_testcase extends externallib_advanced_testcase {
 
         // Create a very simple feedback.
         $feedbackgenerator = $generator->get_plugin_generator('mod_feedback');
-        $numericitem = $feedbackgenerator->create_item_numeric($this->feedback);
-        $textfielditem = $feedbackgenerator->create_item_textfield($this->feedback);
+        $feedback = $this->feedback;
+        $items = [];
+        $items[0] = $feedbackgenerator->create_item_label($feedback);
+        $items[1] = $feedbackgenerator->create_item_info($feedback);
+        $items[2] = $feedbackgenerator->create_item_numeric($feedback);
+        $items[4] = $feedbackgenerator->create_item_multichoice($feedback);
+        $items[5] = $feedbackgenerator->create_item_multichoicerated($feedback);
+        $items[6] = $feedbackgenerator->create_item_textarea($feedback);
+        $items[7] = $feedbackgenerator->create_item_textfield($feedback);
+
 
         $pagedata = [
-            ['name' => $numericitem->typ .'_'. $numericitem->id, 'value' => 5],
-            ['name' => $textfielditem->typ .'_'. $textfielditem->id, 'value' => 'abc'],
+            ['name' => $items[0]->typ .'_'. $items[0]->id, 'value' => ''],
+            ['name' => $items[1]->typ .'_'. $items[1]->id, 'value' => $this->course->shortname],
+            ['name' => $items[2]->typ .'_'. $items[2]->id, 'value' => 5],
+            ['name' => $items[4]->typ .'_'. $items[4]->id, 'value' => '3'],
+            ['name' => $items[5]->typ .'_'. $items[5]->id, 'value' => '4'],
+            ['name' => $items[6]->typ .'_'. $items[6]->id, 'value' => 'abc'],
+            ['name' => $items[7]->typ .'_'. $items[7]->id, 'value' => 'long text 1'],
         ];
 
         // Process the feedback, there is only one page so the feedback will be completed.
@@ -788,8 +840,13 @@ class mod_feedback_external_testcase extends externallib_advanced_testcase {
         $this->setUser($anotherstudent1);
 
         $pagedata = [
-            ['name' => $numericitem->typ .'_'. $numericitem->id, 'value' => 10],
-            ['name' => $textfielditem->typ .'_'. $textfielditem->id, 'value' => 'def'],
+            ['name' => $items[0]->typ .'_'. $items[0]->id, 'value' => ''],
+            ['name' => $items[1]->typ .'_'. $items[1]->id, 'value' => $this->course->shortname],
+            ['name' => $items[2]->typ .'_'. $items[2]->id, 'value' => 10],
+            ['name' => $items[4]->typ .'_'. $items[4]->id, 'value' => '2'],
+            ['name' => $items[5]->typ .'_'. $items[5]->id, 'value' => '5'],
+            ['name' => $items[6]->typ .'_'. $items[6]->id, 'value' => 'def'],
+            ['name' => $items[7]->typ .'_'. $items[7]->id, 'value' => 'long text 2'],
         ];
 
         $result = mod_feedback_external::process_page($this->feedback->id, 0, $pagedata);
@@ -799,8 +856,13 @@ class mod_feedback_external_testcase extends externallib_advanced_testcase {
         $this->setUser($anotherstudent2);
 
         $pagedata = [
-            ['name' => $numericitem->typ .'_'. $numericitem->id, 'value' => 10],
-            ['name' => $textfielditem->typ .'_'. $textfielditem->id, 'value' => 'def'],
+            ['name' => $items[0]->typ .'_'. $items[0]->id, 'value' => ''],
+            ['name' => $items[1]->typ .'_'. $items[1]->id, 'value' => $this->course->shortname],
+            ['name' => $items[2]->typ .'_'. $items[2]->id, 'value' => 10],
+            ['name' => $items[4]->typ .'_'. $items[4]->id, 'value' => '2'],
+            ['name' => $items[5]->typ .'_'. $items[5]->id, 'value' => '4'],
+            ['name' => $items[6]->typ .'_'. $items[6]->id, 'value' => 'xyz'],
+            ['name' => $items[7]->typ .'_'. $items[7]->id, 'value' => 'long text 3'],
         ];
 
         $result = mod_feedback_external::process_page($this->feedback->id, 0, $pagedata);
