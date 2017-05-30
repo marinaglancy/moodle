@@ -45,7 +45,7 @@ class feedback_item_captcha extends feedback_item_base {
 
         $this->item->feedback = $feedback->id;
         $this->item->template = 0;
-        $this->item->name = get_string('captcha', 'feedback');
+        $this->item->name = '';
         $this->item->label = '';
         $this->item->presentation = '';
         $this->item->typ = $this->type;
@@ -107,7 +107,7 @@ class feedback_item_captcha extends feedback_item_base {
      * @return string
      */
     public function get_display_name($item, $withpostfix = true, $truncated = false) {
-        return get_string('captcha', 'feedback');
+        return get_string('pluginname', 'feedbackitem_captcha');
     }
 
     /**

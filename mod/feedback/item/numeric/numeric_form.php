@@ -26,7 +26,8 @@ class feedback_numeric_form extends feedback_item_form {
 
         $mform =& $this->_form;
 
-        $mform->addElement('header', 'general', get_string($this->type, 'feedback'));
+        $mform->addElement('header', 'general',
+                get_string('pluginname', 'feedbackitem_' . $this->type));
         $mform->addElement('advcheckbox', 'required', get_string('required', 'feedback'), '' , null , array(0, 1));
 
         $mform->addElement('editor', 'name_editor', get_string('item_name', 'feedback'), null, $nameoptions);
@@ -37,13 +38,13 @@ class feedback_numeric_form extends feedback_item_form {
 
         $mform->addElement('text',
                             'rangefrom',
-                            get_string('numeric_range_from', 'feedback'),
+                            get_string('numeric_range_from', 'feedbackitem_numeric'),
                             array('size'=>10, 'maxlength'=>10));
         $mform->setType('rangefrom', PARAM_RAW);
 
         $mform->addElement('text',
                             'rangeto',
-                            get_string('numeric_range_to', 'feedback'),
+                            get_string('numeric_range_to', 'feedbackitem_numeric'),
                             array('size'=>10, 'maxlength'=>10));
         $mform->setType('rangeto', PARAM_RAW);
 

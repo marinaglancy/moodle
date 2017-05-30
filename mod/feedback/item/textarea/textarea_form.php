@@ -25,7 +25,8 @@ class feedback_textarea_form extends feedback_item_form {
 
         $mform =& $this->_form;
 
-        $mform->addElement('header', 'general', get_string($this->type, 'feedback'));
+        $mform->addElement('header', 'general',
+                get_string('pluginname', 'feedbackitem_' . $this->type));
         $mform->addElement('advcheckbox', 'required', get_string('required', 'feedback'), '' , null , array(0, 1));
 
         $mform->addElement('editor', 'name_editor', get_string('item_name', 'feedback'), null, $nameoptions);
@@ -36,12 +37,12 @@ class feedback_textarea_form extends feedback_item_form {
 
         $mform->addElement('select',
                             'itemwidth',
-                            get_string('textarea_width', 'feedback').'&nbsp;',
+                            get_string('textarea_width', 'feedbackitem_textarea'),
                             array_slice(range(0, 80), 5, 80, true));
 
         $mform->addElement('select',
                             'itemheight',
-                            get_string('textarea_height', 'feedback').'&nbsp;',
+                            get_string('textarea_height', 'feedbackitem_textarea'),
                             array_slice(range(0, 40), 5, 40, true));
 
         parent::definition();
