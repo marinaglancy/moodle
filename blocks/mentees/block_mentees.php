@@ -42,7 +42,6 @@ class block_mentees extends block_base {
 
     function get_content() {
         global $CFG, $USER, $DB;
-
         if ($this->content !== NULL) {
             return $this->content;
         }
@@ -59,8 +58,12 @@ class block_mentees extends block_base {
                                                          AND c.contextlevel = ".CONTEXT_USER, array($USER->id))) {
 
             $this->content->text = '<ul>';
+            $courseid = SITEID;
+            if ($coursecontext = $this->context->get_course_context(false)) {
+                $courseid = $coursecontext->instanceid;
+            }
             foreach ($usercontexts as $usercontext) {
-                $this->content->text .= '<li><a href="'.$CFG->wwwroot.'/user/view.php?id='.$usercontext->instanceid.'&amp;course='.SITEID.'">'.fullname($usercontext).'</a></li>';
+                $this->content->text .= '<li><a href="'.$CFG->wwwroot.'/user/view.php?id='.$usercontext->instanceid.'&amp;course='.$courseid.'">'.fullname($usercontext).'</a></li>';
             }
             $this->content->text .= '</ul>';
         }
