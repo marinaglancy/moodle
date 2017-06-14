@@ -204,5 +204,37 @@ class data_field_date extends data_field_base {
         return parent::export_text_value($record);
     }
 
+    /**
+     * Custom processing when importing date
+     *
+     * @param int $recordid
+     * @param string $value
+     * @param string $name
+     */
+    function update_content_import($recordid, $value, $name = '') {
+        global $DB;
+        if (strlen($value) && !is_numeric($value)) {
+            // If the date in the export file is not numeric, it is not a unix timestamp, try to parse it and convert to timestamp.
+            $parseddate = date_parse($value);
+            if (empty($parseddate['errors'])) {
+                $calendartype = \core_calendar\type_factory::get_calendar_instance();
+                $gregoriandate = $calendartype->convert_to_gregorian($parseddate['year'], $parseddate['month'], $parseddate['day']);
 
+                $value = make_timestamp(
+                    $gregoriandate['year'],
+                    $gregoriandate['month'],
+                    $gregoriandate['day'],
+                    $gregoriandate['hour'],
+                    $gregoriandate['minute'],
+                    0,
+                    0,
+                    false);
+            } else {
+                \core\notification::warning(get_string('cannotparsedate', 'datafield_date', s($value)));
+                $value = null;
+            }
+        }
+        $DB->insert_record('data_content',
+            ['recordid' => $recordid, 'content' => $value, 'fieldid' => $this->field->id]);
+    }
 }

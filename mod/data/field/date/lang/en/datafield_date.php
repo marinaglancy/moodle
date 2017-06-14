@@ -26,3 +26,4 @@
 
 $string['pluginname'] = 'Date';
 $string['fieldtypelabel'] = 'Date field';
+$string['cannotparsedate'] = 'Can not parse date <b>{$a}</b>, skipping';
