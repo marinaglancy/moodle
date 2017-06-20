@@ -78,12 +78,12 @@ function survey_add_instance($survey) {
     $survey->timecreated  = time();
     $survey->timemodified = $survey->timecreated;
 
-    $id = $DB->insert_record("survey", $survey);
+    $survey->id = $DB->insert_record("survey", $survey);
 
     $completiontimeexpected = !empty($survey->completionexpected) ? $survey->completionexpected : null;
-    \core_completion\api::update_completion_date_event($survey->coursemodule, 'survey', $id, $completiontimeexpected);
+    \core_completion\api::update_completion_date_event($survey->coursemodule, 'survey', $survey, $completiontimeexpected);
 
-    return $id;
+    return $survey->id;
 
 }
 

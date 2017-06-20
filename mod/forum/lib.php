@@ -131,7 +131,7 @@ function forum_add_instance($forum, $mform = null) {
     forum_grade_item_update($forum);
 
     $completiontimeexpected = !empty($forum->completionexpected) ? $forum->completionexpected : null;
-    \core_completion\api::update_completion_date_event($forum->coursemodule, 'forum', $forum->id, $completiontimeexpected);
+    \core_completion\api::update_completion_date_event($forum->coursemodule, 'forum', $forum, $completiontimeexpected);
 
     return $forum->id;
 }
@@ -289,7 +289,7 @@ function forum_delete_instance($id) {
 
     $result = true;
 
-    \core_completion\api::update_completion_date_event($cm->id, 'forum', $forum->id, null);
+    \core_completion\api::update_completion_date_event($cm->id, 'forum', $forum, null);
 
     // Delete digest and subscription preferences.
     $DB->delete_records('forum_digests', array('forum' => $forum->id));

@@ -88,12 +88,12 @@ function book_add_instance($data, $mform) {
         $data->customtitles = 0;
     }
 
-    $id = $DB->insert_record('book', $data);
+    $data->id = $DB->insert_record('book', $data);
 
     $completiontimeexpected = !empty($data->completionexpected) ? $data->completionexpected : null;
-    \core_completion\api::update_completion_date_event($data->coursemodule, 'book', $id, $completiontimeexpected);
+    \core_completion\api::update_completion_date_event($data->coursemodule, 'book', $data, $completiontimeexpected);
 
-    return $id;
+    return $data->id;
 }
 
 /**
@@ -118,7 +118,7 @@ function book_update_instance($data, $mform) {
     $DB->set_field('book', 'revision', $book->revision+1, array('id'=>$book->id));
 
     $completiontimeexpected = !empty($data->completionexpected) ? $data->completionexpected : null;
-    \core_completion\api::update_completion_date_event($data->coursemodule, 'book', $book->id, $completiontimeexpected);
+    \core_completion\api::update_completion_date_event($data->coursemodule, 'book', $book, $completiontimeexpected);
 
     return true;
 }
@@ -137,7 +137,7 @@ function book_delete_instance($id) {
     }
 
     $cm = get_coursemodule_from_instance('book', $id);
-    \core_completion\api::update_completion_date_event($cm->id, 'book', $id, null);
+    \core_completion\api::update_completion_date_event($cm->id, 'book', $book, null);
 
     $DB->delete_records('book_chapters', array('bookid'=>$book->id));
     $DB->delete_records('book', array('id'=>$book->id));

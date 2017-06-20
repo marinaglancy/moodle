@@ -45,18 +45,22 @@ class api {
      *
      * @param int $cmid The course module id
      * @param string $modulename The name of the module (eg. assign, quiz)
-     * @param int $instanceid The instance idLOL
+     * @param int|stdClass $instanceorid The instance idLOL
      * @param int|null $completionexpectedtime The time completion is expected, null if not set
      * @return bool
      */
-    public static function update_completion_date_event($cmid, $modulename, $instanceid, $completionexpectedtime) {
+    public static function update_completion_date_event($cmid, $modulename, $instanceorid, $completionexpectedtime) {
         global $CFG, $DB;
 
         // Required for calendar constant CALENDAR_EVENT_TYPE_ACTION.
         require_once($CFG->dirroot . '/calendar/lib.php');
 
-        $instance = $DB->get_record($modulename, array('id' => $instanceid), '*', MUST_EXIST);
-        $course = $DB->get_record('course', array('id' => $instance->course), '*', MUST_EXIST);
+        if (!is_object($instanceorid)) {
+            $instance = $DB->get_record($modulename, array('id' => $instanceorid), '*', MUST_EXIST);
+        } else {
+            $instance = $instanceorid;
+        }
+        $course = get_course($instance->course);
 
         $completion = new \completion_info($course);
 

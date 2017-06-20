@@ -120,7 +120,7 @@ function folder_add_instance($data, $mform) {
     }
 
     $completiontimeexpected = !empty($data->completionexpected) ? $data->completionexpected : null;
-    \core_completion\api::update_completion_date_event($data->coursemodule, 'folder', $data->id, $completiontimeexpected);
+    \core_completion\api::update_completion_date_event($data->coursemodule, 'folder', $data, $completiontimeexpected);
 
     return $data->id;
 }
@@ -167,7 +167,7 @@ function folder_delete_instance($id) {
     }
 
     $cm = get_coursemodule_from_instance('folder', $id);
-    \core_completion\api::update_completion_date_event($cm->id, 'folder', $folder->id, null);
+    \core_completion\api::update_completion_date_event($cm->id, 'folder', $folder, null);
 
     // note: all context files are deleted automatically
 
