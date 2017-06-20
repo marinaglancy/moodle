@@ -582,10 +582,11 @@ class oracle_sql_generator extends sql_generator {
          $prefixupper  = strtoupper($this->prefix);
          $sequencename = false;
 
+        $prefixescaped = $this->mdb->sql_like_escape($prefixupper, '!');
         if ($trigger = $this->mdb->get_record_sql("SELECT trigger_name, trigger_body
                                                      FROM user_triggers
-                                                    WHERE table_name = ? AND trigger_name LIKE ?",
-                                                  array($tablename, "{$prefixupper}%_ID%_TRG"))) {
+                                                    WHERE table_name = ? AND trigger_name LIKE ? ESCAPE ?",
+                                                  array($tablename, "{$prefixescaped}%!_ID%!_TRG", '!'))) {
             // If trigger found, regexp it looking for the sequence name
             preg_match('/.*SELECT (.*)\.nextval/i', $trigger->trigger_body, $matches);
             if (isset($matches[1])) {
@@ -609,10 +610,11 @@ class oracle_sql_generator extends sql_generator {
         $prefixupper = strtoupper($this->prefix);
         $triggername = false;
 
+        $prefixescaped = $this->mdb->sql_like_escape($prefixupper, '!');
         if ($trigger = $this->mdb->get_record_sql("SELECT trigger_name, trigger_body
                                                      FROM user_triggers
-                                                    WHERE table_name = ? AND trigger_name LIKE ?",
-                                                  array($tablename, "{$prefixupper}%_ID%_TRG"))) {
+                                                    WHERE table_name = ? AND trigger_name LIKE ? ESCAPE ?",
+                                                  array($tablename, "{$prefixescaped}%!_ID%!_TRG", '!'))) {
             $triggername = $trigger->trigger_name;
         }
 
