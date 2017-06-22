@@ -36,6 +36,7 @@ defined('MOODLE_INTERNAL') || die();
  *      - string modulename: name of module created.
  *      - string name: title of module.
  *      - string instanceid: id of module instance.
+ *      - int duplicatedfrom: id of course module this module was duplicated from (optional)
  * }
  *
  * @package    core

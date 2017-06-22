@@ -3423,6 +3423,9 @@ function duplicate_module($course, $cm) {
 
         // Trigger course module created event. We can trigger the event only if we know the newcmid.
         $event = \core\event\course_module_created::create_from_cm($newcm);
+        $eventdata = $event->get_data();
+        $eventdata['other']['duplicatedfrom'] = $cm->id;
+        $event->add_record_snapshot('course_modules', $cm);
         $event->trigger();
     }
     rebuild_course_cache($cm->course);
