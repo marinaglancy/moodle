@@ -494,7 +494,7 @@ define('HUB_HUBDIRECTORYURL', "http://hubdirectory.moodle.org");
 /**
  * Moodle.org url (should be moodle.org)
  */
-define('HUB_MOODLEORGHUBURL', "http://hub.moodle.org");
+define('HUB_MOODLEORGHUBURL', "http://marina.per.in.moodle.com/hub");
 
 /**
  * Moodle mobile app service name
