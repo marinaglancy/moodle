@@ -154,6 +154,17 @@ class registration_manager {
     }
 
     /**
+     * Is site registered with the hub?
+     *
+     * @param string $huburl
+     * @return bool
+     */
+    public function is_registered($huburl) {
+        $hub = $this->get_registeredhub($huburl);
+        return !empty($hub->token) && !empty($hub->confirmed);
+    }
+
+    /**
      * Get the hub which has not confirmed that the site is registered on,
      * but for which a request has been sent
      * @param string $huburl

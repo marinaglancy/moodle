@@ -271,17 +271,19 @@ class core_admin_renderer extends plugin_renderer_base {
      * @param bool $cronoverdue warn cron not running
      * @param bool $dbproblems warn db has problems
      * @param bool $maintenancemode warn in maintenance mode
-     * @param bool $buggyiconvnomb warn iconv problems
      * @param array|null $availableupdates array of \core\update\info objects or null
      * @param int|null $availableupdatesfetch timestamp of the most recent updates fetch or null (unknown)
+     * @param bool $buggyiconvnomb warn iconv problems
+     * @param bool $unused this argument is no longer used
      * @param string[] $cachewarnings An array containing warnings from the Cache API.
      * @param array $eventshandlers Events 1 API handlers.
+     * @param bool $themedesignermode true if enabled
      *
      * @return string HTML to output.
      */
     public function admin_notifications_page($maturity, $insecuredataroot, $errorsdisplayed,
             $cronoverdue, $dbproblems, $maintenancemode, $availableupdates, $availableupdatesfetch,
-            $buggyiconvnomb, $registered, array $cachewarnings = array(), $eventshandlers = 0, $themedesignermode = false) {
+            $buggyiconvnomb, $unused, array $cachewarnings = array(), $eventshandlers = 0, $themedesignermode = false) {
         global $CFG;
         $output = '';
 
@@ -298,7 +300,7 @@ class core_admin_renderer extends plugin_renderer_base {
         $output .= $this->maintenance_mode_warning($maintenancemode);
         $output .= $this->cache_warnings($cachewarnings);
         $output .= $this->events_handlers($eventshandlers);
-        $output .= $this->registration_warning($registered);
+        $output .= $this->warn_if_not_registered();
 
         //////////////////////////////////////////////////////////////////////////////////////////////////
         ////  IT IS ILLEGAL AND A VIOLATION OF THE GPL TO HIDE, REMOVE OR MODIFY THIS COPYRIGHT NOTICE ///
@@ -782,15 +784,34 @@ class core_admin_renderer extends plugin_renderer_base {
 
         if (!$registered) {
 
-            $registerbutton = $this->single_button(new moodle_url('/admin/registration/register.php',
+            if (has_capability('moodle/site:config', context_system::instance())) {
+                $registerbutton = $this->single_button(new moodle_url('/admin/registration/register.php',
                     array('huburl' =>  HUB_MOODLEORGHUBURL, 'hubname' => 'Moodle.org')),
                     get_string('register', 'admin'));
+                $str = 'registrationwarning';
+            } else {
+                $registerbutton = '';
+                $str = 'registrationwarningcontactadmin';
+            }
 
-            return $this->warning( get_string('registrationwarning', 'admin')
-                    . '&nbsp;' . $this->help_icon('registration', 'admin') . $registerbutton );
+            return $this->warning( get_string($str, 'admin')
+                    . '&nbsp;' . $this->help_icon('registration', 'admin') . $registerbutton ,
+                'error alert alert-danger');
         }
 
         return '';
+    }
+
+    /**
+     * Return an admin page warning if site is not registered with moodle.org
+     *
+     * @return string
+     */
+    public function warn_if_not_registered() {
+        global $CFG;
+        require_once($CFG->dirroot . '/' . $CFG->admin . '/registration/lib.php');
+        $registrationmanager = new registration_manager();
+        return $this->registration_warning($registrationmanager->is_registered(HUB_MOODLEORGHUBURL));
     }
 
     /**
