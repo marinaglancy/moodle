@@ -4647,7 +4647,14 @@ function file_pluginfile($relativepath, $forcedownload, $preview = null, $offlin
             if (!plugin_supports('mod', $modname, FEATURE_MOD_INTRO, true)) {
                 send_file_not_found();
             }
-            require_course_login($course, true, $cm);
+            require_course_login($course, true);
+            $cminfo = cm_info::create($cm);
+            if (!$cminfo->uservisible) {
+                // Even if module is not available user may still be able to see the files included in intro.
+                if (!$cminfo->is_visible_on_course_page() || !$cminfo->content) {
+                    return send_file_not_found();
+                }
+            }
 
             // all users may access it
             $filename = array_pop($args);
