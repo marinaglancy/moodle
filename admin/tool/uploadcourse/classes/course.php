@@ -94,7 +94,7 @@ class tool_uploadcourse_course {
 
     /** @var array fields allowed as course data. */
     static protected $validfields = array('fullname', 'shortname', 'idnumber', 'category', 'visible', 'startdate', 'enddate',
-        'summary', 'format', 'theme', 'lang', 'newsitems', 'showgrades', 'showreports', 'legacyfiles', 'maxbytes',
+        'summary', 'format', 'numsections', 'theme', 'lang', 'newsitems', 'showgrades', 'showreports', 'legacyfiles', 'maxbytes',
         'groupmode', 'groupmodeforce', 'groupmodeforce', 'enablecompletion');
 
     /** @var array fields required on course creation. */
