@@ -109,6 +109,11 @@ class tool_uploadcourse_step2_form extends tool_uploadcourse_base_form {
         $mform->addHelpButton('defaults[format]', 'format');
         $mform->setDefault('defaults[format]', $courseconfig->format);
 
+        $maxsections = (int)$courseconfig->maxsections;
+        $mform->addElement('select', 'defaults[numsections]', get_string('numberweeks'), range(0, $maxsections ?: 52));
+        $mform->setType('defaults[numsections]', PARAM_INT);
+        $mform->setDefault('defaults[numsections]', $courseconfig->numsections);
+
         if (!empty($CFG->allowcoursethemes)) {
             $themeobjects = get_list_of_themes();
             $themes=array();
