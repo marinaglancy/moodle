@@ -22,187 +22,108 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL
  * @copyright  (C) 1999 onwards Martin Dougiamas  http://dougiamas.com
  *
- * On this page the administrator selects which hub he wants to register (except for moodle.net)
- * Admins can register with moodle.net via the site admin menu "Registration" link.
- * On this page the administrator can also unregister from any hubs including moodle.net.
+ * This page displays the site registration form for Moodle.net.
+ * It handles redirection to the hub to continue the registration workflow process.
+ * It also handles update operation by web service.
  */
 
-require('../../config.php');
-
+require_once('../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
-require_once($CFG->dirroot . '/' . $CFG->admin . '/registration/lib.php');
 require_once($CFG->dirroot . '/' . $CFG->admin . '/registration/forms.php');
-require_once($CFG->dirroot . '/course/publish/lib.php');
-require_once($CFG->dirroot . "/webservice/xmlrpc/lib.php");
+require_once($CFG->dirroot . '/' . $CFG->admin . '/registration/lib.php');
 
-admin_externalpage_setup('registrationhubs');
-
-$renderer = $PAGE->get_renderer('core', 'register');
+admin_externalpage_setup('registrationmoodleorg');
 
 $unregistration = optional_param('unregistration', 0, PARAM_INT);
-$cleanregdata = optional_param('cleanregdata', 0, PARAM_BOOL);
-$confirm = optional_param('confirm', 0, PARAM_INT);
-$huburl = optional_param('huburl', '', PARAM_URL);
-$cancel = optional_param('cancel', null, PARAM_ALPHA);
 
 $registrationmanager = new registration_manager();
-$publicationmanager = new course_publish_manager();
-$errormessage = '';
-if (empty($cancel) and $unregistration and $confirm and confirm_sesskey()) {
+$registeredhub = $registrationmanager->get_registeredhub();
 
-    $hub = $registrationmanager->get_registeredhub($huburl);
+if ($unregistration && $registeredhub) {
+    $siteunregistrationform = new site_unregistration_form();
 
-    //unpublish course and unregister the site by web service
-    if (!$cleanregdata) {
-
-        //check if we need to unpublish courses
-        //enrollable courses
-        $unpublishalladvertisedcourses = optional_param('unpublishalladvertisedcourses', 0, PARAM_INT);
-        $hubcourseids = array();
-        if ($unpublishalladvertisedcourses) {
-            $enrollablecourses = $publicationmanager->get_publications($huburl, null, 1);
-            if (!empty($enrollablecourses)) {
-                foreach ($enrollablecourses as $enrollablecourse) {
-                    $hubcourseids[] = $enrollablecourse->hubcourseid;
-                }
-            }
-        }
-        //downloadable courses
-        $unpublishalluploadedcourses = optional_param('unpublishalluploadedcourses', 0, PARAM_INT);
-        if ($unpublishalluploadedcourses) {
-            $downloadablecourses = $publicationmanager->get_publications($huburl, null, 0);
-            if (!empty($downloadablecourses)) {
-                foreach ($downloadablecourses as $downloadablecourse) {
-                    $hubcourseids[] = $downloadablecourse->hubcourseid;
-                }
-            }
-        }
-
-        //unpublish the courses by web service
-        if (!empty($hubcourseids)) {
-            $function = 'hub_unregister_courses';
-            $params = array('courseids' => $hubcourseids);
-            $serverurl = $huburl . "/local/hub/webservice/webservices.php";
-            $xmlrpcclient = new webservice_xmlrpc_client($serverurl, $hub->token);
-            try {
-                $result = $xmlrpcclient->call($function, $params);
-                //delete the published courses
-                if (!empty($enrollablecourses)) {
-                    $publicationmanager->delete_hub_publications($huburl, 1);
-                }
-                if (!empty($downloadablecourses)) {
-                    $publicationmanager->delete_hub_publications($huburl, 0);
-                }
-            } catch (Exception $e) {
-                $errormessage = $e->getMessage();
-                $errormessage .= html_writer::empty_tag('br') .
-                        get_string('errorunpublishcourses', 'hub');
-                $confirm = false;
-                $cleanregdata = 1;
-            }
+    if ($siteunregistrationform->is_cancelled()) {
+        redirect(new moodle_url('/admin/registration/index.php'));
+    } else if ($data = $siteunregistrationform->get_data()) {
+        if ($registrationmanager->unregister($data->unpublishalladvertisedcourses,
+            $data->unpublishalluploadedcourses)) {
+            redirect(new moodle_url('/admin/registration/index.php'));
         }
     }
-
-    //course unpublish went ok, unregister the site now
-    if ($confirm) {
-        $function = 'hub_unregister_site';
-        $params = array();
-        $serverurl = $huburl . "/local/hub/webservice/webservices.php";
-        $xmlrpcclient = new webservice_xmlrpc_client($serverurl, $hub->token);
-        try {
-            $result = $xmlrpcclient->call($function, $params);
-        } catch (Exception $e) {
-            if (!$cleanregdata) {
-                $errormessage = $e->getMessage();
-                $confirm = false;
-                $cleanregdata = 1;
-            }
-        }
-    }
-
-    //check that we are still processing the unregistration,
-    //it could have been unset if an exception were previsouly catched
-    if ($confirm) {
-        $registrationmanager->delete_registeredhub($huburl);
-    }
-}
-
-if (empty($cancel) and $unregistration and !$confirm) {
 
     echo $OUTPUT->header();
-
-    //do not check sesskey if confirm = false because this script is linked into email message
-    if (!empty($errormessage)) {
-        echo $OUTPUT->notification(get_string('unregistrationerror', 'hub', $errormessage));
-    }
-
-    $hub = $registrationmanager->get_registeredhub($huburl);
-    echo $OUTPUT->heading(get_string('unregisterfrom', 'hub', $hub->hubname), 3, 'main');
-    if ($cleanregdata) {
-        $siteunregistrationform = new site_clean_registration_data_form('',
-                        array('huburl' => $huburl, 'hubname' => $hub->hubname));
-    } else {
-        $siteunregistrationform = new site_unregistration_form('',
-                        array('huburl' => $huburl, 'hubname' => $hub->hubname));
-    }
-
+    echo $OUTPUT->heading(get_string('unregisterfrom', 'hub', 'Moodle.net'), 3, 'main');
     $siteunregistrationform->display();
-} else {
-    $registeredonmoodleorg = false;
-    $moodleorghub = $registrationmanager->get_registeredhub(HUB_MOODLEORGHUBURL);
-    if (!empty($moodleorghub)) {
-        $registeredonmoodleorg = true;
-    }
-
-    // load the hub selector form
-    $hubselectorform = new hub_selector_form();
-    $fromform = $hubselectorform->get_data();
-    $selectedhuburl = optional_param('publichub', false, PARAM_URL);
-    $unlistedhuburl = optional_param('unlistedurl', false, PARAM_TEXT);
-    $password = optional_param('password', '', PARAM_RAW);
-    $registeringhuburl = null;
-    if (!empty($unlistedhuburl)) {
-        if (clean_param($unlistedhuburl, PARAM_URL) !== '') {
-            $registeringhuburl = $unlistedhuburl;
-        }
-    } else if (!empty($selectedhuburl)) {
-        $registeringhuburl = $selectedhuburl;
-    }
-
-    // a hub has been selected, redirect to the hub registration page
-    if (empty($cancel) and !empty($registeringhuburl) and confirm_sesskey()) {
-        $hubname = optional_param(clean_param($registeringhuburl, PARAM_ALPHANUMEXT), '', PARAM_TEXT);
-        $params = array('sesskey' => sesskey(), 'huburl' => $registeringhuburl,
-            'password' => $password, 'hubname' => $hubname);
-        redirect(new moodle_url($CFG->wwwroot . "/" . $CFG->admin . "/registration/register.php",
-                        $params));
-    }
-
-    echo $OUTPUT->header();
-
-    //check if the site is registered on Moodle.org and display a message about registering on MOOCH
-    $adminrenderer = $PAGE->get_renderer('core', 'admin');
-    echo $adminrenderer->warn_if_not_registered();
-
-    //do not check sesskey if confirm = false because this script is linked into email message
-    if (!empty($errormessage)) {
-        echo $OUTPUT->notification(get_string('unregistrationerror', 'hub', $errormessage));
-    }
-
-    echo $OUTPUT->heading(get_string('registerwith', 'hub'));
-
-    $hubselectorform->display();
-
-    if (extension_loaded('xmlrpc')) {
-        $hubs = $registrationmanager->get_registered_on_hubs();
-        if (!empty($hubs)) {
-            echo $OUTPUT->heading(get_string('registeredon', 'hub'), 3, 'main');
-            echo $renderer->registeredonhublisting($hubs);
-        }
-    } else { //display notice about xmlrpc
-        $xmlrpcnotification = $OUTPUT->doc_link('admin/environment/php_extension/xmlrpc', '');
-        $xmlrpcnotification .= get_string('xmlrpcdisabledregistration', 'hub');
-        echo $OUTPUT->notification($xmlrpcnotification);
-    }
+    echo $OUTPUT->footer();
+    exit;
 }
+
+
+$siteregistrationform = new site_registration_form();
+if ($fromform = $siteregistrationform->get_data()) {
+
+    // Save the settings.
+    $cleanhuburl = clean_param(HUB_MOODLEORGHUBURL, PARAM_ALPHANUMEXT);
+    foreach (registration_manager::FORM_FIELDS as $field) {
+        set_config('site_'.$field.'_' . $cleanhuburl, $fromform->$field, 'hub');
+    }
+
+    if ($registeredhub) {
+        try {
+            $registrationmanager->update_registration($registeredhub);
+        } catch (Exception $e) {
+            redirect(new moodle_url('/admin/registration/index.php'),
+                get_string('errorregistration', 'hub', $e->getMessage()), 0,
+                \core\output\notification::NOTIFY_ERROR);
+        }
+
+        redirect(new moodle_url('/admin/registration/index.php'), get_string('siteregistrationupdated', 'hub'), 0,
+            \core\output\notification::NOTIFY_SUCCESS);
+
+    } else {
+        $registrationmanager->register();
+        // This method will redirect away.
+    }
+
+}
+
+/////// OUTPUT SECTION /////////////
+
+echo $OUTPUT->header();
+
+// Current status of registration on Moodle.net.
+
+$notificationtype = \core\output\notification::NOTIFY_ERROR;
+if ($registeredhub) {
+    if ($registeredhub->timemodified == 0) {
+        $registrationmessage = get_string('pleaserefreshregistrationunknown', 'admin');
+    } else {
+        $lastupdated = userdate($registeredhub->timemodified, get_string('strftimedate', 'langconfig'));
+        $registrationmessage = get_string('pleaserefreshregistration', 'admin', $lastupdated);
+        $notificationtype = \core\output\notification::NOTIFY_INFO;
+    }
+    echo $OUTPUT->notification($registrationmessage, $notificationtype);
+} else {
+    $registrationmessage = get_string('registrationwarning', 'admin');
+    echo $OUTPUT->notification($registrationmessage, $notificationtype);
+}
+
+// Unregister button and heading.
+if ($registeredhub) {
+
+    $unregisterhuburl = new moodle_url("/admin/registration/index.php", ['unregistration' => 1]);
+    $unregisterbutton = new single_button($unregisterhuburl, get_string('unregister', 'hub'));
+
+    echo $OUTPUT->render($unregisterbutton);
+
+    echo $OUTPUT->heading(get_string('updatesite', 'hub', $registeredhub->hubname));
+
+} else {
+    echo $OUTPUT->heading(get_string('registerwithmoodleorg', 'admin'));
+}
+
+$renderer = $PAGE->get_renderer('core', 'register');
+echo $renderer->moodleorg_registration_message();
+
+$siteregistrationform->display();
 echo $OUTPUT->footer();

@@ -44,7 +44,7 @@ $hubname = optional_param('hubname', '', PARAM_TEXT);
 $token = optional_param('token', '', PARAM_TEXT);
 $error = optional_param('error', '', PARAM_ALPHANUM);
 
-admin_externalpage_setup('registrationhubs');
+admin_externalpage_setup('registrationmoodleorg');
 
 if (!empty($error) and $error == 'urlalreadyexist') {
     throw new moodle_exception('urlalreadyregistered', 'hub',

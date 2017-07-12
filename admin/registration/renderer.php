@@ -52,17 +52,17 @@ class core_register_renderer extends plugin_renderer_base {
      * @param string $confirmationmessage
      * @return string
      */
-    public function registration_confirmation($confirmationmessage) {
+    /*public function registration_confirmation($confirmationmessage) {
         $linktositelist = html_writer::tag('a', get_string('sitelist', 'hub'),
                         array('href' => new moodle_url('/local/hub/index.php')));
         $message = $confirmationmessage . html_writer::empty_tag('br') . $linktositelist;
         return $this->output->box($message);
-    }
+    }*/
 
     /**
      * Display the listing of registered on hub
      */
-    public function registeredonhublisting($hubs) {
+    /*public function registeredonhublisting($hubs) {
         global $CFG;
         $table = new html_table();
         $table->head = array(get_string('hub', 'hub'), get_string('operation', 'hub'));
@@ -90,6 +90,6 @@ class core_register_renderer extends plugin_renderer_base {
         }
 
         return html_writer::table($table);
-    }
+    }*/
 
 }
