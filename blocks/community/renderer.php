@@ -88,11 +88,11 @@ class block_community_renderer extends plugin_renderer_base {
     /**
      * Display a list of courses
      * @param array $courses
-     * @param boolean $withwriteaccess
+     * @param mixed $unused parameter is not used
      * @param int $contextcourseid context course id
      * @return string
      */
-    public function course_list($courses, $huburl, $contextcourseid) {
+    public function course_list($courses, $unused, $contextcourseid) {
         global $CFG;
 
         $renderedhtml = '';
@@ -129,7 +129,7 @@ class block_community_renderer extends plugin_renderer_base {
                 // create screenshots html
                 $screenshothtml = '';
                 if (!empty($course->screenshots)) {
-                    $baseurl = new moodle_url($huburl . '/local/hub/webservice/download.php',
+                    $baseurl = new moodle_url(HUB_MOODLEORGHUBURL . '/local/hub/webservice/download.php',
                                     array('courseid' => $course->id,
                                         'filetype' => HUB_SCREENSHOT_FILE_TYPE));
                     $screenshothtml = html_writer::empty_tag('img',
@@ -269,7 +269,7 @@ class block_community_renderer extends plugin_renderer_base {
                 if (!$course->enrollable) {
                     $params = array('sesskey' => sesskey(), 'download' => 1, 'confirmed' => 1,
                         'remotemoodleurl' => $CFG->wwwroot, 'courseid' => $contextcourseid,
-                        'downloadcourseid' => $course->id, 'huburl' => $huburl,
+                        'downloadcourseid' => $course->id,
                         'coursefullname' => $course->fullname, 'backupsize' => $course->backupsize);
                     $downloadurl = new moodle_url("/blocks/community/communitycourse.php", $params);
                     $downloadbuttonhtml = html_writer::tag('a', get_string('install', 'block_community'),
@@ -340,7 +340,7 @@ class block_community_renderer extends plugin_renderer_base {
                 //link rate and comment
                 $rateandcomment = html_writer::tag('div',
                                 html_writer::tag('a', get_string('rateandcomment', 'block_community'),
-                                        array('href' => new moodle_url($huburl,
+                                        array('href' => new moodle_url(HUB_MOODLEORGHUBURL,
                                                     array('courseid' => $course->id, 'mustbelogged' => true)),
                                             'onclick' => 'this.target="_blank"')),
                                 array('class' => 'hubrateandcomment'));

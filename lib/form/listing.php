@@ -114,9 +114,14 @@ class MoodleQuickForm_listing extends HTML_QuickForm_input {
                 array('id' => $this->getName().'_items_main', 'class' => 'formlistingmain'));
 
         // Add the main div containing the selected item (+ the caption: "More items").
+        if (count($this->items) > 1) {
+            $showall = html_writer::tag('div', $this->showall,
+                array('id' => $this->getName().'_items_caption', 'class' => 'formlistingmore'));
+        } else {
+            $showall = '';
+        }
         $html = html_writer::tag('div', $mainhtml .
-                    html_writer::tag('div', $this->showall,
-                        array('id' => $this->getName().'_items_caption', 'class' => 'formlistingmore')),
+                    $showall,
                     array('id'=>$this->getName().'_items', 'class' => 'formlisting hide'));
 
         // Add collapsible region: all the items.
@@ -144,15 +149,17 @@ class MoodleQuickForm_listing extends HTML_QuickForm_input {
         $module = array('name'=>'form_listing', 'fullpath'=>'/lib/form/yui/listing/listing.js',
             'requires'=>array('node', 'event', 'transition', 'escape'));
 
-        $PAGE->requires->js_init_call('M.form_listing.init',
-                 array(array(
-                'elementid' => $this->getName().'_items',
-                'hideall' => $this->hideall,
-                'showall' => $this->showall,
-                'hiddeninputid' => $this->getAttribute('id'),
-                'items' => $this->items,
-                'inputname' => $this->getName(),
-                'currentvalue' => $this->getValue())), true, $module);
+        if (count($this->items) > 1) {
+            $PAGE->requires->js_init_call('M.form_listing.init',
+                array(array(
+                    'elementid' => $this->getName() . '_items',
+                    'hideall' => $this->hideall,
+                    'showall' => $this->showall,
+                    'hiddeninputid' => $this->getAttribute('id'),
+                    'items' => $this->items,
+                    'inputname' => $this->getName(),
+                    'currentvalue' => $this->getValue())), true, $module);
+        }
 
         return $html;
     }

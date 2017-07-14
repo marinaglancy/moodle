@@ -81,11 +81,6 @@ class community_hub_search_form extends moodleform {
         } else {
             $orderby = 'newest';
         }
-        if (isset($this->_customdata['huburl'])) {
-            $huburl = $this->_customdata['huburl'];
-        } else {
-            $huburl = HUB_MOODLEORGHUBURL;
-        }
 
         $mform->addElement('header', 'site', get_string('search', 'block_community'));
 
@@ -95,115 +90,47 @@ class community_hub_search_form extends moodleform {
         $mform->addElement('hidden', 'executesearch', 1);
         $mform->setType('executesearch', PARAM_INT);
 
-        //retrieve the hub list on the hub directory by web service
-        $function = 'hubdirectory_get_hubs';
-        $params = array();
-        $serverurl = HUB_HUBDIRECTORYURL . "/local/hubdirectory/webservice/webservices.php";
-        require_once($CFG->dirroot . "/webservice/xmlrpc/lib.php");
-        $xmlrpcclient = new webservice_xmlrpc_client($serverurl, 'publichubdirectory');
-        try {
-            $hubs = $xmlrpcclient->call($function, $params);
-        } catch (Exception $e) {
-            $hubs = array();
-            $error = $OUTPUT->notification(get_string('errorhublisting', 'block_community', $e->getMessage()));
-            $mform->addElement('static', 'errorhub', '', $error);
-        }
+            $hubdescription = 'Moodle.net (previously known as MOOCH) connects you with free content and courses shared by Moodle users all over the world.  It contains: 
 
-        // Hubdirectory returns old URL for the moodle.net hub, substitute it.
-        foreach ($hubs as $key => $hub) {
-            if ($hub['url'] === HUB_OLDMOODLEORGHUBURL) {
-                $hubs[$key]['url'] = HUB_MOODLEORGHUBURL;
-            }
-        }
+* courses you can download and use
+* courses you can enrol in and participate
+* other content you can import into your own courses';
 
-        //display list of registered on hub
-        $registrationmanager = new registration_manager();
-        $registeredhubs = $registrationmanager->get_registered_on_hubs();
-        //retrieve some additional hubs that we will add to
-        //the hub list got from the hub directory
-        $additionalhubs = array();
-        foreach ($registeredhubs as $registeredhub) {
-            $inthepubliclist = false;
-            foreach ($hubs as $hub) {
-                if ($hub['url'] == $registeredhub->huburl) {
-                    $inthepubliclist = true;
-                    $hub['registeredon'] = true;
-                }
-            }
-            if (!$inthepubliclist) {
-                $additionalhub = array();
-                $additionalhub['name'] = $registeredhub->hubname;
-                $additionalhub['url'] = $registeredhub->huburl;
-                $additionalhubs[] = $additionalhub;
-            }
-        }
-        if (!empty($additionalhubs)) {
-            $hubs = array_merge($hubs, $additionalhubs);
-        }
+                $hubname = 'Moodle.net';
 
-        if (!empty($hubs)) {
-            $htmlhubs = array();
-            foreach ($hubs as $hub) {
-                // Name can come from hub directory - need some cleaning.
-                $hubname = clean_text($hub['name'], PARAM_TEXT);
-                $smalllogohtml = '';
-                if (array_key_exists('id', $hub)) {
-
-                    // Retrieve hub logo + generate small logo.
-                    $params = array('hubid' => $hub['id'], 'filetype' => HUB_HUBSCREENSHOT_FILE_TYPE);
-                    $imgurl = new moodle_url(HUB_HUBDIRECTORYURL . "/local/hubdirectory/webservice/download.php", $params);
-                    $imgsize = getimagesize($imgurl->out(false));
-                    if ($imgsize[0] > 1) {
-                        $ascreenshothtml = html_writer::empty_tag('img', array('src' => $imgurl, 'alt' => $hubname));
-                        $smalllogohtml = html_writer::empty_tag('img', array('src' => $imgurl, 'alt' => $hubname
-                                        , 'height' => 30, 'width' => 40));
-                    } else {
-                        $ascreenshothtml = '';
-                    }
+                    // Hub logo.
+                    $imgurl = 'https://hubdirectory.moodle.org/local/hubdirectory/webservice/download.php?hubid=62&filetype=hubscreenshot'; // TODO
+                    $ascreenshothtml = html_writer::empty_tag('img', array('src' => $imgurl, 'alt' => $hubname));
+                    $smalllogohtml = html_writer::empty_tag('img', array('src' => $imgurl, 'alt' => $hubname
+                                    , 'height' => 30, 'width' => 40));
                     $hubimage = html_writer::tag('div', $ascreenshothtml, array('class' => 'hubimage'));
 
-                    // Statistics + trusted info.
-                    $hubstats = '';
-                    if (isset($hub['enrollablecourses'])) { //check needed to avoid warnings for Moodle version < 2011081700
-                        $additionaldesc = get_string('enrollablecourses', 'block_community') . ': ' . $hub['enrollablecourses'] . ' - ' .
-                                get_string('downloadablecourses', 'block_community') . ': ' . $hub['downloadablecourses'];
-                        $hubstats .= html_writer::tag('div', $additionaldesc);
-                    }
-                    if ($hub['trusted']) {
-                        $hubtrusted =  get_string('hubtrusted', 'block_community');
-                        $hubstats .= $OUTPUT->doc_link('trusted_hubs') . html_writer::tag('div', $hubtrusted);
-                    }
-                    $hubstats = html_writer::tag('div', $hubstats, array('class' => 'hubstats'));
-
                     // hub name link + hub description.
-                    $hubnamelink = html_writer::link($hub['url'], html_writer::tag('h2',$hubname),
+                    $hubnamelink = html_writer::link(HUB_MOODLEORGHUBURL, html_writer::tag('h2',$hubname),
                                     array('class' => 'hubtitlelink'));
                     // The description can come from the hub directory - need to clean.
-                    $hubdescription = clean_param($hub['description'], PARAM_TEXT);
+                    $hubdescription = clean_param($hubdescription, PARAM_TEXT);
                     $hubdescriptiontext = html_writer::tag('div', format_text($hubdescription, FORMAT_PLAIN),
                                     array('class' => 'hubdescription'));
 
-                    $hubtext = html_writer::tag('div', $hubdescriptiontext . $hubstats, array('class' => 'hubtext'));
+                    $hubtext = html_writer::tag('div', $hubdescriptiontext, array('class' => 'hubtext'));
 
                     $hubimgandtext = html_writer::tag('div', $hubimage . $hubtext, array('class' => 'hubimgandtext'));
 
                     $hubfulldesc = html_writer::tag('div', $hubnamelink . $hubimgandtext, array('class' => 'hubmainhmtl'));
-                } else {
-                    $hubfulldesc = html_writer::link($hub['url'], $hubname);
-                }
 
                 // Add hub to the hub items.
                 $hubinfo = new stdClass();
                 $hubinfo->mainhtml = $hubfulldesc;
                 $hubinfo->rowhtml = html_writer::tag('div', $smalllogohtml , array('class' => 'hubsmalllogo')) . $hubname;
-                $hubitems[$hub['url']] = $hubinfo;
-            }
+                $hubitems[HUB_MOODLEORGHUBURL] = $hubinfo;
+
 
             // Hub listing form element.
             $mform->addElement('listing','huburl', '', '', array('items' => $hubitems,
                 'showall' => get_string('showall', 'block_community'),
                 'hideall' => get_string('hideall', 'block_community')));
-            $mform->setDefault('huburl', $huburl);
+            $mform->setDefault('huburl', HUB_MOODLEORGHUBURL);
 
             //display enrol/download select box if the USER has the download capability on the course
             if (has_capability('moodle/community:download',
@@ -298,19 +225,7 @@ class community_hub_search_form extends moodleform {
             $mform->setType('search', PARAM_NOTAGS);
 
             $mform->addElement('submit', 'submitbutton', get_string('search', 'block_community'));
-        }
-    }
 
-    function validation($data, $files) {
-        global $CFG;
-
-        $errors = array();
-
-        if (empty($this->_form->_submitValues['huburl'])) {
-            $errors['huburl'] = get_string('nohubselected', 'hub');
-        }
-
-        return $errors;
     }
 
 }

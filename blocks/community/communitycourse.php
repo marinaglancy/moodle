@@ -93,7 +93,6 @@ if ($usercandownload and $cancelrestore and confirm_sesskey()) {
 }
 
 /// Download
-$huburl = optional_param('huburl', false, PARAM_URL);
 $download = optional_param('download', -1, PARAM_INT);
 $downloadcourseid = optional_param('downloadcourseid', '', PARAM_INT);
 $coursefullname = optional_param('coursefullname', '', PARAM_ALPHANUMEXT);
@@ -102,7 +101,7 @@ if ($usercandownload and $download != -1 and !empty($downloadcourseid) and confi
     $course = new stdClass();
     $course->fullname = $coursefullname;
     $course->id = $downloadcourseid;
-    $course->huburl = $huburl;
+    $course->huburl = HUB_MOODLEORGHUBURL;
 
     //OUTPUT: display restore choice page
     echo $OUTPUT->header();
@@ -145,7 +144,6 @@ $fromformdata['language'] = optional_param('language', current_language(), PARAM
 $fromformdata['educationallevel'] = optional_param('educationallevel', 'all', PARAM_ALPHANUMEXT);
 $fromformdata['downloadable'] = optional_param('downloadable', $usercandownload, PARAM_ALPHANUM);
 $fromformdata['orderby'] = optional_param('orderby', 'newest', PARAM_ALPHA);
-$fromformdata['huburl'] = optional_param('huburl', HUB_MOODLEORGHUBURL, PARAM_URL);
 $fromformdata['search'] = $search;
 $fromformdata['courseid'] = $courseid;
 $hubselectorform = new community_hub_search_form('', $fromformdata);
@@ -184,17 +182,14 @@ if (optional_param('executesearch', 0, PARAM_INT) and confirm_sesskey()) {
     //check if the selected hub is from the registered list (in this case we use the private token)
     $token = 'publichub';
     $registrationmanager = new registration_manager();
-    $registeredhubs = $registrationmanager->get_registered_on_hubs();
-    foreach ($registeredhubs as $registeredhub) {
-        if ($huburl == $registeredhub->huburl) {
-            $token = $registeredhub->token;
-        }
+    if ($registeredhub = $registrationmanager->get_registeredhub()) {
+        $token = $registeredhub->token;
     }
 
     $function = 'hub_get_courses';
     $params = array('search' => $search, 'downloadable' => $downloadable,
         'enrollable' => intval(!$downloadable), 'options' => $options);
-    $serverurl = $huburl . "/local/hub/webservice/webservices.php";
+    $serverurl = HUB_MOODLEORGHUBURL . "/local/hub/webservice/webservices.php";
     require_once($CFG->dirroot . "/webservice/xmlrpc/lib.php");
     $xmlrpcclient = new webservice_xmlrpc_client($serverurl, $token);
     try {
@@ -232,9 +227,9 @@ $PAGE->requires->yui_module('moodle-block_community-comments', 'M.blocks_communi
         array(array('commentids' => $commentedcourseids, 'closeButtonTitle' => get_string('close', 'editor'))));
 $PAGE->requires->yui_module('moodle-block_community-imagegallery', 'M.blocks_community.init_imagegallery',
         array(array('imageids' => $courseids, 'imagenumbers' => $courseimagenumbers,
-                'huburl' => $huburl, 'closeButtonTitle' => get_string('close', 'editor'))));
+                'huburl' => HUB_MOODLEORGHUBURL, 'closeButtonTitle' => get_string('close', 'editor'))));
 
-echo highlight($search, $renderer->course_list($courses, $huburl, $courseid));
+echo highlight($search, $renderer->course_list($courses, null, $courseid));
 
 //display givememore/Next link if more course can be displayed
 if (!empty($courses)) {

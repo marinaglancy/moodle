@@ -75,8 +75,7 @@ class block_community_manager {
 
     /**
      * Download the community course backup and save it in file API
-     * @param integer $courseid
-     * @param string $huburl
+     * @param stdClass $courseid
      * @return array 'privatefile' the file name saved in private area
      *               'tmpfile' the file name saved in the moodledata temp dir (for restore)
      */
@@ -92,16 +91,16 @@ class block_community_manager {
 
         $filename = md5(time() . '-' . $course->id . '-'. $USER->id . '-'. random_string(20));
 
-        $url  = new moodle_url($course->huburl.'/local/hub/webservice/download.php', $params);
+        $url  = new moodle_url(HUB_MOODLEORGHUBURL.'/local/hub/webservice/download.php', $params);
         $path = $CFG->tempdir.'/backup/'.$filename.".mbz";
         $fp = fopen($path, 'w');
-        $curlurl = $course->huburl.'/local/hub/webservice/download.php?filetype='
+        $curlurl = HUB_MOODLEORGHUBURL.'/local/hub/webservice/download.php?filetype='
                 .HUB_BACKUP_FILE_TYPE.'&courseid='.$course->id;
 
         //send an identification token if the site is registered on the hub
         require_once($CFG->dirroot . '/' . $CFG->admin . '/registration/lib.php');
         $registrationmanager = new registration_manager();
-        $registeredhub = $registrationmanager->get_registeredhub($course->huburl);
+        $registeredhub = $registrationmanager->get_registeredhub();
         if (!empty($registeredhub)) {
             $token = $registeredhub->token;
             $curlurl .= '&token='.$token;
