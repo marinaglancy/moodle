@@ -108,6 +108,32 @@ class MoodleQuickForm_filepicker extends HTML_QuickForm_input implements templat
     }
 
     /**
+     * Called by HTML_QuickForm whenever form event is made on this element
+     *
+     * @param string $event Name of event
+     * @param mixed $arg event arguments
+     * @param object $caller calling object
+     * @return bool
+     */
+    function onQuickFormEvent($event, $arg, &$caller)
+    {
+        parent::onQuickFormEvent($event, $arg, $caller);
+        switch ($event) {
+            case 'createElement':
+                $elementname = $arg[0];
+                $acceptedtypes = $this->_options['accepted_types'];
+                $caller->addFormRule(function($values, $files) use ($elementname, $acceptedtypes) {
+                    if ($error = MoodleQuickForm_filepicker::validate_accepted_types($values[$elementname], $acceptedtypes)) {
+                        return [$elementname => $error];
+                    }
+                    return true;
+                });
+                break;
+        }
+        return true;
+    }
+
+    /**
      * Returns type of filepicker element
      *
      * @return string
@@ -237,10 +263,10 @@ class MoodleQuickForm_filepicker extends HTML_QuickForm_input implements templat
      * @param array $value Draft item id with the uploaded files.
      * @return string|null Validation error message or null.
      */
-    public function validateSubmitValue($value) {
+    public function validate_accepted_types($value, $acceptedtypes) {
 
         $filetypesutil = new \core_form\filetypes_util();
-        $whitelist = $filetypesutil->normalize_file_types($this->_options['accepted_types']);
+        $whitelist = $filetypesutil->normalize_file_types($acceptedtypes);
 
         if (empty($whitelist) || $whitelist === ['*']) {
             // Any file type is allowed, nothing to check here.

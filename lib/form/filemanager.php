@@ -104,12 +104,21 @@ class MoodleQuickForm_filemanager extends HTML_QuickForm_element implements temp
      */
     function onQuickFormEvent($event, $arg, &$caller)
     {
+        parent::onQuickFormEvent($event, $arg, $caller);
         switch ($event) {
             case 'createElement':
-                $caller->setType($arg[0], PARAM_INT);
+                $elementname = $arg[0];
+                $acceptedtypes = $this->_options['accepted_types'];
+                $caller->setType($elementname, PARAM_INT);
+                $caller->addFormRule(function($values, $files) use ($elementname, $acceptedtypes) {
+                    if ($error = MoodleQuickForm_filemanager::validate_accepted_types($values[$elementname], $acceptedtypes)) {
+                        return [$elementname => $error];
+                    }
+                    return true;
+                });
                 break;
         }
-        return parent::onQuickFormEvent($event, $arg, $caller);
+        return true;
     }
 
     /**
@@ -313,12 +322,13 @@ class MoodleQuickForm_filemanager extends HTML_QuickForm_element implements temp
      * Check that all files have the allowed type.
      *
      * @param array $value Draft item id with the uploaded files.
+     * @param array $acceptedtypes
      * @return string|null Validation error message or null.
      */
-    public function validateSubmitValue($value) {
+    public static function validate_accepted_types($value, $acceptedtypes) {
 
         $filetypesutil = new \core_form\filetypes_util();
-        $whitelist = $filetypesutil->normalize_file_types($this->_options['accepted_types']);
+        $whitelist = $filetypesutil->normalize_file_types($acceptedtypes);
 
         if (empty($whitelist) || $whitelist === ['*']) {
             // Any file type is allowed, nothing to check here.
