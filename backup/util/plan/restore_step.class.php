@@ -68,9 +68,15 @@ abstract class restore_step extends base_step {
         }
         // No cache, let's calculate the offset.
         $original = $this->task->get_info()->original_course_startdate;
-        $setting = 0;
-        if ($this->setting_exists('course_startdate')) { // Seting may not exist (MDL-25019).
+
+        if ((!$this->setting_exists('overwrite_conf') || $this->get_setting_value('overwrite_conf')) &&
+                $this->setting_exists('course_startdate')) {
+            // Course configuration is overwritten and there is a setting for new course start date. Take the value from it.
             $setting  = $this->get_setting_value('course_startdate');
+        } else {
+            // Course configuration was not overwritten or setting for new course start date not found. Take existing course start date.
+            $course = get_course($this->get_courseid());
+            $setting = $course->startdate;
         }
 
         if (empty($original) || empty($setting)) {
