@@ -36,58 +36,6 @@ require_once($CFG->dirroot . "/" . $CFG->admin . "/registration/lib.php");
 require_once($CFG->dirroot . "/course/publish/lib.php");
 
 /*
- * Hub selector to choose on which hub we want to publish.
- */
-
-class hub_publish_selector_form extends moodleform {
-
-    public function definition() {
-        global $CFG;
-        $mform = & $this->_form;
-        $share = $this->_customdata['share'];
-
-        $mform->addElement('header', 'site', get_string('selecthub', 'hub'));
-
-        $mform->addElement('static', 'info', '', get_string('selecthubinfo', 'hub') . html_writer::empty_tag('br'));
-
-        $registrationmanager = new registration_manager();
-        $registeredhubs = $registrationmanager->get_registered_on_hubs();
-
-        //Public hub list
-        $options = array();
-        foreach ($registeredhubs as $hub) {
-
-            $hubname = $hub->hubname;
-            $mform->addElement('hidden', clean_param($hub->huburl, PARAM_ALPHANUMEXT), $hubname);
-            $mform->setType(clean_param($hub->huburl, PARAM_ALPHANUMEXT), PARAM_ALPHANUMEXT);
-            if (empty($hubname)) {
-                $hubname = $hub->huburl;
-            }
-            $mform->addElement('radio', 'huburl', null, ' ' . $hubname, $hub->huburl);
-            if ($hub->huburl == HUB_MOODLEORGHUBURL) {
-                $mform->setDefault('huburl', $hub->huburl);
-            }
-        }
-
-        $mform->addElement('hidden', 'id', $this->_customdata['id']);
-        $mform->setType('id', PARAM_INT);
-
-        if ($share) {
-            $buttonlabel = get_string('shareonhub', 'hub');
-            $mform->addElement('hidden', 'share', true);
-            $mform->setType('share', PARAM_BOOL);
-        } else {
-            $buttonlabel = get_string('advertiseonhub', 'hub');
-            $mform->addElement('hidden', 'advertise', true);
-            $mform->setType('advertise', PARAM_BOOL);
-        }
-
-        $this->add_action_buttons(false, $buttonlabel);
-    }
-
-}
-
-/*
  * Course publication form
  */
 
@@ -98,23 +46,15 @@ class course_publication_form extends moodleform {
 
         $strrequired = get_string('required');
         $mform = & $this->_form;
-        $huburl = $this->_customdata['huburl'];
-        $hubname = $this->_customdata['hubname'];
         $course = $this->_customdata['course'];
         $advertise = $this->_customdata['advertise'];
         $share = $this->_customdata['share'];
         $page = $this->_customdata['page'];
         $site = get_site();
 
-        //hidden parameters
-        $mform->addElement('hidden', 'huburl', $huburl);
-        $mform->setType('huburl', PARAM_URL);
-        $mform->addElement('hidden', 'hubname', $hubname);
-        $mform->setType('hubname', PARAM_TEXT);
-
         //check on the hub if the course has already been published
         $registrationmanager = new registration_manager();
-        $registeredhub = $registrationmanager->get_registeredhub($huburl);
+        $registeredhub = $registrationmanager->get_registeredhub();
         $publicationmanager = new course_publish_manager();
         $publications = $publicationmanager->get_publications($registeredhub->huburl, $course->id, $advertise);
 
@@ -128,7 +68,7 @@ class course_publication_form extends moodleform {
             $options->allsitecourses = 1;
             $params = array('search' => '', 'downloadable' => $share,
                 'enrollable' => !$share, 'options' => $options);
-            $serverurl = $huburl . "/local/hub/webservice/webservices.php";
+            $serverurl = HUB_MOODLEORGHUBURL . "/local/hub/webservice/webservices.php";
             require_once($CFG->dirroot . "/webservice/xmlrpc/lib.php");
             $xmlrpcclient = new webservice_xmlrpc_client($serverurl, $registeredhub->token);
             try {
@@ -165,7 +105,7 @@ class course_publication_form extends moodleform {
                         'M.blocks_community.init_imagegallery',
                         array(array('imageids' => array($hubcourseid),
                                 'imagenumbers' => array($screenshotsnumber),
-                                'huburl' => $huburl)));
+                                'huburl' => HUB_MOODLEORGHUBURL)));
             }
         } else {
             $defaultfullname = $course->fullname;
@@ -209,7 +149,7 @@ class course_publication_form extends moodleform {
         $mform->setType('id', PARAM_INT);
 
         if ($share) {
-            $buttonlabel = get_string('shareon', 'hub', !empty($hubname) ? $hubname : $huburl);
+            $buttonlabel = get_string('shareon', 'hub', 'Moodle.net');
 
             $mform->addElement('hidden', 'share', $share);
             $mform->setType('share', PARAM_BOOL);
@@ -222,9 +162,9 @@ class course_publication_form extends moodleform {
 
         if ($advertise) {
             if (empty($publishedcourses)) {
-                $buttonlabel = get_string('advertiseon', 'hub', !empty($hubname) ? $hubname : $huburl);
+                $buttonlabel = get_string('advertiseon', 'hub', 'Moodle.net');
             } else {
-                $buttonlabel = get_string('readvertiseon', 'hub', !empty($hubname) ? $hubname : $huburl);
+                $buttonlabel = get_string('readvertiseon', 'hub', 'Moodle.net');
             }
             $mform->addElement('hidden', 'advertise', $advertise);
             $mform->setType('advertise', PARAM_BOOL);
@@ -342,7 +282,7 @@ class course_publication_form extends moodleform {
             if (!empty($screenshotsnumber)) {
 
                 if (!empty($privacy)) {
-                    $baseurl = new moodle_url($huburl . '/local/hub/webservice/download.php',
+                    $baseurl = new moodle_url(HUB_MOODLEORGHUBURL . '/local/hub/webservice/download.php',
                                     array('courseid' => $hubcourseid, 'filetype' => HUB_SCREENSHOT_FILE_TYPE));
                     $screenshothtml = html_writer::empty_tag('img',
                                     array('src' => $baseurl, 'alt' => $defaultfullname));

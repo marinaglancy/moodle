@@ -200,9 +200,9 @@ class course_publish_manager {
         $sql = 'SELECT cp.id, cp.status, cp.timechecked, cp.timepublished, rh.hubname,
                        rh.huburl, cp.courseid, cp.enrollable, cp.hubcourseid
                 FROM {course_published} cp, {registration_hubs} rh
-                WHERE cp.huburl = rh.huburl and cp.courseid = :courseid
+                WHERE cp.huburl = rh.huburl and cp.courseid = :courseid and rh.huburl = :huburl
                 ORDER BY cp.enrollable DESC, rh.hubname, cp.timepublished';
-        $params = array('courseid' => $courseid);
+        $params = array('courseid' => $courseid, 'huburl' => HUB_MOODLEORGHUBURL);
         return $DB->get_records_sql($sql, $params);
     }
 

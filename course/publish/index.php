@@ -31,8 +31,6 @@ require_once($CFG->dirroot . '/' . $CFG->admin . '/registration/lib.php');
 require_once($CFG->dirroot . '/course/publish/lib.php');
 
 $id = required_param('id', PARAM_INT);
-$hubname = optional_param('hubname', 0, PARAM_TEXT);
-$huburl = optional_param('huburl', 0, PARAM_URL);
 
 $course = $DB->get_record('course', array('id'=>$id), '*', MUST_EXIST);
 
@@ -66,14 +64,14 @@ if (has_capability('moodle/course:publish', context_course::instance($id))) {
     if (!empty($updatestatusid) and confirm_sesskey()) {
         //get the communication token from the publication
         $hub = $publicationmanager->get_registeredhub_by_publication($updatestatusid);
-        if (empty($hub)) {
+        if (empty($hub) || $hub->huburl !== HUB_MOODLEORGHUBURL) {
             $confirmmessage = $OUTPUT->notification(get_string('nocheckstatusfromunreghub', 'hub'));
         } else {
             //get all site courses registered on this hub
             $function = 'hub_get_courses';
             $params = array('search' => '', 'downloadable' => 1,
                 'enrollable' => 1, 'options' => array( 'allsitecourses' => 1));
-            $serverurl = $hub->huburl."/local/hub/webservice/webservices.php";
+            $serverurl = HUB_MOODLEORGHUBURL."/local/hub/webservice/webservices.php";
             require_once($CFG->dirroot."/webservice/xmlrpc/lib.php");
             $xmlrpcclient = new webservice_xmlrpc_client($serverurl, $hub->token);
             $result = $xmlrpcclient->call($function, $params);
@@ -100,8 +98,8 @@ if (has_capability('moodle/course:publish', context_course::instance($id))) {
 
     //if the site os registered on no hub display an error page
     $registrationmanager = new registration_manager();
-    $registeredhubs = $registrationmanager->get_registered_on_hubs();
-    if (empty($registeredhubs)) {
+    $registeredhub = $registrationmanager->get_registeredhub();
+    if (!$registeredhub) {
         echo $OUTPUT->header();
         echo $OUTPUT->heading(get_string('publishon', 'hub'), 3, 'main');
         echo $OUTPUT->box(get_string('notregisteredonhub', 'hub'));
@@ -121,20 +119,16 @@ if (has_capability('moodle/course:publish', context_course::instance($id))) {
         $publication = new stdClass();
         $publication->courseshortname = $course->shortname;
         $publication->courseid = $course->id;
-        $publication->hubname = $hubname;
-        $publication->huburl = $huburl;
+        $publication->hubname = 'Moodle.net';
+        $publication->huburl = HUB_MOODLEORGHUBURL;
         $publication->hubcourseid = $hubcourseid;
         $publication->timepublished = $timepublished;
-        if (empty($publication->hubname)) {
-             $publication->hubname = $huburl;
-        }
         $publication->id = $publicationid;
         if($confirm) {
             //unpublish the publication by web service
-            $registeredhub = $registrationmanager->get_registeredhub($huburl);
             $function = 'hub_unregister_courses';
             $params = array('courseids' => array( $publication->hubcourseid));
-            $serverurl = $huburl."/local/hub/webservice/webservices.php";
+            $serverurl = HUB_MOODLEORGHUBURL."/local/hub/webservice/webservices.php";
             require_once($CFG->dirroot."/webservice/xmlrpc/lib.php");
             $xmlrpcclient = new webservice_xmlrpc_client($serverurl, $registeredhub->token);
             $result = $xmlrpcclient->call($function, $params);
@@ -159,7 +153,7 @@ if (has_capability('moodle/course:publish', context_course::instance($id))) {
     //check if a course was published
     if (optional_param('published', 0, PARAM_TEXT)) {
         $confirmmessage = $OUTPUT->notification(get_string('coursepublished', 'hub',
-                empty($hubname)?$huburl:$hubname), 'notifysuccess');
+                'Moodle.net'), 'notifysuccess');
     }
 
 

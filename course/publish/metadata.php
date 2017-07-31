@@ -65,27 +65,23 @@ if (!extension_loaded('xmlrpc')) {
 if (has_capability('moodle/course:publish', context_course::instance($id))) {
 
     //retrieve hub name and hub url
-    $huburl = optional_param('huburl', '', PARAM_URL);
-    $hubname = optional_param('hubname', '', PARAM_TEXT);
-    if (empty($huburl) or !confirm_sesskey()) {
-        throw new moodle_exception('missingparameter');
-    }
+    require_sesskey();
 
     //set the publication form
     $advertise = optional_param('advertise', false, PARAM_BOOL);
     $share = optional_param('share', false, PARAM_BOOL);
     $coursepublicationform = new course_publication_form('',
-                    array('huburl' => $huburl, 'hubname' => $hubname, 'sesskey' => sesskey(),
+                    array('sesskey' => sesskey(),
                         'course' => $course, 'advertise' => $advertise, 'share' => $share,
                         'id' => $id, 'page' => $PAGE));
     $fromform = $coursepublicationform->get_data();
 
     //retrieve the token to call the hub
     $registrationmanager = new registration_manager();
-    $registeredhub = $registrationmanager->get_registeredhub($huburl);
+    $registeredhub = $registrationmanager->get_registeredhub();
 
     //setup web service xml-rpc client
-    $serverurl = $huburl . "/local/hub/webservice/webservices.php";
+    $serverurl = HUB_MOODLEORGHUBURL . "/local/hub/webservice/webservices.php";
     require_once($CFG->dirroot . "/webservice/xmlrpc/lib.php");
     $xmlrpcclient = new webservice_xmlrpc_client($serverurl, $registeredhub->token);
 
@@ -200,10 +196,10 @@ if (has_capability('moodle/course:publish', context_course::instance($id))) {
         }
 
         //save the record into the published course table
-        $publication = $publicationmanager->get_publication($courseids[0], $huburl);
+        $publication = $publicationmanager->get_publication($courseids[0], HUB_MOODLEORGHUBURL);
         if (empty($publication)) {
             //if never been published or if we share, we need to save this new publication record
-            $publicationmanager->add_course_publication($registeredhub->huburl, $course->id, !$share, $courseids[0]);
+            $publicationmanager->add_course_publication(HUB_MOODLEORGHUBURL, $course->id, !$share, $courseids[0]);
         } else {
             //if we update the enrollable course publication we update the publication record
             $publicationmanager->update_enrollable_course_publication($publication->id);
@@ -230,29 +226,27 @@ if (has_capability('moodle/course:publish', context_course::instance($id))) {
                     $params['filename'] = $file->get_filename();
                     $params['screenshotnumber'] = $screenshotnumber;
                     $params['token'] = $registeredhub->token;
-                    $curl->post($huburl . "/local/hub/webservice/upload.php", $params);
+                    $curl->post(HUB_MOODLEORGHUBURL . "/local/hub/webservice/upload.php", $params);
                 }
             }
         }
 
         //redirect to the backup process page
         if ($share) {
-            $params = array('sesskey' => sesskey(), 'id' => $id, 'hubcourseid' => $courseids[0],
-                'huburl' => $huburl, 'hubname' => $hubname);
+            $params = array('sesskey' => sesskey(), 'id' => $id, 'hubcourseid' => $courseids[0]);
             $backupprocessurl = new moodle_url("/course/publish/backup.php", $params);
             redirect($backupprocessurl);
         } else {
             //redirect to the index publis page
             redirect(new moodle_url('/course/publish/index.php',
-                            array('sesskey' => sesskey(), 'id' => $id, 'published' => true,
-                                'hubname' => $hubname, 'huburl' => $huburl)));
+                            array('sesskey' => sesskey(), 'id' => $id, 'published' => true)));
         }
     }
 
     /////// OUTPUT SECTION /////////////
 
     echo $OUTPUT->header();
-    echo $OUTPUT->heading(get_string('publishcourseon', 'hub', !empty($hubname) ? $hubname : $huburl), 3, 'main');
+    echo $OUTPUT->heading(get_string('publishcourseon', 'hub', 'Moodle.net'), 3, 'main');
 
     //display hub information (logo, name, description)
     $function = 'hub_get_info';

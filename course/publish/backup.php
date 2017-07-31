@@ -43,8 +43,6 @@ require_once($CFG->libdir . '/filelib.php');
 //retrieve initial page parameters
 $id = required_param('id', PARAM_INT);
 $hubcourseid = required_param('hubcourseid', PARAM_INT);
-$huburl = required_param('huburl', PARAM_URL);
-$hubname = optional_param('hubname', '', PARAM_TEXT);
 
 //some permissions and parameters checking
 $course = $DB->get_record('course', array('id'=>$id), '*', MUST_EXIST);
@@ -67,7 +65,7 @@ if (!($bc = backup_ui::load_controller($backupid))) {
                     backup::INTERACTIVE_YES, backup::MODE_HUB, $USER->id);
 }
 $backup = new backup_ui($bc,
-        array('id' => $id, 'hubcourseid' => $hubcourseid, 'huburl' => $huburl, 'hubname' => $hubname));
+        array('id' => $id, 'hubcourseid' => $hubcourseid, 'huburl' => HUB_MOODLEORGHUBURL, 'hubname' => 'Moodle.net'));
 $backup->process();
 if ($backup->get_stage() == backup_ui::STAGE_FINAL) {
     $backup->execute();
@@ -78,7 +76,7 @@ if ($backup->get_stage() == backup_ui::STAGE_FINAL) {
 if ($backup->get_stage() !== backup_ui::STAGE_COMPLETE) {
     $renderer = $PAGE->get_renderer('core', 'backup');
     echo $OUTPUT->header();
-    echo $OUTPUT->heading(get_string('publishcourseon', 'hub', !empty($hubname)?$hubname:$huburl), 3, 'main');
+    echo $OUTPUT->heading(get_string('publishcourseon', 'hub', 'Moodle.net'), 3, 'main');
     if ($backup->enforce_changed_dependencies()) {
         debugging('Your settings have been altered due to unmet dependencies', DEBUG_DEVELOPER);
     }
@@ -95,7 +93,7 @@ $backupfile = $backupfile['backup_destination'];
 
 //retrieve the token to call the hub
 $registrationmanager = new registration_manager();
-$registeredhub = $registrationmanager->get_registeredhub($huburl);
+$registeredhub = $registrationmanager->get_registeredhub();
 
 //display the sending file page
 echo $OUTPUT->header();
@@ -114,13 +112,13 @@ $params['filetype'] = HUB_BACKUP_FILE_TYPE;
 $params['courseid'] = $hubcourseid;
 $params['file'] = $backupfile;
 $params['token'] = $registeredhub->token;
-$curl->post($huburl . "/local/hub/webservice/upload.php", $params);
+$curl->post(HUB_MOODLEORGHUBURL . "/local/hub/webservice/upload.php", $params);
 
 //delete the temp backup file from user_tohub aera
 $backupfile->delete();
 $bc->destroy();
 
 //Output sending success
-echo $renderer->sentbackupinfo($id, $huburl, $hubname);
+echo $renderer->sentbackupinfo($id, HUB_MOODLEORGHUBURL, 'Moodle.net');
 
 echo $OUTPUT->footer();

@@ -36,7 +36,7 @@ class core_publish_renderer extends plugin_renderer_base {
     public function publicationselector($courseid) {
         $text = '';
 
-        $advertiseurl = new moodle_url("/course/publish/hubselector.php",
+        $advertiseurl = new moodle_url("/course/publish/metadata.php",
                         array('sesskey' => sesskey(), 'id' => $courseid, 'advertise' => true));
         $advertisebutton = new single_button($advertiseurl, get_string('advertise', 'hub'));
         $text .= $this->output->render($advertisebutton);
@@ -45,7 +45,7 @@ class core_publish_renderer extends plugin_renderer_base {
 
         $text .= html_writer::empty_tag('br');  /// TODO Delete
 
-        $uploadurl = new moodle_url("/course/publish/hubselector.php",
+        $uploadurl = new moodle_url("/course/publish/metadata.php",
                         array('sesskey' => sesskey(), 'id' => $courseid, 'share' => true));
         $uploadbutton = new single_button($uploadurl, get_string('share', 'hub'));
         $text .= $this->output->render($uploadbutton);
@@ -61,19 +61,16 @@ class core_publish_renderer extends plugin_renderer_base {
     public function registeredonhublisting($courseid, $publications) {
         global $CFG;
         $table = new html_table();
-        $table->head = array(get_string('type', 'hub'), get_string('hub', 'hub'),
+        $table->head = array(get_string('type', 'hub'),
             get_string('date'), get_string('status', 'hub'), get_string('operation', 'hub'));
-        $table->size = array('10%', '40%', '20%', '%10', '%15');
+        $table->size = array('20%', '30%', '%20', '%25');
 
         $brtag = html_writer::empty_tag('br');
 
         foreach ($publications as $publication) {
 
-            $updatebuttonhtml = '';
-
             $params = array('sesskey' => sesskey(), 'id' => $publication->courseid,
                 'hubcourseid' => $publication->hubcourseid,
-                'huburl' => $publication->huburl, 'hubname' => $publication->hubname,
                 'cancel' => true, 'publicationid' => $publication->id,
                 'timepublished' => $publication->timepublished);
             $cancelurl = new moodle_url("/course/publish/index.php", $params);
@@ -83,7 +80,6 @@ class core_publish_renderer extends plugin_renderer_base {
 
             if ($publication->enrollable) {
                 $params = array('sesskey' => sesskey(), 'id' => $publication->courseid,
-                    'huburl' => $publication->huburl, 'hubname' => $publication->hubname,
                     'share' => !$publication->enrollable, 'advertise' => $publication->enrollable);
                 $updateurl = new moodle_url("/course/publish/metadata.php", $params);
                 $updatebutton = new single_button($updateurl, get_string('update', 'hub'));
@@ -95,9 +91,6 @@ class core_publish_renderer extends plugin_renderer_base {
                 $operations = $cancelbuttonhtml;
             }
 
-            $hubname = html_writer::tag('a',
-                            $publication->hubname ? $publication->hubname : $publication->huburl,
-                            array('href' => $publication->huburl));
             //if the publication check time if bigger than May 2010, it has been checked
             if ($publication->timechecked > 1273127954) {
                 if ($publication->status == 0) {
@@ -122,7 +115,7 @@ class core_publish_renderer extends plugin_renderer_base {
             //add button cells
             $cells = array($publication->enrollable ?
                         get_string('advertised', 'hub') : get_string('shared', 'hub'),
-                $hubname, userdate($publication->timepublished,
+                        userdate($publication->timepublished,
                         get_string('strftimedatetimeshort')), $status, $operations);
             $row = new html_table_row($cells);
             $table->data[] = $row;
@@ -145,11 +138,10 @@ class core_publish_renderer extends plugin_renderer_base {
     public function confirmunpublishing($publication) {
         $optionsyes = array('sesskey' => sesskey(), 'id' => $publication->courseid,
             'hubcourseid' => $publication->hubcourseid,
-            'huburl' => $publication->huburl, 'hubname' => $publication->hubname,
             'cancel' => true, 'publicationid' => $publication->id, 'confirm' => true);
         $optionsno = array('sesskey' => sesskey(), 'id' => $publication->courseid);
-        $publication->hubname = html_writer::tag('a', $publication->hubname,
-                        array('href' => $publication->huburl));
+        $publication->hubname = html_writer::tag('a', 'Moodle.net',
+                        array('href' => HUB_MOODLEORGHUBURL));
         $formcontinue = new single_button(new moodle_url("/course/publish/index.php",
                                 $optionsyes), get_string('unpublish', 'hub'), 'post');
         $formcancel = new single_button(new moodle_url("/course/publish/index.php",
@@ -174,16 +166,14 @@ class core_publish_renderer extends plugin_renderer_base {
     /**
      * Display upload successfull message and a button to the publish index page
      * @param int $id the course id
-     * @param string $huburl the hub url where the course is published
-     * @param string $hubname the hub name where the course is published
      * @return $html string
      */
-    public function sentbackupinfo($id, $huburl, $hubname) {
+    public function sentbackupinfo($id) {
         $html = html_writer::tag('div', get_string('sent', 'hub'),
                         array('class' => 'courseuploadtextinfo'));
         $publishindexurl = new moodle_url('/course/publish/index.php',
                         array('sesskey' => sesskey(), 'id' => $id,
-                            'published' => true, 'huburl' => $huburl, 'hubname' => $hubname));
+                            'published' => true));
         $continue = $this->output->render(
                         new single_button($publishindexurl, get_string('continue', 'hub')));
         $html .= html_writer::tag('div', $continue, array('class' => 'sharecoursecontinue'));
