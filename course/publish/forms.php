@@ -68,11 +68,8 @@ class course_publication_form extends moodleform {
             $options->allsitecourses = 1;
             $params = array('search' => '', 'downloadable' => $share,
                 'enrollable' => !$share, 'options' => $options);
-            $serverurl = HUB_MOODLEORGHUBURL . "/local/hub/webservice/webservices.php";
-            require_once($CFG->dirroot . "/webservice/xmlrpc/lib.php");
-            $xmlrpcclient = new webservice_xmlrpc_client($serverurl, $registeredhub->token);
             try {
-                $result = $xmlrpcclient->call($function, $params);
+                $result = $registrationmanager->call_moodlenet_webservice($function, $params);
                 $publishedcourses = $result['courses'];
             } catch (Exception $e) {
                 $error = $OUTPUT->notification(get_string('errorcourseinfo', 'hub', $e->getMessage()));

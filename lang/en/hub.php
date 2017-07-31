@@ -106,6 +106,7 @@ $string['forceunregisterconfirmation'] = 'Your site cannot reach {$a}. This hub 
 $string['geolocation'] = 'Geolocation';
 $string['geolocation_help'] = 'In future we may provide location-based searching. If you want to specify the location for your course use a latitude/longitude value here (eg: -31.947884,115.871285).  One way to find this is to use Google Maps.';
 $string['hub'] = 'Hub';
+$string['hubwserror'] = '{$a}';
 $string['imageurl'] = 'Image URL';
 $string['imageurl_help'] = 'This image will be displayed on the hub. This image must be available from the hub at any moment. The image should have a maximum size of {$a->width} X {$a->height}';
 $string['information'] = 'Information';

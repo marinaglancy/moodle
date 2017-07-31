@@ -68,29 +68,58 @@ class registration_manager {
     }
 
     /**
-     * @param stdClass $hub
-     * @throws Exception when WS call was not successful
+     * @param $function
+     * @param $params
+     * @return mixed
+     * @throws moodle_exception
      */
-    public function update_registration($hub) {
-        global $CFG, $DB;
-        require_once($CFG->dirroot . '/webservice/lib.php');
-        require_once($CFG->dirroot . "/webservice/xmlrpc/lib.php");
+    public function call_moodlenet_webservice($function, $params, $allowpublic = false) {
+        global $CFG;
 
-        if ($hub->huburl !== HUB_MOODLEORGHUBURL) {
-            return;
+        if (!$hub = $this->get_registeredhub()) {
+            if ($allowpublic) {
+                $token = 'publichub';
+            } else if (has_capability('moodle/site:config', context_system::instance())) {
+                throw new moodle_exception('registrationwarning', 'admin', new moodle_url('/admin/registration/index.php'));
+            } else {
+                throw new moodle_exception('registrationwarningcontactadmin', 'admin');
+            }
+        } else {
+            $token = $hub->token;
         }
 
         if (!extension_loaded('xmlrpc')) {
             throw new moodle_exception('errorcronnoxmlrpc', 'hub');
         }
 
+        require_once($CFG->dirroot . '/webservice/lib.php');
+        require_once($CFG->dirroot . "/webservice/xmlrpc/lib.php");
+
+        $serverurl = HUB_MOODLEORGHUBURL . "/local/hub/webservice/webservices.php";
+        try {
+            $xmlrpcclient = new webservice_xmlrpc_client($serverurl, $token);
+            return $xmlrpcclient->call($function, $params);
+        } catch (Exception $e) {
+            // Function webservice_xmlrpc_client::call() can throw exception, wrap it into moodle_exception.
+            throw new moodle_exception('hubwserror', 'hub', '', $e->getMessage());
+        }
+    }
+
+    /**
+     * @param stdClass $hub
+     * @throws Exception when WS call was not successful
+     */
+    public function update_registration($hub) {
+        global $CFG, $DB;
+
+        if ($hub->huburl !== HUB_MOODLEORGHUBURL) {
+            return;
+        }
+
         $function = 'hub_update_site_info';
         $siteinfo = $this->get_site_info();
         $params = array('siteinfo' => $siteinfo);
-        $serverurl = HUB_MOODLEORGHUBURL . "/local/hub/webservice/webservices.php";
-        require_once($CFG->dirroot . "/webservice/xmlrpc/lib.php");
-        $xmlrpcclient = new webservice_xmlrpc_client($serverurl, $hub->token);
-        $xmlrpcclient->call($function, $params);
+        $this->call_moodlenet_webservice($function, $params);
         $DB->update_record('registration_hubs', ['id' => $hub->id, 'timemodified' => time()]);
 
         return;
@@ -103,8 +132,8 @@ class registration_manager {
         $hubname = 'Moodle.net';
         $hub = $DB->get_record('registration_hubs', ['huburl' => $huburl]);
         if (!empty($hub->confirmed)) {
-            // TODO error?
-            return $this->update_registration($hub);
+            // Caller of this method must make sure that site is not registered.
+            throw new coding_exception('Site already registered');
         }
 
         if (empty($hub)) {
@@ -127,19 +156,11 @@ class registration_manager {
 
     public function unregister($unpublishalladvertisedcourses, $unpublishalluploadedcourses) {
         global $CFG, $DB;
-        require_once($CFG->dirroot . '/webservice/lib.php');
-        require_once($CFG->dirroot . "/webservice/xmlrpc/lib.php");
         require_once($CFG->dirroot . '/course/publish/lib.php');
 
         $huburl = HUB_MOODLEORGHUBURL;
         if (!$hub = $this->get_registeredhub($huburl)) {
             return true;
-        }
-
-        if (!extension_loaded('xmlrpc')) {
-            core\notification::add(get_string('unregistrationerror', 'hub', get_string('errorcronnoxmlrpc', 'hub')),
-                core\output\notification::NOTIFY_ERROR);
-            return false;
         }
 
         $publicationmanager = new course_publish_manager();
@@ -169,12 +190,11 @@ class registration_manager {
 
             //unpublish the courses by web service
             if (!empty($hubcourseids)) {
+
                 $function = 'hub_unregister_courses';
                 $params = array('courseids' => $hubcourseids);
-                $serverurl = $huburl . "/local/hub/webservice/webservices.php";
-                $xmlrpcclient = new webservice_xmlrpc_client($serverurl, $hub->token);
                 try {
-                    $result = $xmlrpcclient->call($function, $params);
+                    $this->call_moodlenet_webservice($function, $params);
                     //delete the published courses
                     if (!empty($enrollablecourses)) {
                         $publicationmanager->delete_hub_publications($huburl, 1);
@@ -182,7 +202,7 @@ class registration_manager {
                     if (!empty($downloadablecourses)) {
                         $publicationmanager->delete_hub_publications($huburl, 0);
                     }
-                } catch (Exception $e) {
+                } catch (moodle_exception $e) {
                     $errormessage = $e->getMessage();
                     $errormessage .= html_writer::empty_tag('br') .
                         get_string('errorunpublishcourses', 'hub');
@@ -195,13 +215,9 @@ class registration_manager {
 
 
         //course unpublish went ok, unregister the site now
-            $function = 'hub_unregister_site';
-            $params = array();
-            $serverurl = $huburl . "/local/hub/webservice/webservices.php";
-            $xmlrpcclient = new webservice_xmlrpc_client($serverurl, $hub->token);
             try {
-                $xmlrpcclient->call($function, $params);
-            } catch (Exception $e) {
+                $this->call_moodlenet_webservice('hub_unregister_site', array());
+            } catch (moodle_exception $e) {
                 core\notification::add(get_string('unregistrationerror', 'hub', $e->getMessage()),
                     core\output\notification::NOTIFY_ERROR);
                 return false;

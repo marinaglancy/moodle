@@ -179,24 +179,15 @@ if (optional_param('executesearch', 0, PARAM_INT) and confirm_sesskey()) {
     //the range of course requested
     $options->givememore = optional_param('givememore', 0, PARAM_INT);
 
-    //check if the selected hub is from the registered list (in this case we use the private token)
-    $token = 'publichub';
     $registrationmanager = new registration_manager();
-    if ($registeredhub = $registrationmanager->get_registeredhub()) {
-        $token = $registeredhub->token;
-    }
-
     $function = 'hub_get_courses';
     $params = array('search' => $search, 'downloadable' => $downloadable,
         'enrollable' => intval(!$downloadable), 'options' => $options);
-    $serverurl = HUB_MOODLEORGHUBURL . "/local/hub/webservice/webservices.php";
-    require_once($CFG->dirroot . "/webservice/xmlrpc/lib.php");
-    $xmlrpcclient = new webservice_xmlrpc_client($serverurl, $token);
     try {
-        $result = $xmlrpcclient->call($function, array_values($params));
+        $result = $registrationmanager->call_moodlenet_webservice($function, $params, true);
         $courses = $result['courses'];
         $coursetotal = $result['coursetotal'];
-    } catch (Exception $e) {
+    } catch (moodle_exception $e) {
         $errormessage = $OUTPUT->notification(
                         get_string('errorcourselisting', 'block_community', $e->getMessage()));
     }

@@ -54,6 +54,8 @@ if (!extension_loaded('xmlrpc')) {
     die();
 }
 
+$registrationmanager = new registration_manager();
+
 if (has_capability('moodle/course:publish', context_course::instance($id))) {
 
     $publicationmanager = new course_publish_manager();
@@ -71,10 +73,7 @@ if (has_capability('moodle/course:publish', context_course::instance($id))) {
             $function = 'hub_get_courses';
             $params = array('search' => '', 'downloadable' => 1,
                 'enrollable' => 1, 'options' => array( 'allsitecourses' => 1));
-            $serverurl = HUB_MOODLEORGHUBURL."/local/hub/webservice/webservices.php";
-            require_once($CFG->dirroot."/webservice/xmlrpc/lib.php");
-            $xmlrpcclient = new webservice_xmlrpc_client($serverurl, $hub->token);
-            $result = $xmlrpcclient->call($function, $params);
+            $result = $registrationmanager->call_moodlenet_webservice($function, $params);
             $sitecourses = $result['courses'];
 
             //update status for all these course
@@ -97,7 +96,6 @@ if (has_capability('moodle/course:publish', context_course::instance($id))) {
     }
 
     //if the site os registered on no hub display an error page
-    $registrationmanager = new registration_manager();
     $registeredhub = $registrationmanager->get_registeredhub();
     if (!$registeredhub) {
         echo $OUTPUT->header();
@@ -128,10 +126,7 @@ if (has_capability('moodle/course:publish', context_course::instance($id))) {
             //unpublish the publication by web service
             $function = 'hub_unregister_courses';
             $params = array('courseids' => array( $publication->hubcourseid));
-            $serverurl = HUB_MOODLEORGHUBURL."/local/hub/webservice/webservices.php";
-            require_once($CFG->dirroot."/webservice/xmlrpc/lib.php");
-            $xmlrpcclient = new webservice_xmlrpc_client($serverurl, $registeredhub->token);
-            $result = $xmlrpcclient->call($function, $params);
+            $result = $registrationmanager->call_moodlenet_webservice($function, $params);
 
             //delete the publication from the database
             $publicationmanager->delete_publication($publicationid);

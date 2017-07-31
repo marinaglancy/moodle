@@ -91,7 +91,6 @@ class block_community_manager {
 
         $filename = md5(time() . '-' . $course->id . '-'. $USER->id . '-'. random_string(20));
 
-        $url  = new moodle_url(HUB_MOODLEORGHUBURL.'/local/hub/webservice/download.php', $params);
         $path = $CFG->tempdir.'/backup/'.$filename.".mbz";
         $fp = fopen($path, 'w');
         $curlurl = HUB_MOODLEORGHUBURL.'/local/hub/webservice/download.php?filetype='

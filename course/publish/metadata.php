@@ -80,11 +80,6 @@ if (has_capability('moodle/course:publish', context_course::instance($id))) {
     $registrationmanager = new registration_manager();
     $registeredhub = $registrationmanager->get_registeredhub();
 
-    //setup web service xml-rpc client
-    $serverurl = HUB_MOODLEORGHUBURL . "/local/hub/webservice/webservices.php";
-    require_once($CFG->dirroot . "/webservice/xmlrpc/lib.php");
-    $xmlrpcclient = new webservice_xmlrpc_client($serverurl, $registeredhub->token);
-
     if (!empty($fromform)) {
 
         $publicationmanager = new course_publish_manager();
@@ -185,7 +180,7 @@ if (has_capability('moodle/course:publish', context_course::instance($id))) {
         $function = 'hub_register_courses';
         $params = array('courses' => array($courseinfo));
         try {
-            $courseids = $xmlrpcclient->call($function, $params);
+            $courseids = $registrationmanager->call_moodlenet_webservice($function, $params);
         } catch (Exception $e) {
             throw new moodle_exception('errorcoursepublish', 'hub',
                     new moodle_url('/course/view.php', array('id' => $id)), $e->getMessage());
@@ -252,7 +247,7 @@ if (has_capability('moodle/course:publish', context_course::instance($id))) {
     $function = 'hub_get_info';
     $params = array();
     try {
-        $hubinfo = $xmlrpcclient->call($function, $params);
+        $registrationmanager->call_moodlenet_webservice($function, $params);
     } catch (Exception $e) {
         //only print error log in apache (for backward compatibility)
         error_log(print_r($e->getMessage(), true));
