@@ -187,7 +187,6 @@ abstract class testing_module_generator extends component_generator_base {
         $defaults = array(
             'section' => 0,
             'visible' => 1,
-            'visibleoncoursepage' => 1,
             'cmidnumber' => '',
             'groupmode' => 0,
             'groupingid' => 0,
