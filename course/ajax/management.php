@@ -138,6 +138,9 @@ switch ($action) {
         break;
     case 'getsubcategorieshtml' :
         $categoryid = required_param('categoryid', PARAM_INT);
+        // Set page URL to the page that called this AJAX script, we need it to build return links.
+        $selectedcategoryid = optional_param('selectedcategory', null, PARAM_INT);
+        $PAGE->set_url(new moodle_url('/course/management.php', ['categoryid' => $selectedcategoryid]));
         /* @var core_course_management_renderer $renderer */
         $renderer = $PAGE->get_renderer('core_course', 'management');
         $outcome->html = html_writer::start_tag('ul',
