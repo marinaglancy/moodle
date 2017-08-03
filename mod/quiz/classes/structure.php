@@ -520,7 +520,8 @@ class structure {
 
         if (quiz_has_attempts($this->quizobj->get_quizid())) {
             $reviewlink = quiz_attempt_summary_link_to_reports($this->quizobj->get_quiz(),
-                    $this->quizobj->get_cm(), $this->quizobj->get_context());
+                    $this->quizobj->get_cm(), $this->quizobj->get_context(), false, 0,
+                    array('attempts' => 'all_with'));
             $warnings[] = get_string('cannoteditafterattempts', 'quiz', $reviewlink);
         }
 

@@ -1726,7 +1726,7 @@ function quiz_num_attempt_summary($quiz, $cm, $returnzero = false, $currentgroup
  * @return string HTML fragment for the link.
  */
 function quiz_attempt_summary_link_to_reports($quiz, $cm, $context, $returnzero = false,
-        $currentgroup = 0) {
+        $currentgroup = 0, $urlparams = []) {
     global $CFG;
     $summary = quiz_num_attempt_summary($quiz, $cm, $returnzero, $currentgroup);
     if (!$summary) {
@@ -1735,7 +1735,7 @@ function quiz_attempt_summary_link_to_reports($quiz, $cm, $context, $returnzero 
 
     require_once($CFG->dirroot . '/mod/quiz/report/reportlib.php');
     $url = new moodle_url('/mod/quiz/report.php', array(
-            'id' => $cm->id, 'mode' => quiz_report_default_report($context)));
+            'id' => $cm->id, 'mode' => quiz_report_default_report($context)) + $urlparams);
     return html_writer::link($url, $summary);
 }
 
