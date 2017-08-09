@@ -550,15 +550,7 @@ class feedback_item_pagebreak extends feedback_item_base {
      * @return action_menu_link[]
      */
     public function edit_actions($item, $feedback, $cm) {
-        $actions = array();
-        $strdelete = get_string('delete_pagebreak', 'feedback');
-        $actions['delete'] = new action_menu_link_secondary(
-            new moodle_url('/mod/feedback/edit.php', array('id' => $cm->id, 'deleteitem' => $item->id, 'sesskey' => sesskey())),
-            new pix_icon('t/delete', $strdelete, 'moodle', array('class' => 'iconsmall', 'title' => '')),
-            $strdelete,
-            array('class' => 'editing_delete', 'data-action' => 'delete')
-        );
-        return $actions;
+        return [];
     }
 
     /**

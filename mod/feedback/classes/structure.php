@@ -154,6 +154,23 @@ class mod_feedback_structure {
     }
 
     /**
+     * Finds and returns an item that is the next after an item with a given id
+     *
+     * @param int $id
+     * @return stdClass|null returns a record from feedback_item table or null if item with id=$id
+     *      is not found in this feedback or this is the last item
+     */
+    protected function get_next_item($id) {
+        $allitems = $this->get_items();
+        $keys = array_keys($allitems);
+        $position = array_search($id, $keys);
+        if ($position !== false && $position < count($keys) - 1) {
+            return $allitems[$keys[$position + 1]];
+        }
+        return null;
+    }
+
+    /**
      * Is the items list empty?
      * @return bool
      */
@@ -546,5 +563,122 @@ class mod_feedback_structure {
             }
         }
         return true;
+    }
+
+    /**
+     * Check that dependend item is before the current item and there is a page break between them
+     *
+     * @param stdClass $item
+     * @return bool
+     */
+    protected function get_dependency_error($item) {
+        if (!$item->dependitem) {
+            return null;
+        }
+        $allitems = $this->get_items();
+        $allitemsids = array_keys($allitems);
+        if (($positem = array_search($item->id, $allitemsids)) === false) {
+            // Current item is not found in the items list, this should never happen.
+            return null;
+        }
+        if (($posdepend = array_search($item->dependitem, $allitemsids)) === false) {
+            // Dependend item not found.
+            return get_string('dependencyerror_notfound', 'mod_feedback');
+        }
+        if ($posdepend >= $positem) {
+            return get_string('dependencyerror_after', 'mod_feedback');
+        }
+        // Check that dependitem is before item and there is a page break between them.
+        for ($i = $posdepend + 1; $i < $positem; $i++) {
+            if ($allitems[$allitemsids[$i]]->typ === 'pagebreak') {
+                return null;
+            }
+        }
+        return get_string('dependencyerror_nopagebreak', 'mod_feedback');
+    }
+
+    /**
+     * Prepares item dependencies for use in a template
+     *
+     * @param stdClass $item
+     * @return array
+     */
+    public function get_item_dependencies_for_template($item) {
+        $allitems = $this->get_items();
+        $rv = [];
+        if ($item->dependitem && array_key_exists($item->dependitem, $allitems)) {
+            $rv[] = (object)[
+                'dependencylabel' => format_string($allitems[$item->dependitem]->label),
+                'dependencyvalue' => $item->dependvalue,
+                'dependencyerror' => $this->get_dependency_error($item)
+            ];
+        }
+        return ['dependencies' => $rv];
+    }
+
+    /**
+     * Returns list of items to be used with template mod_feedback/edititems
+     *
+     * @return array
+     */
+    public function get_items_for_edit_template() {
+        global $OUTPUT;
+
+        $allitems = $this->get_items();
+        $includeitemnumber = $this->get_feedback()->autonumbering;
+
+        // Create a pseudo-item for the beginning of page 1.
+        $allitems = [0 => (object)['typ' => 'pagebreak']] + $allitems;
+
+        $templatedata = ['items' => []];
+        $page = 0;
+        foreach ($allitems as $id => $item) {
+            if ($item->typ === 'pagebreak') {
+                $page++;
+                $templatedata['items'][] = (object)[
+                    'itemid' => $id,
+                    'itemtype' => $item->typ,
+                    'shortname' => get_string('pagea', '', $page)
+                ];
+                continue;
+            }
+
+            $itemobj = feedback_get_item_class($item->typ);
+            $object = $itemobj->get_item_info($item);
+            unset($object->name); // We don't need it and it may be big, save network data and RAM.
+
+            // Add some info that is shown on edit screen.
+            $object->required = $item->required;
+            $object->itemnr = $includeitemnumber ? $item->itemnr : null;
+            $object->dependencies = $this->get_item_dependencies_for_template($item)['dependencies'];
+
+            // Add/remove page break links.
+            $nextitem = $this->get_next_item($item->id);
+            if (!$nextitem || $nextitem->typ !== 'pagebreak') {
+                $url = new moodle_url('/mod/feedback/edit_item.php', array('cmid' => $this->cm->id, 'typ' => 'pagebreak', 'after' => $item->id, 'sesskey' => sesskey()));
+                $object->addpagebreakurl = $url->out(false);
+            } else {
+                $url = new moodle_url('/mod/feedback/edit.php', array('id' => $this->cm->id, 'deleteitem' => $nextitem->id, 'sesskey' => sesskey()));
+                $object->removepagebreakurl = $url->out(false);
+            }
+
+            // Action menu.
+            $menu = new action_menu();
+            $menu->set_owner_selector('#feedback_item_' . $item->id);
+            $menu->set_constraint('.feedback_edit');
+            $menu->set_alignment(action_menu::TR, action_menu::BR);
+            $menu->set_menu_trigger(get_string('edit'));
+            $menu->prioritise = true;
+
+            $actions = $itemobj->edit_actions($item, $this->feedback, $this->cm);
+            foreach ($actions as $action) {
+                $menu->add($action);
+            }
+            $object->editmenu = $OUTPUT->render($menu);
+
+            $templatedata['items'][] = $object;
+        }
+
+        return $templatedata;
     }
 }

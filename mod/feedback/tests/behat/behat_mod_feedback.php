@@ -74,21 +74,15 @@ class behat_mod_feedback extends behat_base {
     }
 
     /**
-     * Adds a question to the existing feedback with filling the form.
+     * Adds a page break to the end of the feedback
      *
-     * The form for creating a question should be on one page.
+     * User has to be on the feedback edit page
      *
      * @When /^I add a page break to the feedback$/
      */
     public function i_add_a_page_break_to_the_feedback() {
-
-        $questiontype = $this->escape(get_string('add_pagebreak', 'feedback'));
-        $additem = $this->escape(get_string('add_item', 'feedback'));
-
-        $this->execute('behat_forms::i_select_from_the_singleselect', array($questiontype, $additem));
-
-        // Wait again, for page to reloaded.
-        $this->execute('behat_general::i_wait_to_be_redirected');
+        $this->execute("behat_general::i_click_on",
+            ["(//span[contains(@class, 'addremovepagebreak')])[last()]/a", "xpath_element"]);
     }
 
     /**

@@ -40,7 +40,7 @@ Feature: Exporting and importing feedbacks
       | Label            | multichoice1                |
       | Multiple choice type | Multiple choice - single answer |
       | Multiple choice values | option a\noption b\noption c  |
-    And I select "Add a page break" from the "Add question" singleselect
+    And I add a page break to the feedback
     And I add a "Multiple choice" question to the feedback with:
       | Question                       | this is a multiple choice 2        |
       | Label                          | multichoice2                       |

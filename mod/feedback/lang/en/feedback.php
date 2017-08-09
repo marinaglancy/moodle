@@ -68,6 +68,9 @@ $string['delete_old_items'] = 'Delete old items';
 $string['delete_pagebreak'] = 'Delete page break';
 $string['delete_template'] = 'Delete template';
 $string['delete_templates'] = 'Delete template...';
+$string['dependencyerror_notfound'] = 'Dependend question not found';
+$string['dependencyerror_after'] = 'Dependend question must be before the current question';
+$string['dependencyerror_nopagebreak'] = 'Dependend question must be on a different page from the current question';
 $string['depending'] = 'Dependencies';
 $string['depending_help'] = 'It is possible to show an item depending on the value of another item.<br />
 <strong>Here is an example.</strong><br />

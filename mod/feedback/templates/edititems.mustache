@@ -1,0 +1,99 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template mod_feedback/edititems
+
+    Displays one item for editing
+
+    Classes required for JS:
+    * feedback_dragarea
+    * feedback_itemlist
+
+    Data attributes required for JS:
+    * none
+
+    Context variables required for this template:
+    * none
+
+    Example context (json):
+    {
+        "items": [{
+                "itemid": 0,
+                "itemtype": "pagebreak",
+                "shortname": "Page 1"
+            }, {
+                "itemid": 1,
+                "itemnr": 1,
+                "itemtype": "multichoice",
+                "shortname": "First question with a label",
+                "label": "qlabel",
+                "haslabel": 1,
+                "required": 1,
+                "removepagebreakurl": "http://moodle.org"
+            }, {
+                "itemid": 2,
+                "itemtype": "pagebreak",
+                "shortname": "Page 2"
+            }, {
+                "itemid": 3,
+                "itemnr": 2,
+                "itemtype": "multichoice",
+                "shortname": "Second question without a label",
+                "dependencies": [{
+                        "dependencylabel": "qlabel",
+                        "dependencyvalue": "A"
+                    }
+                ],
+                "addpagebreakurl": "http://moodle.org"
+            }
+        ]
+    }
+
+}}
+
+<div id="feedback_dragarea">
+<ul class="unstyled unlist feedback_edit">
+
+{{#items}}
+<li class="feedback_itemlist feedback-item-{{itemtype}}" id="feedback_item_{{itemid}}">
+    <span>
+        {{>mod_feedback/itemshortname}}
+        {{#editmenu}}
+            <span class="itemactions">
+                {{{editmenu}}}
+            </span>
+        {{/editmenu}}
+    </span>
+    {{#addpagebreakurl}}
+        <div class="page_split_join_wrapper">
+            <span class="addremovepagebreak">
+                <a href="{{addpagebreakurl}}">{{#pix}} insert_page_break, mod_feedback, {{#str}}add_pagebreak, mod_feedback{{/str}} {{/pix}}</a>
+            </span>
+        </div>
+    {{/addpagebreakurl}}
+    {{#removepagebreakurl}}
+        <div class="page_split_join_wrapper">
+            <span class="addremovepagebreak">
+                <a href="{{removepagebreakurl}}">{{#pix}} remove_page_break, mod_feedback, {{#str}}delete_pagebreak, mod_feedback{{/str}} {{/pix}}</a>
+            </span>
+        </div>
+    {{/removepagebreakurl}}
+</li>
+{{/items}}
+
+</ul>
+</div>
