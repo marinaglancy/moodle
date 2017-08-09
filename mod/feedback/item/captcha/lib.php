@@ -84,28 +84,15 @@ class feedback_item_captcha extends feedback_item_base {
         return $DB->get_record('feedback_item', array('id'=>$this->item->id));
     }
 
-    public function get_printval($item, $value) {
-        return '';
-    }
-
-    public function print_analysed($item, $itemnr = '', $groupid = false, $courseid = false) {
-        return $itemnr;
-    }
-
-    public function excelprint_item(&$worksheet, $row_offset,
-                             $xls_formats, $item,
-                             $groupid, $courseid = false) {
-        return $row_offset;
-    }
-
     /**
      * Returns the formatted name of the item for the complete form or response view
      *
      * @param stdClass $item
      * @param bool $withpostfix
+     * @param bool $truncated
      * @return string
      */
-    public function get_display_name($item, $withpostfix = true) {
+    public function get_display_name($item, $withpostfix = true, $truncated = false) {
         return get_string('captcha', 'feedback');
     }
 

@@ -71,31 +71,8 @@ if (has_capability('mod/feedback:viewreports', $context) && $feedbackstructure->
 $summary = new mod_feedback\output\summary($feedbackstructure, $mygroupid);
 echo $OUTPUT->render_from_template('mod_feedback/summary', $summary->export_for_template($OUTPUT));
 
-// Get the items of the feedback.
-$items = $feedbackstructure->get_items(true);
-
-$check_anonymously = true;
-if ($mygroupid > 0 AND $feedback->anonymous == FEEDBACK_ANONYMOUS_YES) {
-    $completedcount = $feedbackstructure->count_completed_responses($mygroupid);
-    if ($completedcount < FEEDBACK_MIN_ANONYMOUS_COUNT_IN_GROUP) {
-        $check_anonymously = false;
-    }
-}
-
-echo '<div>';
-if ($check_anonymously) {
-    // Print the items in an analysed form.
-    foreach ($items as $item) {
-        $itemobj = feedback_get_item_class($item->typ);
-        $printnr = ($feedback->autonumbering && $item->itemnr) ? ($item->itemnr . '.') : '';
-        $itemobj->print_analysed($item, $printnr, $mygroupid);
-    }
-} else {
-    echo $OUTPUT->heading_with_help(get_string('insufficient_responses_for_this_group', 'feedback'),
-                                    'insufficient_responses',
-                                    'feedback', '', '', 3);
-}
-echo '</div>';
+// Print the items in an analysed form.
+echo $feedbackstructure->print_analysis($mygroupid);
 
 echo $OUTPUT->footer();
 

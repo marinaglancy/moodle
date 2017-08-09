@@ -112,55 +112,31 @@ class feedback_item_textarea extends feedback_item_base {
      * @param stdClass $item the db-object from feedback_item
      * @param int $groupid
      * @param int $courseid
+     * @param bool $forexport prepare for export or for display (for example: newlines should be converted to <br> for display but not for export)
      * @return stdClass
      */
-    protected function get_analysed($item, $groupid = false, $courseid = false) {
-        global $DB;
-
-        $analysed_val = new stdClass();
-        $analysed_val->data = array();
-        $analysed_val->name = $item->name;
+    public function get_analysis($item, $groupid = false, $courseid = false, $forexport = false) {
+        $analyseditem = parent::get_analysis($item, $groupid, $courseid, $forexport);
+        $analyseditem->individualdata = [];
 
         $values = feedback_get_group_values($item, $groupid, $courseid);
-        if ($values) {
-            $data = array();
-            foreach ($values as $value) {
-                $data[] = str_replace("\n", '<br />', $value->value);
-            }
-            $analysed_val->data = $data;
+        foreach ($values as $value) {
+            $analyseditem->individualdata[] = $this->get_display_value($item, $value->value, $forexport);
         }
-        return $analysed_val;
+        array_filter($analyseditem->individualdata, function($el) {
+            strval($el) !== '';
+        });
+        $analyseditem->hasdata = !empty($analyseditem->individualdata);
+        return $analyseditem;
     }
 
-    public function get_printval($item, $value) {
-
-        if (!isset($value->value)) {
-            return '';
-        }
-
-        return $value->value;
-    }
-
-    public function print_analysed($item, $itemnr = '', $groupid = false, $courseid = false) {
-        $values = feedback_get_group_values($item, $groupid, $courseid);
-        if ($values) {
-            echo "<table class=\"analysis itemtype_{$item->typ}\">";
-            echo '<tr><th colspan="2" align="left">';
-            echo $itemnr . ' ';
-            if (strval($item->label) !== '') {
-                echo '('. format_string($item->label).') ';
-            }
-            echo $this->get_display_name($item);
-            echo '</th></tr>';
-            foreach ($values as $value) {
-                $class = strlen(trim($value->value)) ? '' : ' class="isempty"';
-                echo '<tr'.$class.'>';
-                echo '<td colspan="2" class="singlevalue">';
-                echo str_replace("\n", '<br />', $value->value);
-                echo '</td>';
-                echo '</tr>';
-            }
-            echo '</table>';
+    public function get_display_value($item, $value, $forexport = false) {
+        $value = parent::get_display_value($item, $value, $forexport);
+        if ($forexport) {
+            // Method create_value() applies s() to the value stored in the database. Before exporting we need to revert it.
+            return htmlspecialchars_decode($value, ENT_QUOTES | ENT_HTML401 | ENT_SUBSTITUTE);
+        } else {
+            return str_replace("\n", '<br />', $value);
         }
     }
 
@@ -168,19 +144,13 @@ class feedback_item_textarea extends feedback_item_base {
                              $xls_formats, $item,
                              $groupid, $courseid = false) {
 
-        $analysed_item = $this->get_analysed($item, $groupid, $courseid);
+        $analyseditem = $this->get_analysis($item, $groupid, $courseid, true);
 
-        $worksheet->write_string($row_offset, 0, $item->label, $xls_formats->head2);
-        $worksheet->write_string($row_offset, 1, $item->name, $xls_formats->head2);
-        $data = $analysed_item->data;
-        if (is_array($data)) {
-            if (isset($data[0])) {
-                $worksheet->write_string($row_offset, 2, htmlspecialchars_decode($data[0], ENT_QUOTES), $xls_formats->value_bold);
-            }
-            $row_offset++;
-            $sizeofdata = count($data);
-            for ($i = 1; $i < $sizeofdata; $i++) {
-                $worksheet->write_string($row_offset, 2, htmlspecialchars_decode($data[$i], ENT_QUOTES), $xls_formats->default);
+        $worksheet->write_string($row_offset, 0, $analyseditem->label, $xls_formats->head2);
+        $worksheet->write_string($row_offset, 1, $analyseditem->shortname, $xls_formats->head2);
+        if (!empty($analyseditem->individualdata)) {
+            foreach ($analyseditem->individualdata as $value) {
+                $worksheet->write_string($row_offset, 2, $value, $xls_formats->default);
                 $row_offset++;
             }
         }
@@ -199,7 +169,8 @@ class feedback_item_textarea extends feedback_item_base {
         $inputname = $item->typ . '_' . $item->id;
         list($cols, $rows) = explode ("|", $item->presentation);
         $form->add_form_element($item,
-            ['textarea', $inputname, $name, array('rows' => $rows, 'cols' => $cols)]);
+            ['textarea', $inputname, $name, array('rows' => $rows, 'cols' => $cols)], true, false);
+        $form->set_element_default($inputname, $this->get_display_value($item, $form->get_item_value($item), true));
         $form->set_element_type($inputname, PARAM_NOTAGS);
     }
 
@@ -219,10 +190,10 @@ class feedback_item_textarea extends feedback_item_base {
     public function get_analysed_for_external($item, $groupid = false, $courseid = false) {
 
         $externaldata = array();
-        $data = $this->get_analysed($item, $groupid, $courseid);
+        $data = $this->get_analysis($item, $groupid, $courseid, true);
 
-        if (is_array($data->data)) {
-            return $data->data; // No need to json, scalar type.
+        if (is_array($data->individualdata)) {
+            return $data->individualdata; // No need to json, scalar type.
         }
         return $externaldata;
     }

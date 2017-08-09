@@ -114,35 +114,34 @@ class feedback_item_multichoice extends feedback_item_base {
      * @param stdClass $item the db-object from feedback_item
      * @param int $groupid
      * @param int $courseid
-     * @return array
+     * @param bool $forexport prepare for export or for display (for example: newlines should be converted to <br> for display but not for export)
+     * @return stdClass
      */
-    protected function get_analysed($item, $groupid = false, $courseid = false) {
+    public function get_analysis($item, $groupid = false, $courseid = false, $forexport = false) {
+        global $OUTPUT;
         $info = $this->get_info($item);
 
-        $analysed_item = array();
-        $analysed_item[] = $item->typ;
-        $analysed_item[] = format_string($item->name);
+        $analyseditem = parent::get_analysis($item, $groupid, $courseid, $forexport);
+        $analyseditem->data = [];
 
         //get the possible answers
-        $answers = null;
-        $answers = explode (FEEDBACK_MULTICHOICE_LINE_SEP, $info->presentation);
-        if (!is_array($answers)) {
-            return null;
+        if (!$answers = $this->get_options($item)) {
+            return $analyseditem;
         }
+        unset($answers[0]); // We do not need "No answer".
 
         //get the values
         $values = feedback_get_group_values($item, $groupid, $courseid, $this->ignoreempty($item));
         if (!$values) {
-            return null;
+            return $analyseditem;
         }
+        $analyseditem->hasdata = true;
 
         //get answertext, answercount and quotient for each answer
-        $analysed_answer = array();
         if ($info->subtype == 'c') {
-            $sizeofanswers = count($answers);
-            for ($i = 1; $i <= $sizeofanswers; $i++) {
+            foreach ($answers as $i => $answer) {
                 $ans = new stdClass();
-                $ans->answertext = $answers[$i-1];
+                $ans->answertext = $answer;
                 $ans->answercount = 0;
                 foreach ($values as $value) {
                     //ist die Antwort gleich dem index der Antworten + 1?
@@ -154,13 +153,12 @@ class feedback_item_multichoice extends feedback_item_base {
                     }
                 }
                 $ans->quotient = $ans->answercount / count($values);
-                $analysed_answer[] = $ans;
+                $analyseditem->data[] = $ans;
             }
         } else {
-            $sizeofanswers = count($answers);
-            for ($i = 1; $i <= $sizeofanswers; $i++) {
+            foreach ($answers as $i => $answer) {
                 $ans = new stdClass();
-                $ans->answertext = $answers[$i-1];
+                $ans->answertext = $answer;
                 $ans->answercount = 0;
                 foreach ($values as $value) {
                     //ist die Antwort gleich dem index der Antworten + 1?
@@ -169,103 +167,65 @@ class feedback_item_multichoice extends feedback_item_base {
                     }
                 }
                 $ans->quotient = $ans->answercount / count($values);
-                $analysed_answer[] = $ans;
+                $analyseditem->data[] = $ans;
             }
         }
-        $analysed_item[] = $analysed_answer;
-        return $analysed_item;
+
+        // Get chart.
+        $count = 0;
+        $data = [];
+        foreach ($analyseditem->data as $val) {
+            $quotient = format_float($val->quotient * 100, 2);
+            $strquotient = '';
+            if ($val->quotient > 0) {
+                $strquotient = ' ('. $quotient . ' %)';
+            }
+            $data['labels'][$count] = strip_tags($val->answertext); // Charts do not like html tags.
+            $data['series'][$count] = $val->answercount;
+            $data['series_labels'][$count] = $val->answercount . $strquotient;
+            $count++;
+        }
+        $chart = new \core\chart_bar();
+        $chart->set_horizontal(true);
+        $series = new \core\chart_series(format_string(get_string("responses", "feedback")), $data['series']);
+        $series->set_labels($data['series_labels']);
+        $chart->add_series($series);
+        $chart->set_labels($data['labels']);
+
+        $analyseditem->summary = $OUTPUT->render($chart);
+
+        return $analyseditem;
     }
 
-    public function get_printval($item, $value) {
+    public function get_display_value($item, $value, $forexport = false) {
         $info = $this->get_info($item);
-
-        $printval = '';
-
-        if (!isset($value->value)) {
-            return $printval;
-        }
-
-        $presentation = explode (FEEDBACK_MULTICHOICE_LINE_SEP, $info->presentation);
-
+        $options = $this->get_options($item);
         if ($info->subtype == 'c') {
-            $vallist = array_values(explode (FEEDBACK_MULTICHOICE_LINE_SEP, $value->value));
-            $sizeofvallist = count($vallist);
-            $sizeofpresentation = count($presentation);
-            for ($i = 0; $i < $sizeofvallist; $i++) {
-                for ($k = 0; $k < $sizeofpresentation; $k++) {
-                    if ($vallist[$i] == ($k + 1)) {//Die Werte beginnen bei 1, das Array aber mit 0
-                        $printval .= trim(format_string($presentation[$k])) . chr(10);
-                        break;
-                    }
-                }
-            }
+            $vallist = explode(FEEDBACK_MULTICHOICE_LINE_SEP, $value);
         } else {
-            $index = 1;
-            foreach ($presentation as $pres) {
-                if ($value->value == $index) {
-                    $printval = format_string($pres);
-                    break;
-                }
-                $index++;
+            $vallist = [$value];
+        }
+        $displayvalues = [];
+        foreach ($vallist as $val) {
+            if (is_number($val) && array_key_exists($val, $options)) {
+                $displayvalues[] = $options[$val];
             }
         }
-        return $printval;
-    }
-
-    public function print_analysed($item, $itemnr = '', $groupid = false, $courseid = false) {
-        global $OUTPUT;
-
-        $analysed_item = $this->get_analysed($item, $groupid, $courseid);
-        if ($analysed_item) {
-            $itemname = $analysed_item[1];
-            echo "<table class=\"analysis itemtype_{$item->typ}\">";
-            echo '<tr><th colspan="2" align="left">';
-            echo $itemnr . ' ';
-            if (strval($item->label) !== '') {
-                echo '('. format_string($item->label).') ';
-            }
-            echo $this->get_display_name($item);
-            echo '</th></tr>';
-            echo "</table>";
-            $analysed_vals = $analysed_item[2];
-            $count = 0;
-            $data = [];
-            foreach ($analysed_vals as $val) {
-                $quotient = format_float($val->quotient * 100, 2);
-                $strquotient = '';
-                if ($val->quotient > 0) {
-                    $strquotient = ' ('. $quotient . ' %)';
-                }
-                $answertext = format_text(trim($val->answertext), FORMAT_HTML,
-                        array('noclean' => true, 'para' => false));
-
-                $data['labels'][$count] = $answertext;
-                $data['series'][$count] = $val->answercount;
-                $data['series_labels'][$count] = $val->answercount . $strquotient;
-                $count++;
-            }
-            $chart = new \core\chart_bar();
-            $chart->set_horizontal(true);
-            $series = new \core\chart_series(format_string(get_string("responses", "feedback")), $data['series']);
-            $series->set_labels($data['series_labels']);
-            $chart->add_series($series);
-            $chart->set_labels($data['labels']);
-
-            echo $OUTPUT->render($chart);
-        }
+        $separator = $forexport ? " \n" : (!empty($info->horizontal) ? ' ' : "<br>");
+        return join($separator, $displayvalues);
     }
 
     public function excelprint_item(&$worksheet, $row_offset,
                              $xls_formats, $item,
                              $groupid, $courseid = false) {
 
-        $analysed_item = $this->get_analysed($item, $groupid, $courseid);
+        $analyseditem = $this->get_analysis($item, $groupid, $courseid, true);
 
-        $data = $analysed_item[2];
+        $data = $analyseditem->data;
 
         //frage schreiben
-        $worksheet->write_string($row_offset, 0, $item->label, $xls_formats->head2);
-        $worksheet->write_string($row_offset, 1, $analysed_item[1], $xls_formats->head2);
+        $worksheet->write_string($row_offset, 0, $analyseditem->label, $xls_formats->head2);
+        $worksheet->write_string($row_offset, 1, $analyseditem->shortname, $xls_formats->head2);
         if (is_array($data)) {
             $sizeofdata = count($data);
             for ($i = 0; $i < $sizeofdata; $i++) {
@@ -273,7 +233,7 @@ class feedback_item_multichoice extends feedback_item_base {
 
                 $worksheet->write_string($row_offset,
                                          $i + 2,
-                                         trim($analysed_data->answertext),
+                                         $analysed_data->answertext,
                                          $xls_formats->head2);
 
                 $worksheet->write_number($row_offset + 1,
@@ -301,7 +261,7 @@ class feedback_item_multichoice extends feedback_item_base {
         $presentation = explode (FEEDBACK_MULTICHOICE_LINE_SEP, $info->presentation);
         $options = array();
         foreach ($presentation as $idx => $optiontext) {
-            $options[$idx + 1] = format_text($optiontext, FORMAT_HTML, array('noclean' => true, 'para' => false));
+            $options[$idx + 1] = format_text(trim($optiontext), FORMAT_HTML, array('noclean' => true, 'para' => false));
         }
         if ($info->subtype === 'r' && !$this->hidenoselect($item)) {
             $options = array(0 => get_string('not_selected', 'feedback')) + $options;
@@ -328,19 +288,16 @@ class feedback_item_multichoice extends feedback_item_base {
         $separator = !empty($info->horizontal) ? ' ' : '<br>';
         $tmpvalue = $form->get_item_value($item);
 
-        if ($info->subtype === 'd' || ($info->subtype === 'r' && $form->is_frozen())) {
+        if ($form->is_frozen()) {
+            $element = $form->add_form_element($item,
+                ['static', $inputname."[0]", $name, $this->get_display_value($item, $form->get_item_value($item))],
+                false, false);
+        } else if ($info->subtype === 'd') {
             // Display as a dropdown in the complete form or a single value in the response view.
             $element = $form->add_form_element($item,
                     ['select', $inputname.'[0]', $name, array(0 => '') + $options, array('class' => $class)],
                     false, false);
             $form->set_element_default($inputname.'[0]', $tmpvalue);
-        } else if ($info->subtype === 'c' && $form->is_frozen()) {
-            // Display list of checkbox values in the response view.
-            $objs = [];
-            foreach (explode(FEEDBACK_MULTICHOICE_LINE_SEP, $form->get_item_value($item)) as $v) {
-                $objs[] = ['static', $inputname."[$v]", '', isset($options[$v]) ? $options[$v] : ''];
-            }
-            $element = $form->add_form_group_element($item, 'group_'.$inputname, $name, $objs, $separator, $class);
         } else {
             // Display group or radio or checkbox elements.
             $class .= ' multichoice-' . ($info->horizontal ? 'horizontal' : 'vertical');
@@ -496,10 +453,10 @@ class feedback_item_multichoice extends feedback_item_base {
     public function get_analysed_for_external($item, $groupid = false, $courseid = false) {
 
         $externaldata = array();
-        $data = $this->get_analysed($item, $groupid, $courseid);
+        $data = $this->get_analysis($item, $groupid, $courseid, true);
 
-        if (!empty($data[2]) && is_array($data[2])) {
-            foreach ($data[2] as $d) {
+        if (!empty($data->data) && is_array($data->data)) {
+            foreach ($data->data as $d) {
                 $externaldata[] = json_encode($d);
             }
         }

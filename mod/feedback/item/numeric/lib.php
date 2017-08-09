@@ -112,84 +112,47 @@ class feedback_item_numeric extends feedback_item_base {
      * @param stdClass $item the db-object from feedback_item
      * @param int $groupid
      * @param int $courseid
+     * @param bool $forexport prepare for export or for display (for example: newlines should be converted to <br> for display but not for export)
      * @return stdClass
      */
-    protected function get_analysed($item, $groupid = false, $courseid = false) {
-        global $DB;
-
-        $analysed = new stdClass();
-        $analysed->data = array();
-        $analysed->name = $item->name;
+    public function get_analysis($item, $groupid = false, $courseid = false, $forexport = false) {
+        $analysed = parent::get_analysis($item, $groupid, $courseid, $forexport);
         $values = feedback_get_group_values($item, $groupid, $courseid);
 
-        $avg = 0.0;
+        $totalvalue = 0.0;
         $counter = 0;
-        if ($values) {
-            $data = array();
-            foreach ($values as $value) {
-                if (is_numeric($value->value)) {
-                    $data[] = $value->value;
-                    $avg += $value->value;
-                    $counter++;
+        $analysed->individualdata = [];
+        foreach ($values as $value) {
+            if (is_numeric($value->value)) {
+                if (!$forexport) {
+                    $analysed->individualdata[] = $this->get_display_value($item, $value->value, $forexport);
                 }
+                $totalvalue += $value->value;
+                $counter++;
             }
-            $avg = $counter > 0 ? $avg / $counter : null;
-            $analysed->data = $data;
-            $analysed->avg = $avg;
+        }
+        if ($counter) {
+            $analysed->avg = $totalvalue / $counter;
+            $analysed->summary = html_writer::div(get_string('averageforanalysis', 'feedback', $analysed->avg), 'average');
+            $analysed->hasdata = true;
         }
         return $analysed;
     }
 
-    public function get_printval($item, $value) {
-        if (!isset($value->value)) {
-            return '';
-        }
-
-        return $value->value;
-    }
-
-    public function print_analysed($item, $itemnr = '', $groupid = false, $courseid = false) {
-
-        $values = $this->get_analysed($item, $groupid, $courseid);
-
-        if (isset($values->data) AND is_array($values->data)) {
-            echo "<table class=\"analysis itemtype_{$item->typ}\">";
-            echo '<tr><th colspan="2" align="left">';
-            echo $itemnr . ' ';
-            if (strval($item->label) !== '') {
-                echo '('. format_string($item->label).') ';
-            }
-            echo $this->get_display_name($item);
-            echo '</th></tr>';
-
-            foreach ($values->data as $value) {
-                echo '<tr><td colspan="2" class="singlevalue">';
-                echo $this->format_float($value);
-                echo '</td></tr>';
-            }
-
-            if (isset($values->avg)) {
-                $avg = format_float($values->avg, 2);
-            } else {
-                $avg = '-';
-            }
-            echo '<tr><td colspan="2"><b>';
-            echo get_string('average', 'feedback').': '.$avg;
-            echo '</b></td></tr>';
-            echo '</table>';
-        }
+    public function get_display_value($item, $value, $forexport = false) {
+        $value = parent::get_display_value($item, $value, $forexport);
+        return $this->format_float($value);
     }
 
     public function excelprint_item(&$worksheet, $row_offset,
                              $xls_formats, $item,
                              $groupid, $courseid = false) {
 
-        $analysed_item = $this->get_analysed($item, $groupid, $courseid);
+        $analyseditem = $this->get_analysis($item, $groupid, $courseid, true);
 
-        $worksheet->write_string($row_offset, 0, $item->label, $xls_formats->head2);
-        $worksheet->write_string($row_offset, 1, $item->name, $xls_formats->head2);
-        $data = $analysed_item->data;
-        if (is_array($data)) {
+        $worksheet->write_string($row_offset, 0, $analyseditem->label, $xls_formats->head2);
+        $worksheet->write_string($row_offset, 1, $analyseditem->shortname, $xls_formats->head2);
+        if (isset($analyseditem->avg)) {
 
             // Export average.
             $worksheet->write_string($row_offset,
@@ -197,17 +160,10 @@ class feedback_item_numeric extends feedback_item_base {
                                      get_string('average', 'feedback'),
                                      $xls_formats->value_bold);
 
-            if (isset($analysed_item->avg)) {
-                $worksheet->write_number($row_offset + 1,
-                                         2,
-                                         $analysed_item->avg,
-                                         $xls_formats->value_bold);
-            } else {
-                $worksheet->write_string($row_offset + 1,
-                                         2,
-                                         '',
-                                         $xls_formats->value_bold);
-            }
+            $worksheet->write_number($row_offset + 1,
+                                     2,
+                                     $analyseditem->avg,
+                                     $xls_formats->value_bold);
             $row_offset++;
         }
         $row_offset++;
@@ -226,8 +182,7 @@ class feedback_item_numeric extends feedback_item_base {
         if (!is_numeric($value)) {
             return null;
         }
-        $decimal = is_int($value) ? 0 : strlen(substr(strrchr($value, '.'), 1));
-        return format_float($value, $decimal);
+        return format_float($value, 5, true, true);
     }
 
     /**
@@ -284,7 +239,7 @@ class feedback_item_numeric extends feedback_item_base {
                 false
                 );
         $form->set_element_type($inputname, PARAM_NOTAGS);
-        $tmpvalue = $this->format_float($form->get_item_value($item));
+        $tmpvalue = $this->get_display_value($item, $form->get_item_value($item));
         $form->set_element_default($inputname, $tmpvalue);
 
         // Add form validation rule to check for boundaries.
@@ -329,10 +284,10 @@ class feedback_item_numeric extends feedback_item_base {
     public function get_analysed_for_external($item, $groupid = false, $courseid = false) {
 
         $externaldata = array();
-        $data = $this->get_analysed($item, $groupid, $courseid);
+        $data = $this->get_analysis($item, $groupid, $courseid, false);
 
-        if (is_array($data->data)) {
-            return $data->data; // No need to json, scalar type.
+        if (is_array($data->individualdata)) {
+            return $data->individualdata; // No need to json, scalar type.
         }
         return $externaldata;
     }

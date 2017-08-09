@@ -135,46 +135,117 @@ abstract class feedback_item_base {
      * @param integer $courseid
      * @return integer the new row_offset
      */
-    abstract public function excelprint_item(&$worksheet, $row_offset,
+    public function excelprint_item(&$worksheet, $row_offset,
                                       $xls_formats, $item,
-                                      $groupid, $courseid = false);
+                                      $groupid, $courseid = false) {
+        return $row_offset;
+    }
+
+    /**
+     * Returns info about the item with formatted name and label
+     *
+     * This method used for collecting analytics and for preparing an item for display (to use in templates)
+     *
+     * @param stdClass $item
+     * @return stdClass
+     */
+    public function get_item_info($item) {
+        $analyseditem = new stdClass();
+        $analyseditem->itemtype = $this->type;
+        $analyseditem->itemid = $item->id;
+        $analyseditem->name = $this->get_display_name($item);
+        $analyseditem->shortname = $this->get_display_name($item, true, true);
+        $analyseditem->label = format_string($item->label, true, ['context' => $this->get_context($item)]);
+        $analyseditem->haslabel = strval($analyseditem->label) !== '';
+        return $analyseditem;
+    }
+
+    /**
+     * Helper function for collected data for exporting to excel
+     *
+     * @param stdClass $item the db-object from feedback_item
+     * @param int $groupid
+     * @param int $courseid
+     * @param bool $forexport prepare for export or for display (for example: newlines should be converted to <br> for display but not for export)
+     * @return stdClass in case $forexport=false - data for template mod_feedback/analysis
+     *                  in case $forexport=true - data for $this->excelprint_item()
+     */
+    public function get_analysis($item, $groupid = false, $courseid = false, $forexport = false) {
+        $analyseditem = $this->get_item_info($item);
+        $analyseditem->hasdata = false;
+        return $analyseditem;
+    }
 
     /**
      * Prints analysis for the current item
      *
+     * @deprecated since Moodle 3.4
      * @param $item the db-object from feedback_item
      * @param string $itemnr
      * @param integer $groupid
      * @param integer $courseid
      * @return integer the new itemnr
      */
-    abstract public function print_analysed($item, $itemnr = '', $groupid = false, $courseid = false);
+    public function print_analysed($item, $itemnr = '', $groupid = false, $courseid = false) {
+        global $OUTPUT;
+        debugging('Method print_analysed() is deprecated, please use get_analysis().', DEBUG_DEVELOPER);
+
+        $analyseditem = $this->get_analysis($item, $groupid, $courseid);
+        $analyseditem->itemnr = $itemnr;
+        echo $OUTPUT->render_from_template('mod_feedback/analysis', $analyseditem);
+    }
 
     /**
-     * Prepares the value for exporting to Excel
+     * Prepares the value for displaying or export
      *
      * @param object $item the db-object from feedback_item
      * @param string $value a item-related value from feedback_values
+     * @param bool $forexport prepare for export or for display (for example: newlines should be converted to <br> for display but not for export)
      * @return string
      */
-    abstract public function get_printval($item, $value);
+    public function get_display_value($item, $value, $forexport = false) {
+        if ($this->get_hasvalue()) {
+            return trim(strval($value));
+        } else {
+            return '';
+        }
+    }
+
+    /**
+     * Deprecated method returning display value
+     *
+     * @deprecated since Moodle 3.4
+     * @param object $item the db-object from feedback_item
+     * @param object $value a item-related value from feedback_values
+     * @return string
+     */
+    public function get_printval($item, $value) {
+        debugging('Method get_printval() is deprecated, please use get_display_value().', DEBUG_DEVELOPER);
+        return $this->get_display_value($item, isset($value->value) ? $value->value : null, true);
+    }
 
     /**
      * Returns the formatted name of the item for the complete form or response view
      *
      * @param stdClass $item
      * @param bool $withpostfix
+     * @param bool $truncated
      * @return string
      */
-    public function get_display_name($item, $withpostfix = true) {
+    public function get_display_name($item, $withpostfix = true, $truncated = false) {
         $name = $item->name;
         if ($nameoptions = $this->get_name_editor_options($item)) {
             $name = file_rewrite_pluginfile_urls($item->name, 'pluginfile.php',
                 $nameoptions['context']->id, 'mod_feedback',
                 $this->get_file_area($item), $item->id, $nameoptions);
         }
-        return format_text($name, $item->nameformat, array('noclean' => true, 'para' => false)) .
-                ($withpostfix ? $this->get_display_name_postfix($item) : '');
+        $name = format_text($name, $item->nameformat, array('noclean' => true, 'para' => false));
+        $postfix = ($withpostfix ? $this->get_display_name_postfix($item) : '');
+        if ($truncated) {
+            return str_replace("\n", " ", shorten_text(trim(html_to_text($name, 0, false)), 72) . html_to_text($postfix, 0, false));
+        } else {
+            return $name . $postfix;
+        }
     }
 
     /**
@@ -451,15 +522,6 @@ class feedback_item_pagebreak extends feedback_item_base {
     public function get_hasvalue() {
         return 0;
     }
-    public function excelprint_item(&$worksheet, $row_offset,
-                            $xls_formats, $item,
-                            $groupid, $courseid = false) {
-    }
-
-    public function print_analysed($item, $itemnr = '', $groupid = false, $courseid = false) {
-    }
-    public function get_printval($item, $value) {
-    }
     public function can_switch_require() {
         return false;
     }
@@ -509,7 +571,7 @@ class feedback_item_pagebreak extends feedback_item_base {
      * @since  Moodle 3.3
      */
     public function get_analysed_for_external($item, $groupid = false, $courseid = false) {
-        return;
+        return [];
     }
 
     /**

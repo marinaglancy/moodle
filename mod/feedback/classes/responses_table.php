@@ -189,7 +189,7 @@ class mod_feedback_responses_table extends table_sql {
         if (preg_match('/^val(\d+)$/', $column, $matches)) {
             $items = $this->feedbackstructure->get_items();
             $itemobj = feedback_get_item_class($items[$matches[1]]->typ);
-            return trim($itemobj->get_printval($items[$matches[1]], (object) ['value' => $row->$column] ));
+            return $itemobj->get_display_value($items[$matches[1]], $row->$column, $this->is_downloading());
         }
         return $row->$column;
     }
@@ -263,6 +263,8 @@ class mod_feedback_responses_table extends table_sql {
      * are only needed when outputting or downloading data.
      */
     protected function add_all_values_to_output() {
+        global $OUTPUT;
+
         $tablecolumns = array_keys($this->columns);
         $tableheaders = $this->headers;
 
@@ -289,7 +291,11 @@ class mod_feedback_responses_table extends table_sql {
 
             $tablecolumns[] = "val{$nr}";
             $itemobj = feedback_get_item_class($item->typ);
-            $tableheaders[] = $itemobj->get_display_name($item);
+            $header = $OUTPUT->render_from_template('mod_feedback/itemshortname', $itemobj->get_item_info($item));
+            if ($this->is_downloading()) {
+                $header = trim(html_to_text($header, 0, false));
+            }
+            $tableheaders[] = $header;
         }
 
         // Add 'Delete entry' column.

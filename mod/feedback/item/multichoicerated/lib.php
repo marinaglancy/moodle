@@ -116,30 +116,33 @@ class feedback_item_multichoicerated extends feedback_item_base {
      * @param stdClass $item the db-object from feedback_item
      * @param int $groupid
      * @param int $courseid
-     * @return array
+     * @param bool $forexport prepare for export or for display (for example: newlines should be converted to <br> for display but not for export)
+     * @return stdClass
      */
-    protected function get_analysed($item, $groupid = false, $courseid = false) {
-        $analysed_item = array();
-        $analysed_item[] = $item->typ;
-        $analysed_item[] = $item->name;
+    public function get_analysis($item, $groupid = false, $courseid = false, $forexport = false) {
+        global $OUTPUT;
+        $analyseditem = parent::get_analysis($item, $groupid, $courseid, $forexport);
+        $analyseditem->data = [];
 
         //die moeglichen Antworten extrahieren
         $info = $this->get_info($item);
         $lines = null;
         $lines = explode (FEEDBACK_MULTICHOICERATED_LINE_SEP, $info->presentation);
         if (!is_array($lines)) {
-            return null;
+            return $analyseditem;
         }
 
         //die Werte holen
         $values = feedback_get_group_values($item, $groupid, $courseid, $this->ignoreempty($item));
         if (!$values) {
-            return null;
+            return $analyseditem;
         }
-        //schleife ueber den Werten und ueber die Antwortmoeglichkeiten
 
-        $analysed_answer = array();
+        $analyseditem->hasdata = true;
+
         $sizeoflines = count($lines);
+        $totalanswercount = 0;
+        $totalanswersvalues = 0;
         for ($i = 1; $i <= $sizeoflines; $i++) {
             $item_values = explode(FEEDBACK_MULTICHOICERATED_VALUE_SEP, $lines[$i-1]);
             $ans = new stdClass();
@@ -150,110 +153,124 @@ class feedback_item_multichoicerated extends feedback_item_base {
                 //ist die Antwort gleich dem index der Antworten + 1?
                 if ($value->value == $i) {
                     $avg += $item_values[0]; //erst alle Werte aufsummieren
+                    $totalanswersvalues += $item_values[0];
                     $anscount++;
+                    $totalanswercount++;
                 }
             }
             $ans->answercount = $anscount;
             $ans->avg = doubleval($avg) / doubleval(count($values));
             $ans->value = $item_values[0];
             $ans->quotient = $ans->answercount / count($values);
-            $analysed_answer[] = $ans;
+            $analyseditem->data[] = $ans;
         }
-        $analysed_item[] = $analysed_answer;
-        return $analysed_item;
+        if ($totalanswercount) {
+            $analyseditem->avg = format_float($totalanswersvalues / $totalanswercount, 2, true, true);
+        }
+
+        // Prepare chart.
+        $data = [];
+        foreach ($analyseditem->data as $count => $val) {
+            $quotient = format_float($val->quotient * 100, 2);
+
+            if ($val->quotient > 0) {
+                $strquotient = ' ('.$quotient.' %)';
+            } else {
+                $strquotient = '';
+            }
+
+            $data['labels'][$count] = strip_tags($this->get_display_value($item, $count+1, $forexport)); // Charts do not like html tags.
+            $data['series'][$count] = $val->answercount;
+            $data['series_labels'][$count] = $val->answercount . $strquotient;
+        }
+        $chart = new \core\chart_bar();
+        $chart->set_horizontal(true);
+        $series = new \core\chart_series(format_string(get_string("responses", "feedback")), $data['series']);
+        $series->set_labels($data['series_labels']);
+        $chart->add_series($series);
+        $chart->set_labels($data['labels']);
+
+        $analyseditem->summary = $OUTPUT->render($chart);
+        $analyseditem->summary .= html_writer::div(get_string('averageforanalysis', 'feedback', $analyseditem->avg), 'average');
+
+        // "Sort by courses".
+        if (!$forexport && ($analysisbycourse = $this->get_analysis_by_course($item))) {
+            $analyseditem->summary .= $analysisbycourse;
+        }
+
+        return $analyseditem;
     }
 
-    public function get_printval($item, $value) {
-        $printval = '';
-
-        if (!isset($value->value)) {
-            return $printval;
+    /**
+     * Part of analysis summary - table "Average by course".
+     *
+     * @param stdClass $item
+     * @return string
+     */
+    protected function get_analysis_by_course($item) {
+        global $PAGE, $DB;
+        // Find course where feedback module was created.
+        if ($PAGE->cm && $PAGE->cm->instance == $item->feedback && $PAGE->cm->modname === 'feedback') {
+            $courseid = $PAGE->cm->course;
+        } else {
+            $courseid = $DB->get_field('feedback', 'course', ['id' => $item->feedback]);
+        }
+        if (!$courseid || $courseid !== SITEID) {
+            // No by course analysis for feedbacks that are not on the front page.
+            return '';
         }
 
-        $info = $this->get_info($item);
+        $valuereal = $DB->sql_cast_char2real('fv.value', true);
+        $sql = "SELECT c.id, c.shortname, c.fullname, c.idnumber, 
+            SUM($valuereal) AS sumvalue, COUNT(fv.value) as countvalue
+            FROM {feedback_value} fv, {course} c, {feedback_item} fi
+            WHERE fv.course_id = c.id AND fi.id = fv.item AND fi.typ = ? AND fv.item = ?
+            GROUP BY c.id, c.shortname, c.fullname, c.idnumber
+            ORDER BY sumvalue desc";
 
-        $presentation = explode (FEEDBACK_MULTICHOICERATED_LINE_SEP, $info->presentation);
-        $index = 1;
-        foreach ($presentation as $pres) {
-            if ($value->value == $index) {
-                $item_label = explode(FEEDBACK_MULTICHOICERATED_VALUE_SEP, $pres);
-                $printval = format_string($item_label[1]);
-                break;
+        $rv = '';
+        $courses = $DB->get_records_sql($sql, array($item->typ, $item->id));
+        if (count($courses) > 1) {
+            $rv .= '<table class="averagebycourse">';
+            $rv .= "<tr><th colspan=\"2\">".get_string('averagebycourse', 'feedback')."</th></tr>";
+            foreach ($courses as $c) {
+                $coursecontext = context_course::instance($c->id);
+                $shortname = format_string(get_course_display_name_for_list($c), true, $coursecontext);
+                $value = format_float(($c->sumvalue / $c->countvalue), 2, true, true);;
+                $rv .= "<tr><td>$shortname</td><td align=\"right\">$value</td></tr>";
             }
-            $index++;
+            $rv .= '</table>';
         }
-        return $printval;
+        return $rv;
     }
 
-    public function print_analysed($item, $itemnr = '', $groupid = false, $courseid = false) {
-        global $OUTPUT;
-        $analysed_item = $this->get_analysed($item, $groupid, $courseid);
-        if ($analysed_item) {
-            echo "<table class=\"analysis itemtype_{$item->typ}\">";
-            echo '<tr><th colspan="2" align="left">';
-            echo $itemnr . ' ';
-            if (strval($item->label) !== '') {
-                echo '('. format_string($item->label).') ';
-            }
-            echo $this->get_display_name($item);
-            echo '</th></tr>';
-            echo '</table>';
-            $analysed_vals = $analysed_item[2];
-            $avg = 0.0;
-            $count = 0;
-            $data = [];
-            foreach ($analysed_vals as $val) {
-                $avg += $val->avg;
-                $quotient = format_float($val->quotient * 100, 2);
-                $answertext = '('.$val->value.') ' . format_text(trim($val->answertext), FORMAT_HTML,
-                        array('noclean' => true, 'para' => false));
-
-                if ($val->quotient > 0) {
-                    $strquotient = ' ('.$quotient.' %)';
-                } else {
-                    $strquotient = '';
-                }
-
-                $data['labels'][$count] = $answertext;
-                $data['series'][$count] = $val->answercount;
-                $data['series_labels'][$count] = $val->answercount . $strquotient;
-                $count++;
-            }
-            $chart = new \core\chart_bar();
-            $chart->set_horizontal(true);
-            $series = new \core\chart_series(format_string(get_string("responses", "feedback")), $data['series']);
-            $series->set_labels($data['series_labels']);
-            $chart->add_series($series);
-            $chart->set_labels($data['labels']);
-            echo $OUTPUT->render($chart);
-
-            $avg = format_float($avg, 2);
-            echo '<tr><td align="left" colspan="2"><b>';
-            echo get_string('average', 'feedback').': '.$avg.'</b>';
-            echo '</td></tr>';
+    public function get_display_value($item, $value, $forexport = false) {
+        $options = $this->get_options($item);
+        if (is_number($value) && array_key_exists($value, $options)) {
+            return $forexport ? strip_tags($options[$value]) : $options[$value];
         }
+        return '';
     }
 
     public function excelprint_item(&$worksheet, $row_offset,
                              $xls_formats, $item,
                              $groupid, $courseid = false) {
 
-        $analysed_item = $this->get_analysed($item, $groupid, $courseid);
+        $analyseditem = $this->get_analysis($item, $groupid, $courseid, true);
 
-        $data = $analysed_item[2];
+        $data = $analyseditem->data;
 
         //write the item
-        $worksheet->write_string($row_offset, 0, $item->label, $xls_formats->head2);
-        $worksheet->write_string($row_offset, 1, $analysed_item[1], $xls_formats->head2);
+        $worksheet->write_string($row_offset, 0, $analyseditem->label, $xls_formats->head2);
+        $worksheet->write_string($row_offset, 1, $analyseditem->shortname, $xls_formats->head2);
         if (is_array($data)) {
-            $avg = 0.0;
             $sizeofdata = count($data);
             for ($i = 0; $i < $sizeofdata; $i++) {
                 $analysed_data = $data[$i];
 
                 $worksheet->write_string($row_offset,
                                 $i + 2,
-                                trim($analysed_data->answertext).' ('.$analysed_data->value.')',
+                                $analysed_data->answertext,
                                 $xls_formats->value_bold);
 
                 $worksheet->write_number($row_offset + 1,
@@ -261,18 +278,19 @@ class feedback_item_multichoicerated extends feedback_item_base {
                                 $analysed_data->answercount,
                                 $xls_formats->default);
 
-                $avg += $analysed_data->avg;
             }
             //mittelwert anzeigen
-            $worksheet->write_string($row_offset,
+            if (isset($analyseditem->avg)) {
+                $worksheet->write_string($row_offset,
                                 count($data) + 2,
                                 get_string('average', 'feedback'),
                                 $xls_formats->value_bold);
 
-            $worksheet->write_number($row_offset + 1,
+                $worksheet->write_number($row_offset + 1,
                                 count($data) + 2,
-                                $avg,
+                                $analyseditem->avg,
                                 $xls_formats->value_bold);
+            }
         }
         $row_offset +=2;
         return $row_offset;
@@ -492,10 +510,10 @@ class feedback_item_multichoicerated extends feedback_item_base {
     public function get_analysed_for_external($item, $groupid = false, $courseid = false) {
 
         $externaldata = array();
-        $data = $this->get_analysed($item, $groupid, $courseid);
+        $data = $this->get_analysis($item, $groupid, $courseid, true);
 
-        if (!empty($data[2]) && is_array($data[2])) {
-            foreach ($data[2] as $d) {
+        if (!empty($data->data) && is_array($data->data)) {
+            foreach ($data->data as $d) {
                 $externaldata[] = json_encode($d);
             }
         }
