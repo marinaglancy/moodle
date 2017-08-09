@@ -322,17 +322,10 @@ class mod_feedback_complete_form extends moodleform {
             $element->freeze();
         }
 
-        // Add red asterisks on required fields.
-        if ($item->required) {
-            $required = $OUTPUT->pix_icon('req', get_string('requiredelement', 'form'));
-            $element->setLabel($element->getLabel() . $required);
-            $this->hasrequired = true;
-        }
+        $this->hasrequired = $this->hasrequired || $item->required;
 
         // Add different useful stuff to the question name.
-        $this->add_item_label($item, $element);
-        $this->add_item_dependencies($item, $element);
-        $this->add_item_number($item, $element);
+        $this->enhance_question_text($item, $element);
 
         return $element;
     }
@@ -368,46 +361,31 @@ class mod_feedback_complete_form extends moodleform {
     }
 
     /**
-     * Adds an item number to the question name (if feedback autonumbering is on)
+     * Adds item number, label, "required" and dependencies to the question text if applicable.
+     *
      * @param stdClass $item
      * @param HTML_QuickForm_element $element
      */
-    protected function add_item_number($item, $element) {
+    protected function enhance_question_text($item, $element) {
+        global $OUTPUT;
+
+        $itemobj = feedback_get_item_class($item->typ);
+        $info = $itemobj->get_item_info($item);
+        $info->name = $element->getLabel();
+
         if ($this->get_feedback()->autonumbering && !empty($item->itemnr)) {
-            $name = $element->getLabel();
-            $element->setLabel(html_writer::span($item->itemnr. '.', 'itemnr') . ' ' . $name);
+            $info->itemnr = $item->itemnr;
         }
-    }
 
-    /**
-     * Adds an item label to the question name
-     * @param stdClass $item
-     * @param HTML_QuickForm_element $element
-     */
-    protected function add_item_label($item, $element) {
-        if (strlen($item->label) && $this->mode == self::MODE_VIEW_TEMPLATE) {
-            $name = $element->getLabel();
-            $name = '('.format_string($item->label).') '.$name;
-            $element->setLabel($name);
+        if ($this->mode == self::MODE_VIEW_TEMPLATE) {
+            $info->dependencies = $this->structure->get_item_dependencies_for_template($item)['dependencies'];
+        } else {
+            // Do not show the label even when it's set.
+            $info->haslabel = false;
+            $info->label = '';
         }
-    }
 
-    /**
-     * Adds a dependency description to the question name
-     * @param stdClass $item
-     * @param HTML_QuickForm_element $element
-     */
-    protected function add_item_dependencies($item, $element) {
-        $allitems = $this->structure->get_items();
-        if ($item->dependitem && $this->mode == self::MODE_VIEW_TEMPLATE) {
-            if (isset($allitems[$item->dependitem])) {
-                $dependitem = $allitems[$item->dependitem];
-                $name = $element->getLabel();
-                $name .= html_writer::span(' ('.format_string($dependitem->label).'-&gt;'.$item->dependvalue.')',
-                        'feedback_depend');
-                $element->setLabel($name);
-            }
-        }
+        $element->setLabel($OUTPUT->render_from_template('mod_feedback/itemfullname', $info));
     }
 
     /**
