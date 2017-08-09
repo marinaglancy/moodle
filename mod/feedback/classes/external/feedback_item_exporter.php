@@ -55,7 +55,13 @@ class feedback_item_exporter extends exporter {
             ),
             'name' => array(
                 'type' => PARAM_RAW,
-                'description' => 'The item name.',
+                'description' => 'The question text.',
+            ),
+            'nameformat' => array(
+                'choices' => array(FORMAT_HTML, FORMAT_MOODLE, FORMAT_PLAIN, FORMAT_MARKDOWN),
+                'type' => PARAM_INT,
+                'default' => FORMAT_MOODLE,
+                'description' => 'The question text format.',
             ),
             'label' => array(
                 'type' => PARAM_NOTAGS,
@@ -63,7 +69,7 @@ class feedback_item_exporter extends exporter {
             ),
             'presentation' => array(
                 'type' => PARAM_RAW,
-                'description' => 'The text describing the item or the available possible answers.',
+                'description' => 'Item specific data, for example, options in multichoice questions.',
             ),
             'typ' => array(
                 'type' => PARAM_ALPHA,
@@ -156,19 +162,6 @@ class feedback_item_exporter extends exporter {
      * @return array
      */
     protected function get_format_parameters_for_name() {
-        return [
-            'component' => 'mod_feedback',
-            'filearea' => 'item',
-            'itemid' => $this->data->id
-        ];
-    }
-
-    /**
-     * Get the formatting parameters for the presentation.
-     *
-     * @return array
-     */
-    protected function get_format_parameters_for_presentation() {
         return [
             'component' => 'mod_feedback',
             'filearea' => 'item',
