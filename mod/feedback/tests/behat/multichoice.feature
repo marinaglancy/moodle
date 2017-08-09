@@ -35,7 +35,7 @@ Feature: Testing multichoice questions in feedback
       | Multiple choice values | option a\noption b\noption c  |
     And I add a "Label" question to the feedback with:
       | Contents | this is the first page of the feedback |
-    And I select "Add a page break" from the "Add question" singleselect
+    And I add a page break to the feedback
     And I add a "Multiple choice" question to the feedback with:
       | Question         | this is a multiple choice 2 |
       | Label            | multichoice2                |
@@ -44,7 +44,7 @@ Feature: Testing multichoice questions in feedback
       | Required | 1 |
     And I add a "Label" question to the feedback with:
       | Contents | this is the second page of the feedback |
-    And I select "Add a page break" from the "Add question" singleselect
+    And I add a page break to the feedback
     And I add a "Multiple choice" question to the feedback with:
       | Question         | this is a multiple choice 3 |
       | Label            | multichoice3                |
@@ -179,7 +179,7 @@ Feature: Testing multichoice questions in feedback
       | Multiple choice values | option a\noption b\noption c  |
     And I add a "Label" question to the feedback with:
       | Contents | this is the first page of the feedback |
-    And I select "Add a page break" from the "Add question" singleselect
+    And I add a page break to the feedback
     And I add a "Multiple choice" question to the feedback with:
       | Question         | this is a multiple choice 2 |
       | Label            | multichoice2                |
@@ -188,7 +188,7 @@ Feature: Testing multichoice questions in feedback
       | Required | 1 |
     And I add a "Label" question to the feedback with:
       | Contents | this is the second page of the feedback |
-    And I select "Add a page break" from the "Add question" singleselect
+    And I add a page break to the feedback
     And I add a "Multiple choice" question to the feedback with:
       | Question         | this is a multiple choice 3 |
       | Label            | multichoice3                |
@@ -322,7 +322,7 @@ Feature: Testing multichoice questions in feedback
       | Multiple choice values | option a\noption b\noption c  |
     And I add a "Label" question to the feedback with:
       | Contents | this is the first page of the feedback |
-    And I select "Add a page break" from the "Add question" singleselect
+    And I add a page break to the feedback
     And I add a "Multiple choice" question to the feedback with:
       | Question         | this is a multiple choice 2 |
       | Label            | multichoice2                |
@@ -331,7 +331,7 @@ Feature: Testing multichoice questions in feedback
       | Required | 1 |
     And I add a "Label" question to the feedback with:
       | Contents | this is the second page of the feedback |
-    And I select "Add a page break" from the "Add question" singleselect
+    And I add a page break to the feedback
     And I add a "Multiple choice" question to the feedback with:
       | Question         | this is a multiple choice 3 |
       | Label            | multichoice3                |

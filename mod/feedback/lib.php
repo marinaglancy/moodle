@@ -1549,7 +1549,7 @@ function feedback_load_feedback_items($dir = 'mod/feedback/item') {
 function feedback_load_feedback_items_options() {
     global $CFG;
 
-    $feedback_options = array("pagebreak" => get_string('add_pagebreak', 'feedback'));
+    $feedback_options = array();
 
     if (!$feedback_names = feedback_load_feedback_items('mod/feedback/item')) {
         return array();
@@ -2080,12 +2080,20 @@ function feedback_delete_completedtmp($tmpcplid) {
  * @param int $feedbackid
  * @return mixed false if there already is a pagebreak on last position or the id of the pagebreak-item
  */
-function feedback_create_pagebreak($feedbackid) {
+function feedback_create_pagebreak($feedbackid, $afteritemid = 0) {
     global $DB;
 
-    //check if there already is a pagebreak on the last position
-    $lastposition = $DB->count_records('feedback_item', array('feedback'=>$feedbackid));
-    if ($lastposition == feedback_get_last_break_position($feedbackid)) {
+    $items = $DB->get_records('feedback_item', array('feedback' => $feedbackid), 'position', 'id, typ, position');
+    $afteritem = null;
+    $position = count($items) + 1;
+    if ($afteritemid && isset($items[$afteritemid])) {
+        $afteritem = $items[$afteritemid];
+        $position = $items[$afteritemid]->position + 1;
+    } else if ($items) {
+        $afteritem = end($items);
+    }
+    if ($afteritem && $afteritem->typ === 'pagebreak') {
+        // There is already a page break there.
         return false;
     }
 
@@ -2100,11 +2108,15 @@ function feedback_create_pagebreak($feedbackid) {
     $item->hasvalue = 0;
 
     $item->typ = 'pagebreak';
-    $item->position = $lastposition + 1;
+    $item->position = $position;
 
     $item->required=0;
 
-    return $DB->insert_record('feedback_item', $item);
+    $item->id = $DB->insert_record('feedback_item', $item);
+    if ($position <= count($items)) {
+        feedback_move_item($item, $position);
+    }
+    return $item->id;
 }
 
 /**

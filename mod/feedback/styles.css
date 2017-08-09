@@ -8,7 +8,12 @@
 }
 
 .path-mod-feedback span.feedback_depend {
+    color: #9600ff;
+}
+
+.path-mod-feedback span.feedback_depend.feedback_depend_invalid {
     color: #f00;
+    font-weight: bold;
 }
 
 .path-mod-feedback hr.feedback_pagebreak {
@@ -19,6 +24,39 @@
     margin: 0;
 }
 
+/* Edit questions page */
+.path-mod-feedback .itemactions {
+    float: right;
+}
+
+.path-mod-feedback ul.feedback_edit {
+    padding: 0 0 0 20px;
+}
+
+.path-mod-feedback ul.feedback_edit li.feedback_itemlist {
+    margin: 3px 0;
+    padding: .2em;
+}
+
+.path-mod-feedback ul.feedback_edit li.feedback_itemlist:not(.feedback-item-pagebreak) {
+    background: #e6e6e6;
+}
+
+.path-mod-feedback .feedback_edit .page_split_join_wrapper {
+    position: absolute;
+    height: 1px;
+}
+
+.path-mod-feedback .feedback_edit .addremovepagebreak {
+    position: relative;
+    left: -20px;
+    top: -7px;
+}
+
+.path-mod-feedback .feedback_edit .addremovepagebreak img {
+    margin-left: 0;
+}
+
 .path-mod-feedback .drag_target_active {
     opacity: .25;
 }
@@ -27,6 +65,12 @@
     opacity: .5;
 }
 
+.path-mod-feedback .drag_target_active .page_split_join_wrapper,
+.path-mod-feedback .drag_item_active .page_split_join_wrapper {
+    display: none;
+}
+
+/* Templates page */
 .path-mod-feedback .templateslist td.cell.action,
 .path-mod-feedback .templateslist th.header.action {
     width: 10%;

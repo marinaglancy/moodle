@@ -3,8 +3,8 @@ YUI.add('moodle-mod_feedback-dragdrop', function(Y) {
     var CSS = {
         DRAGAREA: '#feedback_dragarea',
         DRAGITEMCLASS: 'feedback_itemlist',
-        DRAGITEM: 'div.feedback_itemlist',
-        DRAGLIST: '#feedback_dragarea form',
+        DRAGITEM: 'li.feedback_itemlist:not(.feedback-item-pagebreak)',
+        DRAGLIST: '#feedback_dragarea ul',
         DRAGHANDLE: 'itemhandle'
     };
 
@@ -28,7 +28,7 @@ YUI.add('moodle-mod_feedback-dragdrop', function(Y) {
             listitems = basenode.all(CSS.DRAGITEM).each(function(v) {
                 var item_id = this.get_node_id(v.get('id')); //Get the id of the feedback item.
                 var mydraghandle = this.get_drag_handle(handletitle, CSS.DRAGHANDLE, 'icon');
-                v.append(mydraghandle); // Insert the new handle into the item box.
+                v.prepend(mydraghandle); // Insert the new handle into the item box.
             }, this);
 
             //We use a delegate to make all items draggable
@@ -171,13 +171,10 @@ YUI.add('moodle-mod_feedback-dragdrop', function(Y) {
                 var elementId;
                 var elements = [];
                 drop.all(CSS.DRAGITEM).each(function(v) {
-                    childElement = v.one('.felement').one('[id^="feedback_item_"]');
-                    if (childElement) {
-                        elementId = this.get_node_id(childElement.get('id'));
+                        elementId = this.get_node_id(v.get('id'));
                         if (elements.indexOf(elementId) == -1) {
                             elements.push(elementId);
                         }
-                    }
                 }, this);
                 var spinner = M.util.add_spinner(Y, dragnode);
                 this.save_item_order(this.cmid, elements.toString(), spinner);

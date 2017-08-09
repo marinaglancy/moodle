@@ -27,6 +27,7 @@ require_once("lib.php");
 
 $id = required_param('id', PARAM_INT);
 $courseid = optional_param('courseid', false, PARAM_INT); // Course where this feedback is mapped to - used for return link.
+$returnto = optional_param('returnto', '', PARAM_ALPHANUM);
 
 $PAGE->set_url('/mod/feedback/print.php', array('id'=>$id));
 
@@ -53,9 +54,13 @@ echo $OUTPUT->header();
 // Print the main part of the page.
 echo $OUTPUT->heading(format_string($feedback->name));
 
-$continueurl = new moodle_url('/mod/feedback/view.php', array('id' => $id));
-if ($courseid) {
-    $continueurl->param('courseid', $courseid);
+if ($returnto === 'edit') {
+    $continueurl = new moodle_url('/mod/feedback/edit.php', array('id' => $id));
+} else {
+    $continueurl = new moodle_url('/mod/feedback/view.php', array('id' => $id));
+    if ($courseid) {
+        $continueurl->param('courseid', $courseid);
+    }
 }
 
 $form = new mod_feedback_complete_form(mod_feedback_complete_form::MODE_PRINT,

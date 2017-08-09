@@ -38,8 +38,6 @@ class mod_feedback_complete_form extends moodleform {
     /** @var int */
     const MODE_PRINT = 2;
     /** @var int */
-    const MODE_EDIT = 3;
-    /** @var int */
     const MODE_VIEW_RESPONSE = 4;
     /** @var int */
     const MODE_VIEW_TEMPLATE = 5;
@@ -91,7 +89,7 @@ class mod_feedback_complete_form extends moodleform {
         $mform->addElement('hidden', 'lastitempos');
         $mform->setType('lastitempos', PARAM_INT);
 
-        if (isloggedin() && !isguestuser() && $this->mode != self::MODE_EDIT && $this->mode != self::MODE_VIEW_TEMPLATE &&
+        if (isloggedin() && !isguestuser() && $this->mode != self::MODE_VIEW_TEMPLATE &&
                     $this->mode != self::MODE_VIEW_RESPONSE) {
             // Output information about the current mode (anonymous or not) in some modes.
             if ($this->structure->is_anonymous()) {
@@ -336,10 +334,6 @@ class mod_feedback_complete_form extends moodleform {
         $this->add_item_dependencies($item, $element);
         $this->add_item_number($item, $element);
 
-        if ($this->mode == self::MODE_EDIT) {
-            $this->enhance_name_for_edit($item, $element);
-        }
-
         return $element;
     }
 
@@ -391,7 +385,7 @@ class mod_feedback_complete_form extends moodleform {
      * @param HTML_QuickForm_element $element
      */
     protected function add_item_label($item, $element) {
-        if (strlen($item->label) && ($this->mode == self::MODE_EDIT || $this->mode == self::MODE_VIEW_TEMPLATE)) {
+        if (strlen($item->label) && $this->mode == self::MODE_VIEW_TEMPLATE) {
             $name = $element->getLabel();
             $name = '('.format_string($item->label).') '.$name;
             $element->setLabel($name);
@@ -405,7 +399,7 @@ class mod_feedback_complete_form extends moodleform {
      */
     protected function add_item_dependencies($item, $element) {
         $allitems = $this->structure->get_items();
-        if ($item->dependitem && ($this->mode == self::MODE_EDIT || $this->mode == self::MODE_VIEW_TEMPLATE)) {
+        if ($item->dependitem && $this->mode == self::MODE_VIEW_TEMPLATE) {
             if (isset($allitems[$item->dependitem])) {
                 $dependitem = $allitems[$item->dependitem];
                 $name = $element->getLabel();
@@ -431,35 +425,6 @@ class mod_feedback_complete_form extends moodleform {
             return 'fgroup_' . $id;
         }
         return 'fitem_' . $id;
-    }
-
-    /**
-     * Adds editing actions to the question name in the edit mode
-     * @param stdClass $item
-     * @param HTML_QuickForm_element $element
-     */
-    protected function enhance_name_for_edit($item, $element) {
-        global $OUTPUT;
-        $menu = new action_menu();
-        $menu->set_owner_selector('#' . $this->guess_element_id($item, $element));
-        $menu->set_constraint('.feedback_form');
-        $menu->set_alignment(action_menu::TR, action_menu::BR);
-        $menu->set_menu_trigger(get_string('edit'));
-        $menu->prioritise = true;
-
-        $itemobj = feedback_get_item_class($item->typ);
-        $actions = $itemobj->edit_actions($item, $this->get_feedback(), $this->get_cm());
-        foreach ($actions as $action) {
-            $menu->add($action);
-        }
-        $editmenu = $OUTPUT->render($menu);
-
-        $name = $element->getLabel();
-
-        $name = html_writer::span('', 'itemdd', array('id' => 'feedback_item_box_' . $item->id)) .
-                html_writer::span($name, 'itemname') .
-                html_writer::span($editmenu, 'itemactions');
-        $element->setLabel(html_writer::span($name, 'itemtitle'));
     }
 
     /**
@@ -565,9 +530,5 @@ class mod_feedback_complete_form extends moodleform {
         }
 
         $this->_form->display();
-
-        if ($this->mode == self::MODE_EDIT) {
-            $PAGE->requires->js_call_amd('mod_feedback/edit', 'setup');
-        }
     }
 }

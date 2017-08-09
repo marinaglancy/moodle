@@ -125,7 +125,10 @@ if (count($feedbackitems) > 1) {
 }
 
 echo $OUTPUT->header();
-echo $OUTPUT->heading(format_string($feedback->name));
+$previewimg = $OUTPUT->pix_icon('t/preview', get_string('preview'));
+$previewlnk = new moodle_url('/mod/feedback/print.php', array('id' => $id, 'returnto' => 'edit'));
+$preview = html_writer::link($previewlnk, $previewimg);
+echo $OUTPUT->heading(format_string($feedback->name) . $preview);
 
 /// print the tabs
 require('tabs.php');
@@ -166,12 +169,9 @@ if ($do_show == 'edit') {
     $select->label = get_string('add_item', 'mod_feedback');
     echo $OUTPUT->render($select);
 
-
-    $form = new mod_feedback_complete_form(mod_feedback_complete_form::MODE_EDIT,
-            $feedbackstructure, 'feedback_edit_form');
-    echo '<div id="feedback_dragarea">'; // The container for the dragging area.
-    $form->display();
-    echo '</div>';
+    echo $OUTPUT->render_from_template('mod_feedback/edititems',
+        $feedbackstructure->get_items_for_edit_template());
+    $PAGE->requires->js_call_amd('mod_feedback/edit', 'setup');
 }
 
 echo $OUTPUT->footer();
