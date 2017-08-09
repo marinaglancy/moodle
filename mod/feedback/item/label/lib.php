@@ -116,19 +116,6 @@ class feedback_item_label extends feedback_item_base {
         return false;
     }
 
-    public function excelprint_item(&$worksheet,
-                             $row_offset,
-                             $xls_formats,
-                             $item,
-                             $groupid,
-                             $courseid = false) {
-    }
-
-    public function print_analysed($item, $itemnr = '', $groupid = false, $courseid = false) {
-    }
-    public function get_printval($item, $value) {
-    }
-
     /**
      * Return the analysis data ready for external functions.
      *

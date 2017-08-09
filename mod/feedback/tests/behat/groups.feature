@@ -184,7 +184,7 @@ Feature: Feedbacks in courses with groups
     And I am on "Course 1" course homepage
     And I follow "Course anon feedback"
     And I follow "Submitted answers"
-    And I should see "There are insufficient responses for this group"
+    And I should see "Must be at least 2 responses to show analysis for the group"
     And I should not see "Yes of course"
     And I log out
     And I log in as "user2" and complete feedback "Course anon feedback" in course "Course 1" with:

@@ -107,9 +107,9 @@ Feature: Test creating different types of feedback questions for anonymous feedb
     And I am on "Course 1" course homepage
     And I follow "Learning experience"
     And I navigate to "Analysis" in current page administration
-    And I should see "C1" in the "(info)" "table"
-    And I should see "my long answer" in the "(longertext)" "table"
-    And I should see "lots of feedbacks" in the "(longertext)" "table"
+    And I should see "C1" in the analysis for feedback question "(info)"
+    And I should see "my long answer" in the analysis for feedback question "(longertext)"
+    And I should see "lots of feedbacks" in the analysis for feedback question "(longertext)"
     And I show chart data for the "multichoice2" feedback
     And I should see "2 (100.00 %)" in the "option d" "table_row"
     And I should see "1 (50.00 %)" in the "option e" "table_row"
@@ -124,12 +124,12 @@ Feature: Test creating different types of feedback questions for anonymous feedb
     And I should not see "%" in the "(0) option k" "table_row"
     And I should see "1 (50.00 %)" in the "(1) option l" "table_row"
     And I should see "1 (50.00 %)" in the "(5) option m" "table_row"
-    And I should see "Average: 3.00"
-    And I should see "35" in the "(numeric)" "table"
-    And I should see "71" in the "(numeric)" "table"
-    And I should see "Average: 53.00" in the "(numeric)" "table"
-    And I should see "no way" in the "(shorttext)" "table"
-    And I should see "hello" in the "(shorttext)" "table"
+    And I should see "Average: 3" in the analysis for feedback question "(multichoice4)"
+    And I should see "35" in the analysis for feedback question "(numeric)"
+    And I should see "71" in the analysis for feedback question "(numeric)"
+    And I should see "Average: 53" in the analysis for feedback question "(numeric)"
+    And I should see "no way" in the analysis for feedback question "(shorttext)"
+    And I should see "hello" in the analysis for feedback question "(shorttext)"
     And I show chart data for the "multichoice1" feedback
     And I should see "1 (50.00 %)" in the "option a" "table_row"
     And I should see "1 (50.00 %)" in the "option b" "table_row"

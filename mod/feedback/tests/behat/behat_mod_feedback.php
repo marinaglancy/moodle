@@ -121,6 +121,20 @@ class behat_mod_feedback extends behat_base {
     }
 
     /**
+     * Checks text in the analysis for the feedback question
+     *
+     * @Then /^I should see "(?P<text_string>(?:[^"]|\\")*)" in the analysis for feedback question "(?P<question_string>(?:[^"]|\\")*)"$/
+     * @param string $text
+     * @param string $question
+     */
+    public function i_should_see_in_the_analysis_for_feedback_question($text, $question) {
+        $question = $this->escape($question);
+        $xpath = "//div[contains(@class, 'analysis') and ./div[contains(@class, 'question') and contains(., '$question')]]";
+
+        $this->execute("behat_general::assert_element_contains_text", [$text, $xpath, 'xpath_element']);
+    }
+
+    /**
      * Exports feedback and makes sure the export file is the same as in the fixture
      *
      * @Then /^following "(?P<link_string>(?:[^"]|\\")*)" should export feedback identical to "(?P<filename_string>(?:[^"]|\\")*)"$/
@@ -154,8 +168,8 @@ class behat_mod_feedback extends behat_base {
      */
     public function i_show_chart_data_for_the_feedback($feedbackname) {
 
-        $feedbackxpath = "//th[contains(normalize-space(string(.)), \"" . $feedbackname . "\")]/ancestor::table/" .
-            "following-sibling::div[contains(concat(' ', normalize-space(@class), ' '), ' chart-area ')][1]" .
+        $feedbackxpath =
+            "//div[contains(@class, 'analysis') and ./div[contains(@class, 'question') and contains(., '$feedbackname')]]" .
             "//p[contains(concat(' ', normalize-space(@class), ' '), ' chart-table-expand ') and ".
             "//a[contains(normalize-space(string(.)), '".get_string('showchartdata')."')]]";
 

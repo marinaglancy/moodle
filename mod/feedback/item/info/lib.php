@@ -117,88 +117,46 @@ class feedback_item_info extends feedback_item_base {
      * @param stdClass $item the db-object from feedback_item
      * @param int|false $groupid
      * @param int $courseid
+     * @param bool $forexport prepare for export or for display (for example: newlines should be converted to <br> for display but not for export)
      * @return stdClass
      */
-    protected function get_analysed($item, $groupid = false, $courseid = false) {
+    public function get_analysis($item, $groupid = false, $courseid = false, $forexport = false) {
 
-        $presentation = $item->presentation;
-        $analysed_val = new stdClass();
-        $analysed_val->data = null;
-        $analysed_val->name = $item->name;
+        $analysed = parent::get_analysis($item, $groupid, $courseid, $forexport, $forexport);
         $values = feedback_get_group_values($item, $groupid, $courseid);
+        $analysed->individualdata = [];
+        $analysed->dataexternal = [];
         if ($values) {
-            $data = array();
             foreach ($values as $value) {
-                $datavalue = new stdClass();
-
-                switch($presentation) {
-                    case self::MODE_RESPONSETIME:
-                        $datavalue->value = $value->value;
-                        $datavalue->show = $value->value ? userdate($datavalue->value) : '';
-                        break;
-                    case self::MODE_COURSE:
-                        $datavalue->value = $value->value;
-                        $datavalue->show = $datavalue->value;
-                        break;
-                    case self::MODE_CATEGORY:
-                        $datavalue->value = $value->value;
-                        $datavalue->show = $datavalue->value;
-                        break;
-                }
-
-                $data[] = $datavalue;
+                $show = $this->get_display_value($item, $value->value, $forexport);
+                $analysed->dataexternal[] = (object)['value' => $value->value, 'show' => $show];
+                $analysed->individualdata[] = $show;
             }
-            $analysed_val->data = $data;
         }
-        return $analysed_val;
+        array_filter($analysed->individualdata, function($el) {
+            strval($el) !== '';
+        });
+        $analysed->hasdata = !empty($analysed->individualdata);
+        return $analysed;
     }
 
-    public function get_printval($item, $value) {
-
-        if (strval($value->value) === '') {
+    public function get_display_value($item, $value, $forexport = false) {
+        if (strval($value) === '') {
             return '';
         }
-        return $item->presentation == self::MODE_RESPONSETIME ?
-                userdate($value->value) : $value->value;
-    }
-
-    public function print_analysed($item, $itemnr = '', $groupid = false, $courseid = false) {
-        echo "<table class=\"analysis itemtype_{$item->typ}\">";
-        $analysed_item = $this->get_analysed($item, $groupid, $courseid);
-        $data = $analysed_item->data;
-        if (is_array($data)) {
-            echo '<tr><th colspan="2" align="left">';
-            echo $itemnr . ' ';
-            if (strval($item->label) !== '') {
-                echo '('. format_string($item->label).') ';
-            }
-            echo $this->get_display_name($item);
-            echo '</th></tr>';
-            $sizeofdata = count($data);
-            for ($i = 0; $i < $sizeofdata; $i++) {
-                $class = strlen(trim($data[$i]->show)) ? '' : ' class="isempty"';
-                echo '<tr'.$class.'><td colspan="2" class="singlevalue">';
-                echo str_replace("\n", '<br />', $data[$i]->show);
-                echo '</td></tr>';
-            }
-        }
-        echo '</table>';
+        return $item->presentation == self::MODE_RESPONSETIME ? userdate($value) : $value;
     }
 
     public function excelprint_item(&$worksheet, $row_offset,
                              $xls_formats, $item,
                              $groupid, $courseid = false) {
-        $analysed_item = $this->get_analysed($item, $groupid, $courseid);
+        $analyseditem = $this->get_analysis($item, $groupid, $courseid, true);
 
-        $worksheet->write_string($row_offset, 0, $item->label, $xls_formats->head2);
-        $worksheet->write_string($row_offset, 1, $item->name, $xls_formats->head2);
-        $data = $analysed_item->data;
-        if (is_array($data)) {
-            $worksheet->write_string($row_offset, 2, $data[0]->show, $xls_formats->value_bold);
-            $row_offset++;
-            $sizeofdata = count($data);
-            for ($i = 1; $i < $sizeofdata; $i++) {
-                $worksheet->write_string($row_offset, 2, $data[$i]->show, $xls_formats->default);
+        $worksheet->write_string($row_offset, 0, $analyseditem->label, $xls_formats->head2);
+        $worksheet->write_string($row_offset, 1, $analyseditem->shortname, $xls_formats->head2);
+        if (!empty($analyseditem->individualdata)) {
+            foreach ($analyseditem->individualdata as $value) {
+                $worksheet->write_string($row_offset, 2, $value, $xls_formats->default);
                 $row_offset++;
             }
         }
@@ -253,7 +211,7 @@ class feedback_item_info extends feedback_item_base {
             $value = $this->get_current_value($item,
                     $form->get_feedback(), $form->get_current_course_id());
         }
-        $printval = $this->get_printval($item, (object)['value' => $value]);
+        $printval = $this->get_display_value($item, $value);
 
         $class = '';
         switch ($item->presentation) {
@@ -320,12 +278,10 @@ class feedback_item_info extends feedback_item_base {
     public function get_analysed_for_external($item, $groupid = false, $courseid = false) {
 
         $externaldata = array();
-        $data = $this->get_analysed($item, $groupid, $courseid);
+        $data = $this->get_analysis($item, $groupid, $courseid);
 
-        if (is_array($data->data)) {
-            foreach ($data->data as $d) {
-                $externaldata[] = json_encode($d);
-            }
+        if (is_array($data->dataexternal)) {
+            return array_map('json_encode', $data->dataexternal);
         }
         return $externaldata;
     }
