@@ -16714,48 +16714,90 @@ fieldset.coursesearchbox label {
   font-weight: bold;
 }
 /**
+ * Forms marked as vertical always display this way;
+ */
+#region-main .mform.full-width-labels:not(.unresponsive) .fitem .fitemtitle {
+  display: block;
+  margin-top: 4px;
+  margin-bottom: 4px;
+  text-align: left;
+  width: 100%;
+}
+#region-main .mform.full-width-labels:not(.unresponsive) .fitem .felement {
+  margin-left: 0;
+  width: 100%;
+  float: left;
+  padding-left: 0;
+  padding-right: 0;
+}
+#region-main .mform.full-width-labels:not(.unresponsive) .fitem .fstatic:empty {
+  display: none;
+}
+#region-main .mform.full-width-labels:not(.unresponsive) .fitem .fcheckbox > span,
+#region-main .mform.full-width-labels:not(.unresponsive) .fitem .fradio > span,
+#region-main .mform.full-width-labels:not(.unresponsive) .fitem .fgroup > span {
+  margin-top: 4px;
+}
+#region-main .mform.full-width-labels:not(.unresponsive) .femptylabel .fitemtitle {
+  display: inline-block;
+  width: auto;
+  margin-right: 8px;
+}
+#region-main .mform.full-width-labels:not(.unresponsive) .femptylabel .felement {
+  display: inline-block;
+  margin-top: 4px;
+  padding-top: 5px;
+}
+#region-main .mform.full-width-labels:not(.unresponsive) .fitem_fcheckbox .fitemtitle,
+#region-main .mform.full-width-labels:not(.unresponsive) .fitem_fcheckbox .felement {
+  display: inline-block;
+  width: auto;
+}
+#region-main .mform.full-width-labels:not(.unresponsive) .fitem_fcheckbox .felement {
+  padding: 6px;
+}
+/**
  * Make forms vertical when the screen is less than 1200px;
  */
 @media (max-width: 1199px) {
-  body #region-main .mform:not(.unresponsive) .fitem .fitemtitle {
+  #region-main .mform:not(.unresponsive) .fitem .fitemtitle {
     display: block;
     margin-top: 4px;
     margin-bottom: 4px;
     text-align: left;
     width: 100%;
   }
-  body #region-main .mform:not(.unresponsive) .fitem .felement {
+  #region-main .mform:not(.unresponsive) .fitem .felement {
     margin-left: 0;
     width: 100%;
     float: left;
     padding-left: 0;
     padding-right: 0;
   }
-  body #region-main .mform:not(.unresponsive) .fitem .fstatic:empty {
+  #region-main .mform:not(.unresponsive) .fitem .fstatic:empty {
     display: none;
   }
-  body #region-main .mform:not(.unresponsive) .fitem .fcheckbox > span,
-  body #region-main .mform:not(.unresponsive) .fitem .fradio > span,
-  body #region-main .mform:not(.unresponsive) .fitem .fgroup > span {
+  #region-main .mform:not(.unresponsive) .fitem .fcheckbox > span,
+  #region-main .mform:not(.unresponsive) .fitem .fradio > span,
+  #region-main .mform:not(.unresponsive) .fitem .fgroup > span {
     margin-top: 4px;
   }
-  body #region-main .mform:not(.unresponsive) .femptylabel .fitemtitle {
+  #region-main .mform:not(.unresponsive) .femptylabel .fitemtitle {
     display: inline-block;
     width: auto;
     margin-right: 8px;
   }
-  body #region-main .mform:not(.unresponsive) .femptylabel .felement {
+  #region-main .mform:not(.unresponsive) .femptylabel .felement {
     display: inline-block;
     margin-top: 4px;
     padding-top: 5px;
-    width: auto;
   }
-  body #region-main .mform:not(.unresponsive) .fitem_fcheckbox .fitemtitle,
-  body #region-main .mform:not(.unresponsive) .fitem_fcheckbox .felement {
+  #region-main .mform:not(.unresponsive) .fitem_fcheckbox .fitemtitle,
+  #region-main .mform:not(.unresponsive) .fitem_fcheckbox .felement {
     display: inline-block;
     width: auto;
   }
-  body #region-main .mform:not(.unresponsive) .fitem_fcheckbox .felement {
+  #region-main .mform:not(.unresponsive) .fitem_fcheckbox .felement {
     padding: 6px;
   }
 }
@@ -16801,7 +16843,6 @@ fieldset.coursesearchbox label {
     display: inline-block;
     margin-top: 4px;
     padding-top: 5px;
-    width: auto;
   }
   .used-region-side-pre.used-region-side-post #region-main .mform:not(.unresponsive) .fitem_fcheckbox .fitemtitle,
   .used-region-side-pre.used-region-side-post #region-main .mform:not(.unresponsive) .fitem_fcheckbox .felement {

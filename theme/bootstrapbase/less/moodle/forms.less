@@ -270,7 +270,7 @@ fieldset.coursesearchbox label {
     font-weight: bold;
 }
 .makeFormsVertical() {
-    #region-main .mform:not(.unresponsive) {
+    &:not(.unresponsive) {
         .fitem {
             .fitemtitle {
                 display: block;
@@ -306,7 +306,6 @@ fieldset.coursesearchbox label {
                 display: inline-block;
                 margin-top: 4px;
                 padding-top: 5px;
-                width: auto;
             }
         }
         .fitem_fcheckbox {
@@ -323,10 +322,17 @@ fieldset.coursesearchbox label {
 }
 
 /**
+ * Forms marked as vertical always display this way;
+ */
+#region-main .mform.full-width-labels {
+    .makeFormsVertical;
+}
+
+/**
  * Make forms vertical when the screen is less than 1200px;
  */
 @media (max-width: 1199px) {
-    body {
+    #region-main .mform {
         .makeFormsVertical;
     }
 }
@@ -345,7 +351,7 @@ fieldset.coursesearchbox label {
 @maxWidthForVerticalForms: 1474px;
 
 @media (max-width: @maxWidthForVerticalForms) {
-    .used-region-side-pre.used-region-side-post {
+    .used-region-side-pre.used-region-side-post #region-main .mform {
         .makeFormsVertical;
     }
 }
