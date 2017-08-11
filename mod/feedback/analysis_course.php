@@ -87,8 +87,9 @@ if (has_capability('mod/feedback:viewreports', $context) && $feedbackstructure->
 $summary = new mod_feedback\output\summary($feedbackstructure);
 echo $OUTPUT->render_from_template('mod_feedback/summary', $summary->export_for_template($OUTPUT));
 
-// Print the items in an analysed form.
-echo $feedbackstructure->print_analysis($mygroupid);
+// Print analysis of each question.
+$analysis = new \mod_feedback\output\analysis($feedbackstructure, $mygroupid);
+echo $OUTPUT->render_from_template('mod_feedback/analysis', $analysis->export_for_template($OUTPUT));
 
 echo $OUTPUT->footer();
 

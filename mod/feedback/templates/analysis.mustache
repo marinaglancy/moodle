@@ -23,40 +23,39 @@
     * none
 
     Data attributes required for JS:
-    * none
+    * data-mode
+    * data-showquestion
 
     Context variables required for this template:
     * none
 
     Example context (json):
     {
-        "hasdata" : 1,
-        "itemtype" : "text",
-        "itemnr" : 2,
-        "haslabel" : 1,
-        "label" : "itemlabel",
-        "name" : "How did you like this course?",
-        "individualdata" : [ "It was ok", "Amazing", "I've seen better" ],
-        "summary" : "<p>Some <b>additional</b> statistics goes here...</p>"
+        "items": [{
+            "itemtype" : "text",
+            "itemnr" : 2,
+            "haslabel" : 1,
+            "label" : "itemlabel",
+            "name" : "How did you like this course?",
+            "individualdata" : [ "It was ok", "Amazing", "I've seen better" ],
+            "summary" : "<p>Some <b>additional</b> statistics goes here...</p>"
+        }]
     }
 
 }}
-
-{{#hasdata}}
-<div class="analysis itemtype_{{itemtype}}" id="item_analysis_{{itemid}}">
-    <div class="questionshort" aria-expanded="true">
-        {{>mod_feedback/itemshortname}}
-        <a href="#" data-showquestion="full" role="button">{{#str}} more, mod_feedback {{/str}}</a>
-    </div>
-    <div class="questionfull" style="display:none" aria-expanded="false">
+{{#insufficientdata}}
+    {{>core/notification_info}}
+{{/insufficientdata}}
+{{#items}}
+<div class="analysis itemtype_{{itemtype}} card" id="item_analysis_{{itemid}}">
+    <div class="card-header">
         {{>mod_feedback/itemfullname}}
-        <a href="#" data-showquestion="short" role="button">{{#str}} less, mod_feedback {{/str}}</a>
     </div>
-    <div class="details">
+    <div class="details card-block">
         {{#individualdata.0}}
-            <ul class="individualdata">
+            <ul class="individualdata list-group">
             {{#individualdata}}
-                <li>{{{.}}}</li>
+                <li class="list-group-item">{{{.}}}</li>
             {{/individualdata}}
             </ul>
         {{/individualdata.0}}
@@ -67,25 +66,4 @@
         {{/summary}}
     </div>
 </div>
-{{/hasdata}}
-
-{{#js}}
-    require(['jquery'], function($) {
-        $('body').delegate('.analysis a[data-showquestion=full]', 'click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            var main = $(this).closest('.analysis');
-            main.find('.questionshort').hide().attr('aria-expanded','false');
-            main.find('.questionfull').show().attr('aria-expanded','true');
-            main.find('.questionfull a[data-showquestion=short]').focus();
-        });
-        $('body').delegate('.analysis a[data-showquestion=short]', 'click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            var main = $(this).closest('.analysis');
-            main.find('.questionshort').show().attr('aria-expanded','true');
-            main.find('.questionfull').hide().attr('aria-expanded','false');
-            main.find('.questionshort a[data-showquestion=full]').focus();
-        });
-    });
-{{/js}}
+{{/items}}

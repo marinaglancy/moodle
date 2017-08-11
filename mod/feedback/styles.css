@@ -27,37 +27,12 @@
     opacity: .5;
 }
 
-.path-mod-feedback .feedback_bar_image {
-    height: 10px;
-}
-
-.path-mod-feedback #analysis-form label {
-    display: inline;
-}
-
 .path-mod-feedback .templateslist td.cell.action,
 .path-mod-feedback .templateslist th.header.action {
     width: 10%;
 }
 
 /* Analysis page */
-.path-mod-feedback .analysis {
-    width: 100%;
-    border-top: 1px solid #aaa;
-    margin-top: 10px;
-}
-
-.path-mod-feedback .analysis {
-    padding-top: 10px;
-}
-
-.path-mod-feedback .analysis > .question {
-    font-weight: bold;
-}
-
-.path-mod-feedback .analysis.itemtype_textarea li {
-    padding: 4px 0;
-}
 
 .path-mod-feedback .analysis .individualdata li.isempty {
     display: none;

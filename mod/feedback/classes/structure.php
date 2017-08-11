@@ -529,35 +529,22 @@ class mod_feedback_structure {
     }
 
     /**
-     * Prepares analysis page
+     * Checks if analysis page can be shown for a group
+     *
+     * Returns false if feedback is anonymous, group is specified and there are less than
+     * FEEDBACK_MIN_ANONYMOUS_COUNT_IN_GROUP responses
      *
      * @param int $groupid
-     * @return string
+     * @return bool
      */
-    public function print_analysis($groupid = 0) {
-        global $OUTPUT;
-
+    public function has_sufficient_responses_for_group($groupid = 0) {
         // Check if we have enough results to print analysis.
         if ($groupid > 0 AND $this->feedback->anonymous == FEEDBACK_ANONYMOUS_YES) {
             $completedcount = $this->count_completed_responses($groupid);
             if ($completedcount < FEEDBACK_MIN_ANONYMOUS_COUNT_IN_GROUP) {
-                return $OUTPUT->notification(get_string('insufficient_responses_for_this_group', 'feedback'),
-                    \core\output\notification::NOTIFY_INFO);
+                return false;
             }
         }
-
-        // Get analysis for each item.
-        $rv = '';
-        $items = $this->get_items(true);
-        $courseid = $this->get_courseid();
-        foreach ($items as $item) {
-            $itemobj = feedback_get_item_class($item->typ);
-            $analyseditem = $itemobj->get_analysis($item, $groupid, $courseid);
-            $analyseditem->itemnr = ($this->feedback->autonumbering && $item->itemnr) ? $item->itemnr : '';
-            $rv .= $OUTPUT->render_from_template('mod_feedback/analysis', $analyseditem);
-        }
-
-        return $rv;
-
+        return true;
     }
 }
