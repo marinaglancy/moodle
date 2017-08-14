@@ -279,6 +279,13 @@ class mod_feedback_complete_form extends moodleform {
         return $class;
     }
 
+    protected function append_element_class($element, $class) {
+        $attributes = $element->getAttributes();
+        $currentclass = !empty($attributes['class']) ? $attributes['class'] . ' ' : '';
+        $attributes['class'] = $currentclass . $class;
+        $element->setAttributes($attributes);
+    }
+
     /**
      * Adds an element to this form - to be used by items in their complete_form_element() method
      *
@@ -299,18 +306,10 @@ class mod_feedback_complete_form extends moodleform {
             }
             $element = call_user_func_array(array($this->_form, 'createElement'), $element);
         }
-        $element = $this->_form->addElement($element);
+        //$element = $this->_form->addElement($element);
 
-        // Prepend standard CSS classes to the element classes.
-        $attributes = $element->getAttributes();
-        $class = !empty($attributes['class']) ? ' ' . $attributes['class'] : '';
-        $attributes['class'] = $this->get_suggested_class($item) . $class;
-        $element->setAttributes($attributes);
-
-        // Add required rule.
-        if ($item->required && $addrequiredrule) {
-            $this->_form->addRule($element->getName(), get_string('required'), 'required', null, 'client');
-        }
+        // Append feedback styles to the form element.
+        $this->append_element_class($element, $this->get_suggested_class($item));
 
         // Set default value.
         if ($setdefaultvalue && ($tmpvalue = $this->get_item_value($item))) {
@@ -322,10 +321,28 @@ class mod_feedback_complete_form extends moodleform {
             $element->freeze();
         }
 
-        $this->hasrequired = $this->hasrequired || $item->required;
+        //$this->enhance_question_text($item, $questionelement, $element);
+        $text = $this->get_full_question_text($item);
 
-        // Add different useful stuff to the question name.
-        $this->enhance_question_text($item, $element);
+        if ($item->typ === 'pagebreak') {
+
+        } else if ($element->getType() === 'static' && !$item->hasvalue && !strlen($element->getValue())) {
+            //$this->append_element_class($element, 'card-header');
+        } else {
+            $questionelement = $this->_form->addElement('static', 'question' . $item->id, '', $text);
+            $this->append_element_class($questionelement, $this->get_suggested_class($item) . ' feedback_questionheader'/*.' card-header m-b-0'*/);
+            $element->setLabel('');
+            $this->append_element_class($element, 'feedback_hasquestionheader'/*.' card card-block m-t-0'*/);
+        }
+
+        $this->_form->addElement($element);
+
+        // Add required rule.
+        if ($item->required && $addrequiredrule) {
+            $this->_form->addRule($element->getName(), get_string('required'), 'required', null, 'client');
+        }
+
+        $this->hasrequired = $this->hasrequired || $item->required;
 
         return $element;
     }
@@ -364,28 +381,26 @@ class mod_feedback_complete_form extends moodleform {
      * Adds item number, label, "required" and dependencies to the question text if applicable.
      *
      * @param stdClass $item
-     * @param HTML_QuickForm_element $element
      */
-    protected function enhance_question_text($item, $element) {
+    protected function get_full_question_text($item) {
         global $OUTPUT;
+
+        if ($item->typ === 'pagebreak') {
+            return '';
+        }
 
         $itemobj = feedback_get_item_class($item->typ);
         $info = $itemobj->get_item_info($item);
-        $info->name = $element->getLabel();
+        //$info->name = $element->getLabel();
 
         if ($this->get_feedback()->autonumbering && !empty($item->itemnr)) {
             $info->itemnr = $item->itemnr;
         }
 
-        if ($this->mode == self::MODE_VIEW_TEMPLATE) {
-            $info->dependencies = $this->structure->get_item_dependencies_for_template($item)['dependencies'];
-        } else {
-            // Do not show the label even when it's set.
-            $info->haslabel = false;
-            $info->label = '';
-        }
+        //$element->setLabel(''/*trim(html_to_text($info->name, 0, false))*/);
+        //$questionelement->setText($OUTPUT->render_from_template('mod_feedback/itemfullname', $info));
 
-        $element->setLabel($OUTPUT->render_from_template('mod_feedback/itemfullname', $info));
+        return $OUTPUT->render_from_template('mod_feedback/itemfullname', $info);
     }
 
     /**

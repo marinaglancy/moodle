@@ -47,11 +47,11 @@
     {{>core/notification_info}}
 {{/insufficientdata}}
 {{#items}}
-<div class="analysis itemtype_{{itemtype}} card" id="item_analysis_{{itemid}}">
-    <div class="card-header">
+<div class="analysis itemtype_{{itemtype}}" id="item_analysis_{{itemid}}">
+    <div class="analysis-header">
         {{>mod_feedback/itemfullname}}
     </div>
-    <div class="details card-block">
+    <div class="analysis-details">
         {{#individualdata.0}}
             <ul class="individualdata list-group">
             {{#individualdata}}
