@@ -3,9 +3,17 @@
     font-weight: bold;
 }
 
-.path-mod-feedback div.feedback_is_dependent {
-    background: #ddd;
+/** Pagebreak on preview/review pages */
+
+body.path-mod-feedback #region-main .mform.feedback_form .feedback-item-pagebreak .felement {
+    width: 100%;
 }
+
+body.path-mod-feedback #region-main .mform.feedback_form .feedback-item-pagebreak .felement .form-control-static {
+    display: block;
+}
+
+/** Dependencies */
 
 .path-mod-feedback span.feedback_depend {
     color: #9600ff;
