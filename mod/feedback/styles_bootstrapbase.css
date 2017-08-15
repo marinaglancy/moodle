@@ -1,0 +1,40 @@
+/* Feedback BS4 compatibility */
+.path-mod-feedback ul.list-group {
+    padding-left: 0;
+    margin: 0;
+}
+
+.path-mod-feedback .list-group .list-group-item {
+    position: relative;
+    display: block;
+    padding: .75rem 1.25rem;
+    margin-bottom: -1px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+}
+
+.path-mod-feedback .m-b-0 {
+    margin-bottom: 0 !important; /* stylelint-disable-line declaration-no-important */
+}
+
+.path-mod-feedback .m-t-0 {
+    margin-top: 0 !important; /* stylelint-disable-line declaration-no-important */
+}
+
+/* Other bootstrapbase-only styles */
+.path-mod-feedback #region-main .mform.full-width-labels:not(.unresponsive) .femptylabel.card .felement {
+    margin: 0;
+    padding: 0;
+}
+
+body.path-mod-feedback #region-main .mform.feedback_form .feedback-item-pagebreak .felement {
+    width: 100%;
+}
+
+.path-mod-feedback .mform.feedback_form .fitem.feedback_hasvalue .fstatic:empty {
+    display: inherit;
+}
+
+.path-mod-feedback .fitem .fstaticlabel {
+    font-weight: inherit;
+}
