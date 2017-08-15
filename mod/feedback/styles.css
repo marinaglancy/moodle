@@ -3,6 +3,11 @@
     font-weight: bold;
 }
 
+/** Viewing questions */
+.path-mod-feedback .feedback_form .feedback_questionheader {
+    border-bottom: none;
+}
+
 /** Pagebreak on preview/review pages */
 
 body.path-mod-feedback #region-main .mform.feedback_form .feedback-item-pagebreak .felement {
@@ -37,17 +42,9 @@ body.path-mod-feedback #region-main .mform.feedback_form .feedback-item-pagebrea
     float: right;
 }
 
-.path-mod-feedback ul.feedback_edit {
-    padding: 0 0 0 20px;
-}
-
-.path-mod-feedback ul.feedback_edit li.feedback_itemlist {
-    margin: 3px 0;
-    padding: .2em;
-}
-
-.path-mod-feedback ul.feedback_edit li.feedback_itemlist:not(.feedback-item-pagebreak) {
-    background: #e6e6e6;
+.path-mod-feedback ul.feedback_edit li.feedback_itemlist.feedback-item-pagebreak {
+    border: none;
+    margin-top: .5rem;
 }
 
 .path-mod-feedback .feedback_edit .page_split_join_wrapper {
@@ -57,12 +54,12 @@ body.path-mod-feedback #region-main .mform.feedback_form .feedback-item-pagebrea
 
 .path-mod-feedback .feedback_edit .addremovepagebreak {
     position: relative;
-    left: -20px;
-    top: -7px;
+    left: -2.35rem;
 }
 
 .path-mod-feedback .feedback_edit .addremovepagebreak img {
-    margin-left: 0;
+    margin: 0;
+    padding: 0;
 }
 
 .path-mod-feedback .drag_target_active {

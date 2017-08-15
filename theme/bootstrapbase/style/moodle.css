@@ -17104,30 +17104,6 @@ select {
   border-top: 1px solid #ddd;
   padding: 8px 0;
 }
-body.path-mod-feedback #region-main .mform.feedback_form .feedback-item-pagebreak .felement {
-  width: 100%;
-}
-.path-mod-feedback .mform.feedback_form .fitem.feedback_hasvalue .fstatic:empty {
-  display: inherit;
-}
-.path-mod-feedback .feedback_form .feedback_questionheader,
-.path-mod-feedback .feedback_form .feedback-item-label {
-  padding: .25rem .625rem;
-}
-.path-mod-feedback .feedback_form .feedback_questionheader {
-  margin-bottom: 0;
-  border-bottom: none;
-}
-.path-mod-feedback .feedback_form .feedback_hasquestionheader,
-.path-mod-feedback .analysis .analysis-details {
-  margin-top: 0;
-}
-.path-mod-feedback .feedback_form .feedback_hasquestionheader {
-  padding: 0.625rem;
-}
-.path-mod-feedback .fitem .fstaticlabel {
-  font-weight: inherit;
-}
 .path-mod-forum .forumsearch input,
 .path-mod-forum .forumsearch .helptooltip {
   margin: 0 3px;
