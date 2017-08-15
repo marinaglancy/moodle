@@ -327,12 +327,12 @@ class mod_feedback_complete_form extends moodleform {
         if ($item->typ === 'pagebreak') {
 
         } else if ($element->getType() === 'static' && !$item->hasvalue && !strlen($element->getValue())) {
-            //$this->append_element_class($element, 'card-header');
+            $this->append_element_class($element, 'card card-header');
         } else {
             $questionelement = $this->_form->addElement('static', 'question' . $item->id, '', $text);
-            $this->append_element_class($questionelement, $this->get_suggested_class($item) . ' feedback_questionheader'/*.' card-header m-b-0'*/);
+            $this->append_element_class($questionelement, $this->get_suggested_class($item) . ' feedback_questionheader card card-header m-b-0');
             $element->setLabel('');
-            $this->append_element_class($element, 'feedback_hasquestionheader'/*.' card card-block m-t-0'*/);
+            $this->append_element_class($element, 'feedback_hasquestionheader card card-block m-t-0');
         }
 
         $this->_form->addElement($element);
