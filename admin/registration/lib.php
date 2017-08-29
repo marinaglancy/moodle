@@ -51,36 +51,75 @@ class registration_manager {
      * Automatically update the registration on all hubs
      */
     public function cron() {
-        global $CFG;
-        if (extension_loaded('xmlrpc')) {
-            $function = 'hub_update_site_info';
-            require_once($CFG->dirroot . "/webservice/xmlrpc/lib.php");
-
-            // Update all hubs where the site is registered.
-            $hubs = $this->get_registered_on_hubs();
-            if (empty($hubs)) {
-                mtrace(get_string('registrationwarning', 'admin'));
+        $hubs = $this->get_registered_on_hubs();
+        if (empty($hubs)) {
+            mtrace(get_string('registrationwarning', 'admin'));
+            return;
+        }
+        foreach ($hubs as $hub) {
+            try {
+                $this->update_registration($hub);
+                mtrace(get_string('siteupdatedcron', 'hub', $hub->hubname));
+            } catch (moodle_exception $e) {
+                mtrace($e->getMessage());
             }
-            foreach ($hubs as $hub) {
-                // Update the registration.
-                $siteinfo = $this->get_site_info($hub->huburl);
-                $params = array('siteinfo' => $siteinfo);
-                $serverurl = $hub->huburl . "/local/hub/webservice/webservices.php";
-                $xmlrpcclient = new webservice_xmlrpc_client($serverurl, $hub->token);
-                try {
-                    $result = $xmlrpcclient->call($function, $params);
-                    $this->update_registeredhub($hub); // To update timemodified.
-                    mtrace(get_string('siteupdatedcron', 'hub', $hub->hubname));
-                } catch (Exception $e) {
-                    $errorparam = new stdClass();
-                    $errorparam->errormessage = $e->getMessage();
-                    $errorparam->hubname = $hub->hubname;
-                    mtrace(get_string('errorcron', 'hub', $errorparam));
-                }
+        }
+    }
+
+    /**
+     * Update registration on the hub where this site is registered
+     *
+     * @param stdClass $registeredhub
+     * @return bool
+     * @throws moodle_exception
+     */
+    public function update_registration($registeredhub) {
+        global $CFG;
+
+        $siteinfo = $this->get_site_info($registeredhub->huburl);
+        $errormessage = null;
+
+        if (extension_loaded('xmlrpc')) {
+            // Update registration using XMLRPC protocol.
+            $function = 'hub_update_site_info';
+            $params = array('siteinfo' => $siteinfo);
+            $serverurl = $registeredhub->huburl . "/local/hub/webservice/webservices.php";
+            require_once($CFG->dirroot . "/webservice/xmlrpc/lib.php");
+            $xmlrpcclient = new webservice_xmlrpc_client($serverurl, $registeredhub->token);
+            try {
+                $xmlrpcclient->call($function, $params);
+                $this->update_registeredhub($registeredhub); // To update timemodified.
+                return true;
+            } catch (Exception $e) {
+                $errormessage = $e->getMessage();
+            }
+        } else if ($registeredhub->huburl == HUB_MOODLEORGHUBURL) {
+            // If php_xmlrpc is not installed moodle.net provides a fallback.
+            $siteinfo['token'] = $registeredhub->token;
+            $siteinfo['json'] = 1;
+            $curl = new curl();
+            $curloutput = @json_decode($curl->get($registeredhub->huburl . '/local/hub/siteregistration.php', $siteinfo));
+            $info = $curl->get_info();
+            if ($curl->get_errno()) {
+                $errormessage = $curl->error;
+            } else if (isset($curloutput->error)) {
+                $errormessage = $curloutput->error;
+            } else if ($info['http_code'] != 200) {
+                $errormessage = $info['http_code'];
+            } else {
+                $this->update_registeredhub($registeredhub); // To update timemodified.
+                return true;
             }
         } else {
-            mtrace(get_string('errorcronnoxmlrpc', 'hub'));
+            // Not possible to update registration.
+            throw new moodle_exception('errorcronnoxmlrpc', 'hub');
         }
+
+        $errorparam = new stdClass();
+        $errorparam->errormessage = $errormessage;
+        $errorparam->hubname = $registeredhub->hubname;
+        throw new moodle_exception('errorcron', 'hub', '', $errorparam);
+
     }
 
     /**
