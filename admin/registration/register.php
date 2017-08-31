@@ -110,17 +110,10 @@ $update = optional_param('update', 0, PARAM_INT);
 if ($update and confirm_sesskey()) {
 
     //update the registration
-    $function = 'hub_update_site_info';
-    $siteinfo = $registrationmanager->get_site_info($huburl);
-    $params = array('siteinfo' => $siteinfo);
-    $serverurl = $huburl . "/local/hub/webservice/webservices.php";
-    require_once($CFG->dirroot . "/webservice/xmlrpc/lib.php");
-    $xmlrpcclient = new webservice_xmlrpc_client($serverurl, $registeredhub->token);
     try {
-        $result = $xmlrpcclient->call($function, $params);
-        $registrationmanager->update_registeredhub($registeredhub); // To update timemodified.
-    } catch (Exception $e) {
-        $error = $OUTPUT->notification(get_string('errorregistration', 'hub', $e->getMessage()));
+        $result = $registrationmanager->update_registration($registeredhub);
+    } catch (moodle_exception $e) {
+        $error = $OUTPUT->notification($e->getMessage());
     }
 }
 
