@@ -934,30 +934,37 @@ abstract class webservice_server implements webservice_server_interface {
 
             $this->restricted_context = context_system::instance();
 
-            if (!$this->username) {
-                throw new moodle_exception('missingusername', 'webservice');
+            if ($this->username) {
+                if (!$this->password) {
+                    throw new moodle_exception('missingpassword', 'webservice');
+                }
+
+                if (!$auth->user_login_webservice($this->username, $this->password)) {
+
+                    // Log failed login attempts.
+                    $params = $loginfaileddefaultparams;
+                    $params['other']['reason'] = 'password';
+                    $params['other']['username'] = $this->username;
+                    $event = \core\event\webservice_login_failed::create($params);
+                    $event->set_legacy_logdata(array(SITEID, 'webservice', get_string('simpleauthlog', 'webservice'), '',
+                        get_string('failedtolog', 'webservice') . ": " . $this->username . "/" . $this->password . " - " . getremoteaddr(), 0));
+                    $event->trigger();
+
+                    throw new moodle_exception('wrongusernamepassword', 'webservice');
+                }
+
+                $user = $DB->get_record('user', array('username' => $this->username, 'mnethostid' => $CFG->mnet_localhost_id), '*', MUST_EXIST);
+            } else {
+                if ($this->password) {
+                    throw new moodle_exception('passwordwithoutusername', 'webservice'); // TODO add
+                } else {
+                    $user = guest_user();
+                }
             }
 
-            if (!$this->password) {
-                throw new moodle_exception('missingpassword', 'webservice');
-            }
-
-            if (!$auth->user_login_webservice($this->username, $this->password)) {
-
-                // Log failed login attempts.
-                $params = $loginfaileddefaultparams;
-                $params['other']['reason'] = 'password';
-                $params['other']['username'] = $this->username;
-                $event = \core\event\webservice_login_failed::create($params);
-                $event->set_legacy_logdata(array(SITEID, 'webservice', get_string('simpleauthlog', 'webservice'), '' ,
-                    get_string('failedtolog', 'webservice').": ".$this->username."/".$this->password." - ".getremoteaddr() , 0));
-                $event->trigger();
-
-                throw new moodle_exception('wrongusernamepassword', 'webservice');
-            }
-
-            $user = $DB->get_record('user', array('username'=>$this->username, 'mnethostid'=>$CFG->mnet_localhost_id), '*', MUST_EXIST);
-
+        } else if (!$this->token) {
+            $user = guest_user();
+            $this->restricted_context = context_system::instance();
         } else if ($this->authmethod == WEBSERVICE_AUTHMETHOD_PERMANENT_TOKEN){
             $user = $this->authenticate_by_token(EXTERNAL_TOKEN_PERMANENT);
         } else {
@@ -1362,6 +1369,13 @@ abstract class webservice_base_server extends webservice_server {
                      These settings can be found in Administration > Site administration
                      > Plugins > Web services > External services and Manage tokens.');
         }
+        if ($function->loginrequired && isguestuser($this->userid)) {
+            if ($this->authmethod == WEBSERVICE_AUTHMETHOD_USERNAME) {
+                throw new moodle_exception('missingusername', 'webservice');
+            } else {
+                throw new moodle_exception('invalidtoken', 'webservice');
+            }
+        }
 
         // we have all we need now
         $this->function = $function;
@@ -1452,8 +1466,11 @@ abstract class webservice_base_server extends webservice_server {
 
         // Generate code for the virtual methods for this web service.
         $methods = '';
+        $isguest = isguestuser($this->userid);
         foreach ($functions as $function) {
-            $methods .= $this->get_virtual_method_code($function);
+            if (!$isguest || !external_api::external_function_info($function)->loginrequired) {
+                $methods .= $this->get_virtual_method_code($function);
+            }
         }
 
         $code = <<<EOD

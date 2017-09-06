@@ -10,6 +10,12 @@ This information is intended for authors of webservices, not people writing webs
 * Implementations of forms for test clients now must follow naming schema: WSFUNCTIONNAME_testclient_form
   The old naming schema WSFUNCTIONNAME_form caused conflicts with existing classes.
   New class webservice_test_client_base_form can be used as a base class for such forms.
+* It is possible to call WS functions without authentication if they define 'requirelogin'=>false
+  Method webservice_server::authenticate_user() sets current user to guest if no credentials are provided.
+  Method webservice_server::load_function_info() throws exception for guests if login is required for this WS function.
+  Method webservice_base_server::init_service_class also respects 'requirelogin' when preparing list of functions.
+  Note that respective capabilities to use WS are still checked and the "Unauthenticated user" role has to be modified
+  in order to allow guests to use WS.
 
 === 3.2 ===
 
