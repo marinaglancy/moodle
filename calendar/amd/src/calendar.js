@@ -223,8 +223,7 @@ define([
      * @param {object} eventFormModalPromise A promise reolved with the event form modal
      */
     var registerCalendarEventListeners = function(root, eventFormModalPromise) {
-        var body = $('body'),
-            courseId = $(root).find(SELECTORS.CALENDAR_MONTH_WRAPPER).data('courseid');
+        var body = $('body');
 
         body.on(CalendarEvents.created, function() {
             CalendarViewManager.reloadCurrentMonth(root);
@@ -246,14 +245,14 @@ define([
             CalendarViewManager.reloadCurrentMonth(root);
         });
 
-        eventFormModalPromise.then(function(modal) {
+        eventFormModalPromise
+        .then(function(modal) {
             // When something within the calendar tells us the user wants
             // to edit an event then show the event form modal.
             body.on(CalendarEvents.editEvent, function(e, eventId) {
                 modal.setEventId(eventId);
                 modal.show();
             });
-            modal.setCourseId(courseId);
             return;
         })
         .fail(Notification.exception);
@@ -299,8 +298,13 @@ define([
         registerCalendarEventListeners(root, eventFormPromise);
 
         // Bind click event on the new event button.
+        CustomEvents.define(root, [CustomEvents.events.activate]);
         root.on('click', SELECTORS.NEW_EVENT_BUTTON, function(e) {
             eventFormPromise.then(function(modal) {
+                var wrapper = root.find(SELECTORS.CALENDAR_MONTH_WRAPPER);
+                modal.setCourseId(wrapper.data('courseid'));
+                modal.setCategoryId(wrapper.data('categoryid'));
+
                 // Attempt to find the cell for today.
                 // If it can't be found, then use the start time of the first day on the calendar.
                 var today = root.find(SELECTORS.TODAY);
