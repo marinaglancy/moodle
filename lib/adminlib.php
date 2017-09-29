@@ -3711,7 +3711,7 @@ class admin_setting_configmixedhostiplist extends admin_setting_configtextarea {
                 $entry)) {
                 // If we can convert the unicode string to an idn, do so.
                 // Otherwise, leave the original unicode string alone and let the validation function handle it (it will fail).
-                $val = idn_to_ascii($entry);
+                $val = idn_to_ascii($entry, 0, INTL_IDNA_VARIANT_UTS46);
                 $entries[$key] = $val ? $val : $entry;
             }
         }
@@ -3729,7 +3729,7 @@ class admin_setting_configmixedhostiplist extends admin_setting_configtextarea {
         foreach ($entries as $key => $entry) {
             $entry = trim($entry);
             if (strpos($entry, 'xn--') !== false) {
-                $entries[$key] = idn_to_utf8($entry);
+                $entries[$key] = idn_to_utf8($entry, 0, INTL_IDNA_VARIANT_UTS46);
             }
         }
         return implode("\n", $entries);
