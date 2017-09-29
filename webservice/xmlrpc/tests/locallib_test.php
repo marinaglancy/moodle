@@ -45,6 +45,7 @@ class webservice_xmlrpc_locallib_testcase extends advanced_testcase {
         if (!function_exists('xmlrpc_decode')) {
             $this->markTestSkipped('XMLRPC is not installed.');
         }
+        $this->markTestSkipped('TODO MDL-60292: PHP7.2 has a fit in xmlrpc_encode_request()');
     }
 
     /**

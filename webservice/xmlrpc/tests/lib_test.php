@@ -93,6 +93,7 @@ class webservice_xmlrpc_test extends advanced_testcase {
      * Test the XML-RPC request encoding.
      */
     public function test_encode_request() {
+        $this->markTestSkipped('TODO MDL-60292: PHP7.2 has a fit in xmlrpc_encode_request()');
 
         $client = new webservice_xmlrpc_client_mock('/webservice/xmlrpc/server.php', 'anytoken');
 
