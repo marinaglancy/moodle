@@ -65,6 +65,10 @@ class block_navigation_renderer extends plugin_renderer_base {
      */
     protected function navigation_node($items, $attrs=array(), $expansionlimit=null, array $options = array(), $depth=1) {
         // Exit if empty, we don't want an empty ul element.
+        if (!is_array($items) && !($items instanceof Countable)) {
+            error_log('***MIM*** : '.(is_null($items) ? "NULL" : (is_object($items) ? get_class($items) : print_r($items, true))));
+        }
+        //new navigation_node_collection();
         if (count($items) === 0) {
             return '';
         }
