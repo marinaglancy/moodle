@@ -86,10 +86,9 @@ class Horde_Support_Numerizer_Locale_De extends Horde_Support_Numerizer_Locale_B
         foreach ($this->TEN_PREFIXES as $tp => $tp_replacement) {
             $string = preg_replace_callback(
                 "/(?:$tp)( *\d(?=[^\d]|\$))*/i",
-                create_function(
-                    '$m',
-                    'return ' . $tp_replacement . ' + (isset($m[1]) ? (int)$m[1] : 0);'
-                ),
+                function($m) {
+                    return $tp_replacement + (isset($m[1]) ? (int)$m[1] : 0);
+                },
                 $string);
         }
         return $string;
@@ -103,10 +102,13 @@ class Horde_Support_Numerizer_Locale_De extends Horde_Support_Numerizer_Locale_B
         foreach ($this->BIG_PREFIXES as $bp => $bp_replacement) {
             $string = preg_replace_callback(
                 '/(\d*) *' . $bp . '(\d?)/i',
-                create_function(
-                    '$m',
-                    '$factor = (int)$m[1]; if (!$factor) $factor = 1; return (' . $bp_replacement . ' * $factor)' . ($bp_replacement == 100 ? ' . ($m[2] ? "und" : "")' : ' . "und"') . ' . $m[2];'
-                ),
+                function($m) use ($bp_replacement) {
+                    $factor = (int)$m[1];
+                    if (!$factor) $factor = 1;
+                    return ($bp_replacement * $factor) .
+                        ($bp_replacement == 100 ? ($m[2] ? "und" : "") : "und") .
+                        $m[2];
+                },
                 $string);
             $string = $this->_andition($string);
         }
