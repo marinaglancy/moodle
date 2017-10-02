@@ -154,7 +154,7 @@ class quiz_statistics_question_stats_testcase extends basic_testcase {
     public function get_fields_from_csv($line) {
         $line = trim($line);
         $items = preg_split('!,!', $line);
-        while (list($key) = each($items)) {
+        foreach ($items as $key => $unused) {
             if ($items[$key]!='') {
                 if ($start = ($items[$key]{0}=='"')) {
                     $items[$key] = substr($items[$key], 1);
