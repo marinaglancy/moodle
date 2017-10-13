@@ -91,7 +91,7 @@ class Horde_Mail_Rfc822_Address extends Horde_Mail_Rfc822_Object
         case 'host':
             $value = ltrim($value, '@');
             $this->_host = function_exists('idn_to_utf8')
-                ? strtolower(idn_to_utf8($value))
+                ? strtolower(idn_to_utf8($value, 0, INTL_IDNA_VARIANT_UTS46))
                 : strtolower($value);
             break;
 
@@ -128,7 +128,7 @@ class Horde_Mail_Rfc822_Address extends Horde_Mail_Rfc822_Object
 
         case 'host_idn':
             return function_exists('idn_to_ascii')
-                ? idn_to_ascii($this->_host)
+                ? idn_to_ascii($this->_host, 0, INTL_IDNA_VARIANT_UTS46)
                 : $this->host;
 
         case 'label':
