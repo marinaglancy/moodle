@@ -494,7 +494,7 @@ define('HUB_HUBDIRECTORYURL', "https://hubdirectory.moodle.org");
 /**
  * Moodle.net url (should be moodle.net)
  */
-define('HUB_MOODLEORGHUBURL', "https://moodle.net");
+define('HUB_MOODLEORGHUBURL', "http://marina.per.in.moodle.com/hub");
 define('HUB_OLDMOODLEORGHUBURL', "http://hub.moodle.org");
 
 /**
