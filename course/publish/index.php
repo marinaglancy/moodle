@@ -47,7 +47,9 @@ if (!\core\hub\registration::is_registered()) {
     echo $OUTPUT->heading(get_string('publishcourseon', 'hub', 'Moodle.net'), 3, 'main');
     echo $OUTPUT->box(get_string('notregisteredonhub', 'hub'));
     if (has_capability('moodle/site:config', context_system::instance())) {
-        echo $OUTPUT->single_button(new moodle_url('/admin/registration/index.php'), get_string('register', 'admin'));
+        echo $OUTPUT->single_button(new moodle_url('/admin/registration/index.php',
+            ['returnurl' => $PAGE->url->out_as_local_url(false)]),
+            get_string('register', 'admin'));
     }
     echo $OUTPUT->footer();
     die();

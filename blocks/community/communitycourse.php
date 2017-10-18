@@ -38,7 +38,7 @@ $parentcourse = $DB->get_record('course', array('id' => $courseid), '*', MUST_EX
 
 $context = context_course::instance($courseid);
 $PAGE->set_course($parentcourse);
-$PAGE->set_url('/blocks/community/communitycourse.php');
+$PAGE->set_url(new moodle_url('/blocks/community/communitycourse.php', ['courseid' => $courseid]));
 $PAGE->set_heading($SITE->fullname);
 $PAGE->set_pagelayout('incourse');
 $PAGE->set_title(get_string('searchcourse', 'block_community'));
