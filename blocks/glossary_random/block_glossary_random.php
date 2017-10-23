@@ -132,12 +132,13 @@ class block_glossary_random extends block_base {
                 if (empty($this->config->showconcept)) {
                     $text = '';
                 } else {
-                    $text = "<h3>".format_string($entry->concept,true)."</h3>";
+                    $text = "<h3>".format_string($entry->concept, true, ['context' => $glossaryctx])."</h3>";
                 }
 
                 $options = new stdClass();
                 $options->trusted = $entry->definitiontrust;
                 $options->overflowdiv = true;
+                $options->context = $glossaryctx;
                 $entry->definition = file_rewrite_pluginfile_urls($entry->definition, 'pluginfile.php', $glossaryctx->id, 'mod_glossary', 'entry', $entry->id);
                 $text .= format_text($entry->definition, $entry->definitionformat, $options);
 
