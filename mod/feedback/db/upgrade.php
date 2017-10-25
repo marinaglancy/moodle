@@ -174,5 +174,21 @@ function xmldb_feedback_upgrade($oldversion) {
     // Automatically generated Moodle v3.3.0 release upgrade line.
     // Put any upgrade step following this.
 
+    if ($oldversion < 2017102400) {
+        if (!get_config('mod_feedback', 'upgrade20170328isok')) {
+            // There was an error in the upgrade script from March 28 2017 that was corrected in October 2017.
+            // If the site was upgraded between March and October and this is a consequtive upgrade,
+            // we need to restore accidentally removed multiple anonymous feedback responses.
+            mod_feedback_upgrade_restore_removed_completed();
+
+            // Do not run this fix script any more (in future Moodle versions).
+            set_config('upgrade20170328isok', 1, 'mod_feedback');
+        }
+
+        // Feedback savepoint reached.
+        upgrade_mod_savepoint(true, 2017102400, 'feedback');
+
+    }
+
     return true;
 }
