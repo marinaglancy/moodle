@@ -87,3 +87,49 @@ function mod_feedback_upgrade_delete_duplicate_values($tmp = false) {
             "completed = :completed AND item = :item AND course_id = :course_id AND id > :id", (array)$record);
     }
 }
+
+/**
+ * Restore records in feedback_completed table mistakenly removed in upgrade script from 28 March 2017.
+ */
+function mod_feedback_upgrade_restore_removed_completed() {
+    global $DB;
+    $dbman = $DB->get_manager();
+
+    $sql = 'SELECT DISTINCT
+                    v.completed AS id,
+                    i.feedback,
+                    1 AS userid,
+                    1 AS timemodified,
+                    1 AS anonymous_response,
+                    v.course_id AS courseid
+                FROM {feedback_value} v
+                JOIN {feedback_item} i ON i.id = v.item
+                JOIN {feedback} f ON f.id = i.feedback AND f.anonymous = :anonymous AND f.multiple_submit = :multiplesubmit
+                LEFT OUTER JOIN {feedback_completed} c ON c.id = v.completed
+                WHERE c.id IS NULL';
+    $params = ['anonymous' => 1 /*FEEDBACK_ANONYMOUS_YES*/, 'multiplesubmit' => 1];
+
+    if ($dbman->table_exists('logstore_standard_log') && !get_config('mod_feedback', 'upgrade20170328nolog')) {
+        $sql = 'SELECT
+                    orphan.id,
+                    orphan.feedback,
+                    COALESCE(l.userid, orphan.userid) AS userid,
+                    COALESCE(l.timecreated, orphan.timemodified) AS timemodified,
+                    orphan.anonymous_response,
+                    orphan.courseid
+                FROM
+                    (' . $sql . ') orphan
+                    JOIN {course_modules} cm ON cm.instance = orphan.feedback AND cm.module = :moduleid
+                    JOIN {context} ctx ON ctx.contextlevel = 70 AND ctx.instanceid = cm.id
+                    LEFT OUTER JOIN {logstore_standard_log} l ON l.eventname = :eventname AND l.objectid = orphan.id
+                                AND l.courseid = cm.course AND l.contextid = ctx.id
+                WHERE l.id IS NULL or l.anonymous = :loganonymous';
+        $params['eventname'] = '\\mod_feedback\\event\\response_submitted';
+        $params['moduleid'] = $DB->get_field('modules', 'id', ['name' => 'feedback']);
+        $params['contextlevel'] = 70 /*CONTEXT_MODULE*/;
+        $params['loganonymous'] = 1;
+    }
+
+    $sql = 'INSERT INTO {feedback_completed} (id, feedback, userid, timemodified, anonymous_response, courseid) ' . $sql;
+    $DB->execute($sql, $params);
+}
