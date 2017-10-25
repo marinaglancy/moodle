@@ -173,6 +173,9 @@ function xmldb_feedback_upgrade($oldversion) {
         }
         $duplicatedrows->close();
 
+        // This upgrade script used to have an error in it. It is now corrected but if this config value is not set we'll have to run a fix on it.
+        set_config('upgrade20170328isok', 1, 'mod_feedback');
+
         // Feedback savepoint reached.
         upgrade_mod_savepoint(true, 2017032800, 'feedback');
     }

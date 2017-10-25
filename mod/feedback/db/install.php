@@ -17,4 +17,7 @@
 function xmldb_feedback_install() {
     global $DB;
 
+    // If installed from now on we don't need to run the fix upgrade script
+    // (may run again when upgrading to future Moodle versions).
+    set_config('upgrade20170328isok', 1, 'mod_feedback');
 }
