@@ -1,2 +1,4 @@
 err_unknownfileextension,mod_workshop
 err_wrongfileextension,mod_workshop
+submissionrequiredcontent,mod_workshop
+submissionrequiredfile,mod_workshop

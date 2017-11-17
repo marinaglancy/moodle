@@ -48,5 +48,42 @@ function xmldb_workshop_upgrade($oldversion) {
     // Automatically generated Moodle v3.4.0 release upgrade line.
     // Put any upgrade step following this.
 
+    if ($oldversion < 2018010500) {
+
+        // Define field submissiontypetext to be added to workshop.
+        $table = new xmldb_table('workshop');
+        $field = new xmldb_field('submissiontypetext', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '1', 'gradedecimals');
+
+        // Conditionally launch add field submissiontypetext.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        $field = new xmldb_field('submissiontypefile', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '2',
+                'submissiontypetext');
+
+        // Conditionally launch add field submissiontypefile.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Convert existing workshops with attachments disabled to use the new settings.
+        $workshops = $DB->get_records('workshop');
+        foreach ($workshops as $workshop) {
+            if ($workshop->nattachments == 0) {
+                $update = (object) [
+                    'id' => $workshop->id,
+                    'submissiontypefile' => WORKSHOP_SUBMISSION_TYPE_DISABLED,
+                    'submissiontypetext' => WORKSHOP_SUBMISSION_TYPE_REQUIRED,
+                    'nattachments' => 1
+                ];
+                $DB->update_record('workshop', $update);
+            }
+        }
+
+        // Workshop savepoint reached.
+        upgrade_mod_savepoint(true, 2018010500, 'workshop');
+    }
+
     return true;
 }
