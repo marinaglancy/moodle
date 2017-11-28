@@ -59,6 +59,11 @@ class editsection_form extends moodleform {
         $course = $this->_customdata['course'];
         $context = context_course::instance($course->id);
 
+        if ($course->id == SITEID) {
+            // no section names for the site
+            $mform->removeElement('name_group');
+        }
+
         if (!empty($CFG->enableavailability)) {
             $mform->addElement('header', 'availabilityconditions',
                     get_string('restrictaccess', 'availability'));
