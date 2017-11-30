@@ -89,7 +89,7 @@ class webservice_xmlrpc_client {
         $response = download_file_content($this->serverurl->out(false), $headers, $request);
 
         // Decode the response.
-        $result = xmlrpc_decode($response);
+        $result = $this->decode_response($response);
         if (is_array($result) && xmlrpc_is_fault($result)) {
             throw new Exception($result['faultString'], $result['faultCode']);
         }
@@ -115,5 +115,21 @@ class webservice_xmlrpc_client {
         $params = array_values($params);
 
         return xmlrpc_encode_request($functionname, $params, $outputoptions);
+    }
+
+    /**
+     * Parses and decodes the response XML
+     *
+     * @param string $response
+     * @return array
+     */
+    protected function decode_response($response) {
+        // Unexplainable bug with xmlrpc_decode - sometimes it picks up the encoding correctly, sometimes not.
+        if (preg_match('/^<\?xml [^>]*\bencoding="(.*?)"/', $response, $matches)) {
+            $result = xmlrpc_decode($response, $matches[1]);
+        } else {
+            $result = xmlrpc_decode($response);
+        }
+        return $result;
     }
 }
