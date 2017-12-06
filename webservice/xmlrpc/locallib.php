@@ -55,6 +55,8 @@ class webservice_xmlrpc_server extends webservice_base_server {
      *  3/ function parameters
      */
     protected function parse_request() {
+        global $CFG;
+        require_once("$CFG->dirroot/webservice/xmlrpc/lib.php");
         // Retrieve and clean the POST/GET parameters from the parameters specific to the server.
         parent::set_web_service_call_settings();
 
@@ -70,7 +72,7 @@ class webservice_xmlrpc_server extends webservice_base_server {
         $methodname = null;
 
         // Decode the request to get the decoded parameters and the name of the method to be called.
-        $decodedparams = xmlrpc_decode_request($rawpostdata, $methodname, 'UTF-8');
+        $decodedparams = xmlrpc_decode_request(webservice_xmlrpc_client::fix_encoding($rawpostdata), $methodname);
         $methodinfo = external_api::external_function_info($methodname);
         $methodparams = array_keys($methodinfo->parameters_desc->keys);
         $methodvariables = [];

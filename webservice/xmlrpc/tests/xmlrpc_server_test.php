@@ -109,6 +109,24 @@ class xmlrpc_server_test extends advanced_testcase {
                     'core_get_component_strings',
                     ['component' => 'ᛞᛁᛞᛃᛟᚢᚲᚾᛟᚹᛈᚺᛈᛋᚢᛈᛈᛟᚱᛏᛋᚢᛏᚠ8ᚡᚨᚱᛁᚨᛒᛚᛖᚾᚨᛗᛖᛋ'],
                 ],
+                'Correctly encoded request' => [
+                    // Options of xmlrpc_encode_request include fix from MDL-57775 (Moodle 3.2.5, 3.3.2 and above).
+                    xmlrpc_encode_request('core_get_component_strings', ['Text ᛞᛁᛞᛃ<br>'], ['encoding' => 'utf-8', 'escaping' => 'markup']),
+                    'core_get_component_strings',
+                    ['component' => 'Text ᛞᛁᛞᛃ<br>'],
+                ],
+                'Weirdly encoded request' => [
+                    // Encoding used in Moodle 3.1 .
+                    xmlrpc_encode_request('core_get_component_strings', ['Text ᛞᛁᛞᛃ<br>'], ['encoding' => 'utf-8']),
+                    'core_get_component_strings',
+                    ['component' => 'Text ᛞᛁᛞᛃ<br>'],
+                ],
+                'Request encoded with default options' => [
+                    // No options passed to xmlrpc_encode_request, encoding iso-8859-1 is used .
+                    xmlrpc_encode_request('core_get_component_strings', ['Text ᛞᛁᛞᛃ<br>']),
+                    'core_get_component_strings',
+                    ['component' => 'Text ᛞᛁᛞᛃ<br>'],
+                ],
             ];
     }
 }

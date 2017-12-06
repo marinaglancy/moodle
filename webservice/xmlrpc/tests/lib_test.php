@@ -144,6 +144,60 @@ class webservice_xmlrpc_test extends advanced_testcase {
         // Symbol ó comes as chr(243), it looks like 'Formaci�n Docente'.
         $this->assertEquals([preg_replace('/ó/', chr(243), $teststring)], xmlrpc_decode($xml));
     }
+
+    /**
+     * More and more different strings that fail with XMLRPC encoding
+     *
+     * See also MDL-60977, MDLSITE-4617, MDLSITE-4726
+     * @return array
+     */
+    public function decode_provider() {
+        return [
+            ['<bar>Recherche thématique:Villes & Développement durable</bar>'],
+            ['Πλατφόρμα Διαχείρισης Μάθησης της Δ/θμιας Εκπ/σης Καρδίτσας'],
+            ['Formación Docente'],
+            ['<bar>ŠČŘŽÝÁÍÉ</bar>'],
+            ['Портал дистанционного образования'],
+            ['Система дистанционной поддержки курсов и предметов в Школе'],
+            ['上海交通大学-网络教育精品资源共享课'],
+            ['温职院信息技术系网络专业E_Learning平台'],
+            ['ムッシュ・ボナンファンのフランス語教室（Moodle部屋）'],
+            ['MOODLE ŠKOLA'],
+            ['€ ěščř κίνημα <foo>Muhehe</foo>'],
+            ['ジュンのI33 Review PostgreSQL ŠKOLA اردو'],
+            ['Site with English name'],
+            ['Alfaisal University, Riyadh | جامعةالفيصل'],
+            ['التصميم التعليمي للوحدة السابعة في مقرر الدراسات الاجتماعية والوطنية للصف الثاني متوسط باستخدام برنامج قوقل ايرث'],
+            ['𐤆 𐤇 𐤈 𐤉 𐤊 𐤋 𐤌 𐤍 𐤎 𐤏 𐤐 𐤑 𐤒 𐤓'],
+            ['Did you know you can play cards in Unicode? 🂡 🂢 🂣 🂤 🂥 🂦 🂧 🂨 🂩 🂪 🂫 🂬 🂭 🂮'],
+        ];
+    }
+
+    /**
+     * Test the XML-RPC response decoding
+     *
+     * As we discover more and more bugs in XMLRPC we keep adding unittests that look similar to the ones already
+     * present but add more cases and test strings that would fail after only the previous fix.
+     *
+     * This battle is endless!
+     *
+     * @dataProvider decode_provider
+     */
+    public function test_decode_response_again($teststring) {
+        $client = new webservice_xmlrpc_client_mock('/webservice/xmlrpc/server.php', 'anytoken');
+
+        // 1. String was encoded after applying fix from MDL-57775 (Moodle 3.2.5, 3.3.2 and up).
+        $xml = $client->encode_request('do_it', [$teststring]);
+        $this->assertEquals([$teststring], $client->decode_response($xml));
+
+        // 2. String was encoded with xmlrpc_encode_request() with only UTF-8 encoding specified (used in Moodle 3.1).
+        $xml = xmlrpc_encode_request('do_it', [$teststring], ['encoding' => 'utf-8']);
+        $this->assertEquals([$teststring], $client->decode_response($xml));
+
+        // 3. String was encoded with bare xmlrpc_encode_request() and "iso-8859-1" encoding.
+        $xml = xmlrpc_encode_request('do_it', [$teststring]);
+        $this->assertEquals([$teststring], $client->decode_response($xml));
+    }
 }
 
 /**
