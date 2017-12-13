@@ -552,6 +552,7 @@ $string['filtersettingsgeneral'] = 'General filter settings';
 $string['filteruploadedfiles'] = 'Filter uploaded files';
 $string['forceclean'] = 'Content cleaning everywhere';
 $string['forceclean_desc'] = 'Content added to the site is normally cleaned before being displayed, to remove anything which might be a security threat. However, content is not cleaned in certain places such as activity descriptions, page resources or HTML blocks to allow scripts, media, inline frames etc. to be added. If this setting is enabled, ALL content will be cleaned. This may result in existing content no longer displaying correctly.';
+$string['forcecleanapplies'] = 'Content will be cleaned before being displayed, to remove anything which might be a security threat.';
 $string['forcelogin'] = 'Force users to log in';
 $string['forceloginforprofileimage'] = 'Force users to log in to view user pictures';
 $string['forceloginforprofileimage_help'] = 'If enabled, users must log in in order to view user profile pictures and the default user picture will be used in all notification emails.';

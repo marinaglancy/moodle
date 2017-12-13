@@ -434,6 +434,18 @@ class MoodleQuickForm_editor extends HTML_QuickForm_element implements templatab
 
         $str .= $OUTPUT->render_from_template('core_form/editor_textarea', $context);
 
+        // Inform the user if the forceclean flag would apply. See {@link format_text()} for reference.
+        if (!empty($CFG->forceclean)) {
+            $nocleanbecausesaidso = !empty($this->_options['noclean']);
+            $nocleanbecausetrusted = (!isset($this->_options['noclean']) && $this->_options['trusted'] && trusttext_active());
+            if ($nocleanbecausesaidso || $nocleanbecausetrusted) {
+                $str .= $OUTPUT->notification(
+                    get_string('forcecleanapplies', 'core_admin'),
+                    \core\output\notification::NOTIFY_INFO
+                );
+            }
+        }
+
         // during moodle installation, user area doesn't exist
         // so we need to disable filepicker here.
         if (!during_initial_install() && empty($CFG->adminsetuppending)) {
