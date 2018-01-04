@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="message/output/airnotifier/db" VERSION="20140129" COMMENT="XMLDB file for Moodle message/output/airnotifier"
+<XMLDB VERSION="20140129" COMMENT="XMLDB file for Moodle message/output/airnotifier"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../../lib/xmldb/xmldb.xsd"
 >

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="repository/onedrive/db" VERSION="20170314" COMMENT="XMLDB file for Moodle repository/onedrive"
+<XMLDB VERSION="20170314" COMMENT="XMLDB file for Moodle repository/onedrive"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >

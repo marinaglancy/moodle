@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="question/type/randomsamatch/db" VERSION="20120122" COMMENT="XMLDB file for Moodle question/type/randomsamatch"
+<XMLDB VERSION="20120122" COMMENT="XMLDB file for Moodle question/type/randomsamatch"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../../lib/xmldb/xmldb.xsd"
 >

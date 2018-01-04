@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="question/type/essay/db" VERSION="20140113" COMMENT="XMLDB file for Moodle question/type/essay"
+<XMLDB VERSION="20140113" COMMENT="XMLDB file for Moodle question/type/essay"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../../lib/xmldb/xmldb.xsd"
 >
