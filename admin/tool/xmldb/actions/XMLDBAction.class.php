@@ -211,7 +211,7 @@ class XMLDBAction {
      * upgrade code generated from the editor. It's used by
      * the view_structure_php and view_table_php actions
      *
-     * @param xmldb_structure structure object containing all the info
+     * @param \xmldb_structure structure object containing all the info
      * @return string PHP code to be used to mark a reached savepoint
      */
     function upgrade_savepoint_php($structure) {

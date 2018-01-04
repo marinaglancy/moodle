@@ -42,10 +42,16 @@ class xmldb_structure extends xmldb_object {
      * @param string $name
      */
     public function __construct($name) {
+        global $CFG;
         parent::__construct($name);
         $this->path = null;
         $this->version = null;
         $this->tables = array();
+
+        $matchstring = '|^' . preg_quote($CFG->dirroot . '/', '|') . '|';
+        if (preg_match($matchstring, $name) && file_exists($name)) {
+            $this->path = preg_replace($matchstring, '', dirname($name));
+        }
     }
 
     /**
@@ -223,14 +229,7 @@ class xmldb_structure extends xmldb_object {
         // print_object ($GLOBALS['traverse_array']);  //Debug
         // $GLOBALS['traverse_array']="";              //Debug
 
-        // Process structure attributes (path, comment and version)
-        if (isset($xmlarr['XMLDB']['@']['PATH'])) {
-            $this->path = trim($xmlarr['XMLDB']['@']['PATH']);
-        } else {
-            $this->errormsg = 'Missing PATH attribute';
-            $this->debug($this->errormsg);
-            $result = false;
-        }
+        // Process structure attributes (comment and version)
         if (isset($xmlarr['XMLDB']['@']['VERSION'])) {
             $this->version = trim($xmlarr['XMLDB']['@']['VERSION']);
         } else {
@@ -324,7 +323,7 @@ class xmldb_structure extends xmldb_object {
      */
     public function xmlOutput() {
         $o = '<?xml version="1.0" encoding="UTF-8" ?>' . "\n";
-        $o.= '<XMLDB PATH="' . $this->path . '"';
+        $o.= '<XMLDB';
         $o.= ' VERSION="' . $this->version . '"';
         if ($this->comment) {
             $o.= ' COMMENT="' . htmlspecialchars($this->comment) . '"'."\n";

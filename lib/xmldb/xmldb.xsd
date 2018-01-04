@@ -166,7 +166,7 @@
       <xs:sequence>
         <xs:element ref="TABLES"     minOccurs="0" />
       </xs:sequence>
-      <xs:attribute name="PATH"    type="xs:string" use="required" />
+      <xs:attribute name="PATH"    type="xs:string" use="optional" />
       <xs:attribute name="VERSION" type="xs:string" use="required" />
       <xs:attribute name="COMMENT" type="xs:string" use="optional" />
     </xs:complexType>

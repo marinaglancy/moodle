@@ -82,7 +82,7 @@ class create_xml_file extends XMLDBAction {
 
         // Initial contents
         $c = '<?xml version="1.0" encoding="UTF-8" ?>' . "\n";
-        $c.= '  <XMLDB PATH="' . $xmlpath . '" VERSION="' . $xmlversion .'" COMMENT="' . $xmlcomment .'">' . "\n";
+        $c.= '  <XMLDB VERSION="' . $xmlversion .'" COMMENT="' . $xmlcomment .'">' . "\n";
         $c.= '    <TABLES>' . "\n";
         $c.= '      <TABLE NAME="' . $xmltable . '" COMMENT="Default comment for ' . $xmltable .', please edit me">' . "\n";
         $c.= '        <FIELDS>' . "\n";
