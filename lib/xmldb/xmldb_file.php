@@ -104,6 +104,9 @@ class xmldb_file extends xmldb_object {
         if (!empty($this->schema) && file_exists($this->schema)) {
             $parser->schemaValidate($this->schema);
         }
+        if ($schemapath = $parser->childNodes[0]->getAttribute('xsi:noNamespaceSchemaLocation')) {
+            $parser->schemaValidate(realpath(dirname($this->path) . '/' . $schemapath));
+        }
         // Check for errors
         $errors = libxml_get_errors();
 
