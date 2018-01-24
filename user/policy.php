@@ -22,6 +22,9 @@
  * @package core_user
  */
 
+// Do not check for the site policies in require_login() to avoid the redirect loop.
+define('NO_SITEPOLICY_CHECK', true);
+
 require_once('../config.php');
 require_once($CFG->libdir.'/filelib.php');
 require_once($CFG->libdir.'/resourcelib.php');
@@ -45,6 +48,15 @@ if (!empty($SESSION->wantsurl)) {
     $return = $SESSION->wantsurl;
 } else {
     $return = $CFG->wwwroot.'/';
+}
+
+if (!empty($CFG->sitepolicyhandler)) {
+    // We are on the wrong page, site policies are managed by somebody else.
+    if ($sitepolicyurl = get_site_policy_redirect()) {
+        redirect($sitepolicyurl);
+    } else {
+        redirect($return);
+    }
 }
 
 if (empty($sitepolicy)) {
