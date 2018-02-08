@@ -274,6 +274,7 @@ class tool_policy_api_testcase extends advanced_testcase {
         // Officers and managers have access even to drafts.
         $this->assertTrue(api::can_user_view_policy_version($policy1, $officer->id));
         $this->assertTrue(api::can_user_view_policy_version($policy3, $manager->id));
+        $this->assertTrue(api::can_user_view_policy_version($policy3, $manager->id, $child->id));
 
         // Current versions are public so that users can decide whether to even register on such a site.
         api::make_current($policy2->policyid, $policy2->versionid);
@@ -296,7 +297,6 @@ class tool_policy_api_testcase extends advanced_testcase {
         $policy2 = api::get_policy_version($policy2->policyid, $policy2->versionid);
         $policy3 = api::get_policy_version($policy3->policyid, $policy3->versionid);
 
-        api::get_user_minors($parent->id);
         // They should now have access to the archived version (because they agreed) and the current one.
         $this->assertFalse(api::can_user_view_policy_version($policy1, $child->id));
         $this->assertFalse(api::can_user_view_policy_version($policy1, $parent->id));

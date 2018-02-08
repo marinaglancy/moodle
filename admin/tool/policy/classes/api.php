@@ -175,21 +175,6 @@ class api {
             return true;
         }
 
-        // Check if the user is viewing the policy on someone else's behalf.
-        // Typical scenario is a parent viewing the policy on behalf of her child.
-        if ($behalfid > 0) {
-            $behalfcontext = context_user::instance($behalfid);
-
-            if (!has_capability('tool/policy:acceptbehalf', $behalfcontext, $userid)) {
-                return false;
-            }
-
-            // Check that the other user (e.g. the child) has access to the policy.
-            // Pass a negative third parameter to avoid eventual endless loop.
-            // We do not support grand-parent relations.
-            return static::can_user_view_policy_version($policy, $behalfid, -1);
-        }
-
         // Users who can manage policies, can see all versions.
         if (has_capability('tool/policy:managedocs', context_system::instance(), $userid)) {
             return true;
@@ -200,17 +185,37 @@ class api {
             return true;
         }
 
-        // Users have access to all the policies they have ever accepted.
-        if (!empty(static::get_user_acceptances($userid, $policy->versionid))) {
+        // User who can accept policy on behalf of any user can also see all versions.
+        if (has_capability('tool/policy:acceptbehalf', context_system::instance(), $userid)) {
             return true;
         }
 
+        if ($behalfid > 0) {
+            // If behalfid is specified we only check if current user can accept policies on behalf of this user
+            // and also check if this policy was previously accepted by the behalfid user.
+            // We do not check if policy was accepted by the current user or by any other minors of the current user.
+            $behalfcontext = context_user::instance($behalfid);
+
+            if (!has_capability('tool/policy:acceptbehalf', $behalfcontext, $userid)) {
+                return false;
+            }
+
+            $minors = [$behalfid];
+        } else {
+            // When behalfid is not specified we check if user ever accepted this policy for themselves or for
+            // any of their minors.
+            if (!empty(static::get_user_acceptances($userid, $policy->versionid))) {
+                return true;
+            }
+
+            // Get all minors that this user can accept policies for.
+            $minors = static::get_user_minors($userid);
+        }
+
         // Check if the user could get access through some of her minors.
-        if ($behalfid === null) {
-            foreach (static::get_user_minors($userid) as $minor) {
-                if (static::can_user_view_policy_version($policy, $userid, $minor->id)) {
-                    return true;
-                }
+        foreach ($minors as $minor) {
+            if (!empty(static::get_user_acceptances($minor->id, $policy->versionid))) {
+                return true;
             }
         }
 
@@ -222,12 +227,18 @@ class api {
      *
      * Returned objects contain all the standard user name and picture fields as well as the context instanceid.
      *
-     * @param int $userid The id if the user with parental responsibility
+     * Note: if user has capability 'tool/policy:acceptbehalf' in the system context, nothing is returned.
+     *
+     * @param int $userid The id if the user with parental responsibility, by default current user
      * @param array $extrafields Extra fields to be included in result
      * @return array of objects
      */
-    public static function get_user_minors($userid, array $extrafields = null) {
-        global $DB;
+    public static function get_user_minors($userid = null, array $extrafields = null) {
+        global $DB, $USER;
+
+        if (!$userid) {
+            $userid = $USER->id;
+        }
 
         $ctxfields = context_helper::get_preload_record_columns_sql('c');
         $namefields = get_all_user_name_fields(true, 'u');
