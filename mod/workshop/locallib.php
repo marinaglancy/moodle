@@ -2866,11 +2866,11 @@ class workshop {
         if (empty($data['id']) and empty($data['example'])) {
             // Make sure there is no submission saved meanwhile from another browser window.
             $sql = "SELECT COUNT(s.id)
-                      FROM {workshop_submissions} S
-                      JOIN {workshop} W ON (S.workshopid = W.id)
-                      JOIN {course_modules} cm ON (W.id = cm.instance)
-                      JOIN {modules} M ON (M.name = 'workshop' AND M.id = cm.module)
-                     WHERE cm.id = ? AND S.authorid = ? AND S.example = 0";
+                      FROM {workshop_submissions} s
+                      JOIN {workshop} w ON (s.workshopid = w.id)
+                      JOIN {course_modules} cm ON (w.id = cm.instance)
+                      JOIN {modules} m ON (m.name = 'workshop' AND m.id = cm.module)
+                     WHERE cm.id = ? AND s.authorid = ? AND s.example = 0";
 
             if ($DB->count_records_sql($sql, array($data['cmid'], $USER->id))) {
                 $errors['title'] = get_string('err_multiplesubmissions', 'mod_workshop');

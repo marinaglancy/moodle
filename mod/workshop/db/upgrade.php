@@ -81,6 +81,12 @@ function xmldb_workshop_upgrade($oldversion) {
             }
         }
 
+        // Changing the default of field nattachments on table workshop to 1.
+        $field = new xmldb_field('nattachments', XMLDB_TYPE_INTEGER, '3', null, null, null, '1', 'submissiontypefile');
+
+        // Launch change of default for field nattachments.
+        $dbman->change_field_default($table, $field);
+
         // Workshop savepoint reached.
         upgrade_mod_savepoint(true, 2018010500, 'workshop');
     }
