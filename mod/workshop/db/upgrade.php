@@ -87,6 +87,8 @@ function xmldb_workshop_upgrade($oldversion) {
 
     if ($oldversion < 2018010501) {
 
+        $table = new xmldb_table('workshop');
+
         // Changing the default of field nattachments on table workshop to 1.
         $field = new xmldb_field('nattachments', XMLDB_TYPE_INTEGER, '3', null, null, null, '1', 'submissiontypefile');
 
