@@ -73,8 +73,8 @@ function xmldb_workshop_upgrade($oldversion) {
             if ($workshop->nattachments == 0) {
                 $update = (object) [
                     'id' => $workshop->id,
-                    'submissiontypefile' => WORKSHOP_SUBMISSION_TYPE_DISABLED,
-                    'submissiontypetext' => WORKSHOP_SUBMISSION_TYPE_REQUIRED,
+                    'submissiontypefile' => 0/*WORKSHOP_SUBMISSION_TYPE_DISABLED*/,
+                    'submissiontypetext' => 2/*WORKSHOP_SUBMISSION_TYPE_REQUIRED*/,
                     'nattachments' => 1
                 ];
                 $DB->update_record('workshop', $update);
