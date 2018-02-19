@@ -215,4 +215,88 @@ class core_auth_external extends external_api {
             )
         );
     }
+
+    /**
+     * Describes the parameters for the digital minor check.
+     *
+     * @return external_function_parameters
+     * @since Moodle 3.4
+     */
+    public static function is_minor_parameters() {
+        return new external_function_parameters(
+            array(
+                'age' => new external_value(PARAM_INT, 'Age', VALUE_DEFAULT, ''),
+                'country' => new external_value(PARAM_RAW, 'Country of residence', VALUE_DEFAULT, ''),
+            )
+        );
+    }
+
+    /**
+     * Requests a check if a user is digital minor.
+     *
+     * @param  int $age User age
+     * @param  string $country Country of residence
+     * @return array Warnings and status (true if the user is a minor, false otherwise)
+     * @since Moodle 3.4
+     * @throws moodle_exception
+     */
+    public static function is_minor($age, $country) {
+        global $CFG, $PAGE;
+        require_once($CFG->dirroot . '/login/lib.php');
+
+        $warnings = array();
+        $params = self::validate_parameters(
+            self::is_minor_parameters(),
+            array(
+                'age' => $age,
+                'country' => $country,
+            )
+        );
+
+        $context = context_system::instance();
+        $PAGE->set_context($context);
+
+        // Check if verification of age and location (minor check) is enabled.
+        if (!is_age_digital_consent_verification_enabled()) {
+            throw new moodle_exception('nopermissions', 'error', '',
+                get_string('agelocationverificationdisabled', 'error'));
+        }
+
+        $errors = core_login_validate_age_location_data($params);
+        if (!empty($errors)) {
+            $status = null;
+
+            foreach ($errors as $itemname => $message) {
+                $warnings[] = array(
+                    'item' => $itemname,
+                    'itemid' => 0,
+                    'warningcode' => 'fielderror',
+                    'message' => s($message)
+                );
+            }
+        } else {
+            $status = core_login_is_minor($params['age'], $params['country']);
+        }
+
+        return array(
+            'status' => $status,
+            'warnings' => $warnings,
+        );
+    }
+
+    /**
+     * Describes the is_minor return value.
+     *
+     * @return external_single_structure
+     * @since Moodle 3.4
+     */
+    public static function is_minor_returns() {
+        return new external_single_structure(
+            array(
+                'status' => new external_value(PARAM_BOOL, 'True if the user is considered to be a digital minor,
+                    false if not'),
+                'warnings'  => new external_warnings(),
+            )
+        );
+    }
 }

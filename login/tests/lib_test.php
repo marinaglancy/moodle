@@ -222,4 +222,94 @@ class core_login_lib_testcase extends advanced_testcase {
         list($status, $notice, $url) = core_login_process_password_reset(null, 'fakeemail@nofd.zdy');
         $this->assertEquals('emailpasswordconfirmnotsent', $status);
     }
+
+    public function test_core_login_is_minor() {
+        global $CFG;
+        $this->resetAfterTest();
+
+        $agedigitalconsentmap = implode(PHP_EOL, [
+            '* 16',
+            'AT 14',
+            'CZ 13',
+            'DE 14',
+            'DK 13',
+        ]);
+        $CFG->agedigitalconsentmap = $agedigitalconsentmap;
+
+        $usercountry1 = 'DK';
+        $usercountry2 = 'AU';
+        $userage1 = 12;
+        $userage2 = 14;
+        $userage3 = 16;
+
+        // Test country exists in agedigitalconsentmap and user age is below the particular digital minor age.
+        $isminor = core_login_is_minor($userage1, $usercountry1);
+        $this->assertTrue($isminor);
+        // Test country exists in agedigitalconsentmap and user age is above the particular digital minor age.
+        $isminor = core_login_is_minor($userage2, $usercountry1);
+        $this->assertFalse($isminor);
+        // Test country does not exists in agedigitalconsentmap and user age is below the particular digital minor age.
+        $isminor = core_login_is_minor($userage2, $usercountry2);
+        $this->assertTrue($isminor);
+        // Test country does not exists in agedigitalconsentmap and user age is above the particular digital minor age.
+        $isminor = core_login_is_minor($userage3, $usercountry2);
+        $this->assertFalse($isminor);
+    }
+
+    public function test_core_login_validate_age_location_data() {
+        $this->resetAfterTest();
+
+        // Test age empty and country empty.
+        $data = array(
+            'age' => '',
+            'country' => ''
+        );
+
+        $errors = core_login_validate_age_location_data($data);
+        $expectederrors = array(
+            'age' => get_string('agemissing'),
+            'country' => get_string('countrymissing')
+        );
+
+        $this->assertEquals($expectederrors, $errors);
+
+        // Test age invalid (string) and country invalid.
+        $data = array(
+            'age' => 'string',
+            'country' => 'country'
+        );
+
+        $errors = core_login_validate_age_location_data($data);
+        $expectederrors = array(
+            'age' => get_string('ageinvalid'),
+            'country' => get_string('countryinvalid')
+        );
+
+        $this->assertEquals($expectederrors, $errors);
+
+        // Test age invalid (negative number).
+        $data = array(
+            'age' => -10,
+            'country' => 'AU'
+        );
+
+        $errors = core_login_validate_age_location_data($data);
+        $expectederrors = array(
+            'age' => get_string('ageinvalid')
+        );
+
+        $this->assertEquals($expectederrors, $errors);
+
+        // Test age and country valid.
+        $data = array(
+            'age' => 16,
+            'country' => 'AU'
+        );
+
+        $errors = core_login_validate_age_location_data($data);
+        $expectederrors = array();
+
+        $this->assertEquals($expectederrors, $errors);
+    }
+
 }

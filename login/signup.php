@@ -59,6 +59,26 @@ if (isloggedin() and !isguestuser()) {
     exit;
 }
 
+// Create/validate the signup session.
+if (!\core_auth\session\signup::is_set()) { // The signup session has not been set.
+    \core_auth\session\signup::create();
+} else {
+    if (!\core_auth\session\signup::is_valid()) { // The signup session is no longer valid.
+        \core_auth\session\signup::destroy();
+        redirect(new moodle_url('/login/index.php'));
+    }
+}
+
+// If verification of age and location (digital minor check) is enabled.
+if (is_age_digital_consent_verification_enabled()) {
+    if (!\core_auth\session\signup::is_set_minor_status()) { // The verification of age and location (minor) has not been done.
+        redirect(new moodle_url('/login/verify_age_location.php'));
+    }
+    if (\core_auth\session\signup::get_minor_status() == true) { // The user that attempts to sign up is a digital minor.
+        redirect(new moodle_url('/login/digital_minor.php'));
+    }
+}
+
 $mform_signup = $authplugin->signup_form();
 
 if ($mform_signup->is_cancelled()) {

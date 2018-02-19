@@ -1073,6 +1073,18 @@ function signup_is_enabled() {
 }
 
 /**
+ * Returns true if age and location verification is enabled in the site.
+ *
+ * @return bool
+ * @since  Moodle 3.4
+ */
+function is_age_digital_consent_verification_enabled() {
+    global $CFG;
+
+    return !empty($CFG->agedigitalconsentverification);
+}
+
+/**
  * Helper function used to print locking for auth plugins on admin pages.
  * @param stdclass $settings Moodle admin settings instance
  * @param string $auth authentication plugin shortname

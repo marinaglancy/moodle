@@ -288,7 +288,7 @@ class core_admin_renderer extends plugin_renderer_base {
             $cronoverdue, $dbproblems, $maintenancemode, $availableupdates, $availableupdatesfetch,
             $buggyiconvnomb, $registered, array $cachewarnings = array(), $eventshandlers = 0,
             $themedesignermode = false, $devlibdir = false, $mobileconfigured = false,
-            $overridetossl = false, $invalidforgottenpasswordurl = false) {
+            $overridetossl = false, $invalidforgottenpasswordurl = false, $invalidagedigitalconsentmap = false) {
         global $CFG;
         $output = '';
 
@@ -310,6 +310,7 @@ class core_admin_renderer extends plugin_renderer_base {
         $output .= $this->registration_warning($registered);
         $output .= $this->mobile_configuration_warning($mobileconfigured);
         $output .= $this->forgotten_password_url_warning($invalidforgottenpasswordurl);
+        $output .= $this->age_digital_consent_invalid_format_warning($invalidagedigitalconsentmap);
 
         //////////////////////////////////////////////////////////////////////////////////////////////////
         ////  IT IS ILLEGAL AND A VIOLATION OF THE GPL TO HIDE, REMOVE OR MODIFY THIS COPYRIGHT NOTICE ///
@@ -884,6 +885,26 @@ class core_admin_renderer extends plugin_renderer_base {
         }
 
         return $output;
+    }
+
+    /**
+     * Display a warning if agedigitalconsentmap has an invalid format.
+     *
+     * @param boolean $invalidagedigitalconsent true if agedigitalconsentmap has a valid format.
+     * @return string HTML to output.
+     */
+    protected function age_digital_consent_invalid_format_warning($invalidagedigitalconsent) {
+
+        if ($invalidagedigitalconsent) {
+
+            $settingslink = new moodle_url('/admin/settings.php', ['section' => 'manageauths']);
+            $configurebutton = $this->single_button($settingslink, get_string('check', 'moodle'));
+
+            return $this->warning( get_string('invalidagedigitalconsent', 'admin')
+                . '&nbsp;' . $configurebutton , 'error alert alert-danger');
+        }
+
+        return '';
     }
 
     /**

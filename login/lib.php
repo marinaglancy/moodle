@@ -382,3 +382,48 @@ function core_login_validate_forgot_password_data($data) {
 
     return $errors;
 }
+
+/**
+ * Checks if a user is a digital minor.
+ *
+ * @param int $age
+ * @param string $country
+ * @return bool
+ */
+function core_login_is_minor($age, $country) {
+
+    $agedigitalconsentmap = \core_auth\helper::parse_age_digital_consent_map();
+
+    return array_key_exists($country, $agedigitalconsentmap) ?
+        $age < $agedigitalconsentmap[$country] : $age < $agedigitalconsentmap['*'];
+}
+
+/**
+ * Validates the age and location verification form data.
+ *
+ * @param  array $data array containing the data to be validated (age and country)
+ * @return array array of errors compatible with mform
+ */
+function core_login_validate_age_location_data($data) {
+
+    $errors = array();
+
+    if (empty($data['age'])) {
+        $errors['age'] = get_string('agemissing');
+    } else {
+        if (!is_numeric($data['age']) || $data['age'] < 0 && $data['age'] !== round($data['age'], 0)) {
+            $errors['age'] = get_string('ageinvalid');
+        }
+    }
+
+    if (empty($data['country'])) {
+        $errors['country'] = get_string('countrymissing');
+    } else {
+        $countries = get_string_manager()->get_list_of_countries();
+        if (!array_key_exists($data['country'], $countries)) {
+            $errors['country'] = get_string('countryinvalid');
+        }
+    }
+
+    return $errors;
+}
