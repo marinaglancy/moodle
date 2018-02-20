@@ -48,22 +48,14 @@ if (isloggedin() and !isguestuser()) {
     exit;
 }
 
-if (!\core_auth\session\signup::is_set()) { // Signup session does not exists.
-    \core_auth\session\signup::create();
-} else { // Signup session exists.
-    if (!\core_auth\session\signup::is_valid()) { // Signup session is no longer valid.
-        \core_auth\session\signup::destroy();
-        redirect(new moodle_url('/login/index.php'));
-    }
-    // Handle if verification of age and location (minor check) has already been done.
-    if (\core_auth\session\signup::is_set_minor_status()) {
-        $isminor = \core_auth\session\signup::get_minor_status();
-        if ($isminor) { // The user that attempts to sign up is a digital minor.
-            redirect(new moodle_url('/login/digital_minor.php'));
-        } else { // The user that attempts to sign up is not a digital minor.
-            redirect(new moodle_url('/login/signup.php'));
-        }
-    }
+$cache = cache::make('core', 'digitalconsent');
+$isminor = $cache->get('isminor');
+if ($isminor === 'yes') {
+    // The user that attempts to sign up is a digital minor.
+    redirect(new moodle_url('/login/digital_minor.php'));
+} else if ($isminor === 'no') {
+    // The user that attempts to sign up has already verified that they are not a digital minor.
+    redirect(new moodle_url('/login/signup.php'));
 }
 
 $PAGE->navbar->add(get_string('login'));
@@ -81,7 +73,7 @@ if ($mform->is_cancelled()) {
 } else if ($data = $mform->get_data()) {
     try {
         $isminor = core_login_is_minor($data->age, $data->country);
-        \core_auth\session\signup::set_minor_status($isminor);
+        cache::make('core', 'digitalconsent')->set('isminor', $isminor ? 'yes' : 'no');
         if ($isminor) {
             redirect(new moodle_url('/login/digital_minor.php'));
         } else {

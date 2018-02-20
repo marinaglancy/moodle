@@ -362,4 +362,11 @@ $definitions = array(
         'simpledata' => true,
         'staticacceleration' => true,
     ),
+    // Stores whether the user who is trying to sign up is a minor.
+    'digitalconsent' => array(
+        'mode' => cache_store::MODE_SESSION,
+        'simplekeys' => true,
+        'simpledata' => true,
+        'ttl' => 1800,
+    ),
 );

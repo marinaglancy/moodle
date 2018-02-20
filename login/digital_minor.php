@@ -48,14 +48,10 @@ if (isloggedin() and !isguestuser()) {
     exit;
 }
 
-// Redirect when the signup session does not exists, minor check has not been done or the user is not a minor.
-if (!\core_auth\session\signup::is_set() || !\core_auth\session\signup::is_set_minor_status() ||
-    \core_auth\session\signup::get_minor_status() == false) {
-    redirect(new moodle_url('/login/index.php'));
-}
-// Handle if the signup session is no longer valid.
-if (!\core_auth\session\signup::is_valid()) {
-    \core_auth\session\signup::destroy();
+$cache = cache::make('core', 'digitalconsent');
+$isminor = $cache->get('isminor');
+if ($isminor !== 'yes') {
+    // Redirect when the signup session does not exists, minor check has not been done or the user is not a minor.
     redirect(new moodle_url('/login/index.php'));
 }
 
