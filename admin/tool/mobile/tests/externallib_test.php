@@ -160,6 +160,17 @@ class tool_mobile_external_testcase extends externallib_advanced_testcase {
         $this->assertCount(0, $result['warnings']);
         $this->assertEquals($expected, $result['settings']);
 
+        // Set the handler for the site policy, make sure it substitutes link to the sitepolicy.
+        // See tool_mobile_site_policy_handler() below.
+        $CFG->sitepolicyhandler = 'tool_mobile';
+        $expected[11]['value'] = 'http://my.site/viewall.php';
+        array_splice($expected, 12, 0, [['name' => 'sitepolicyhandler', 'value' => 'tool_mobile']]);
+
+        $result = external::get_config();
+        $result = external_api::clean_returnvalue(external::get_config_returns(), $result);
+        $this->assertCount(0, $result['warnings']);
+        $this->assertEquals($expected, $result['settings']);
+
         // Change a value and retrieve filtering by section.
         set_config('commentsperpage', 1);
         $expected[10]['value'] = 1;
@@ -288,5 +299,31 @@ class tool_mobile_external_testcase extends externallib_advanced_testcase {
         $this->expectException('moodle_exception');
         $this->expectExceptionMessage(get_string('autologinkeygenerationlockout', 'tool_mobile'));
         $result = external::get_autologin_key($token->privatetoken);
+    }
+}
+
+/**
+ * Pseudo site policy handler callback implemented by tool_mobile
+ *
+ * This is a very basic implementation of site_policy_handler callback with all possible actions.
+ *
+ * @param $action
+ * @return string
+ * @throws coding_exception
+ */
+function tool_mobile_site_policy_handler($action) {
+    global $CFG, $USER, $DB;
+    if ($action === 'redirect') {
+        // Return URL to redirect from require_login() method.
+        return 'http://my.site/policy.php';
+    } else if ($action === 'viewall') {
+        // Returns a single URL instead of $CFG->sitepolicy (for mobile app web services).
+        return 'http://my.site/viewall.php';
+    } else if ($action === 'acceptall') {
+        // Accepts policy on behalf of the current user. We set it to 2 here to check that this callback was called.
+        $USER->policyagreed = 2;
+        $DB->update_record('user', ['policyagreed' => 2, 'id' => $USER->id]);
+    } else {
+        throw new coding_exception('Unrecognised action');
     }
 }
