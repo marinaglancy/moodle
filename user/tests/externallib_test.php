@@ -1236,4 +1236,69 @@ class core_user_externallib_testcase extends externallib_advanced_testcase {
         // Try to retrieve other user private files info.
         core_user_external::get_private_files_info($user2->id);
     }
+
+    /**
+     * Test for validate_context() and agree_site_policy() when site policy handler is set
+     */
+    public function test_agree_site_policy_with_handler() {
+        global $CFG, $DB, $USER;
+        $this->resetAfterTest(true);
+
+        $user = self::getDataGenerator()->create_user();
+        $this->setUser($user);
+
+        // Set mock site policy handler. See function tool_phpunit_site_policy_handler() below.
+        $CFG->sitepolicyhandler = 'tool_phpunit';
+        $this->assertEquals(0, $USER->policyagreed);
+
+        // Make sure user can not login.
+        try {
+            core_user_external::validate_context(context_system::instance());
+            $this->fail('Expected exception policy not agreed');
+        } catch (moodle_exception $e) {
+            $this->assertEquals(get_string('sitepolicynotagreed', 'error', 'http://my.site/policy.php'), $e->getMessage());
+        }
+
+        // Call WS to agree to the site policy. It will call tool_phpunit_site_policy_handler().
+        $result = core_user_external::agree_site_policy();
+        $result = external_api::clean_returnvalue(core_user_external::agree_site_policy_returns(), $result);
+        $this->assertTrue($result['status']);
+        $this->assertCount(0, $result['warnings']);
+        $this->assertEquals(2, $USER->policyagreed);
+        $this->assertEquals(2, $DB->get_field('user', 'policyagreed', array('id' => $USER->id)));
+
+        // Try again, we should get a warning.
+        $result = core_user_external::agree_site_policy();
+        $result = external_api::clean_returnvalue(core_user_external::agree_site_policy_returns(), $result);
+        $this->assertFalse($result['status']);
+        $this->assertCount(1, $result['warnings']);
+        $this->assertEquals('alreadyagreed', $result['warnings'][0]['warningcode']);
+
+    }
+}
+
+/**
+ * Pseudo site policy handler callback implemented by tool_phpunit
+ *
+ * This is a very basic implementation of site_policy_handler callback with all possible actions.
+ *
+ * @param $action
+ * @return string
+ * @throws coding_exception
+ */
+function tool_phpunit_site_policy_handler($action) {
+    global $USER, $DB;
+    if ($action === 'redirect') {
+        // Return URL to redirect from require_login() method.
+        return 'http://my.site/policy.php';
+    } else if ($action === 'viewall') {
+        // Returns a single URL instead of $CFG->sitepolicy (for mobile app web services).
+        return 'http://my.site/viewall.php';
+    } else if ($action === 'acceptall') {
+        // Accepts policy on behalf of the current user. We set it to 2 here to check that this callback was called.
+        $USER->policyagreed = 2;
+        $DB->update_record('user', ['policyagreed' => 2, 'id' => $USER->id]);
+    } else {
+        throw new coding_exception('Unrecognised action');
+    }
 }

@@ -88,8 +88,12 @@ class auth_email_external extends external_api {
         if (!empty($CFG->passwordpolicy)) {
             $result['passwordpolicy'] = print_password_policy();
         }
-        if (!empty($CFG->sitepolicy)) {
+        if (!empty($CFG->sitepolicy) && empty($CFG->sitepolicyhandler)) {
             $result['sitepolicy'] = $CFG->sitepolicy;
+        }
+        if (!empty($CFG->sitepolicyhandler)) {
+            $result['sitepolicy'] = component_callback($CFG->sitepolicyhandler, 'site_policy_handler', ['viewall']);
+            $result['sitepolicyhandler'] = $CFG->sitepolicyhandler;
         }
         if (!empty($CFG->defaultcity)) {
             $result['defaultcity'] = $CFG->defaultcity;
@@ -138,6 +142,7 @@ class auth_email_external extends external_api {
                 ),
                 'passwordpolicy' => new external_value(PARAM_RAW, 'Password policy', VALUE_OPTIONAL),
                 'sitepolicy' => new external_value(PARAM_RAW, 'Site policy', VALUE_OPTIONAL),
+                'sitepolicyhandler' => new external_value(PARAM_PLUGIN, 'Site policy handler', VALUE_OPTIONAL),
                 'defaultcity' => new external_value(PARAM_NOTAGS, 'Default city', VALUE_OPTIONAL),
                 'country' => new external_value(PARAM_ALPHA, 'Default country', VALUE_OPTIONAL),
                 'profilefields' => new external_multiple_structure(
