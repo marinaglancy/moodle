@@ -1831,21 +1831,30 @@ class core_user_external extends external_api {
             }
         }
 
-        if (empty($CFG->sitepolicy)) {
-            $status = false;
-            $warnings[] = array(
-                'item' => 'user',
-                'itemid' => $USER->id,
-                'warningcode' => 'nositepolicy',
-                'message' => 'The site does not have a site policy configured.'
-            );
-        } else if (!empty($USER->policyagreed)) {
+        if (!empty($USER->policyagreed)) {
             $status = false;
             $warnings[] = array(
                 'item' => 'user',
                 'itemid' => $USER->id,
                 'warningcode' => 'alreadyagreed',
                 'message' => 'The user already agreed the site policy.'
+            );
+        } else if (!empty($CFG->sitepolicyhandler)) {
+            component_callback($CFG->sitepolicyhandler, 'site_policy_handler', ['acceptall']);
+            if (empty($USER->policyagreed)) {
+                // Site policy handler must either update $USER->policyagreed or throw exception. If it does neither,
+                // it means it is not properly implemented. Unfortunately user will not be able to agree to the site
+                // policy using web services.
+                throw new moodle_exception('sitepolicynotagreed', 'error', '', get_site_policy_redirect());
+            }
+            $status = true;
+        } else if (empty($CFG->sitepolicy)) {
+            $status = false;
+            $warnings[] = array(
+                'item' => 'user',
+                'itemid' => $USER->id,
+                'warningcode' => 'nositepolicy',
+                'message' => 'The site does not have a site policy configured.'
             );
         } else {
             $DB->set_field('user', 'policyagreed', 1, array('id' => $USER->id));

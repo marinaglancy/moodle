@@ -88,8 +88,11 @@ class auth_email_external extends external_api {
         if (!empty($CFG->passwordpolicy)) {
             $result['passwordpolicy'] = print_password_policy();
         }
-        if (!empty($CFG->sitepolicy)) {
+        if (!empty($CFG->sitepolicy) && empty($CFG->sitepolicyhandler)) {
             $result['sitepolicy'] = $CFG->sitepolicy;
+        }
+        if (!empty($CFG->sitepolicyhandler)) {
+            $result['sitepolicy'] = component_callback($CFG->sitepolicyhandler, 'site_policy_handler', ['viewall']);
         }
         if (!empty($CFG->defaultcity)) {
             $result['defaultcity'] = $CFG->defaultcity;
