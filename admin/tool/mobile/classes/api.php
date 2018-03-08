@@ -211,10 +211,10 @@ class api {
         }
 
         if (empty($section) or $section == 'sitepolicies') {
-            if (empty($CFG->sitepolicyhandler)) {
-                $settings->sitepolicy = $CFG->sitepolicy;
-            } else {
-                $settings->sitepolicy = component_callback($CFG->sitepolicyhandler, 'site_policy_handler', ['viewall']);
+            if ($sitepolicy = \core_site_policy::get_embed_url()) {
+                $settings->sitepolicy = $sitepolicy->out(false);
+            }
+            if (!empty($CFG->sitepolicyhandler)) {
                 $settings->sitepolicyhandler = $CFG->sitepolicyhandler;
             }
             $settings->disableuserimages = $CFG->disableuserimages;

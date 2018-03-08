@@ -1234,13 +1234,13 @@ class core_user_externallib_testcase extends externallib_advanced_testcase {
  */
 function tool_phpunit_site_policy_handler($action) {
     global $USER, $DB;
-    if ($action === 'redirect') {
+    if ($action === core_site_policy::ACTION_REDIRECT_URL || $action === core_site_policy::ACTION_REDIRECT_URL_GUEST) {
         // Return URL to redirect from require_login() method.
         return 'http://my.site/policy.php';
-    } else if ($action === 'viewall') {
+    } else if ($action === core_site_policy::ACTION_EMBED_URL_GUEST || $action === core_site_policy::ACTION_EMBED_URL) {
         // Returns a single URL instead of $CFG->sitepolicy (for mobile app web services).
         return 'http://my.site/viewall.php';
-    } else if ($action === 'acceptall') {
+    } else if ($action === core_site_policy::ACTION_ACCEPT) {
         // Accepts policy on behalf of the current user. We set it to 2 here to check that this callback was called.
         $USER->policyagreed = 2;
         $DB->update_record('user', ['policyagreed' => 2, 'id' => $USER->id]);

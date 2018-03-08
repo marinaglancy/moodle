@@ -2498,27 +2498,6 @@ function get_login_url() {
 }
 
 /**
- * Returns the URL of the page responsible for obtaining site policy contents or null if there is no site policy
- *
- * @return null|string
- */
-function get_site_policy_redirect() {
-    global $CFG;
-    if (!empty($CFG->sitepolicyhandler)) {
-        try {
-            return component_callback($CFG->sitepolicyhandler, 'site_policy_handler', ['redirect']);
-        } catch (Exception $e) {
-            debugging('Error while trying to execute the site_policy_handler callback!');
-        }
-    } else if (!empty($CFG->sitepolicy) and !isguestuser()) {
-        return $CFG->wwwroot . '/user/policy.php';
-    } else if (!empty($CFG->sitepolicyguest) and isguestuser()) {
-        return $CFG->wwwroot . '/user/policy.php';
-    }
-    return null;
-}
-
-/**
  * This function checks that the current user is logged in and has the
  * required privileges
  *
@@ -2740,7 +2719,7 @@ function require_login($courseorid = null, $autologinguest = true, $cm = null, $
     // Check that the user has agreed to a site policy if there is one - do not test in case of admins.
     // Do not test if the script explicitly asked for skipping the site policies check.
     if (!$USER->policyagreed && !is_siteadmin() && !NO_SITEPOLICY_CHECK) {
-        if ($policyurl = get_site_policy_redirect()) {
+        if ($policyurl = core_site_policy::get_redirect_url()) {
             if ($preventredirect) {
                 throw new moodle_exception('sitepolicynotagreed', 'error', '', $policyurl);
             }
