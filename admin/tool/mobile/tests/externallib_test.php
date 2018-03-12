@@ -160,6 +160,18 @@ class tool_mobile_external_testcase extends externallib_advanced_testcase {
         $this->assertCount(0, $result['warnings']);
         $this->assertEquals($expected, $result['settings']);
 
+        // Set the handler for the site policy, make sure it substitutes link to the sitepolicy.
+        // See tool_mobile_site_policy_handler() below.
+        $CFG->sitepolicyhandler = 'tool_mobile';
+        core_privacy\sitepolicy\manager::get_handler(true);
+        $expected[11]['value'] = 'http://example.com/view.htm';
+        array_splice($expected, 12, 0, [['name' => 'sitepolicyhandler', 'value' => 'tool_mobile']]);
+
+        $result = external::get_config();
+        $result = external_api::clean_returnvalue(external::get_config_returns(), $result);
+        $this->assertCount(0, $result['warnings']);
+        $this->assertEquals($expected, $result['settings']);
+
         // Change a value and retrieve filtering by section.
         set_config('commentsperpage', 1);
         $expected[10]['value'] = 1;
@@ -170,6 +182,10 @@ class tool_mobile_external_testcase extends externallib_advanced_testcase {
         $result = external_api::clean_returnvalue(external::get_config_returns(), $result);
         $this->assertCount(0, $result['warnings']);
         $this->assertEquals($expected, $result['settings']);
+
+        // Reset the static cache in the manager class.
+        $CFG->sitepolicyhandler = '';
+        core_privacy\sitepolicy\manager::get_handler(true);
     }
 
     /*
@@ -288,5 +304,33 @@ class tool_mobile_external_testcase extends externallib_advanced_testcase {
         $this->expectException('moodle_exception');
         $this->expectExceptionMessage(get_string('autologinkeygenerationlockout', 'tool_mobile'));
         $result = external::get_autologin_key($token->privatetoken);
+    }
+}
+
+/**
+ * Pseudo site policy handler callback implemented by tool_mobile
+ *
+ * This is a very basic implementation of sitepolicy handler
+ *
+ * @package    tool_mobile
+ * @copyright  2018 Marina Glancy
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class tool_mobile_privacy_sitepolicy_handler extends core_privacy\sitepolicy\handler {
+
+    public function get_embed_url($forguests = false) {
+        return 'http://example.com/view.htm';
+    }
+
+    public function get_redirect_url($forguests = false) {
+        return 'http://example.com/policy.php';
+    }
+
+    public function accept() {
+        global $USER, $DB;
+        // Accepts policy on behalf of the current user. We set it to 2 here to check that this callback was called.
+        $USER->policyagreed = 2;
+        $DB->update_record('user', ['policyagreed' => 2, 'id' => $USER->id]);
+        return true;
     }
 }
