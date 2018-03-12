@@ -36,7 +36,7 @@ function message_popup_render_navbar_output(\renderer_base $renderer) {
     // Early bail out conditions.
     if (!isloggedin() || isguestuser() || user_not_fully_set_up($USER) ||
         get_user_preferences('auth_forcepasswordchange') ||
-        ($CFG->sitepolicy && !$USER->policyagreed && !is_siteadmin())) {
+        (!$USER->policyagreed && !is_siteadmin() && \core_privacy\sitepolicy\manager::is_defined())) {
         return '';
     }
 
