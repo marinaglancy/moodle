@@ -88,8 +88,8 @@ class auth_email_external extends external_api {
         if (!empty($CFG->passwordpolicy)) {
             $result['passwordpolicy'] = print_password_policy();
         }
-        if (!empty($CFG->sitepolicy)) {
-            $result['sitepolicy'] = $CFG->sitepolicy;
+        if ($sitepolicy = \core_privacy\sitepolicy\manager::get_embed_url()) {
+            $result['sitepolicy'] = $sitepolicy->out(false);
         }
         if (!empty($CFG->defaultcity)) {
             $result['defaultcity'] = $CFG->defaultcity;
@@ -287,7 +287,7 @@ class auth_email_external extends external_api {
         $data = $params;
         $data['email2'] = $data['email'];
         // Force policy agreed if a site policy is set. The client is responsible of implementing the interface check.
-        if (!empty($CFG->sitepolicy)) {
+        if (!\core_privacy\sitepolicy\manager::is_defined()) {
             $data['policyagreed'] = 1;
         }
         unset($data['recaptcharesponse']);

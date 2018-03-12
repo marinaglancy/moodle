@@ -1831,15 +1831,7 @@ class core_user_external extends external_api {
             }
         }
 
-        if (empty($CFG->sitepolicy)) {
-            $status = false;
-            $warnings[] = array(
-                'item' => 'user',
-                'itemid' => $USER->id,
-                'warningcode' => 'nositepolicy',
-                'message' => 'The site does not have a site policy configured.'
-            );
-        } else if (!empty($USER->policyagreed)) {
+        if (!empty($USER->policyagreed)) {
             $status = false;
             $warnings[] = array(
                 'item' => 'user',
@@ -1847,10 +1839,16 @@ class core_user_external extends external_api {
                 'warningcode' => 'alreadyagreed',
                 'message' => 'The user already agreed the site policy.'
             );
+        } else if (!\core_privacy\sitepolicy\manager::is_defined()) {
+            $status = false;
+            $warnings[] = array(
+                'item' => 'user',
+                'itemid' => $USER->id,
+                'warningcode' => 'nositepolicy',
+                'message' => 'The site does not have a site policy configured.'
+            );
         } else {
-            $DB->set_field('user', 'policyagreed', 1, array('id' => $USER->id));
-            $USER->policyagreed = 1;
-            $status = true;
+            $status = \core_privacy\sitepolicy\manager::accept();
         }
 
         $result = array();

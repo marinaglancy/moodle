@@ -1182,4 +1182,74 @@ class core_user_externallib_testcase extends externallib_advanced_testcase {
         }
 
     }
+
+    /**
+     * Test for validate_context() and agree_site_policy() when site policy handler is set
+     */
+    public function test_agree_site_policy_with_handler() {
+        global $CFG, $DB, $USER;
+        $this->resetAfterTest(true);
+
+        $user = self::getDataGenerator()->create_user();
+        $this->setUser($user);
+
+        // Set mock site policy handler. See function tool_phpunit_site_policy_handler() below.
+        $CFG->sitepolicyhandler = 'tool_phpunit';
+        core_privacy\sitepolicy\manager::get_handler(true);
+        $this->assertEquals(0, $USER->policyagreed);
+
+        // Make sure user can not login.
+        try {
+            core_user_external::validate_context(context_system::instance());
+            $this->fail('Expected exception policy not agreed');
+        } catch (moodle_exception $e) {
+            $this->assertEquals(get_string('sitepolicynotagreed', 'error', 'http://example.com/policy.php'), $e->getMessage());
+        }
+
+        // Call WS to agree to the site policy. It will call tool_phpunit_site_policy_handler().
+        $result = core_user_external::agree_site_policy();
+        $result = external_api::clean_returnvalue(core_user_external::agree_site_policy_returns(), $result);
+        $this->assertTrue($result['status']);
+        $this->assertCount(0, $result['warnings']);
+        $this->assertEquals(2, $USER->policyagreed);
+        $this->assertEquals(2, $DB->get_field('user', 'policyagreed', array('id' => $USER->id)));
+
+        // Try again, we should get a warning.
+        $result = core_user_external::agree_site_policy();
+        $result = external_api::clean_returnvalue(core_user_external::agree_site_policy_returns(), $result);
+        $this->assertFalse($result['status']);
+        $this->assertCount(1, $result['warnings']);
+        $this->assertEquals('alreadyagreed', $result['warnings'][0]['warningcode']);
+
+        // Reset the static cache in the manager class.
+        $CFG->sitepolicyhandler = '';
+        core_privacy\sitepolicy\manager::get_handler(true);
+    }
+}
+
+/**
+ * Pseudo site policy handler callback implemented by tool_phpunit (must be present to execute unittests)
+ *
+ * This is a very basic implementation of sitepolicy handler
+ *
+ * @copyright  2018 Marina Glancy
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class tool_phpunit_privacy_sitepolicy_handler extends core_privacy\sitepolicy\handler {
+
+    public function get_embed_url($forguests = false) {
+        return 'http://example.com/view.htm';
+    }
+
+    public function get_redirect_url($forguests = false) {
+        return 'http://example.com/policy.php';
+    }
+
+    public function accept() {
+        global $USER, $DB;
+        // Accepts policy on behalf of the current user. We set it to 2 here to check that this callback was called.
+        $USER->policyagreed = 2;
+        $DB->update_record('user', ['policyagreed' => 2, 'id' => $USER->id]);
+        return true;
+    }
 }
