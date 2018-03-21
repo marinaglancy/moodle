@@ -24,9 +24,10 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+// Privacy settings.
+$temp = new admin_settingpage('privacysettings', new lang_string('privacysettings', 'admin'));
+
 if ($hassiteconfig) {
-    // Privacy settings.
-    $temp = new admin_settingpage('privacysettings', new lang_string('privacysettings', 'admin'));
 
     $options = array(
         0 => get_string('no'),
@@ -64,11 +65,14 @@ if ($hassiteconfig) {
         PARAM_RAW
     );
     $temp->add($setting);
+}
 
-    $ADMIN->add('privacy', $temp);
+$ADMIN->add('privacy', $temp);
 
-    // Policy settings.
-    $temp = new admin_settingpage('policysettings', new lang_string('policysettings', 'admin'));
+// Policy settings.
+$temp = new admin_settingpage('policysettings', new lang_string('policysettings', 'admin'));
+
+if ($hassiteconfig) {
     $temp->add(new admin_settings_sitepolicy_handler_select('sitepolicyhandler', new lang_string('sitepolicyhandler', 'core_admin'),
         new lang_string('sitepolicyhandler_desc', 'core_admin')));
     $temp->add(new admin_setting_configtext('sitepolicy', new lang_string('sitepolicy', 'core_admin'),
@@ -76,5 +80,6 @@ if ($hassiteconfig) {
     $temp->add(new admin_setting_configtext('sitepolicyguest', new lang_string('sitepolicyguest', 'core_admin'),
         new lang_string('sitepolicyguest_help', 'core_admin'), (isset($CFG->sitepolicy) ? $CFG->sitepolicy : ''), PARAM_RAW));
 
-    $ADMIN->add('privacy', $temp);
 }
+
+$ADMIN->add('privacy', $temp);
