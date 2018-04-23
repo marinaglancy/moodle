@@ -320,6 +320,14 @@ class manager {
      * @return string the fully qualified provider classname.
      */
     public static function get_provider_classname_for_component(string $component) {
+        if (!\core_component::get_component_directory($component)) {
+            // Some core subsystems do not define the directory, their classes are located in
+            // lib/classes/SUBSYSTEM/ with the namespace core\SUBSYSTEM .
+            list($type, $subsystem) = \core_component::normalize_component($component);
+            if ($type === 'core') {
+                return "$type\\{$subsystem}\\privacy\\provider";
+            }
+        }
         return "$component\privacy\provider";
     }
 
