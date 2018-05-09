@@ -204,4 +204,66 @@ class provider_testcase extends advanced_testcase {
         return false;
     }
 
+    /**
+     * Finds user fields in a table
+     *
+     * Returns fields that have foreign key to user table and fields that are named 'userid'.
+     *
+     * @param xmldb_table $table
+     * @return array
+     */
+    protected function get_userid_fields(xmldb_table $table) {
+        $userfields = [];
+
+        $keys = $table->getKeys();
+        foreach ($keys as $key) {
+            $reffields = $key->getRefFields();
+            $fields = $key->getFields();
+            if ($key->getRefTable() === 'user' && count($reffields) == 1 && $reffields[0] == 'id' && count($fields) == 1) {
+                $userfields[$fields[0]] = $fields[0];
+            }
+        }
+        $fields = $table->getFields();
+        foreach ($fields as $field) {
+            if ($field->getName() == 'userid') {
+                // TODO check type = int
+                $userfields['userid'] = 'userid';
+            }
+        }
+
+        return $userfields;
+    }
+
+    /**
+     * Test that all tables with user fields are covered by metadata providers
+     */
+    public function test_table_coverage() {
+        global $DB;
+        $dbman = $DB->get_manager();
+        $schema = $dbman->get_install_xml_schema();
+        $tables = [];
+        foreach ($schema->getTables() as $table) {
+            if ($fields = $this->get_userid_fields($table)) {
+                $tables[$table->getName()] = join(', ', $fields);
+            }
+        }
+
+        $componentlist = $this->metadata_provider_provider();
+        foreach ($componentlist as $componentarray) {
+            $component = $componentarray['component'];
+            $classname = $componentarray['classname'];
+            $collection = new collection($component);
+            $metadata = $classname::get_metadata($collection);
+            foreach ($metadata->get_collection() as $item) {
+                if ($item instanceof database_table) {
+                    unset($tables[$item->get_name()]);
+                }
+            }
+        }
+
+        if ($tables) {
+            $this->fail("The following tables with user fields must be covered with metadata providers : \n".print_r($tables, true));
+        }
+
+    }
 }
