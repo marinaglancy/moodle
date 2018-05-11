@@ -23,3 +23,4 @@
  */
 
 $string['privacy:metadata'] = 'The privacy subsystem does not store any data of its own and is designed to act as a channel between components and the interface used to describe, export, and remove their data.';
+$string['reportexception'] = "Exception occured while calling {$a->fullmethodname}. This means that {$a->component} did not complete processing data. Below you can find exception information that can be passed to the plugin developer.\n\n{$a->message}";

@@ -369,6 +369,25 @@ class manager {
     }
 
     /**
+     * Privacy operation exception occured
+     *
+     * @param string $component
+     * @param string $interface
+     * @param string $methodname
+     * @param array $params
+     * @param \Throwable $e
+     */
+    protected static function report_exception(string $component, string $interface, string $methodname, array $params, \Throwable $e) {
+        $a = (object)[
+            'fullmethodname' => static::get_provider_classname_for_component($component) . '::' . $methodname,
+            'component' => $component,
+            'message' => $e->getMessage()
+        ];
+        $error = get_string('reportexception', 'core_privacy', $a);
+        debugging($error, DEBUG_DEVELOPER);
+    }
+
+    /**
      * Call the named method with the specified params on the supplied component if it implements the relevant interface on its provider.
      *
      * @param   string  $component The component to call
@@ -380,7 +399,11 @@ class manager {
     public static function component_class_callback(string $component, string $interface, string $methodname, array $params) {
         $classname = static::get_provider_classname_for_component($component);
         if (class_exists($classname) && is_subclass_of($classname, $interface)) {
-            return component_class_callback($classname, $methodname, $params);
+            try {
+                return component_class_callback($classname, $methodname, $params);
+            } catch (\Throwable $e) {
+                self::report_exception($component, $interface, $methodname, $params, $e);
+            }
         }
 
         return null;

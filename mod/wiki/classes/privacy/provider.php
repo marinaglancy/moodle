@@ -100,6 +100,7 @@ class provider implements
      * @return contextlist $contextlist The contextlist containing the list of contexts used in this plugin.
      */
     public static function get_contexts_for_userid(int $userid) : contextlist {
+        throw new \coding_exception('---1---');
         $contextlist = new contextlist();
 
         $contextlist->add_from_sql('SELECT ctx.id
