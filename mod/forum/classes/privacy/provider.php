@@ -270,6 +270,7 @@ class provider implements
                     pref.userid AS tracked
                   FROM {context} c
                   JOIN {course_modules} cm ON cm.id = c.instanceid
+                  JOIN {modules} m ON m.id = cm.module AND m.name = :modname
                   JOIN {forum} f ON f.id = cm.instance
              LEFT JOIN {forum_digests} dig ON dig.forum = f.id AND dig.userid = :digestuserid
              LEFT JOIN {forum_subscriptions} sub ON sub.forum = f.id AND sub.userid = :subuserid
@@ -280,6 +281,7 @@ class provider implements
         ";
 
         $params = [
+            'modname'       => 'forum',
             'digestuserid'  => $userid,
             'subuserid'     => $userid,
             'prefuserid'    => $userid,
@@ -754,19 +756,21 @@ class provider implements
         }
 
         // Get the course module.
-        $cm = $DB->get_record('course_modules', ['id' => $context->instanceid]);
-        $forum = $DB->get_record('forum', ['id' => $cm->instance]);
+        if (!$cm = get_coursemodule_from_id('forum', $context->instanceid, $context->get_course_context()->instanceid)) {
+            return;
+        }
+        $forumid = $cm->instance;
 
-        $DB->delete_records('forum_track_prefs', ['forumid' => $forum->id]);
-        $DB->delete_records('forum_subscriptions', ['forum' => $forum->id]);
-        $DB->delete_records('forum_read', ['forumid' => $forum->id]);
+        $DB->delete_records('forum_track_prefs', ['forumid' => $forumid]);
+        $DB->delete_records('forum_subscriptions', ['forum' => $forumid]);
+        $DB->delete_records('forum_read', ['forumid' => $forumid]);
 
         // Delete all discussion items.
         $DB->delete_records_select(
             'forum_queue',
             "discussionid IN (SELECT id FROM {forum_discussions} WHERE forum = :forum)",
             [
-                'forum' => $forum->id,
+                'forum' => $forumid,
             ]
         );
 
@@ -774,12 +778,12 @@ class provider implements
             'forum_posts',
             "discussion IN (SELECT id FROM {forum_discussions} WHERE forum = :forum)",
             [
-                'forum' => $forum->id,
+                'forum' => $forumid,
             ]
         );
 
-        $DB->delete_records('forum_discussion_subs', ['forum' => $forum->id]);
-        $DB->delete_records('forum_discussions', ['forum' => $forum->id]);
+        $DB->delete_records('forum_discussion_subs', ['forum' => $forumid]);
+        $DB->delete_records('forum_discussions', ['forum' => $forumid]);
 
         // Delete all files from the posts.
         $fs = get_file_storage();
@@ -803,19 +807,21 @@ class provider implements
         $userid = $user->id;
         foreach ($contextlist as $context) {
             // Get the course module.
-            $cm = $DB->get_record('course_modules', ['id' => $context->instanceid]);
-            $forum = $DB->get_record('forum', ['id' => $cm->instance]);
+            if (!$cm = get_coursemodule_from_id('forum', $context->instanceid, $context->get_course_context()->instanceid)) {
+                continue;
+            }
+            $forumid = $cm->instance;
 
             $DB->delete_records('forum_track_prefs', [
-                'forumid' => $forum->id,
+                'forumid' => $forumid,
                 'userid' => $userid,
             ]);
             $DB->delete_records('forum_subscriptions', [
-                'forum' => $forum->id,
+                'forum' => $forumid,
                 'userid' => $userid,
             ]);
             $DB->delete_records('forum_read', [
-                'forumid' => $forum->id,
+                'forumid' => $forumid,
                 'userid' => $userid,
             ]);
 
@@ -825,17 +831,17 @@ class provider implements
                 "userid = :userid AND discussionid IN (SELECT id FROM {forum_discussions} WHERE forum = :forum)",
                 [
                     'userid' => $userid,
-                    'forum' => $forum->id,
+                    'forum' => $forumid,
                 ]
             );
 
             $DB->delete_records('forum_discussion_subs', [
-                'forum' => $forum->id,
+                'forum' => $forumid,
                 'userid' => $userid,
             ]);
 
             $uniquediscussions = $DB->get_recordset('forum_discussions', [
-                    'forum' => $forum->id,
+                    'forum' => $forumid,
                     'userid' => $userid,
                 ]);
 
@@ -845,7 +851,7 @@ class provider implements
                 $postsql = "userid = :userid AND discussion IN (SELECT id FROM {forum_discussions} WHERE forum = :forum)";
                 $postidsql = "SELECT fp.id FROM {forum_posts} fp WHERE {$postsql}";
                 $postparams = [
-                    'forum' => $forum->id,
+                    'forum' => $forumid,
                     'userid' => $userid,
                 ];
 
