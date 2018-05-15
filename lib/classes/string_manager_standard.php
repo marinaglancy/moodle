@@ -338,15 +338,44 @@ class core_string_manager_standard implements core_string_manager {
                 if ($CFG->debugdeveloper) {
                     list($plugintype, $pluginname) = core_component::normalize_component($component);
                     if ($plugintype === 'core') {
-                        $file = "lang/en/{$component}.php";
+                        $file = 'lang/en/' . ($pluginname ?: 'moodle') . '.php';
                     } else if ($plugintype == 'mod') {
                         $file = "mod/{$pluginname}/lang/en/{$pluginname}.php";
                     } else {
                         $path = core_component::get_plugin_directory($plugintype, $pluginname);
+                        $path = preg_replace('|^' . preg_quote($CFG->dirroot . '/', '|') . '|', '', $path);
                         $file = "{$path}/lang/en/{$plugintype}_{$pluginname}.php";
                     }
-                    debugging("Invalid get_string() identifier: '{$identifier}' or component '{$component}'. " .
-                    "Perhaps you are missing \$string['{$identifier}'] = ''; in {$file}?", DEBUG_DEVELOPER);
+
+                    // == MEGA HACK BEGIN ==
+                    // If a string is not found, add it to the respective language file.
+                    // For Privacy API strings get the string value from the DB table or column comment.
+                    static $dbschema = null;
+                    if ($dbschema === null) {
+                        global $DB;
+                        $dbschema = $DB->get_manager()->get_install_xml_schema();
+                    }
+                    $parts = preg_split('/:/', $identifier);
+                    if (count($parts) == 4 && $parts[0] == 'privacy' && ($table = $dbschema->getTable($parts[2])) &&
+                            ($column = $table->getField($parts[3])) && ($suggestion = $column->getComment())) {
+                    } else if (count($parts) == 3 && $parts[0] == 'privacy' && ($table = $dbschema->getTable($parts[2])) &&
+                        ($suggestion = $table->getComment())) {
+                    } else {
+                        $suggestion = array_pop($parts);
+                    }
+                    $filename = $CFG->dirroot.'/'.$file;
+                    if (file_exists($filename)) {
+                        $lines = explode("\n", file_get_contents($filename));
+                        $newline = "\$string['$identifier'] = '$suggestion';\n";
+                        foreach ($lines as $i => $line) {
+                            if (preg_match("|^\\\$string\\['(.*?)'\\]|", $line, $matches) && strcmp($identifier, $matches[1]) < 0) {
+                                $lines[$i] = $newline.$line;
+                                $newline = '';
+                            }
+                        }
+                        file_put_contents($filename, join("\n", $lines) . $newline);
+                    }
+                    // == MEGA HACK END ==
                 }
                 return "[[$identifier]]";
             }
