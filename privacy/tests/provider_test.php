@@ -46,7 +46,10 @@ class provider_testcase extends advanced_testcase {
      * @return array the array of frankenstyle component names with the relevant class name.
      */
     public function get_component_list() {
-        $components = [];
+        $components = ['core' => [
+            'component' => 'core',
+            'classname' => manager::get_provider_classname_for_component('core')
+        ]];
         // Get all plugins.
         $plugintypes = \core_component::get_plugin_types();
         foreach ($plugintypes as $plugintype => $typedir) {
@@ -243,6 +246,10 @@ class provider_testcase extends advanced_testcase {
         $schema = $dbman->get_install_xml_schema();
         $tables = [];
         foreach ($schema->getTables() as $table) {
+            if ($table->getName() === 'role_sortorder') {
+                // TODO MDL-62459 this table is not used anywhere. Remove the table and this statement.
+                continue;
+            }
             if ($fields = $this->get_userid_fields($table)) {
                 $tables[$table->getName()] = join(', ', $fields);
             }
