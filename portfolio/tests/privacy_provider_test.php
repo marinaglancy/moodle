@@ -57,9 +57,11 @@ class portfolio_privacy_provider_test extends \core_privacy\tests\provider_testc
         $collection = \core_portfolio\privacy\provider::get_metadata($collection);
         $this->assertNotEmpty($collection);
         $items = $collection->get_collection();
-        $this->assertEquals(2, count($items));
+        $this->assertEquals(4, count($items));
         $this->assertInstanceOf(\core_privacy\local\metadata\types\database_table::class, $items[0]);
-        $this->assertInstanceOf(\core_privacy\local\metadata\types\plugintype_link::class, $items[1]);
+        $this->assertInstanceOf(\core_privacy\local\metadata\types\database_table::class, $items[1]);
+        $this->assertInstanceOf(\core_privacy\local\metadata\types\database_table::class, $items[2]);
+        $this->assertInstanceOf(\core_privacy\local\metadata\types\plugintype_link::class, $items[3]);
     }
 
     /**

@@ -29,6 +29,7 @@ use core_privacy\local\metadata\collection;
 use core_privacy\local\request\context;
 use core_privacy\local\request\contextlist;
 use core_privacy\local\request\approved_contextlist;
+use core_privacy\local\request\transform;
 
 /**
  * Provider for the portfolio API.
@@ -64,6 +65,7 @@ class provider implements
             'caller_component' => 'privacy:metadata:portfolio_log:caller_component',
         ], 'privacy:metadata:portfolio_log');
 
+        // Temporary data is not exported/deleted in privacy API. It is cleaned by cron.
         $collection->add_database_table('portfolio_tempdata', [
             'data' => 'privacy:metadata:portfolio_tempdata:data',
             'expirytime' => 'privacy:metadata:portfolio_tempdata:expirytime',
@@ -84,9 +86,11 @@ class provider implements
     public static function get_contexts_for_userid(int $userid) : contextlist {
         $sql = "SELECT ctx.id
                   FROM {context} ctx
-                  JOIN {portfolio_instance_user} piu ON ctx.instanceid = piu.userid AND ctx.contextlevel = :usercontext
-                 WHERE piu.userid = :userid";
-        $params = ['userid' => $userid, 'usercontext' => CONTEXT_USER];
+                 WHERE ctx.instanceid = :userid AND ctx.contextlevel = :usercontext
+                  AND (EXISTS (SELECT 1 FROM {portfolio_instance_user} where userid = :userid1) OR
+                       EXISTS (SELECT 1 FROM {portfolio_log} where userid = :userid2))
+                 ";
+        $params = ['userid' => $userid, 'usercontext' => CONTEXT_USER, 'userid1' => $userid, 'userid2' => $userid];
         $contextlist = new contextlist();
         $contextlist->add_from_sql($sql, $params);
         return $contextlist;
@@ -110,15 +114,45 @@ class provider implements
             }
         });
 
+        if (empty($correctusercontext)) {
+            return;
+        }
+
         $usercontext = array_shift($correctusercontext);
 
+        $sql = "SELECT pi.id AS instanceid, pi.name, piu.name AS preference, piu.value, pl.id AS logid,
+                       pl.time AS logtime, pl.caller_class, pl.caller_file, pl.caller_component, pl.returnurl, pl.continueurl
+                  FROM {portfolio_instance} pi 
+             LEFT JOIN {portfolio_instance_user} piu ON piu.instance = pi.id AND piu.userid = :userid1
+             LEFT JOIN {portfolio_log} pl ON pl.portfolio = pi.id AND pl.userid = :userid2
+                 WHERE piu.id IS NOT NULL OR pl.id IS NOT NULL";
+        $params = ['userid1' => $usercontext->instanceid, 'userid2' => $usercontext->instanceid];
+        $instances = [];
+        $rs = $DB->get_recordset_sql($sql, $params);
+        foreach ($rs as $record) {
+            $instances += [$record->name =>
+                (object)[
+                    'name' => $record->name,
+                    'preference' => $record->preference,
+                    'value' => $record->value,
+                ]
+            ];
+            if ($record->logid) {
+                if (!isset($instances[$record->name]->logs)) {
+                    $instances[$record->name]->logs = [];
+                }
+                $instances[$record->name]->logs[$record->logid] = (object)[
+                    'time' => transform::datetime($record->logtime),
+                    'caller_class' => $record->caller_class,
+                    'caller_file' => $record->caller_file,
+                    'caller_component' => $record->caller_component,
+                    'returnurl' => $record->returnurl,
+                    'continueurl' => $record->continueurl
+                ];
+            }
+        }
+        $rs->close();
 
-        $sql = "SELECT pi.name, piu.name AS preference, piu.value
-                  FROM {portfolio_instance_user} piu
-                  JOIN {portfolio_instance} pi ON piu.instance = pi.id
-                 WHERE piu.userid = :userid";
-        $params = ['userid' => $usercontext->instanceid];
-        $instances = $DB->get_records_sql($sql, $params);
         if (!empty($instances)) {
             \core_privacy\local\request\writer::with_context($contextlist->current())->export_data(
                     [get_string('privacy:path', 'portfolio')], (object) $instances);
@@ -135,6 +169,8 @@ class provider implements
         // Context could be anything, BEWARE!
         if ($context->contextlevel == CONTEXT_USER) {
             $DB->delete_records('portfolio_instance_user', ['userid' => $context->instanceid]);
+            $DB->delete_records('portfolio_tempdata', ['userid' => $context->instanceid]);
+            $DB->delete_records('portfolio_log', ['userid' => $context->instanceid]);
         }
     }
 
@@ -156,9 +192,15 @@ class provider implements
             }
         });
 
+        if (empty($correctusercontext)) {
+            return;
+        }
+
         $usercontext = array_shift($correctusercontext);
 
         $DB->delete_records('portfolio_instance_user', ['userid' => $usercontext->instanceid]);
+        $DB->delete_records('portfolio_tempdata', ['userid' => $usercontext->instanceid]);
+        $DB->delete_records('portfolio_log', ['userid' => $usercontext->instanceid]);
     }
 
     /**
