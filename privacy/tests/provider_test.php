@@ -218,6 +218,7 @@ class provider_testcase extends advanced_testcase {
     protected function get_userid_fields(xmldb_table $table) {
         $userfields = [];
 
+        // Find all fields that have a foreign key to 'id' field in 'user' table.
         $keys = $table->getKeys();
         foreach ($keys as $key) {
             $reffields = $key->getRefFields();
@@ -226,10 +227,10 @@ class provider_testcase extends advanced_testcase {
                 $userfields[$fields[0]] = $fields[0];
             }
         }
+        // Find fields with the name 'userid' even if they don't have a foreign key.
         $fields = $table->getFields();
         foreach ($fields as $field) {
             if ($field->getName() == 'userid') {
-                // TODO check type = int
                 $userfields['userid'] = 'userid';
             }
         }
