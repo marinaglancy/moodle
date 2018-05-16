@@ -58,7 +58,7 @@ class database_table implements type {
     public function __construct($name, array $privacyfields = [], $summary = '') {
         if (debugging('', DEBUG_DEVELOPER)) {
             if (empty($privacyfields)) {
-                debugging("Table '{$name}' was supplied without any fields.", DEBUG_DEVELOPER);
+                //debugging("Table '{$name}' was supplied without any fields.", DEBUG_DEVELOPER);
             }
 
             foreach ($privacyfields as $key => $field) {

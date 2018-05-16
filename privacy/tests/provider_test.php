@@ -259,8 +259,8 @@ class provider_testcase extends advanced_testcase {
         $schema = $this->get_database_schema();
         $tables = [];
         foreach ($schema->getTables() as $table) {
-            if ($table->getName() === 'role_sortorder') {
-                // TODO MDL-62459 this table is not used anywhere. Remove the table and this statement.
+            if (in_array($table->getName(), ['role_sortorder', 'scale_history'])) {
+                // TODO MDL-62459 these tables are not used anywhere. Remove the tables and this statement.
                 continue;
             }
             if ($fields = $this->get_userid_fields($table)) {
