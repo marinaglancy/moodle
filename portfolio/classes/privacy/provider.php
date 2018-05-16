@@ -56,6 +56,21 @@ class provider implements
             'name' => 'privacy:metadata:name',
             'value' => 'privacy:metadata:value'
         ], 'privacy:metadata:instancesummary');
+
+        $collection->add_database_table('portfolio_log', [
+            'userid' => 'privacy:metadata:portfolio_log:userid',
+            'time' => 'privacy:metadata:portfolio_log:time',
+            'caller_class' => 'privacy:metadata:portfolio_log:caller_class',
+            'caller_component' => 'privacy:metadata:portfolio_log:caller_component',
+        ], 'privacy:metadata:portfolio_log');
+
+        $collection->add_database_table('portfolio_tempdata', [
+            'data' => 'privacy:metadata:portfolio_tempdata:data',
+            'expirytime' => 'privacy:metadata:portfolio_tempdata:expirytime',
+            'userid' => 'privacy:metadata:portfolio_tempdata:userid',
+            'instance' => 'privacy:metadata:portfolio_tempdata:instance',
+        ], 'privacy:metadata:portfolio_tempdata');
+
         $collection->add_plugintype_link('portfolio', [], 'privacy:metadata');
         return $collection;
     }
