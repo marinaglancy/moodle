@@ -129,6 +129,7 @@ class provider_testcase extends advanced_testcase {
             if ($item instanceof database_table) {
                 // Check that the table is valid.
                 $this->assertTrue($DB->get_manager()->table_exists($item->get_name()));
+                $this->check_table_fields($item);
             }
 
             if ($item instanceof \core_privacy\local\metadata\types\plugintype_link) {
@@ -192,6 +193,19 @@ class provider_testcase extends advanced_testcase {
         });
     }
 
+    protected $dbschema;
+
+    /**
+     * @return xmldb_structure
+     */
+    protected function get_database_schema() {
+        global $DB;
+        if ($this->dbschema === null) {
+            $this->dbschema = $DB->get_manager()->get_install_xml_schema();
+        }
+        return $this->dbschema;
+    }
+
     /**
      * Checks whether the component's provider class implements the specified interface, either directly or as a grandchild.
      *
@@ -242,9 +256,7 @@ class provider_testcase extends advanced_testcase {
      * Test that all tables with user fields are covered by metadata providers
      */
     public function test_table_coverage() {
-        global $DB;
-        $dbman = $DB->get_manager();
-        $schema = $dbman->get_install_xml_schema();
+        $schema = $this->get_database_schema();
         $tables = [];
         foreach ($schema->getTables() as $table) {
             if ($table->getName() === 'role_sortorder') {
@@ -273,5 +285,46 @@ class provider_testcase extends advanced_testcase {
             $this->fail("The following tables with user fields must be covered with metadata providers : \n".print_r($tables, true));
         }
 
+    }
+
+    protected function check_table_fields(database_table $item) {
+        global $DB;
+        $schema = $this->get_database_schema();
+        $tablename = $item->get_name();
+        if (!in_array($tablename, preg_split('/,/', 'scale,scale_history,role_sortorder,my_pages,user_preferences,grade_import_newitem,grade_import_values,'.
+            'portfolio_log,portfolio_tempdata,task_adhoc,chat_messages_current,chat_users,forum_queue,block_recent_activity,log'))) {
+            //return ;
+        }
+        $table = $schema->getTable($tablename);
+
+        $fields = [];
+        foreach ($table->getFields() as $field) {
+            $name = $field->getName();
+            if ($name !== 'id') {
+                $fields[$name] = "            '$name' => 'privacy:metadata:{$tablename}:{$name}'";
+            }
+        }
+        $privacyfields = $item->get_privacy_fields();
+        if (!empty($privacyfields)) {
+            return; // TODO remove
+        }
+        $extra = array_keys(array_diff_key($privacyfields, $fields));
+        $missing = array_keys(array_diff_key($fields, $privacyfields));
+        if ($missing || $extra) {
+            $error = "\nTable $tablename ";
+            if ($missing) {
+                $error .= " missing fields: [".join(', ', $missing)."]";
+            }
+            if ($extra) {
+                $error .= " !EXTRA! fields: [".join(', ', $extra)."]";
+            }
+            $error .= ". Recommended code:\n\n".
+                "        \$collection->add_database_table('{$tablename}', [\n".
+                join(",\n", $fields).
+                "\n        ], 'privacy:metadata:{$tablename}');\n\n";
+            echo $error;
+        }
+        //print_r($fields);
+        //print_r($item->get_privacy_fields());
     }
 }
