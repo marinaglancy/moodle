@@ -358,7 +358,7 @@ class registration {
      * @throws \coding_exception
      */
     public static function register($returnurl) {
-        global $DB, $SESSION;
+        global $DB, $SESSION, $CFG;
 
         if (self::is_registered()) {
             // Caller of this method must make sure that site is not registered.
@@ -381,6 +381,9 @@ class registration {
 
         $params = self::get_site_info();
         $params['token'] = $hub->token;
+        if ($CFG->admin !== 'admin') {
+            $params['admindir'] = $CFG->admin;
+        }
 
         $SESSION->registrationredirect = $returnurl;
         redirect(new moodle_url(HUB_MOODLEORGHUBURL . '/local/hub/siteregistration.php', $params));
