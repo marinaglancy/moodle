@@ -395,13 +395,13 @@ function get_array_of_activities($courseid) {
     $courseformat = course_get_format($course);
 
     if ($sections = $DB->get_records('course_sections', array('course' => $courseid),
-            'section ASC', 'id,section,sequence,visible')) {
+            'section ASC', 'id,section,sequence,visible,visibleoncoursepage')) {
         // First check and correct obvious mismatches between course_sections.sequence and course_modules.section.
         if ($errormessages = course_integrity_check($courseid, $rawmods, $sections)) {
             debugging(join('<br>', $errormessages));
             $rawmods = get_course_mods($courseid);
             $sections = $DB->get_records('course_sections', array('course' => $courseid),
-                'section ASC', 'id,section,sequence,visible');
+                'section ASC', 'id,section,sequence,visible,visibleoncoursepage');
         }
         // Build array of activities.
        foreach ($sections as $section) {
@@ -590,14 +590,16 @@ function course_set_marker($courseid, $marker) {
  * @param int $courseid course id
  * @param int $sectionnumber The section number to adjust
  * @param int $visibility The new visibility
+ * @param int $visibleoncoursepage The new visibility on course page
  * @return array A list of resources which were hidden in the section
  */
-function set_section_visible($courseid, $sectionnumber, $visibility) {
+function set_section_visible($courseid, $sectionnumber, $visibility, $visibleoncoursepage = 1) {
     global $DB;
 
     $resourcestotoggle = array();
     if ($section = $DB->get_record("course_sections", array("course"=>$courseid, "section"=>$sectionnumber))) {
-        course_update_section($courseid, $section, array('visible' => $visibility));
+        course_update_section($courseid, $section,
+            array('visible' => $visibility, 'visibleoncoursepage' => $visibleoncoursepage));
 
         // Determine which modules are visible for AJAX update
         $modules = !empty($section->sequence) ? explode(',', $section->sequence) : array();
@@ -866,6 +868,7 @@ function course_create_section($courseorid, $position = 0, $skipcheck = false) {
     $cw->sequence = '';
     $cw->name = null;
     $cw->visible = 1;
+    $cw->visibleoncoursepage = 1;
     $cw->availability = null;
     $cw->timemodified = time();
     $cw->id = $DB->insert_record("course_sections", $cw);
@@ -1685,7 +1688,18 @@ function course_update_section($course, $section, $data) {
 
     // Some fields can not be updated using this method.
     $data = array_diff_key((array)$data, array('id', 'course', 'section', 'sequence'));
+
+    // Check if visibility has changed.
+    if (!(array_key_exists('visible', $data) ? $data['visible'] : $section->visible)) {
+        $data['visibleoncoursepage'] = 1;
+    }
+    if (array_key_exists('visibleoncoursepage', $data) && !$data['visibleoncoursepage'] &&
+            !course_get_format($courseid)->allow_stealth_section_visibility($section)) {
+        unset($data['visibleoncoursepage']);
+    }
     $changevisibility = (array_key_exists('visible', $data) && (bool)$data['visible'] != (bool)$section->visible);
+
+    // Validate name length.
     if (array_key_exists('name', $data) && \core_text::strlen($data['name']) > 255) {
         throw new moodle_exception('maximumchars', 'moodle', '', 255);
     }

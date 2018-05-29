@@ -570,7 +570,7 @@ class course_modinfo {
 
         // Get section data
         $sections = $DB->get_records('course_sections', array('course' => $course->id), 'section',
-                'section, id, course, name, summary, summaryformat, sequence, visible, availability');
+                'section, id, course, name, summary, summaryformat, sequence, visible, visibleoncoursepage, availability');
         $compressedsections = array();
 
         $formatoptionsdef = course_get_format($course)->section_format_options();
@@ -587,6 +587,9 @@ class course_modinfo {
             }
             // Clone just in case it is reused elsewhere
             $compressedsections[$number] = clone($section);
+            if (!$section->visibleoncoursepage && !course_get_format($course)->allow_stealth_section_visibility($section)) {
+                $section->visibleoncoursepage = 0;
+            }
             section_info::convert_for_section_cache($compressedsections[$number]);
         }
 
@@ -2493,6 +2496,8 @@ class cached_cm_info {
  * @property-read int $section Section number - from course_sections table
  * @property-read string $name Section name if specified - from course_sections table
  * @property-read int $visible Section visibility (1 = visible) - from course_sections table
+ * @property-read int $visibleoncoursepage Visible on course page setting - from course_sections table, adjusted to
+ *    whether course format allows this section to have the "stealth" mode
  * @property-read string $summary Section summary text if specified - from course_sections table
  * @property-read int $summaryformat Section summary text format (FORMAT_xx constant) - from course_sections table
  * @property-read string $availability Availability information as JSON string -
@@ -2540,6 +2545,12 @@ class section_info implements IteratorAggregate {
      * @var int
      */
     private $_visible;
+
+    /**
+     * Visible on course page setting - from course_modules table
+     * @var int
+     */
+    private $_visibleoncoursepage;
 
     /**
      * Section summary text if specified - from course_sections table
@@ -2617,6 +2628,7 @@ class section_info implements IteratorAggregate {
         'summary' => '',
         'summaryformat' => '1', // FORMAT_HTML, but must be a string
         'visible' => '1',
+        'visibleoncoursepage' => '1',
         'availability' => null
     );
 

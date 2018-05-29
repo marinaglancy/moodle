@@ -310,6 +310,7 @@ abstract class format_section_renderer_base extends plugin_renderer_base {
         $coursecontext = context_course::instance($course->id);
         $numsections = course_get_format($course)->get_last_section_number();
         $isstealth = $section->section > $numsections;
+        $allowtriplestate = course_get_format($course)->allow_stealth_section_visibility($section);
 
         $baseurl = course_get_url($course, $sectionreturn);
         $baseurl->param('sesskey', sesskey());
@@ -333,10 +334,11 @@ abstract class format_section_renderer_base extends plugin_renderer_base {
         }
 
         if ($section->section) {
-            $url = clone($baseurl);
             if (!$isstealth) {
                 if (has_capability('moodle/course:sectionvisibility', $coursecontext)) {
-                    if ($section->visible) { // Show the hide/show eye.
+                    $url = clone($baseurl);
+                    if ($section->visible && (!$allowtriplestate || $section->visibleoncoursepage)) {
+                        // Hide section.
                         $strhidefromothers = get_string('hidefromothers', 'format_'.$course->format);
                         $url->param('hide', $section->section);
                         $controls['visiblity'] = array(
@@ -347,6 +349,7 @@ abstract class format_section_renderer_base extends plugin_renderer_base {
                             'attr' => array('class' => 'icon editing_showhide', 'title' => $strhidefromothers,
                                 'data-sectionreturn' => $sectionreturn, 'data-action' => 'hide'));
                     } else {
+                        // Show section.
                         $strshowfromothers = get_string('showfromothers', 'format_'.$course->format);
                         $url->param('show',  $section->section);
                         $controls['visiblity'] = array(
@@ -356,6 +359,30 @@ abstract class format_section_renderer_base extends plugin_renderer_base {
                             'pixattr' => array('class' => '', 'alt' => $strshowfromothers),
                             'attr' => array('class' => 'icon editing_showhide', 'title' => $strshowfromothers,
                                 'data-sectionreturn' => $sectionreturn, 'data-action' => 'show'));
+                    }
+                    $url = clone($baseurl);
+                    if ($allowtriplestate && $section->visible && !$section->visibleoncoursepage) {
+                        // Make unavailable.
+                        $strmakeunavailable = get_string('makeunavailable');
+                        $url->param('hide', $section->section);
+                        $controls['visiblitystealth'] = array(
+                            'url' => $url,
+                            'icon' => 't/unblock',
+                            'name' => $strmakeunavailable,
+                            'pixattr' => array('class' => '', 'alt' => $strmakeunavailable),
+                            'attr' => array('class' => 'icon editing_showhide', 'title' => $strmakeunavailable,
+                                'data-sectionreturn' => $sectionreturn, 'data-action' => 'hide'));
+                    } else if ($allowtriplestate && !$section->visible) {
+                        // Make available.
+                        $strmakeavailable = get_string('makeavailable');
+                        $url->param('stealth',  $section->section);
+                        $controls['visiblitystealth'] = array(
+                            'url' => $url,
+                            'icon' => 't/block',
+                            'name' => $strmakeavailable,
+                            'pixattr' => array('class' => '', 'alt' => $strmakeavailable),
+                            'attr' => array('class' => 'icon editing_showhide', 'title' => $strmakeavailable,
+                                'data-sectionreturn' => $sectionreturn, 'data-action' => 'stealth'));
                     }
                 }
 
@@ -557,8 +584,12 @@ abstract class format_section_renderer_base extends plugin_renderer_base {
      * @return string HTML to output
      */
     protected function section_availability_message($section, $canviewhidden) {
-        global $CFG;
+        global $CFG, $PAGE;
         $o = '';
+        if ($section->visible && !$section->visibleoncoursepage && $PAGE->user_is_editing()) {
+            $o .= $this->courserenderer->availability_info(get_string('hiddenoncoursepage'), 'ishidden');
+        }
+
         if (!$section->visible) {
             if ($canviewhidden) {
                 $o .= $this->courserenderer->availability_info(get_string('hiddenfromstudents'), 'ishidden');
@@ -902,6 +933,9 @@ abstract class format_section_renderer_base extends plugin_renderer_base {
                     ($thissection->visible && !$thissection->available && !empty($thissection->availableinfo)) ||
                     (!$thissection->visible && !$course->hiddensections);
             if (!$showsection) {
+                continue;
+            }
+            if (!$thissection->visibleoncoursepage && !$PAGE->user_is_editing()) {
                 continue;
             }
 

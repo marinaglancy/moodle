@@ -404,6 +404,7 @@ define(['jquery', 'core/ajax', 'core/templates', 'core/notification', 'core/str'
         var defaultEditSectionHandler = function(sectionElement, actionItem, data, courseformat) {
             var action = actionItem.attr('data-action');
             if (action === 'hide' || action === 'show') {
+                // TODO MDL-59481 add items/logic for 'stealth', or better, load the edit menu in AJAX.
                 if (action === 'hide') {
                     sectionElement.addClass('hidden');
                     replaceActionItem(actionItem, 'i/show',

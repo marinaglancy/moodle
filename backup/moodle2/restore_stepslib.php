@@ -1575,6 +1575,7 @@ class restore_section_structure_step extends restore_structure_step {
             $section->summaryformat = $data->summaryformat;
             $section->sequence = '';
             $section->visible = $data->visible;
+            $section->visibleoncoursepage = isset($data->visibleoncoursepage) ? $data->visibleoncoursepage : 1;
             if (empty($CFG->enableavailability)) { // Process availability information only if enabled.
                 $section->availability = null;
             } else {

@@ -11,6 +11,7 @@
     $edit        = optional_param('edit', -1, PARAM_BOOL);
     $hide        = optional_param('hide', 0, PARAM_INT);
     $show        = optional_param('show', 0, PARAM_INT);
+    $stealth     = optional_param('stealth', 0, PARAM_INT);
     $idnumber    = optional_param('idnumber', '', PARAM_RAW);
     $sectionid   = optional_param('sectionid', 0, PARAM_INT);
     $section     = optional_param('section', 0, PARAM_INT);
@@ -186,6 +187,11 @@
 
             if ($show && confirm_sesskey()) {
                 set_section_visible($course->id, $show, '1');
+                redirect($PAGE->url);
+            }
+
+            if ($stealth && confirm_sesskey()) {
+                set_section_visible($course->id, $stealth, '1', '0');
                 redirect($PAGE->url);
             }
         }

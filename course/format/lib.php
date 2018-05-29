@@ -1213,6 +1213,17 @@ abstract class format_base {
     }
 
     /**
+     * Returns whether this course format allows the section to
+     * have "triple visibility state" - visible always, hidden on course page but available, hidden.
+     *
+     * @param stdClass|section_info $section course section
+     * @return bool
+     */
+    public function allow_stealth_section_visibility($section) {
+        return false;
+    }
+
+    /**
      * Callback used in WS core_course_edit_section when teacher performs an AJAX action on a section (show/hide)
      *
      * Access to the course is already validated in the WS but the callback has to make sure
@@ -1240,8 +1251,14 @@ abstract class format_base {
             case 'show':
                 require_capability('moodle/course:sectionvisibility', $coursecontext);
                 $visible = ($action === 'hide') ? 0 : 1;
-                course_update_section($course, $section, array('visible' => $visible));
+                course_update_section($course, $section, array('visible' => $visible, 'visibleoncoursepage' => 1));
                 break;
+            case 'stealth':
+                if ($this->allow_stealth_section_visibility($section)) {
+                    require_capability('moodle/course:sectionvisibility', $coursecontext);
+                    course_update_section($course, $section, array('visible' => 1, 'visibleoncoursepage' => 0));
+                    break;
+                }
             default:
                 throw new moodle_exception('sectionactionnotsupported', 'core', null, s($action));
         }

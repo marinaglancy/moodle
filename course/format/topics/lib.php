@@ -380,7 +380,19 @@ class format_topics extends format_base {
      */
     public function allow_stealth_module_visibility($cm, $section) {
         // Allow the third visibility state inside visible sections or in section 0.
-        return !$section->section || $section->visible;
+        return !$section->section || ($section->visible && $section->visibleoncoursepage);
+    }
+
+    /**
+     * Returns whether this course format allows the section to
+     * have "triple visibility state" - visible always, hidden on course page but available, hidden.
+     *
+     * @param stdClass|section_info $section course section
+     * @return bool
+     */
+    public function allow_stealth_section_visibility($section) {
+        // Allow for sections other than section 0.
+        return !empty($section->section);
     }
 
     public function section_action($section, $action, $sr) {
