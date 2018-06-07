@@ -51,14 +51,14 @@
     <div class="analysis-header card-header">
         {{>mod_feedback/itemfullname}}
     </div>
-    <div class="analysis-details card-block">
-        {{#individualdata.0}}
+    <div class="analysis-details card-block card-body">
+        {{#hasindividualdata}}
             <ul class="individualdata list-group">
             {{#individualdata}}
                 <li class="list-group-item">{{{.}}}</li>
             {{/individualdata}}
             </ul>
-        {{/individualdata.0}}
+        {{/hasindividualdata}}
         {{#summary}}
             <div class="summary">
                 {{{summary}}}

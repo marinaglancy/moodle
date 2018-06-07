@@ -81,6 +81,7 @@ class analysis implements templatable {
                 $analyseditem->itemnr = $autonumbering ? $item->itemnr : '';
                 $data->items[] = $analyseditem;
             }
+            $analyseditem->hasindividualdata = !empty($analyseditem->individualdata);
         }
 
         return $data;
