@@ -20,10 +20,9 @@
  * @package    mod_feedback
  * @copyright  2016 Marina Glancy
  */
-define(['jquery', 'core/ajax', 'core/str', 'core/notification'],
-function($, ajax, str, notification) {
-    var manager = {
-        deleteItem: function(e) {
+define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/sortable'],
+function($, ajax, str, notification, Sortable) {
+    var deleteItem = function(e) {
             e.preventDefault();
 
             str.get_strings([
@@ -50,12 +49,20 @@ function($, ajax, str, notification) {
             });
         },
 
-        setup: function() {
-            $('body').delegate('[data-action="delete"]', 'click', manager.deleteItem);
-        }
-    };
+        moveItem = function(info) {
+
+        },
+
+        setup = function() {
+            $('body').delegate('[data-action="delete"]', 'click', deleteItem);
+            Sortable.init({
+                listSelector: '.feedback_edit',
+                moveHandlerSelector: '.draghandle',
+                onDrop: moveItem
+            });
+        };
 
     return {
-        setup: manager.setup
+        setup: setup
     };
 });

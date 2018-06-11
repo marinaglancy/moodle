@@ -65,11 +65,15 @@
 
 }}
 
-<div id="feedback_dragarea">
 <ul class="feedback_edit list-group">
 
 {{#items}}
-<li class="feedback_itemlist feedback-item-{{itemtype}} list-group-item" id="feedback_item_{{itemid}}">
+<li class="feedback_itemlist feedback-item-{{itemtype}} list-group-item" id="feedback_item_{{itemid}}" {{#moveable}}draggable="true"{{/moveable}}>
+    {{#moveable}}
+    <span class="draghandle">
+        {{#pix}} i/dragdrop, moodle, {{#str}}move, moodle{{/str}} {{/pix}}
+    </span>
+    {{/moveable}}
     <span>
         {{>mod_feedback/itemshortname}}
         {{#editmenu}}
@@ -96,4 +100,8 @@
 {{/items}}
 
 </ul>
-</div>
+<style>
+    .sortable-list-is-dragged { background: red; }
+    .sortable-list-current-position { background: green; }
+    .feedback_edit .draghandle { cursor: move; }
+</style>

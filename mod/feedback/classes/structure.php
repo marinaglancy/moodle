@@ -675,6 +675,7 @@ class mod_feedback_structure {
                 $menu->add($action);
             }
             $object->editmenu = $OUTPUT->render($menu);
+            $object->moveable = true; // TODO false if there is only one object
 
             $templatedata['items'][] = $object;
         }

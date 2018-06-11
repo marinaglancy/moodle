@@ -111,6 +111,7 @@ $PAGE->set_url('/mod/feedback/edit.php', array('id'=>$cm->id, 'do_show'=>$do_sho
 $PAGE->set_heading($course->fullname);
 $PAGE->set_title($feedback->name);
 
+/*
 //Adding the javascript module for the items dragdrop.
 if (count($feedbackitems) > 1) {
     if ($do_show == 'edit') {
@@ -123,6 +124,7 @@ if (count($feedbackitems) > 1) {
                 array(array('cmid' => $cm->id)));
     }
 }
+*/
 
 echo $OUTPUT->header();
 $previewimg = $OUTPUT->pix_icon('t/preview', get_string('preview'));
