@@ -20,7 +20,7 @@
  * @package    mod_feedback
  * @copyright  2016 Marina Glancy
  */
-define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/sortable'],
+define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/sortable_list'],
 function($, ajax, str, notification, Sortable) {
     var deleteItem = function(e) {
             e.preventDefault();
