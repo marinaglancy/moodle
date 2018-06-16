@@ -27,8 +27,6 @@ if (!defined('MOODLE_INTERNAL')) {
     die('Direct access to this script is forbidden.');    ///  It must be included from a Moodle page
 }
 
-require_once($CFG->libdir . '/coursecatlib.php');
-
 /**
  *  These are read by the administration component to provide default values
  */
@@ -805,7 +803,7 @@ class calendar_event {
                     $this->editoroptions['maxbytes'] = $course->maxbytes;
                 } else if ($properties->eventtype === 'category') {
                     // First check the course is valid.
-                    \coursecat::get($properties->categoryid, MUST_EXIST, true);
+                    \core_course_category::get($properties->categoryid, MUST_EXIST, true);
                     // Course context.
                     $this->editorcontext = $this->get_context();
                 } else {
@@ -1067,14 +1065,14 @@ class calendar_information {
             }
 
             $courses = [$course->id => $course];
-            $category = (\coursecat::get($course->category, MUST_EXIST, true))->get_db_record();
+            $category = (\core_course_category::get($course->category, MUST_EXIST, true))->get_db_record();
         } else if (!empty($categoryid)) {
             $course = get_site();
             $courses = calendar_get_default_courses();
 
             // Filter available courses to those within this category or it's children.
             $ids = [$categoryid];
-            $category = \coursecat::get($categoryid);
+            $category = \core_course_category::get($categoryid);
             $ids = array_merge($ids, array_keys($category->get_children()));
             $courses = array_filter($courses, function($course) use ($ids) {
                 return array_search($course->category, $ids) !== false;
@@ -1158,7 +1156,7 @@ class calendar_information {
             // A specific course was requested.
             // Fetch the category that this course is in, along with all parents.
             // Do not include child categories of this category, as the user many not have enrolments in those siblings or children.
-            $category = \coursecat::get($course->category, MUST_EXIST, true);
+            $category = \core_course_category::get($course->category, MUST_EXIST, true);
             $this->categoryid = $category->id;
 
             $this->categories = $category->get_parents();
@@ -1166,7 +1164,7 @@ class calendar_information {
         } else if (null !== $category && $category->id > 0) {
             // A specific category was requested.
             // Fetch all parents of this category, along with all children too.
-            $category = \coursecat::get($category->id);
+            $category = \core_course_category::get($category->id);
             $this->categoryid = $category->id;
 
             // Build the category list.
@@ -1188,7 +1186,7 @@ class calendar_information {
             if ($this->categories === false) {
                 // Use the category id as the key in the following array. That way we do not have to remove duplicates.
                 $categories = [];
-                foreach (\coursecat::get_all() as $category) {
+                foreach (\core_course_category::get_all() as $category) {
                     if (isset($coursecategories[$category->id]) ||
                             has_capability('moodle/category:manage', $category->get_context(), $USER, false)) {
                         // If the user has access to a course in this category or can manage the category,
@@ -2182,7 +2180,7 @@ function calendar_view_event_allowed(calendar_event $event) {
         return isset($mycourses[$courseid]);
     } else if ($event->categoryid) {
         // If this is a category we need to be able to see the category.
-        $cat = \coursecat::get($event->categoryid, IGNORE_MISSING);
+        $cat = \core_course_category::get($event->categoryid, IGNORE_MISSING);
         if (!$cat) {
             return false;
         }
@@ -2604,8 +2602,8 @@ function calendar_get_all_allowed_types() {
         $types['site'] = true;
     }
 
-    if (coursecat::has_manage_capability_on_any()) {
-        $types['category'] = coursecat::make_categories_list('moodle/category:manage');
+    if (core_course_category::has_manage_capability_on_any()) {
+        $types['category'] = core_course_category::make_categories_list('moodle/category:manage');
     }
 
     // This function warms the context cache for the course so the calls
@@ -3215,7 +3213,7 @@ function calendar_can_edit_subscription($subscriptionorid) {
     $category = null;
 
     if (!empty($categoryid)) {
-        $category = \coursecat::get($categoryid);
+        $category = \core_course_category::get($categoryid);
     }
     calendar_get_allowed_types($allowed, $courseid, null, $category);
     switch ($subscription->eventtype) {

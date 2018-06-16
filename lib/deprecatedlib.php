@@ -1305,35 +1305,35 @@ function update_category_button($categoryid = 0) {
 
 /**
  * This function is deprecated! For list of categories use
- * coursecat::make_all_categories($requiredcapability, $excludeid, $separator)
+ * core_course_category::make_all_categories($requiredcapability, $excludeid, $separator)
  * For parents of one particular category use
- * coursecat::get($id)->get_parents()
+ * core_course_category::get($id)->get_parents()
  *
  * @deprecated since 2.5
  */
 function make_categories_list(&$list, &$parents, $requiredcapability = '',
         $excludeid = 0, $category = NULL, $path = "") {
     throw new coding_exception('Global function make_categories_list() is removed. Please use '.
-            'coursecat::make_categories_list() and coursecat::get_parents()');
+            'core_course_category::make_categories_list() and core_course_category::get_parents()');
 }
 
 /**
  * @deprecated since 2.5
  */
 function category_delete_move($category, $newparentid, $showfeedback=true) {
-    throw new coding_exception('Function category_delete_move() is removed. Please use coursecat::delete_move() instead.');
+    throw new coding_exception('Function category_delete_move() is removed. Please use core_course_category::delete_move() instead.');
 }
 
 /**
  * @deprecated since 2.5
  */
 function category_delete_full($category, $showfeedback=true) {
-    throw new coding_exception('Function category_delete_full() is removed. Please use coursecat::delete_full() instead.');
+    throw new coding_exception('Function category_delete_full() is removed. Please use core_course_category::delete_full() instead.');
 }
 
 /**
  * This function is deprecated. Please use
- * $coursecat = coursecat::get($category->id);
+ * $coursecat = core_course_category::get($category->id);
  * if ($coursecat->can_change_parent($newparentcat->id)) {
  *     $coursecat->change_parent($newparentcat->id);
  * }
@@ -1341,102 +1341,102 @@ function category_delete_full($category, $showfeedback=true) {
  * Alternatively you can use
  * $coursecat->update(array('parent' => $newparentcat->id));
  *
- * @see coursecat::change_parent()
- * @see coursecat::update()
+ * @see core_course_category::change_parent()
+ * @see core_course_category::update()
  * @deprecated since 2.5
  */
 function move_category($category, $newparentcat) {
-    throw new coding_exception('Function move_category() is removed. Please use coursecat::change_parent() instead.');
+    throw new coding_exception('Function move_category() is removed. Please use core_course_category::change_parent() instead.');
 }
 
 /**
  * This function is deprecated. Please use
- * coursecat::get($category->id)->hide();
+ * core_course_category::get($category->id)->hide();
  *
- * @see coursecat::hide()
+ * @see core_course_category::hide()
  * @deprecated since 2.5
  */
 function course_category_hide($category) {
-    throw new coding_exception('Function course_category_hide() is removed. Please use coursecat::hide() instead.');
+    throw new coding_exception('Function course_category_hide() is removed. Please use core_course_category::hide() instead.');
 }
 
 /**
  * This function is deprecated. Please use
- * coursecat::get($category->id)->show();
+ * core_course_category::get($category->id)->show();
  *
- * @see coursecat::show()
+ * @see core_course_category::show()
  * @deprecated since 2.5
  */
 function course_category_show($category) {
-    throw new coding_exception('Function course_category_show() is removed. Please use coursecat::show() instead.');
+    throw new coding_exception('Function course_category_show() is removed. Please use core_course_category::show() instead.');
 }
 
 /**
  * This function is deprecated.
  * To get the category with the specified it please use:
- * coursecat::get($catid, IGNORE_MISSING);
+ * core_course_category::get($catid, IGNORE_MISSING);
  * or
- * coursecat::get($catid, MUST_EXIST);
+ * core_course_category::get($catid, MUST_EXIST);
  *
  * To get the first available category please use
- * coursecat::get_default();
+ * core_course_category::get_default();
  *
  * @deprecated since 2.5
  */
 function get_course_category($catid=0) {
-    throw new coding_exception('Function get_course_category() is removed. Please use coursecat::get(), see phpdocs for more details');
+    throw new coding_exception('Function get_course_category() is removed. Please use core_course_category::get(), see phpdocs for more details');
 }
 
 /**
  * This function is deprecated. It is replaced with the method create() in class coursecat.
- * {@link coursecat::create()} also verifies the data, fixes sortorder and logs the action
+ * {@link core_course_category::create()} also verifies the data, fixes sortorder and logs the action
  *
  * @deprecated since 2.5
  */
 function create_course_category($category) {
-    throw new coding_exception('Function create_course_category() is removed. Please use coursecat::create(), see phpdocs for more details');
+    throw new coding_exception('Function create_course_category() is removed. Please use core_course_category::create(), see phpdocs for more details');
 }
 
 /**
  * This function is deprecated.
  *
  * To get visible children categories of the given category use:
- * coursecat::get($categoryid)->get_children();
+ * core_course_category::get($categoryid)->get_children();
  * This function will return the array or coursecat objects, on each of them
  * you can call get_children() again
  *
- * @see coursecat::get()
- * @see coursecat::get_children()
+ * @see core_course_category::get()
+ * @see core_course_category::get_children()
  *
  * @deprecated since 2.5
  */
 function get_all_subcategories($catid) {
-    throw new coding_exception('Function get_all_subcategories() is removed. Please use appropriate methods() of coursecat
-            class. See phpdocs for more details');
+    throw new coding_exception('Function get_all_subcategories() is removed. Please use appropriate methods() '.
+        'of core_course_category class. See phpdocs for more details');
 }
 
 /**
  * This function is deprecated. Please use functions in class coursecat:
- * - coursecat::get($parentid)->has_children()
+ * - core_course_category::get($parentid)->has_children()
  * tells if the category has children (visible or not to the current user)
  *
- * - coursecat::get($parentid)->get_children()
+ * - core_course_category::get($parentid)->get_children()
  * returns an array of coursecat objects, each of them represents a children category visible
  * to the current user (i.e. visible=1 or user has capability to view hidden categories)
  *
- * - coursecat::get($parentid)->get_children_count()
+ * - core_course_category::get($parentid)->get_children_count()
  * returns number of children categories visible to the current user
  *
- * - coursecat::count_all()
+ * - core_course_category::count_all()
  * returns total count of all categories in the system (both visible and not)
  *
- * - coursecat::get_default()
+ * - core_course_category::get_default()
  * returns the first category (usually to be used if count_all() == 1)
  *
  * @deprecated since 2.5
  */
 function get_child_categories($parentid) {
-    throw new coding_exception('Function get_child_categories() is removed. Use coursecat::get_children() or see phpdocs for
+    throw new coding_exception('Function get_child_categories() is removed. Use core_course_category::get_children() or see phpdocs for
             more details.');
 }
 
@@ -1447,29 +1447,29 @@ function get_child_categories($parentid) {
  * This function is deprecated. Use appropriate functions from class coursecat.
  * Examples:
  *
- * coursecat::get($categoryid)->get_children()
+ * core_course_category::get($categoryid)->get_children()
  * - returns all children of the specified category as instances of class
  * coursecat, which means on each of them method get_children() can be called again.
  * Only categories visible to the current user are returned.
  *
- * coursecat::get(0)->get_children()
+ * core_course_category::get(0)->get_children()
  * - returns all top-level categories visible to the current user.
  *
- * Sort fields can be specified, see phpdocs to {@link coursecat::get_children()}
+ * Sort fields can be specified, see phpdocs to {@link core_course_category::get_children()}
  *
- * coursecat::make_categories_list()
+ * core_course_category::make_categories_list()
  * - returns an array of all categories id/names in the system.
  * Also only returns categories visible to current user and can additionally be
- * filetered by capability, see phpdocs to {@link coursecat::make_categories_list()}
+ * filetered by capability, see phpdocs to {@link core_course_category::make_categories_list()}
  *
  * make_categories_options()
  * - Returns full course categories tree to be used in html_writer::select()
  *
- * Also see functions {@link coursecat::get_children_count()}, {@link coursecat::count_all()},
- * {@link coursecat::get_default()}
+ * Also see functions {@link core_course_category::get_children_count()}, {@link core_course_category::count_all()},
+ * {@link core_course_category::get_default()}
  */
 function get_categories($parent='none', $sort=NULL, $shallow=true) {
-    throw new coding_exception('Function get_categories() is removed. Please use coursecat::get_children() or see phpdocs for other alternatives');
+    throw new coding_exception('Function get_categories() is removed. Please use core_course_category::get_children() or see phpdocs for other alternatives');
 }
 
 /**
@@ -1542,15 +1542,15 @@ function print_category_info($category, $depth = 0, $showcourses = false, array 
  *
  * The new class {@link coursecat} stores the information about course category tree
  * To get children categories use:
- * coursecat::get($id)->get_children()
+ * core_course_category::get($id)->get_children()
  * To get list of courses use:
- * coursecat::get($id)->get_courses()
+ * core_course_category::get($id)->get_courses()
  *
  * See http://docs.moodle.org/dev/Courses_lists_upgrade_to_2.5
  */
 function get_course_category_tree($id = 0, $depth = 0) {
-    throw new coding_exception('Function get_course_category_tree() is removed, please use course renderer or coursecat class,
-            see function phpdocs for more info');
+    throw new coding_exception('Function get_course_category_tree() is removed, please use course renderer or' .
+        ' core_course_category class, see function phpdocs for more info');
 }
 
 /**
@@ -1594,19 +1594,21 @@ function print_course($course, $highlightterms = '') {
  *
  * The new class {@link coursecat} stores the information about course category tree
  * To get children categories use:
- * coursecat::get($id)->get_children()
+ * core_course_category::get($id)->get_children()
  * To get list of courses use:
- * coursecat::get($id)->get_courses()
+ * core_course_category::get($id)->get_courses()
  */
 function get_category_courses_array($categoryid = 0) {
-    throw new coding_exception('Function get_category_courses_array() is removed, please use methods of coursecat class');
+    throw new coding_exception('Function get_category_courses_array() is removed, please use methods ' .
+        'of core_course_category class');
 }
 
 /**
  * @deprecated since 2.5
  */
 function get_category_courses_array_recursively(array &$flattened, $category) {
-    throw new coding_exception('Function get_category_courses_array_recursively() is removed, please use methods of coursecat class', DEBUG_DEVELOPER);
+    throw new coding_exception('Function get_category_courses_array_recursively() is removed, please use methods ' .
+        'of core_course_category class', DEBUG_DEVELOPER);
 }
 
 /**
@@ -1620,16 +1622,16 @@ function blog_get_context_url($context=null) {
  * @deprecated since 2.5
  *
  * To get list of all courses with course contacts ('managers') use
- * coursecat::get(0)->get_courses(array('recursive' => true, 'coursecontacts' => true));
+ * core_course_category::get(0)->get_courses(array('recursive' => true, 'coursecontacts' => true));
  *
  * To get list of courses inside particular category use
- * coursecat::get($id)->get_courses(array('coursecontacts' => true));
+ * core_course_category::get($id)->get_courses(array('coursecontacts' => true));
  *
  * Additionally you can specify sort order, offset and maximum number of courses,
- * see {@link coursecat::get_courses()}
+ * see {@link core_course_category::get_courses()}
  */
 function get_courses_wmanagers($categoryid=0, $sort="c.sortorder ASC", $fields=array()) {
-    throw new coding_exception('Function get_courses_wmanagers() is removed, please use coursecat::get_courses()');
+    throw new coding_exception('Function get_courses_wmanagers() is removed, please use core_course_category::get_courses()');
 }
 
 /**

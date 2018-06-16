@@ -255,13 +255,16 @@ class core_collator {
      *      optionally "|" core_collator::CASE_SENSITIVE
      * @return bool True on success
      */
-    public static function asort_objects_by_property(array &$objects, $property, $sortflag = core_collator::SORT_STRING) {
+    public static function asort_objects_by_property(array &$objects, $property, $sortflag = core_collator::SORT_STRING, $ascending = true) {
         $original = $objects;
         foreach ($objects as $key => $object) {
             $objects[$key] = $object->$property;
         }
         $result = self::asort($objects, $sortflag);
         self::restore_array($objects, $original);
+        if ($result && !$ascending) {
+            $objects = array_reverse($objects, true);
+        }
         return $result;
     }
 
