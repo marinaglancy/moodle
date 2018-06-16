@@ -45,5 +45,7 @@ $renamedclasses = array(
     'core_competency\\external\\persistent_exporter' => 'core\\external\\persistent_exporter',
     'core_competency\\external\\comment_area_exporter' => 'core_comment\\external\\comment_area_exporter',
     'core_competency\\external\\stored_file_exporter' => 'core_files\\external\\stored_file_exporter',
-    'core_competency\\external\\user_summary_exporter' => 'core_user\\external\\user_summary_exporter'
+    'core_competency\\external\\user_summary_exporter' => 'core_user\\external\\user_summary_exporter',
+    'course_in_list' => 'core_course_list_element',
+    'coursecat' => 'core_course_category',
 );
