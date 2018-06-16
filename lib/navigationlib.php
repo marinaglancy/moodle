@@ -1497,7 +1497,7 @@ class global_navigation extends navigation_node {
     protected function show_my_categories() {
         global $CFG;
         if ($this->showmycategories === null) {
-            $this->showmycategories = !empty($CFG->navshowmycoursecategories) && core_course_category::count_all() > 1;
+            $this->showmycategories = !empty($CFG->navshowmycoursecategories) && !core_course_category::is_simple_site();
         }
         return $this->showmycategories;
     }
@@ -1884,12 +1884,12 @@ class global_navigation extends navigation_node {
         $context = context_coursecat::instance($category->id);
         $categoryname = format_string($category->name, true, array('context' => $context));
         $categorynode = $parent->add($categoryname, $url, $nodetype, $categoryname, $category->id);
-        if (empty($category->visible)) {
-            if (has_capability('moodle/category:viewhiddencategories', $context)) {
-                $categorynode->hidden = true;
-            } else {
-                $categorynode->display = false;
-            }
+        if (!core_course_category::check_access($category)) {
+            // User does not have required capabilities to view category.
+            $categorynode->display = false;
+        } else if (!$category->visible) {
+            // Category is hidden but user has capability to view hidden categories.
+            $categorynode->hidden = true;
         }
         $this->addedcategories[$category->id] = $categorynode;
     }
@@ -3521,12 +3521,12 @@ class navbar extends navigation_node {
 
         $categories = array();
         $cap = 'moodle/category:viewhiddencategories';
-        $showcategories = core_course_category::count_all() > 1;
+        $showcategories = !core_course_category::is_simple_site();
 
         if ($showcategories) {
             foreach ($this->page->categories as $category) {
                 $context = context_coursecat::instance($category->id);
-                if (!$category->visible && !has_capability($cap, $context)) {
+                if (!core_course_category::check_access($category)) {
                     continue;
                 }
                 $url = new moodle_url('/course/index.php', array('categoryid' => $category->id));

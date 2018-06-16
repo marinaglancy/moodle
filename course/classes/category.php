@@ -589,8 +589,21 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
      * @return bool
      */
     public function is_uservisible() {
-        return !$this->id || $this->visible ||
-                has_capability('moodle/category:viewhiddencategories', $this->get_context());
+        return !$this->id || self::check_access($this);
+    }
+
+    /**
+     * Checks if current user has access to the category
+     *
+     * @param stdClass|core_course_category $category
+     * @return bool
+     */
+    public static function check_access($category) {
+        $context = context_coursecat::instance($category->id);
+        if (!$category->visible && !has_capability('moodle/category:viewhiddencategories', $context)) {
+            return false;
+        }
+        return has_capability('moodle/course:viewcategories', $context);
     }
 
     /**
@@ -680,10 +693,27 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
      * Returns number of ALL categories in the system regardless if
      * they are visible to current user or not
      *
+     * @deprecated since Moodle 3.6
      * @return int
      */
     public static function count_all() {
+        debugging('Method core_course_category::count_all() is deprecated. Please use ' .
+            'core_course_category::is_simple_site()', DEBUG_DEVELOPER);
         return self::get_tree('countall');
+    }
+
+    /**
+     * Checks if the site has only one category and it is visible and available.
+     *
+     * In many situations we won't show this category at all
+     * @return bool
+     */
+    public static function is_simple_site() {
+        if (self::get_tree('countall') != 1) {
+            return false;
+        }
+        $default = self::get_default();
+        return $default->visible && $default->is_uservisible();
     }
 
     /**
@@ -1025,10 +1055,11 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
         if (($invisibleids = $coursecatcache->get('ic'. $this->id)) === false) {
             // We never checked visible children before.
             $hidden = self::get_tree($this->id.'i');
+            $catids = self::get_tree($this->id);
             $invisibleids = array();
-            if ($hidden) {
+            if ($catids) {
                 // Preload categories contexts.
-                list($sql, $params) = $DB->get_in_or_equal($hidden, SQL_PARAMS_NAMED, 'id');
+                list($sql, $params) = $DB->get_in_or_equal($catids, SQL_PARAMS_NAMED, 'id');
                 $ctxselect = context_helper::get_preload_record_columns_sql('ctx');
                 $contexts = $DB->get_records_sql("SELECT $ctxselect FROM {context} ctx
                     WHERE ctx.contextlevel = :contextcoursecat AND ctx.instanceid ".$sql,
@@ -1036,9 +1067,10 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
                 foreach ($contexts as $record) {
                     context_helper::preload_from_record($record);
                 }
-                // Check that user has 'viewhiddencategories' capability for each hidden category.
-                foreach ($hidden as $id) {
-                    if (!has_capability('moodle/category:viewhiddencategories', context_coursecat::instance($id))) {
+                // Check access for each category.
+                foreach ($catids as $id) {
+                    $cat = (object)['id' => $id, 'visible' => in_array($id, $hidden) ? 0 : 1];
+                    if (!self::check_access($cat)) {
                         $invisibleids[] = $id;
                     }
                 }

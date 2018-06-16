@@ -30,14 +30,15 @@ $categoryid = optional_param('categoryid', 0, PARAM_INT); // Category id
 $site = get_site();
 
 if ($categoryid) {
+    core_course_category::get($categoryid);
     $PAGE->set_category_by_id($categoryid);
     $PAGE->set_url(new moodle_url('/course/index.php', array('categoryid' => $categoryid)));
     $PAGE->set_pagetype('course-index-category');
     // And the object has been loaded for us no need for another DB call
     $category = $PAGE->category;
 } else {
-    // Check if there is only one category, if so use that.
-    if (core_course_category::count_all() == 1) {
+    // Check if there is only one top-level category, if so use that.
+    if (core_course_category::is_simple_site()) {
         $category = core_course_category::get_default();
 
         $categoryid = $category->id;
@@ -55,10 +56,6 @@ $courserenderer = $PAGE->get_renderer('core', 'course');
 
 if ($CFG->forcelogin) {
     require_login();
-}
-
-if ($categoryid && !$category->visible && !has_capability('moodle/category:viewhiddencategories', $PAGE->context)) {
-    throw new moodle_exception('unknowncategory');
 }
 
 $PAGE->set_heading($site->fullname);

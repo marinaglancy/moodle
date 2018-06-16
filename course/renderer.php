@@ -1634,7 +1634,7 @@ class core_course_renderer extends plugin_renderer_base {
             $this->page->set_button($managebutton);
         }
         if (!$coursecat->id) {
-            if (core_course_category::count_all() == 1) {
+            if (core_course_category::is_simple_site()) {
                 // There exists only one category in the system, do not display link to it
                 $coursecat = core_course_category::get_default();
                 $strfulllistofcourses = get_string('fulllistofcourses');
@@ -1645,13 +1645,13 @@ class core_course_renderer extends plugin_renderer_base {
             }
         } else {
             $title = $site->shortname;
-            if (core_course_category::count_all() > 1) {
+            if (!core_course_category::is_simple_site()) {
                 $title .= ": ". $coursecat->get_formatted_name();
             }
             $this->page->set_title($title);
 
             // Print the category selector
-            if (core_course_category::count_all() > 1) {
+            if (!core_course_category::is_simple_site()) {
                 $output .= html_writer::start_tag('div', array('class' => 'categorypicker'));
                 $select = new single_select(new moodle_url('/course/index.php'), 'categoryid',
                         core_course_category::make_categories_list(), $coursecat->id, null, 'switchcategory');
@@ -1722,7 +1722,7 @@ class core_course_renderer extends plugin_renderer_base {
             $output .= $this->single_button($url, get_string('addnewcourse'), 'get');
         }
         ob_start();
-        if (core_course_category::count_all() == 1) {
+        if (core_course_category::is_simple_site()) {
             print_course_request_buttons(context_system::instance());
         } else {
             print_course_request_buttons($context);
@@ -1870,7 +1870,7 @@ class core_course_renderer extends plugin_renderer_base {
         if (empty($displayoptions)) {
             $displayoptions = array();
         }
-        $showcategories = core_course_category::count_all() > 1;
+        $showcategories = !core_course_category::is_simple_site();
         $displayoptions += array('limit' => $CFG->coursesperpage, 'offset' => 0);
         $chelper = new coursecat_helper();
         $searchcriteria = array('tagid' => $tagid, 'ctx' => $ctx, 'rec' => $rec);

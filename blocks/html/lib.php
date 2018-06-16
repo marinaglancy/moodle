@@ -48,10 +48,7 @@ function block_html_pluginfile($course, $birecord_or_cm, $context, $filearea, $a
         $parentcontext = $context->get_parent_context();
         if ($parentcontext->contextlevel === CONTEXT_COURSECAT) {
             // Check if category is visible and user can view this category.
-            $category = $DB->get_record('course_categories', array('id' => $parentcontext->instanceid), '*', MUST_EXIST);
-            if (!$category->visible) {
-                require_capability('moodle/category:viewhiddencategories', $parentcontext);
-            }
+            $category = core_course_category::get($parentcontext->instanceid);
         } else if ($parentcontext->contextlevel === CONTEXT_USER && $parentcontext->instanceid != $USER->id) {
             // The block is in the context of a user, it is only visible to the user who it belongs to.
             send_file_not_found();

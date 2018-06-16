@@ -51,6 +51,10 @@
     if (!$course->visible and !has_capability('moodle/course:viewhiddencourses', $context)) {
         print_error('coursehidden', '', $CFG->wwwroot .'/');
     }
+    if (!core_course_category::get($course->category, IGNORE_MISSING)) {
+        // User can not access the category where this course is located.
+        print_error('coursehidden', '', $CFG->wwwroot .'/');
+    }
 
     $PAGE->set_course($course);
     $PAGE->set_pagelayout('incourse');

@@ -4416,12 +4416,7 @@ function file_pluginfile($relativepath, $forcedownload, $preview = null, $offlin
             }
 
             // Check if user can view this category.
-            if (!has_capability('moodle/category:viewhiddencategories', $context)) {
-                $coursecatvisible = $DB->get_field('course_categories', 'visible', array('id' => $context->instanceid));
-                if (!$coursecatvisible) {
-                    send_file_not_found();
-                }
-            }
+            core_course_category::get($context->instanceid);
 
             $filename = array_pop($args);
             $filepath = $args ? '/'.implode('/', $args).'/' : '/';
