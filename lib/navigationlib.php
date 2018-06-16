@@ -1886,7 +1886,7 @@ class global_navigation extends navigation_node {
         $categoryname = format_string($category->name, true, array('context' => $context));
         $categorynode = $parent->add($categoryname, $url, $nodetype, $categoryname, $category->id);
         if (empty($category->visible)) {
-            if (has_capability('moodle/category:viewhiddencategories', context_system::instance())) {
+            if (has_capability('moodle/category:viewhiddencategories', $context)) {
                 $categorynode->hidden = true;
             } else {
                 $categorynode->display = false;
@@ -3528,11 +3528,12 @@ class navbar extends navigation_node {
 
         if ($showcategories) {
             foreach ($this->page->categories as $category) {
-                if (!$category->visible && !has_capability($cap, get_category_or_system_context($category->parent))) {
+                $context = context_coursecat::instance($category->id);
+                if (!$category->visible && !has_capability($cap, $context)) {
                     continue;
                 }
                 $url = new moodle_url('/course/index.php', array('categoryid' => $category->id));
-                $name = format_string($category->name, true, array('context' => context_coursecat::instance($category->id)));
+                $name = format_string($category->name, true, array('context' => $context));
                 $categorynode = breadcrumb_navigation_node::create($name, $url, self::TYPE_CATEGORY, null, $category->id);
                 if (!$category->visible) {
                     $categorynode->hidden = true;
