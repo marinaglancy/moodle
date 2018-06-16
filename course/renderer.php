@@ -1992,15 +1992,15 @@ class core_course_renderer extends plugin_renderer_base {
         if (!empty($courses) || !empty($rcourses) || !empty($rhosts)) {
 
             $chelper = new coursecat_helper();
+            $totalcount = count($courses);
             if (count($courses) > $CFG->frontpagecourselimit) {
                 // There are more enrolled courses than we can display, display link to 'My courses'.
-                $totalcount = count($courses);
                 $courses = array_slice($courses, 0, $CFG->frontpagecourselimit, true);
                 $chelper->set_courses_display_options(array(
                         'viewmoreurl' => new moodle_url('/my/'),
                         'viewmoretext' => new lang_string('mycourses')
                     ));
-            } else {
+            } else if (core_course_category::check_access(null)) {
                 // All enrolled courses are displayed, display link to 'All courses' if there are more courses in system.
                 $chelper->set_courses_display_options(array(
                         'viewmoreurl' => new moodle_url('/course/index.php'),
@@ -2040,6 +2040,10 @@ class core_course_renderer extends plugin_renderer_base {
     public function frontpage_available_courses() {
         global $CFG;
 
+        if (!$tree = core_course_category::get(0, IGNORE_MISSING)) {
+            return '';
+        }
+
         $chelper = new coursecat_helper();
         $chelper->set_show_courses(self::COURSECAT_SHOW_COURSES_EXPANDED)->
                 set_courses_display_options(array(
@@ -2049,8 +2053,8 @@ class core_course_renderer extends plugin_renderer_base {
                     'viewmoretext' => new lang_string('fulllistofcourses')));
 
         $chelper->set_attributes(array('class' => 'frontpage-course-list-all'));
-        $courses = core_course_category::get(0)->get_courses($chelper->get_courses_display_options());
-        $totalcount = core_course_category::get(0)->get_courses_count($chelper->get_courses_display_options());
+        $courses = $tree->get_courses($chelper->get_courses_display_options());
+        $totalcount = $tree->get_courses_count($chelper->get_courses_display_options());
         if (!$totalcount && !$this->page->user_is_editing() && has_capability('moodle/course:create', context_system::instance())) {
             // Print link to create a new course, for the 1st available category.
             return $this->add_new_course_button();
@@ -2080,6 +2084,9 @@ class core_course_renderer extends plugin_renderer_base {
      */
     public function frontpage_combo_list() {
         global $CFG;
+        if (!$tree = core_course_category::get(0, IGNORE_MISSING)) {
+            return '';
+        }
         $chelper = new coursecat_helper();
         $chelper->set_subcat_depth($CFG->maxcategorydepth)->
             set_categories_display_options(array(
@@ -2093,7 +2100,7 @@ class core_course_renderer extends plugin_renderer_base {
                         array('browse' => 'courses', 'page' => 1))
             ))->
             set_attributes(array('class' => 'frontpage-category-combo'));
-        return $this->coursecat_tree($chelper, core_course_category::get(0));
+        return $this->coursecat_tree($chelper, $tree);
     }
 
     /**
@@ -2103,6 +2110,9 @@ class core_course_renderer extends plugin_renderer_base {
      */
     public function frontpage_categories_list() {
         global $CFG;
+        if (!$tree = core_course_category::get(0, IGNORE_MISSING)) {
+            return '';
+        }
         $chelper = new coursecat_helper();
         $chelper->set_subcat_depth($CFG->maxcategorydepth)->
                 set_show_courses(self::COURSECAT_SHOW_COURSES_COUNT)->
@@ -2112,7 +2122,7 @@ class core_course_renderer extends plugin_renderer_base {
                             array('browse' => 'categories', 'page' => 1))
                 ))->
                 set_attributes(array('class' => 'frontpage-category-names'));
-        return $this->coursecat_tree($chelper, core_course_category::get(0));
+        return $this->coursecat_tree($chelper, $tree);
     }
 
     /**
@@ -2417,6 +2427,9 @@ class core_course_renderer extends plugin_renderer_base {
      * @return string
      */
     protected function frontpage_part($skipdivid, $contentsdivid, $header, $contents) {
+        if (strval($contents) === '') {
+            return '';
+        }
         $output = html_writer::link('#' . $skipdivid,
             get_string('skipa', 'access', core_text::strtolower(strip_tags($header))),
             array('class' => 'skip-block skip'));
@@ -2477,10 +2490,8 @@ class core_course_renderer extends plugin_renderer_base {
 
                 case FRONTPAGEALLCOURSELIST:
                     $availablecourseshtml = $this->frontpage_available_courses();
-                    if (!empty($availablecourseshtml)) {
-                        $output .= $this->frontpage_part('skipavailablecourses', 'frontpage-available-course-list',
-                            get_string('availablecourses'), $availablecourseshtml);
-                    }
+                    $output .= $this->frontpage_part('skipavailablecourses', 'frontpage-available-course-list',
+                        get_string('availablecourses'), $availablecourseshtml);
                     break;
 
                 case FRONTPAGECATEGORYNAMES:

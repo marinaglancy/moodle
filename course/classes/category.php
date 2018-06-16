@@ -239,6 +239,12 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
                 $record->path = '';
                 self::$coursecat0 = new self($record);
             }
+            if (!$alwaysreturnhidden && !self::check_access(null)) {
+                if ($strictness == MUST_EXIST) {
+                    require_capability('moodle/course:viewcategories', context_system::instance());
+                }
+                return null;
+            }
             return self::$coursecat0;
         }
         $coursecatrecordcache = cache::make('core', 'coursecatrecords');
@@ -418,7 +424,7 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
         }
 
         if (empty($data->parent)) {
-            $parent = self::get(0);
+            $parent = self::get(0, MUST_EXIST, true);
         } else {
             $parent = self::get($data->parent, MUST_EXIST, true);
         }
@@ -599,6 +605,9 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
      * @return bool
      */
     public static function check_access($category) {
+        if ($category === null) {
+            return has_capability('moodle/course:viewcategories', context_system::instance());
+        }
         $context = context_coursecat::instance($category->id);
         if (!$category->visible && !has_capability('moodle/category:viewhiddencategories', $context)) {
             return false;
@@ -1012,14 +1021,16 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
         } else {
             $fields[] = $DB->sql_substr('c.summary', 1, 1). ' as hassummary';
         }
-        $sql = "SELECT ". join(',', $fields). ", $ctxselect
+        $sql = "SELECT ". join(',', $fields). ", $ctxselect , cc.visible as coursecat_visible
                 FROM {course} c
+                JOIN {course_categories} cc ON cc.id = c.category
                 JOIN {context} ctx ON c.id = ctx.instanceid AND ctx.contextlevel = :contextcourse
                 WHERE ". $whereclause." ORDER BY c.sortorder";
         $list = $DB->get_records_sql($sql,
                 array('contextcourse' => CONTEXT_COURSE) + $params);
 
         if ($checkvisibility) {
+            $mycourses = enrol_get_my_courses();
             // Loop through all records and make sure we only return the courses accessible by user.
             foreach ($list as $course) {
                 if (isset($list[$course->id]->hassummary)) {
@@ -1031,6 +1042,11 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
                     if (!has_capability('moodle/course:viewhiddencourses', context_course::instance($course->id))) {
                         unset($list[$course->id]);
                     }
+                }
+                if (!array_key_exists($course->id, $mycourses) &&
+                    !self::check_access((object)['id' => $course->category, 'visible' => $course->coursecat_visible])) {
+                    // TODO this is not optimal.
+                    continue;
                 }
             }
         }

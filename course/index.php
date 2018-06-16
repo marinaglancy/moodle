@@ -28,9 +28,9 @@ require_once($CFG->dirroot. '/course/lib.php');
 
 $categoryid = optional_param('categoryid', 0, PARAM_INT); // Category id
 $site = get_site();
+core_course_category::get($categoryid);
 
 if ($categoryid) {
-    core_course_category::get($categoryid);
     $PAGE->set_category_by_id($categoryid);
     $PAGE->set_url(new moodle_url('/course/index.php', array('categoryid' => $categoryid)));
     $PAGE->set_pagetype('course-index-category');

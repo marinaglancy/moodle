@@ -816,12 +816,14 @@ function get_courses_search($searchterms, $sort, $page, $recordsperpage, &$total
     $ccjoin = "LEFT JOIN {context} ctx ON (ctx.instanceid = c.id AND ctx.contextlevel = :contextlevel)";
     $params['contextlevel'] = CONTEXT_COURSE;
 
-    $sql = "SELECT c.* $ccselect
+    $sql = "SELECT c.* $ccselect , cc.visible AS coursecat_visible
               FROM {course} c
+              JOIN {course_categories} cc ON cc.id = c.category
            $ccjoin
              WHERE $searchcond AND c.id <> ".SITEID."
           ORDER BY $sort";
 
+    $mycourses = enrol_get_my_courses();
     $rs = $DB->get_recordset_sql($sql, $params);
     foreach($rs as $course) {
         // Preload contexts only for hidden courses or courses we need to return.
@@ -834,6 +836,11 @@ function get_courses_search($searchterms, $sort, $page, $recordsperpage, &$total
             if (!has_all_capabilities($requiredcapabilities, $coursecontext)) {
                 continue;
             }
+        }
+        if (!array_key_exists($course->id, $mycourses) &&
+            !core_course_category::check_access((object)['id' => $course->category, 'visible' => $course->coursecat_visible])) {
+            // TODO this is not optimal.
+            continue;
         }
         // Don't exit this loop till the end
         // we need to count all the visible courses

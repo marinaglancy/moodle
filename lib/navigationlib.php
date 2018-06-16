@@ -2981,6 +2981,10 @@ class global_navigation extends navigation_node {
                 if (isset($this->addedcategories[$coursecat->id])) {
                     continue;
                 }
+                // Skip categories that are not visible.
+                if (!$coursecat->is_uservisible()) {
+                    continue;
+                }
 
                 // Get this course category's parent node.
                 $parent = null;

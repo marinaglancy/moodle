@@ -68,8 +68,9 @@ if ($courseid) {
 } else {
     $course = null;
     $courseid = null;
-    $category = core_course_category::get_default();
-    $categoryid = $category->id;
+    $topchildren = core_course_category::get(0)->get_children();
+    $category = reset($topchildren);
+    $categoryid = $category ? $category->id : 0;
     $context = context_coursecat::instance($category->id);
     $url->param('categoryid', $category->id);
 }

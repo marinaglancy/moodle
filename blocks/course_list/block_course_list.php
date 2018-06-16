@@ -54,6 +54,10 @@ class block_course_list extends block_list {
            }
         }
 
+        $topcategory = core_course_category::get(0, IGNORE_MISSING);
+        $allcourselink = $topcategory && (has_capability('moodle/course:update', context_system::instance())
+            || empty($CFG->block_course_list_hideallcourseslink));
+
         if (empty($CFG->disablemycourses) and isloggedin() and !isguestuser() and
           !(has_capability('moodle/course:update', context_system::instance()) and $adminseesall)) {    // Just print My Courses
             if ($courses = enrol_get_my_courses()) {
@@ -65,7 +69,7 @@ class block_course_list extends block_list {
                 }
                 $this->title = get_string('mycourses');
             /// If we can update any course of the view all isn't hidden, show the view all courses link
-                if (has_capability('moodle/course:update', context_system::instance()) || empty($CFG->block_course_list_hideallcourseslink)) {
+                if ($allcourselink) {
                     $this->content->footer = "<a href=\"$CFG->wwwroot/course/index.php\">".get_string("fulllistofcourses")."</a> ...";
                 }
             }
@@ -75,8 +79,7 @@ class block_course_list extends block_list {
             }
         }
 
-        $categories = core_course_category::get(0)->get_children();  // Parent = 0   ie top-level categories only
-        if ($categories) {   //Check we have categories
+        if ($topcategory && ($categories = $topcategory->get_children())) {   //Check we have categories
             if (count($categories) > 1 || (count($categories) == 1 && $DB->count_records('course') > 200)) {     // Just print top level category links
                 foreach ($categories as $category) {
                     $categoryname = $category->get_formatted_name();
@@ -84,7 +87,7 @@ class block_course_list extends block_list {
                     $this->content->items[]="<a $linkcss href=\"$CFG->wwwroot/course/index.php?categoryid=$category->id\">".$icon . $categoryname . "</a>";
                 }
             /// If we can update any course of the view all isn't hidden, show the view all courses link
-                if (has_capability('moodle/course:update', context_system::instance()) || empty($CFG->block_course_list_hideallcourseslink)) {
+                if ($allcourselink) {
                     $this->content->footer .= "<a href=\"$CFG->wwwroot/course/index.php\">".get_string('fulllistofcourses').'</a> ...';
                 }
                 $this->title = get_string('categories');
@@ -103,7 +106,7 @@ class block_course_list extends block_list {
                                    .$icon. format_string(get_course_display_name_for_list($course), true, array('context' => context_course::instance($course->id))) . "</a>";
                     }
                 /// If we can update any course of the view all isn't hidden, show the view all courses link
-                    if (has_capability('moodle/course:update', context_system::instance()) || empty($CFG->block_course_list_hideallcourseslink)) {
+                    if ($allcourselink) {
                         $this->content->footer .= "<a href=\"$CFG->wwwroot/course/index.php\">".get_string('fulllistofcourses').'</a> ...';
                     }
                     $this->get_remote_courses();
