@@ -188,6 +188,7 @@ $string['course:update'] = 'Update course settings';
 $string['course:useremail'] = 'Enable/disable email address';
 $string['course:view'] = 'View courses without participation';
 $string['course:viewcoursegrades'] = 'View course grades';
+$string['course:viewcategories'] = 'View category and list of courses';
 $string['course:viewhiddenactivities'] = 'View hidden activities';
 $string['course:viewhiddencourses'] = 'View hidden courses';
 $string['course:viewhiddensections'] = 'View hidden sections';
