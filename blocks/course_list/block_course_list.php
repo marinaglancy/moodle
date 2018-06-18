@@ -54,8 +54,9 @@ class block_course_list extends block_list {
            }
         }
 
-        $topcategory = core_course_category::get(0, IGNORE_MISSING);
-        $allcourselink = $topcategory && (has_capability('moodle/course:update', context_system::instance())
+        $topcategory = core_course_category::top();
+        $allcourselink = $topcategory->get_children_count() &&
+            (has_capability('moodle/course:update', context_system::instance())
             || empty($CFG->block_course_list_hideallcourseslink));
 
         if (empty($CFG->disablemycourses) and isloggedin() and !isguestuser() and

@@ -68,7 +68,7 @@ if ($courseid) {
 } else {
     $course = null;
     $courseid = null;
-    $topchildren = core_course_category::get(0)->get_children();
+    $topchildren = core_course_category::top()->get_children();
     $category = reset($topchildren);
     $categoryid = $category ? $category->id : 0;
     $context = context_coursecat::instance($category->id);
@@ -180,7 +180,11 @@ if ($action !== false && confirm_sesskey()) {
     switch ($action) {
         case 'resortcategories' :
             $sort = required_param('resort', PARAM_ALPHA);
-            $cattosort = core_course_category::get((int)optional_param('categoryid', 0, PARAM_INT));
+            if ($categoryid = optional_param('categoryid', 0, PARAM_INT)) {
+                $cattosort = core_course_category::get($categoryid);
+            } else {
+                $cattosort = core_course_category::top();
+            }
             $redirectback = \core_course\management\helper::action_category_resort_subcategories($cattosort, $sort);
             break;
         case 'resortcourses' :
@@ -379,8 +383,8 @@ if ($action !== false && confirm_sesskey()) {
                     }
                     $categories = core_course_category::get_many($categoryids);
                 } else if ($for === 'allcategories') {
-                    if ($sortcategoriesby && core_course_category::get(0)->can_resort_subcategories()) {
-                        \core_course\management\helper::action_category_resort_subcategories(core_course_category::get(0), $sortcategoriesby);
+                    if ($sortcategoriesby && core_course_category::top()->can_resort_subcategories()) {
+                        \core_course\management\helper::action_category_resort_subcategories(core_course_category::top(), $sortcategoriesby);
                     }
                     $categorieslist = core_course_category::make_categories_list('moodle/category:manage');
                     $categoryids = array_keys($categorieslist);

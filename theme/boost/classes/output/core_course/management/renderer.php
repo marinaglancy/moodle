@@ -201,7 +201,7 @@ class renderer extends \core_course_management_renderer {
         $catatlevel[] = array_shift($selectedparents);
         $catatlevel = array_unique($catatlevel);
 
-        $listing = core_course_category::get(0, MUST_EXIST, true)->get_children();
+        $listing = core_course_category::top()->get_children();
 
         $attributes = array(
             'class' => 'ml-1 list-unstyled',
@@ -393,7 +393,7 @@ class renderer extends \core_course_management_renderer {
         $cancreatecategory = $category && $category->can_create_subcategory();
         $cancreatecategory = $cancreatecategory || core_course_category::can_create_top_level_category();
         if ($category === null) {
-            $category = core_course_category::get(0);
+            $category = core_course_category::top();
         }
 
         if ($cancreatecategory) {

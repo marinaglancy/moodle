@@ -136,7 +136,7 @@ class core_course_management_renderer extends plugin_renderer_base {
         $catatlevel[] = array_shift($selectedparents);
         $catatlevel = array_unique($catatlevel);
 
-        $listing = core_course_category::get(0)->get_children();
+        $listing = core_course_category::top()->get_children();
 
         $attributes = array(
             'class' => 'ml',
@@ -323,7 +323,7 @@ class core_course_management_renderer extends plugin_renderer_base {
         $cancreatecategory = $category && $category->can_create_subcategory();
         $cancreatecategory = $cancreatecategory || core_course_category::can_create_top_level_category();
         if ($category === null) {
-            $category = core_course_category::get(0);
+            $category = core_course_category::top();
         }
 
         if ($cancreatecategory) {
@@ -456,7 +456,7 @@ class core_course_management_renderer extends plugin_renderer_base {
         if (core_course_category::can_change_parent_any()) {
             $options = array();
             if (has_capability('moodle/category:manage', context_system::instance())) {
-                $options[0] = core_course_category::get(0)->get_formatted_name();
+                $options[0] = core_course_category::top()->get_formatted_name();
             }
             $options += core_course_category::make_categories_list('moodle/category:manage');
             $select = html_writer::select(

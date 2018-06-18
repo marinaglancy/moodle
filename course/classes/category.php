@@ -231,27 +231,19 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
      */
     public static function get($id, $strictness = MUST_EXIST, $alwaysreturnhidden = false) {
         if (!$id) {
-            // When $id==0 create static object for pseudo-category representing top-level.
-            if (!isset(self::$coursecat0)) {
-                $record = new stdClass();
-                $record->id = 0;
-                $record->visible = 1;
-                $record->depth = 0;
-                $record->path = '';
-                self::$coursecat0 = new self($record);
-            }
-            $coursecat = self::$coursecat0;
-        } else {
-            // Try to get category from cache or retrieve from the DB.
-            $coursecatrecordcache = cache::make('core', 'coursecatrecords');
-            $coursecat = $coursecatrecordcache->get($id);
-            if ($coursecat === false) {
-                if ($records = self::get_records('cc.id = :id', array('id' => $id))) {
-                    $record = reset($records);
-                    $coursecat = new self($record);
-                    // Store in cache.
-                    $coursecatrecordcache->set($id, $coursecat);
-                }
+            debugging('To retrieve top-level category use core_course_category::top()', DEBUG_DEVELOPER);
+            return self::top();
+        }
+
+        // Try to get category from cache or retrieve from the DB.
+        $coursecatrecordcache = cache::make('core', 'coursecatrecords');
+        $coursecat = $coursecatrecordcache->get($id);
+        if ($coursecat === false) {
+            if ($records = self::get_records('cc.id = :id', array('id' => $id))) {
+                $record = reset($records);
+                $coursecat = new self($record);
+                // Store in cache.
+                $coursecatrecordcache->set($id, $coursecat);
             }
         }
 
@@ -268,6 +260,26 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
             $coursecat = null;
         }
         return $coursecat;
+    }
+
+    public static function top() {
+        if (!isset(self::$coursecat0)) {
+            $record = new stdClass();
+            $record->id = 0;
+            $record->visible = 1;
+            $record->depth = 0;
+            $record->path = '';
+            self::$coursecat0 = new self($record);
+        }
+        return self::$coursecat0;
+    }
+
+    public static function user_top() {
+        $children = self::top()->get_children();
+        if (count($children) == 1) {
+            return reset($children);
+        }
+        return self::top();
     }
 
     /**
@@ -351,7 +363,7 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
      * @return core_course_category
      */
     public static function get_default() {
-        if ($visiblechildren = self::get(0, MUST_EXIST, true)->get_children()) {
+        if ($visiblechildren = self::top()->get_children()) {
             $defcategory = reset($visiblechildren);
         } else {
             $toplevelcategories = self::get_tree(0);
@@ -366,6 +378,9 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
      * during {@link fix_course_sortorder()}
      */
     protected function restore() {
+        if ($this->id) {
+            return;
+        }
         // Update all fields in the current object.
         $newrecord = self::get($this->id, MUST_EXIST, true);
         foreach (self::$coursecatfields as $key => $unused) {
@@ -427,7 +442,7 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
         }
 
         if (empty($data->parent)) {
-            $parent = self::get(0, MUST_EXIST, true);
+            $parent = self::top();
         } else {
             $parent = self::get($data->parent, MUST_EXIST, true);
         }
@@ -560,7 +575,7 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
             if ($changes) {
                 cache_helper::purge_by_event('changesincoursecat');
             }
-            $parentcat = self::get($data->parent, MUST_EXIST, true);
+            $parentcat = $data->parent ? self::get($data->parent, MUST_EXIST, true) : self::top();
             $this->change_parent_raw($parentcat);
             fix_course_sortorder();
         }
@@ -598,7 +613,11 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
      * @return bool
      */
     public function is_uservisible() {
-        return !$this->id || self::check_access($this);
+        if ($this->id) {
+            return self::check_access($this);
+        } else {
+            return has_capability('moodle/course:viewcategories', context_system::instance());
+        }
     }
 
     /**
@@ -621,11 +640,22 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
     /**
      * Check access to the category and throw exception if user doesn't have sufficient capabilities.
      *
-     * @param int $categoryid
+     * @param int|stdClass $categoryorid
      * @throws moodle_exception
      */
-    public static function require_access($categoryid) {
-        self::get($categoryid);
+    public static function require_access($categoryorid) {
+        if (!$categoryorid) {
+            if (!has_capability('moodle/course:viewcategories', context_system::instance())) {
+                throw new moodle_exception('cannotviewcategory');
+            }
+        } else if (is_object($categoryorid)) {
+            if (!self::check_access($categoryorid)) {
+                throw new moodle_exception('cannotviewcategory');
+            }
+        } else {
+            // Try to retrieve category by id, it will validate access.
+            self::get($categoryorid);
+        }
     }
 
     /**
@@ -1642,6 +1672,8 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
         // Check if this category is hidden.
         // Also 0-category never has courses unless this is recursive call.
         if (!$this->is_uservisible() || (!$this->id && !$recursive)) {
+            // TODO recursive call in combination with !is_uservisible ....
+            // TODO why don't we use search_courses here?
             return array();
         }
 

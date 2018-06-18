@@ -775,7 +775,7 @@ class helper {
             $searchcriteria = array('modulelist' => $modulelist);
         }
 
-        $topcat = \core_course_category::get(0, IGNORE_MISSING, true);
+        $topcat = \core_course_category::top();
         $courses = $topcat->search_courses($searchcriteria, array(
             'recursive' => true,
             'offset' => $page * $perpage,

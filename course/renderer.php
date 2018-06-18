@@ -1623,7 +1623,12 @@ class core_course_renderer extends plugin_renderer_base {
      */
     public function course_category($category) {
         global $CFG;
-        $coursecat = core_course_category::get(is_object($category) ? $category->id : $category);
+        $usertop = core_course_category::user_top();
+        if (empty($category)) {
+            $coursecat = $usertop;
+        } else {
+            $coursecat = core_course_category::get(is_object($category) ? $category->id : $category);
+        }
         $site = get_site();
         $output = '';
 
@@ -1633,25 +1638,22 @@ class core_course_renderer extends plugin_renderer_base {
                 array('categoryid' => $coursecat->id)), get_string('managecourses'), 'get');
             $this->page->set_button($managebutton);
         }
-        if (!$coursecat->id) {
-            if (core_course_category::is_simple_site()) {
-                // There exists only one category in the system, do not display link to it
-                $coursecat = core_course_category::get_default();
-                $strfulllistofcourses = get_string('fulllistofcourses');
-                $this->page->set_title("$site->shortname: $strfulllistofcourses");
-            } else {
-                $strcategories = get_string('categories');
-                $this->page->set_title("$site->shortname: $strcategories");
-            }
+
+        if (core_course_category::is_simple_site()) {
+            // There is only one category in the system, do not display link to it
+            $strfulllistofcourses = get_string('fulllistofcourses');
+            $this->page->set_title("$site->shortname: $strfulllistofcourses");
+        } else if (!$coursecat->id) {
+            $strcategories = get_string('categories');
+            $this->page->set_title("$site->shortname: $strcategories");
         } else {
             $title = $site->shortname;
-            if (!core_course_category::is_simple_site()) {
-                $title .= ": ". $coursecat->get_formatted_name();
-            }
+            $title .= ": ". $coursecat->get_formatted_name();
             $this->page->set_title($title);
 
             // Print the category selector
-            if (!core_course_category::is_simple_site()) {
+            $categorieslist = core_course_category::make_categories_list();
+            if (count($categorieslist) > 1) {
                 $output .= html_writer::start_tag('div', array('class' => 'categorypicker'));
                 $select = new single_select(new moodle_url('/course/index.php'), 'categoryid',
                         core_course_category::make_categories_list(), $coursecat->id, null, 'switchcategory');
@@ -1685,7 +1687,7 @@ class core_course_renderer extends plugin_renderer_base {
         }
         $coursedisplayoptions['limit'] = $perpage;
         $catdisplayoptions['limit'] = $perpage;
-        if ($browse === 'courses' || !$coursecat->has_children()) {
+        if ($browse === 'courses' || !$coursecat->get_children_count()) {
             $coursedisplayoptions['offset'] = $page * $perpage;
             $coursedisplayoptions['paginationurl'] = new moodle_url($baseurl, array('browse' => 'courses'));
             $catdisplayoptions['nodisplay'] = true;
@@ -2040,7 +2042,8 @@ class core_course_renderer extends plugin_renderer_base {
     public function frontpage_available_courses() {
         global $CFG;
 
-        if (!$tree = core_course_category::get(0, IGNORE_MISSING)) {
+        $tree = core_course_category::top();
+        if (!$tree->get_children_count()) {
             return '';
         }
 
@@ -2084,7 +2087,8 @@ class core_course_renderer extends plugin_renderer_base {
      */
     public function frontpage_combo_list() {
         global $CFG;
-        if (!$tree = core_course_category::get(0, IGNORE_MISSING)) {
+        $tree = core_course_category::top();
+        if (!$tree->get_children_count()) {
             return '';
         }
         $chelper = new coursecat_helper();
@@ -2110,7 +2114,8 @@ class core_course_renderer extends plugin_renderer_base {
      */
     public function frontpage_categories_list() {
         global $CFG;
-        if (!$tree = core_course_category::get(0, IGNORE_MISSING)) {
+        $tree = core_course_category::top();
+        if (!$tree->get_children_count()) {
             return '';
         }
         $chelper = new coursecat_helper();
