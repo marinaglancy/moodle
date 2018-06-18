@@ -4416,7 +4416,7 @@ function file_pluginfile($relativepath, $forcedownload, $preview = null, $offlin
             }
 
             // Check if user can view this category.
-            core_course_category::get($context->instanceid);
+            core_course_category::require_access($context->instanceid);
 
             $filename = array_pop($args);
             $filepath = $args ? '/'.implode('/', $args).'/' : '/';

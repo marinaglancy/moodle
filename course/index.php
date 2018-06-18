@@ -28,7 +28,7 @@ require_once($CFG->dirroot. '/course/lib.php');
 
 $categoryid = optional_param('categoryid', 0, PARAM_INT); // Category id
 $site = get_site();
-core_course_category::get($categoryid);
+core_course_category::require_access($categoryid);
 
 if ($categoryid) {
     $PAGE->set_category_by_id($categoryid);

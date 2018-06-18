@@ -231,6 +231,7 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
      */
     public static function get($id, $strictness = MUST_EXIST, $alwaysreturnhidden = false) {
         if (!$id) {
+            // When $id==0 create static object for pseudo-category representing top-level.
             if (!isset(self::$coursecat0)) {
                 $record = new stdClass();
                 $record->id = 0;
@@ -239,32 +240,34 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
                 $record->path = '';
                 self::$coursecat0 = new self($record);
             }
-            if (!$alwaysreturnhidden && !self::check_access(null)) {
-                if ($strictness == MUST_EXIST) {
-                    require_capability('moodle/course:viewcategories', context_system::instance());
-                }
-                return null;
-            }
-            return self::$coursecat0;
-        }
-        $coursecatrecordcache = cache::make('core', 'coursecatrecords');
-        $coursecat = $coursecatrecordcache->get($id);
-        if ($coursecat === false) {
-            if ($records = self::get_records('cc.id = :id', array('id' => $id))) {
-                $record = reset($records);
-                $coursecat = new self($record);
-                // Store in cache.
-                $coursecatrecordcache->set($id, $coursecat);
-            }
-        }
-        if ($coursecat && ($alwaysreturnhidden || $coursecat->is_uservisible())) {
-            return $coursecat;
+            $coursecat = self::$coursecat0;
         } else {
+            // Try to get category from cache or retrieve from the DB.
+            $coursecatrecordcache = cache::make('core', 'coursecatrecords');
+            $coursecat = $coursecatrecordcache->get($id);
+            if ($coursecat === false) {
+                if ($records = self::get_records('cc.id = :id', array('id' => $id))) {
+                    $record = reset($records);
+                    $coursecat = new self($record);
+                    // Store in cache.
+                    $coursecatrecordcache->set($id, $coursecat);
+                }
+            }
+        }
+
+        if (!$coursecat) {
+            // Course category not found.
             if ($strictness == MUST_EXIST) {
                 throw new moodle_exception('unknowncategory');
             }
+        } else if (!$alwaysreturnhidden && !$coursecat->is_uservisible()) {
+            // Course category is found but user can not access it.
+            if ($strictness == MUST_EXIST) {
+                throw new moodle_exception('cannotviewcategory');
+            }
+            $coursecat = null;
         }
-        return null;
+        return $coursecat;
     }
 
     /**
@@ -348,7 +351,7 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
      * @return core_course_category
      */
     public static function get_default() {
-        if ($visiblechildren = self::get(0)->get_children()) {
+        if ($visiblechildren = self::get(0, MUST_EXIST, true)->get_children()) {
             $defcategory = reset($visiblechildren);
         } else {
             $toplevelcategories = self::get_tree(0);
@@ -613,6 +616,16 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
             return false;
         }
         return has_capability('moodle/course:viewcategories', $context);
+    }
+
+    /**
+     * Check access to the category and throw exception if user doesn't have sufficient capabilities.
+     *
+     * @param int $categoryid
+     * @throws moodle_exception
+     */
+    public static function require_access($categoryid) {
+        self::get($categoryid);
     }
 
     /**

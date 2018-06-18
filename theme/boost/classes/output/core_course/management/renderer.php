@@ -201,7 +201,7 @@ class renderer extends \core_course_management_renderer {
         $catatlevel[] = array_shift($selectedparents);
         $catatlevel = array_unique($catatlevel);
 
-        $listing = core_course_category::get(0)->get_children();
+        $listing = core_course_category::get(0, MUST_EXIST, true)->get_children();
 
         $attributes = array(
             'class' => 'ml-1 list-unstyled',
