@@ -48,6 +48,7 @@ if ($course->id == SITEID) {
     redirect("$CFG->wwwroot/");
 }
 
+require_capability('moodle/course:browse', $context);
 if (!$course->visible && !has_capability('moodle/course:viewhiddencourses', context_course::instance($course->id))) {
     print_error('coursehidden');
 }
