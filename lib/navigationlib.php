@@ -1227,6 +1227,9 @@ class global_navigation extends navigation_node {
         $this->rootnodes['currentcourse'] = $this->add(get_string('currentcourse'), null, self::TYPE_ROOTNODE, null, 'currentcourse');
         $this->rootnodes['mycourses'] = $this->add(get_string('mycourses'), null, self::TYPE_ROOTNODE, null, 'mycourses', new pix_icon('i/course', ''));
         $this->rootnodes['courses'] = $this->add(get_string('courses'), new moodle_url('/course/index.php'), self::TYPE_ROOTNODE, null, 'courses');
+        if (!core_course_category::user_top()) {
+            $this->rootnodes['courses']->hide();
+        }
         $this->rootnodes['users'] = $this->add(get_string('users'), null, self::TYPE_ROOTNODE, null, 'users');
 
         // We always load the frontpage course to ensure it is available without
@@ -1497,7 +1500,7 @@ class global_navigation extends navigation_node {
     protected function show_my_categories() {
         global $CFG;
         if ($this->showmycategories === null) {
-            $this->showmycategories = !empty($CFG->navshowmycoursecategories) && core_course_category::count_all() > 1;
+            $this->showmycategories = !empty($CFG->navshowmycoursecategories) && !core_course_category::is_simple_site();
         }
         return $this->showmycategories;
     }
@@ -1884,12 +1887,12 @@ class global_navigation extends navigation_node {
         $context = context_coursecat::instance($category->id);
         $categoryname = format_string($category->name, true, array('context' => $context));
         $categorynode = $parent->add($categoryname, $url, $nodetype, $categoryname, $category->id);
-        if (empty($category->visible)) {
-            if (has_capability('moodle/category:viewhiddencategories', context_system::instance())) {
-                $categorynode->hidden = true;
-            } else {
-                $categorynode->display = false;
-            }
+        if (!core_course_category::check_access($category)) {
+            // User does not have required capabilities to view category.
+            $categorynode->display = false;
+        } else if (!$category->visible) {
+            // Category is hidden but user has capability to view hidden categories.
+            $categorynode->hidden = true;
         }
         $this->addedcategories[$category->id] = $categorynode;
     }
@@ -2986,6 +2989,10 @@ class global_navigation extends navigation_node {
                 if (isset($this->addedcategories[$coursecat->id])) {
                     continue;
                 }
+                // Skip categories that are not visible.
+                if (!$coursecat->is_uservisible()) {
+                    continue;
+                }
 
                 // Get this course category's parent node.
                 $parent = null;
@@ -3526,15 +3533,16 @@ class navbar extends navigation_node {
 
         $categories = array();
         $cap = 'moodle/category:viewhiddencategories';
-        $showcategories = core_course_category::count_all() > 1;
+        $showcategories = !core_course_category::is_simple_site();
 
         if ($showcategories) {
             foreach ($this->page->categories as $category) {
-                if (!$category->visible && !has_capability($cap, get_category_or_system_context($category->parent))) {
+                $context = context_coursecat::instance($category->id);
+                if (!core_course_category::check_access($category)) {
                     continue;
                 }
                 $url = new moodle_url('/course/index.php', array('categoryid' => $category->id));
-                $name = format_string($category->name, true, array('context' => context_coursecat::instance($category->id)));
+                $name = format_string($category->name, true, array('context' => $context));
                 $categorynode = breadcrumb_navigation_node::create($name, $url, self::TYPE_CATEGORY, null, $category->id);
                 if (!$category->visible) {
                     $categorynode->hidden = true;

@@ -1714,7 +1714,7 @@ class core_course_external extends external_api {
             if (!isset($excludedcats[$category->id])) {
 
                 // Final check to see if the category is visible to the user.
-                if ($category->visible or has_capability('moodle/category:viewhiddencategories', $context)) {
+                if (core_course_category::check_access($category)) {
 
                     $categoryinfo = array();
                     $categoryinfo['id'] = $category->id;
