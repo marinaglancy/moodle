@@ -219,6 +219,9 @@ EOT3
                 moveHandlerSelector: '.draghandle',
                 onDrop: function(info) { console.log(info); }
             });
+            $('body').on('sortablelist-drop', function(evt) {
+                console.log(evt);
+            });
         })
 EOT3
         );
