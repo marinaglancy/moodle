@@ -233,17 +233,12 @@ function url_get_coursemodule_info($coursemodule) {
     $display = url_get_final_display_type($url);
 
     if ($display == RESOURCELIB_DISPLAY_POPUP) {
-        $fullurl = "$CFG->wwwroot/mod/url/view.php?id=$coursemodule->id&amp;redirect=1";
         $options = empty($url->displayoptions) ? array() : unserialize($url->displayoptions);
         $width  = empty($options['popupwidth'])  ? 620 : $options['popupwidth'];
         $height = empty($options['popupheight']) ? 450 : $options['popupheight'];
-        $wh = "width=$width,height=$height,toolbar=no,location=no,menubar=no,copyhistory=no,status=no,directories=no,scrollbars=yes,resizable=yes";
-        $info->onclick = "window.open('$fullurl', '', '$wh'); return false;";
-
+        $info->customdata = ['onclick' => true, 'width' => $width, 'height' => $height];
     } else if ($display == RESOURCELIB_DISPLAY_NEW) {
-        $fullurl = "$CFG->wwwroot/mod/url/view.php?id=$coursemodule->id&amp;redirect=1";
-        $info->onclick = "window.open('$fullurl'); return false;";
-
+        $info->customdata = ['onclick' => true];
     }
 
     if ($coursemodule->showdescription) {
@@ -252,6 +247,28 @@ function url_get_coursemodule_info($coursemodule) {
     }
 
     return $info;
+}
+
+/**
+ * Sets dynamic information about a course module
+ *
+ * This callback is called from {@link cm_info::obtain_dynamic_data()}
+ *
+ * @param cm_info $cm
+ */
+function url_cm_info_dynamic(cm_info $cm) {
+    global $CFG;
+    $customdata = is_array($cm->customdata) ? $cm->customdata : [];
+    if (!empty($customdata['onclick'])) {
+        $fullurl = "$CFG->wwwroot/mod/url/view.php?id={$cm->id}&amp;redirect=1";
+        if (!empty($customdata['width']) && !empty($customdata['height'])) {
+            $wh = "width={$customdata['width']},height={$customdata['height']}," .
+                "toolbar=no,location=no,menubar=no,copyhistory=no,status=no,directories=no,scrollbars=yes,resizable=yes";
+            $cm->set_on_click("window.open('$fullurl', '', '$wh'); return false;");
+        } else {
+            $cm->set_on_click("window.open('$fullurl'); return false;");
+        }
+    }
 }
 
 /**
