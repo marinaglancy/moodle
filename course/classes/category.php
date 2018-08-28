@@ -635,7 +635,7 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
      * @return bool
      */
     public function is_uservisible($user = null) {
-        return self::check_access($this, $user);
+        return self::can_view_category($this, $user);
     }
 
     /**
@@ -645,7 +645,7 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
      * @param int|stdClass $user The user id or object. By default (null) checks access for the current user.
      * @return bool
      */
-    public static function check_access($category, $user = null) {
+    public static function can_view_category($category, $user = null) {
         if (!$category->id) {
             return has_capability('moodle/course:browse', context_system::instance(), $user);
         }
@@ -654,6 +654,28 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
             return false;
         }
         return has_capability('moodle/course:browse', $context, $user);
+    }
+
+    /**
+     * Checks if current user can view course information or enrolment page.
+     *
+     * This method does not check if user is already enrolled in the course
+     *
+     * @param stdClass $course course object (must have 'id', 'visible' and 'category' fields)
+     * @param null|stdClass $user The user id or object. By default (null) checks access for the current user.
+     */
+    public static function can_view_course_info($course, $user = null) {
+        if ($course->id == SITEID) {
+            return true;
+        }
+        if (!$course->visible) {
+            $coursecontext = context_course::instance($course->id);
+            if (!has_capability('moodle/course:viewhiddencourses', $coursecontext, $user)) {
+                return false;
+            }
+        }
+        $categorycontext = context_coursecat::instance($course->category);
+        return has_capability('moodle/course:browse', $categorycontext, $user);
     }
 
     /**
@@ -1062,9 +1084,8 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
         } else {
             $fields[] = $DB->sql_substr('c.summary', 1, 1). ' as hassummary';
         }
-        $sql = "SELECT ". join(',', $fields). ", $ctxselect , cc.visible as coursecat_visible
+        $sql = "SELECT ". join(',', $fields). ", $ctxselect
                 FROM {course} c
-                JOIN {course_categories} cc ON cc.id = c.category
                 JOIN {context} ctx ON c.id = ctx.instanceid AND ctx.contextlevel = :contextcourse
                 WHERE ". $whereclause." ORDER BY c.sortorder";
         $list = $DB->get_records_sql($sql,
@@ -1079,10 +1100,8 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
                 }
                 context_helper::preload_from_record($course);
                 $context = context_course::instance($course->id);
-                if (!array_key_exists($course->id, $mycourses) && !has_capability('moodle/course:browse', $context)) {
-                    unset($list[$course->id]);
-                }
-                if (empty($course->visible) && !has_capability('moodle/course:viewhiddencourses', $context)) {
+                // Check that course is accessible by user.
+                if (!array_key_exists($course->id, $mycourses) && !core_course_category::can_view_course_info($course)) {
                     unset($list[$course->id]);
                 }
             }
@@ -1123,7 +1142,7 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
                 // Check access for each category.
                 foreach ($catids as $id) {
                     $cat = (object)['id' => $id, 'visible' => in_array($id, $hidden) ? 0 : 1];
-                    if (!self::check_access($cat)) {
+                    if (!self::can_view_category($cat)) {
                         $invisibleids[] = $id;
                     }
                 }
@@ -2477,12 +2496,8 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
                 //if (!$record->parent || isset($baselist[$record->parent])) {
                     context_helper::preload_from_record($record);
                     $context = context_coursecat::instance($record->id);
-                    if (!has_capability('moodle/course:browse', $context)) {
+                    if (!self::can_view_category($record)) {
                         // User is not allowed to browse this category.
-                        continue;
-                    }
-                    if (!$record->visible && !has_capability('moodle/category:viewhiddencategories', $context)) {
-                        // No cap to view category, added to neither $baselist nor $thislist.
                         continue;
                     }
                     $baselist[$record->id] = array(

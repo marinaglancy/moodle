@@ -1714,7 +1714,7 @@ class core_course_external extends external_api {
             if (!isset($excludedcats[$category->id])) {
 
                 // Final check to see if the category is visible to the user.
-                if (core_course_category::check_access($category)) {
+                if (core_course_category::can_view_category($category)) {
 
                     $categoryinfo = array();
                     $categoryinfo['id'] = $category->id;

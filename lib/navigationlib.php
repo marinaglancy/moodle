@@ -1887,7 +1887,7 @@ class global_navigation extends navigation_node {
         $context = context_coursecat::instance($category->id);
         $categoryname = format_string($category->name, true, array('context' => $context));
         $categorynode = $parent->add($categoryname, $url, $nodetype, $categoryname, $category->id);
-        if (!core_course_category::check_access($category)) {
+        if (!core_course_category::can_view_category($category)) {
             // User does not have required capabilities to view category.
             $categorynode->display = false;
         } else if (!$category->visible) {
@@ -3538,7 +3538,7 @@ class navbar extends navigation_node {
         if ($showcategories) {
             foreach ($this->page->categories as $category) {
                 $context = context_coursecat::instance($category->id);
-                if (!core_course_category::check_access($category)) {
+                if (!core_course_category::can_view_category($category)) {
                     continue;
                 }
                 $url = new moodle_url('/course/index.php', array('categoryid' => $category->id));

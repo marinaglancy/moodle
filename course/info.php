@@ -48,8 +48,10 @@
     }
 
     $context = context_course::instance($course->id);
-    require_capability('moodle/course:browse', $context);
     if (!$course->visible and !has_capability('moodle/course:viewhiddencourses', $context)) {
+        print_error('coursehidden', '', $CFG->wwwroot .'/');
+    }
+    if (!core_course_category::can_view_course_info($course) && !is_enrolled($context, null, '', true)) {
         print_error('coursehidden', '', $CFG->wwwroot .'/');
     }
 

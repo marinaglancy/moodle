@@ -837,7 +837,7 @@ function get_courses_search($searchterms, $sort, $page, $recordsperpage, &$total
                 continue;
             }
         }
-        if (!array_key_exists($course->id, $mycourses) && !has_capability('moodle/course:browse', $coursecontext)) {
+        if (!array_key_exists($course->id, $mycourses) && !core_course_category::can_view_course_info($course)) {
             continue;
         }
         // Don't exit this loop till the end
