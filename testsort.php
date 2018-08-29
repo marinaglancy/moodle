@@ -20,8 +20,10 @@ $dragdrop = $OUTPUT->pix_icon('i/dragdrop', get_string('move'), 'moodle', array(
             $PAGE->requires->js_amd_inline(<<<EOT1
         require(['core/sortable_list'], function(SortableList) {
             SortableList.init({
-                listSelector: '.sort-example-1',
-                onDrop: function(info) { console.log(info); }
+                listSelector: '.sort-example-1'
+            });
+            $('.sort-example-1 > li').on('sortablelist-drop', function(evt, info) {
+                console.log(info);
             });
         })
 EOT1
@@ -46,8 +48,10 @@ EOT1
         require(['core/sortable_list'], function(SortableList) {
             SortableList.init({
                 listSelector: '.sort-example-2 tbody',
-                moveHandlerSelector: '.draghandle',
-                onDrop: function(info) { console.log(info); }
+                moveHandlerSelector: '.draghandle'
+            });
+            $('.sort-example-2 tr').on('sortablelist-drop', function(evt, info) {
+                console.log(info);
             });
         })
 EOT2
@@ -77,8 +81,10 @@ EOT2
             $PAGE->requires->js_amd_inline(<<<EOT3
         require(['core/sortable_list'], function(SortableList) {
             SortableList.init({
-                listSelector: '.sort-example-3',
-                onDrop: function(info) { console.log(info); }
+                listSelector: '.sort-example-3'
+            });
+            $('.sort-example-3 > li').on('sortablelist-drop', function(evt, info) {
+                console.log(info);
             });
         })
 EOT3
@@ -123,13 +129,14 @@ EOT3
         require(['core/sortable_list'], function(SortableList) {
             SortableList.init({
                 listSelector: '.sort-example-4',
-                currentPositionClass: 'current-position',
-                onDrop: function(info) { 
-                    info.draggedElement.addClass('temphighlight');
-                    setTimeout(function() {
-                        info.draggedElement.removeClass('temphighlight');
-                    }, 3000);
-                }
+                currentPositionClass: 'current-position'
+            });
+            $('.sort-example-4 > li').on('sortablelist-drop', function(evt, info) {
+                info.draggedElement.addClass('temphighlight');
+                setTimeout(function() {
+                    info.draggedElement.removeClass('temphighlight');
+                }, 3000);
+                console.log(info);
             });
         })
 EOT4
@@ -189,8 +196,10 @@ EOT4
             SortableList.init({
                 listSelector: '.sort-example-5',
                 isHorizontal: true,
-                moveHandlerSelector: '.draghandle',
-                onDrop: function(info) { console.log(info); }
+                moveHandlerSelector: '.draghandle'
+            });
+            $('.sort-example-5 > li').on('sortablelist-drop', function(evt, info) {
+                console.log(info);
             });
         })
 EOT3
@@ -216,11 +225,11 @@ EOT3
         require(['core/sortable_list'], function(SortableList) {
             SortableList.init({
                 listSelector: '.sort-example-6 ul',
-                moveHandlerSelector: '.draghandle',
-                onDrop: function(info) { console.log(info); }
+                moveHandlerSelector: '.draghandle'
             });
-            $('body').on('sortablelist-drop', function(evt) {
-                console.log(evt);
+            $('.sort-example-6 ul > *').on('sortablelist-drop', function(evt, info) {
+                console.log(info);
+                evt.stopPropagation(); // Important for hierarchical lists to prevent multiple targets.
             });
         })
 EOT3
