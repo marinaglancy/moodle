@@ -7,7 +7,8 @@ $PAGE->set_pagelayout('admin');
 
 echo $OUTPUT->header();
 echo $OUTPUT->heading('Sortable list examples');
-$dragdrop = $OUTPUT->pix_icon('i/dragdrop', get_string('move'), 'moodle', array('class' => 'iconsmall draghandle', 'title' => ''));
+$dragdrop = html_writer::link('#', $OUTPUT->pix_icon('i/dragdrop', get_string('move'), 'moodle',
+    array('class' => 'iconsmall', 'title' => 'Move')), ['class' => 'draghandle']);
 ?>
 
     <div class="container">
