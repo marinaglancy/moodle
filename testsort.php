@@ -21,9 +21,7 @@ $dragdrop = html_writer::span($OUTPUT->pix_icon('i/dragdrop', get_string('move')
             <?php
             $PAGE->requires->js_amd_inline(<<<EOT1
         require(['core/sortable_list'], function(SortableList) {
-            SortableList.init({
-                listSelector: '.sort-example-1'
-            });
+            SortableList.init('.sort-example-1');
             $('.sort-example-1 > li').on('sortablelist-drop', function(evt, info) {
                 console.log('Example 1 event ' + evt.type);
                 console.log(info);
@@ -48,8 +46,7 @@ EOT1
             <?php
             $PAGE->requires->js_amd_inline(<<<EOT2
         require(['core/sortable_list'], function(SortableList) {
-            SortableList.init({
-                listSelector: '.sort-example-2 tbody',
+            SortableList.init('.sort-example-2 tbody', {
                 moveHandlerSelector: '.draghandle'
             });
             $('.sort-example-2 tr').on('sortablelist-drop', function(evt, info) {
@@ -80,9 +77,7 @@ EOT2
             <?php
             $PAGE->requires->js_amd_inline(<<<EOT3
         require(['core/sortable_list'], function(SortableList) {
-            SortableList.init({
-                listSelector: '.sort-example-3'
-            });
+            SortableList.init('.sort-example-3[data-sort-enabled=1]');
             $('.sort-example-3 > li').on('sortablelist-drop', function(evt, info) {
                 console.log('Example 3 event ' + evt.type);
                 console.log(info);
@@ -101,7 +96,7 @@ EOT3
             </style>
 
             <h3>First list</h3>
-            <ul class="sort-example-3 unlist">
+            <ul class="sort-example-3 unlist" data-sort-enabled="1">
                 <li data-drag-type="move">Apple</li>
                 <li data-drag-type="move">Orange</li>
                 <li data-drag-type="move">Banana <a href="#">link</a></li>
@@ -109,7 +104,7 @@ EOT3
             </ul>
 
             <h3>Second list</h3>
-            <ul class="sort-example-3 unlist">
+            <ul class="sort-example-3 unlist" data-sort-enabled="1">
                 <li data-drag-type="move">Cat</li>
                 <li data-drag-type="move">Dog</li>
                 <li data-drag-type="move">Fish</li>
@@ -117,7 +112,7 @@ EOT3
             </ul>
 
             <h3>Third list</h3>
-            <ul class="sort-example-3 unlist">
+            <ul class="sort-example-3 unlist" data-sort-enabled="1">
             </ul>
 
         </div>
@@ -128,8 +123,7 @@ EOT3
             <?php
             $PAGE->requires->js_amd_inline(<<<EOT4
         require(['core/sortable_list'], function(SortableList) {
-            SortableList.init({
-                listSelector: '.sort-example-4',
+            SortableList.init('.sort-example-4', {
                 currentPositionClass: 'current-position'
             });
             $('.sort-example-4 > li').on('sortablelist-drop', function(evt, info) {
@@ -195,8 +189,7 @@ EOT4
     <?php
     $PAGE->requires->js_amd_inline(<<<EOT3
         require(['core/sortable_list'], function(SortableList) {
-            SortableList.init({
-                listSelector: '.sort-example-5',
+            SortableList.init('.sort-example-5', {
                 isHorizontal: true,
                 moveHandlerSelector: '.draghandle'
             });
@@ -229,8 +222,7 @@ EOT3
                 var name = element.attr('data-destination-name');
                 return name ? name : element.text();
             };
-            SortableList.init({
-                listSelector: '.sort-example-6 ul',
+            SortableList.init('.sort-example-6 ul', {
                 moveHandlerSelector: '.draghandle',
                 elementNameCallback: elementName,
                 destinationNameCallback: function(parentElement, afterElement) {
@@ -299,8 +291,7 @@ EOT3
             };
             
             // Sort sections.
-            SortableList.init({
-                listSelector: '.sort-example-7a',
+            SortableList.init('.sort-example-7a', {
                 moveHandlerSelector: '.draghandle-section',
                 elementNameCallback: sectionName
             });
@@ -311,8 +302,7 @@ EOT3
             });
             
             // Sort activities.
-            SortableList.init({
-                listSelector: '.sort-example-7b',
+            SortableList.init('.sort-example-7b', {
                 moveHandlerSelector: '.draghandle-activity',
                 destinationNameCallback: function(parentElement, afterElement) {
                     if (!afterElement.length) {
@@ -382,21 +372,10 @@ $moveto = html_writer::span($OUTPUT->pix_icon('t/add', get_string('add'), 'moodl
 
 $PAGE->requires->js_amd_inline(<<<EOT3
         require(['jquery', 'core/sortable_list', 'core/str'], function($, SortableList, str) {
-            SortableList.init({
-                listSelector: '.sort-example-8',
+            SortableList.init('.sort-example-8', {
+                targetListSelector: '.sort-example-8#selectto',
                 moveHandlerSelector: '.draghandle',
-                isHorizontal: function(list) {
-                    return (list.attr('id') === 'selectto');
-                },
-                destinationNameCallback: function (parent, afterElement) {
-                    if (parent.attr('id') === 'selectfrom') {
-                        return '';
-                    } else if (!afterElement.length) {
-                        return str.get_string('movecontenttothetop', 'moodle');
-                    } else {
-                        return str.get_string('movecontentafter', 'moodle', afterElement.text());
-                    }
-                }
+                isHorizontal: true
             });
             $('#selectto').on('click', '.moveback', function(evt) {
                 if (evt.which === 1) {
