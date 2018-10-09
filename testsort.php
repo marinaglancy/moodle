@@ -9,8 +9,7 @@ echo $OUTPUT->header();
 echo $OUTPUT->heading('Sortable list examples');
 $dragdrop = html_writer::span($OUTPUT->pix_icon('i/dragdrop', get_string('move'), 'moodle',
     array('class' => 'iconsmall', 'title' => 'Move')), 'draghandle',
-    ['tabindex' => 0, 'role' => 'button', 'aria-haspopup' => 'true', 'aria-title' => 'Move', 'data-drag-type' => 'move',
-        'style' => 'touch-action: none;']);
+    ['tabindex' => 0, 'role' => 'button', 'aria-haspopup' => 'true', 'aria-title' => 'Move', 'data-drag-type' => 'move']);
 ?>
 
     <div class="container">
@@ -374,25 +373,25 @@ EOT3
     <h2>Example 8. Drag elements from vertical list into horizontal list</h2>
 <?php
 $moveback = html_writer::span($OUTPUT->pix_icon('i/delete', get_string('delete'), 'moodle',
-    array('class' => 'iconsmall', 'title' => 'Remove')), 'moveback',
+    array('class' => 'iconsmall', 'title' => 'Remove')), 'quickmoveback',
     ['tabindex' => 0, 'role' => 'button', 'aria-title' => 'Delete']);
 $moveto = html_writer::span($OUTPUT->pix_icon('t/add', get_string('add'), 'moodle',
-    array('class' => 'iconsmall', 'title' => 'Add')), 'moveto',
+    array('class' => 'iconsmall', 'title' => 'Add')), 'quickmoveto',
     ['tabindex' => 0, 'role' => 'button', 'aria-title' => 'Add']);
 
 $PAGE->requires->js_amd_inline(<<<EOT3
         require(['jquery', 'core/sortable_list', 'core/str'], function($, SortableList, str) {
-            new SortableList('.sort-example-8', {
+            var s = new SortableList('.sort-example-8', {
                 targetListSelector: '.sort-example-8#selectto',
                 moveHandlerSelector: '.draghandle',
                 isHorizontal: true
             });
-            $('#selectto').on('click', '.moveback', function(evt) {
+            $('#selectto').on('click', '.quickmoveback', function(evt) {
                 if (evt.which === 1) {
                     $('#selectfrom').append($(evt.currentTarget).closest('li').detach());
                 }
             });
-            $('#selectfrom').on('click', '.moveto', function(evt) {
+            $('#selectfrom').on('click', '.quickmoveto', function(evt) {
                 if (evt.which === 1) {
                     $('#selectto').append($(evt.currentTarget).closest('li').detach());
                 }
@@ -408,9 +407,9 @@ EOT3
     <style type="text/css">
         .sort-example-8 li { padding: 3px; border: 1px solid #eee; min-width: 50px; }
         .sort-example-8 { background: #d6f8cd; width: 100%; min-height: 30px; }
-        .moveback, .moveto { cursor: pointer; }
-        #selectfrom .moveback { display: none; }
-        #selectto .moveto { display: none; }
+        .quickmoveback, .quickmoveto { cursor: pointer; }
+        #selectfrom .quickmoveback { display: none; }
+        #selectto .quickmoveto { display: none; }
     </style>
 
     <div class="container">
@@ -428,6 +427,7 @@ EOT3
                 </ul>
             </div>
             <div class="col-sm-9">
+                <br><br>
                 <ul class="sort-example-8 inline-list" id="selectto">
 
                 </ul>
