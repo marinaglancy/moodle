@@ -9,7 +9,8 @@ echo $OUTPUT->header();
 echo $OUTPUT->heading('Sortable list examples');
 $dragdrop = html_writer::span($OUTPUT->pix_icon('i/dragdrop', get_string('move'), 'moodle',
     array('class' => 'iconsmall', 'title' => 'Move')), 'draghandle',
-    ['tabindex' => 0, 'role' => 'button', 'aria-haspopup' => 'true', 'aria-title' => 'Move', 'data-drag-type' => 'move']);
+    ['tabindex' => 0, 'role' => 'button', 'aria-haspopup' => 'true', 'aria-title' => 'Move', 'data-drag-type' => 'move',
+        'style' => 'touch-action: none;']);
 ?>
 
     <div class="container">
@@ -21,8 +22,8 @@ $dragdrop = html_writer::span($OUTPUT->pix_icon('i/dragdrop', get_string('move')
             <?php
             $PAGE->requires->js_amd_inline(<<<EOT1
         require(['core/sortable_list'], function(SortableList) {
-            SortableList.init('.sort-example-1');
-            $('.sort-example-1 > li').on('sortablelist-drop', function(evt, info) {
+            new SortableList('.sort-example-1');
+            $('.sort-example-1 > li').on(SortableList.EVENTS.DROP, function(evt, info) {
                 console.log('Example 1 event ' + evt.type);
                 console.log(info);
             });
@@ -45,11 +46,11 @@ EOT1
             <h2>Example 2. With handles</h2>
             <?php
             $PAGE->requires->js_amd_inline(<<<EOT2
-        require(['core/sortable_list'], function(SortableList) {
-            SortableList.init('.sort-example-2 tbody', {
+        require(['jquery', 'core/sortable_list'], function($, SortableList) {
+            new SortableList($('.sort-example-2 tbody')[0], {
                 moveHandlerSelector: '.draghandle'
             });
-            $('.sort-example-2 tr').on('sortablelist-drop', function(evt, info) {
+            $('.sort-example-2 tr').on(SortableList.EVENTS.DROP, function(evt, info) {
                 console.log('Example 2 event ' + evt.type);
                 console.log(info);
             });
@@ -77,8 +78,8 @@ EOT2
             <?php
             $PAGE->requires->js_amd_inline(<<<EOT3
         require(['core/sortable_list'], function(SortableList) {
-            SortableList.init('.sort-example-3[data-sort-enabled=1]');
-            $('.sort-example-3 > li').on('sortablelist-drop', function(evt, info) {
+            new SortableList('.sort-example-3[data-sort-enabled=1]');
+            $('.sort-example-3 > li').on(SortableList.EVENTS.DROP, function(evt, info) {
                 console.log('Example 3 event ' + evt.type);
                 console.log(info);
             });
@@ -123,10 +124,10 @@ EOT3
             <?php
             $PAGE->requires->js_amd_inline(<<<EOT4
         require(['core/sortable_list'], function(SortableList) {
-            SortableList.init('.sort-example-4', {
+            new SortableList('.sort-example-4', {
                 currentPositionClass: 'current-position'
             });
-            $('.sort-example-4 > li').on('sortablelist-drop', function(evt, info) {
+            $('.sort-example-4 > li').on(SortableList.EVENTS.DROP, function(evt, info) {
                 info.element.addClass('temphighlight');
                 setTimeout(function() {
                     info.element.removeClass('temphighlight');
@@ -189,11 +190,11 @@ EOT4
     <?php
     $PAGE->requires->js_amd_inline(<<<EOT3
         require(['core/sortable_list'], function(SortableList) {
-            SortableList.init('.sort-example-5', {
+            new SortableList('.sort-example-5', {
                 isHorizontal: true,
                 moveHandlerSelector: '.draghandle'
             });
-            $('.sort-example-5 > li').on('sortablelist-drop', function(evt, info) {
+            $('.sort-example-5 > li').on(SortableList.EVENTS.DROP, function(evt, info) {
                 console.log('Example 5 event ' + evt.type);
                 console.log(info);
             });
@@ -217,27 +218,33 @@ EOT3
         <h2>Example 6. Hirarchy</h2>
         <?php
         $PAGE->requires->js_amd_inline(<<<EOT3
-        require(['core/sortable_list', 'core/str'], function(SortableList, str) {
+        require(['jquery', 'core/sortable_list', 'core/str'], function($, SortableList, str) {
             var elementName = function(element) {
                 var name = element.attr('data-destination-name');
-                return name ? name : element.text();
+                return $.Deferred().resolve(name ? name : element.text());
             };
-            SortableList.init('.sort-example-6 ul', {
-                moveHandlerSelector: '.draghandle',
-                elementNameCallback: elementName,
-                destinationNameCallback: function(parentElement, afterElement) {
-                    if (!afterElement.length) {
-                        if (parentElement.attr('data-is-root')) {
-                            return 'To the very top'; // In real life use strings here!
-                        } else {
-                            return str.get_string('totopofsection', 'moodle', elementName(parentElement.parent()));
-                        }
-                    } else {
-                        return str.get_string('movecontentafter', 'moodle', elementName(afterElement));
-                    }
-                }
+            var sort = new SortableList('.sort-example-6 ul', {
+                moveHandlerSelector: '.draghandle'
             });
-            $('.sort-example-6 ul > *').on('sortablelist-drop', function(evt, info) {
+
+            sort.getElementName = elementName;
+            sort.getDestinationName = function(parentElement, afterElement) {
+                if (!afterElement.length) {
+                    if (parentElement.attr('data-is-root')) {
+                        return $.Deferred().resolve('To the very top'); // In real life use strings here!
+                    } else {
+                        return elementName(parentElement.parent()).then(function(txt) {
+                            return str.get_string('totopofsection', 'moodle', txt);
+                        });
+                    }
+                } else {
+                    return elementName(afterElement).then(function(txt) {
+                        return str.get_string('movecontentafter', 'moodle', txt);
+                    });
+                }
+            };
+
+            $('.sort-example-6 ul > *').on(SortableList.EVENTS.DROP, function(evt, info) {
                 console.log('Example 6 event ' + evt.type);
                 console.log(info);
                 evt.stopPropagation(); // Important for nested lists to prevent multiple targets.
@@ -287,31 +294,34 @@ EOT3
         $PAGE->requires->js_amd_inline(<<<EOT3
         require(['core/sortable_list', 'core/str'], function(SortableList, str) {
             var sectionName = function(element) {
-                return element.attr('data-sectionname');
+                return $.Deferred().resolve(element.attr('data-sectionname'));
             };
             
             // Sort sections.
-            SortableList.init('.sort-example-7a', {
-                moveHandlerSelector: '.draghandle-section',
-                elementNameCallback: sectionName
+            var sortSections = new SortableList('.sort-example-7a', {
+                moveHandlerSelector: '.draghandle-section'
             });
+            sortSections.getElementName = sectionName;
             $('.sort-example-7a > *').on('sortablelist-drop sortablelist-dragstart sortablelist-drag sortablelist-dragend', function(evt, info) {
                 console.log('Example 7 section event ' + evt.type);
                 console.log(info);
                 evt.stopPropagation(); // Important for nested lists to prevent multiple targets.
             });
-            
+
             // Sort activities.
-            SortableList.init('.sort-example-7b', {
-                moveHandlerSelector: '.draghandle-activity',
-                destinationNameCallback: function(parentElement, afterElement) {
-                    if (!afterElement.length) {
-                        return str.get_string('totopofsection', 'moodle', sectionName(parentElement.parent()));
-                    } else {
-                        return str.get_string('afterresource', 'moodle', afterElement.text());
-                    }
-                }
+            var sortActivities = new SortableList('.sort-example-7b', {
+                moveHandlerSelector: '.draghandle-activity'
             });
+            sortActivities.getDestinationName = function(parentElement, afterElement) {
+                if (!afterElement.length) {
+                    return sectionName(parentElement.parent()).then(function (txt) {
+                        return str.get_string('totopofsection', 'moodle', txt);
+                    });
+                } else {
+                    return str.get_string('afterresource', 'moodle', afterElement.text());
+                }
+            };
+
             $('.sort-example-7b > *').on('sortablelist-drop sortablelist-dragstart sortablelist-drag sortablelist-dragend', function(evt, info) {
                 console.log('Example 7 activity event ' + evt.type);
                 console.log(info);
@@ -372,7 +382,7 @@ $moveto = html_writer::span($OUTPUT->pix_icon('t/add', get_string('add'), 'moodl
 
 $PAGE->requires->js_amd_inline(<<<EOT3
         require(['jquery', 'core/sortable_list', 'core/str'], function($, SortableList, str) {
-            SortableList.init('.sort-example-8', {
+            new SortableList('.sort-example-8', {
                 targetListSelector: '.sort-example-8#selectto',
                 moveHandlerSelector: '.draghandle',
                 isHorizontal: true
@@ -387,7 +397,7 @@ $PAGE->requires->js_amd_inline(<<<EOT3
                     $('#selectto').append($(evt.currentTarget).closest('li').detach());
                 }
             });
-            $('.sort-example-8 > li').on('sortablelist-drop', function(evt, info) {
+            $('.sort-example-8 > li').on(SortableList.EVENTS.DROP, function(evt, info) {
                 console.log('Example 8 event ' + evt.type);
                 console.log(info);
             });
