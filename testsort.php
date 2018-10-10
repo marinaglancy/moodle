@@ -8,8 +8,9 @@ $PAGE->set_pagelayout('admin');
 echo $OUTPUT->header();
 echo $OUTPUT->heading('Sortable list examples');
 $dragdrop = html_writer::span($OUTPUT->pix_icon('i/dragdrop', get_string('move'), 'moodle',
-    array('class' => 'iconsmall', 'title' => 'Move')), 'draghandle',
-    ['tabindex' => 0, 'role' => 'button', 'aria-haspopup' => 'true', 'aria-title' => 'Move', 'data-drag-type' => 'move']);
+    array('class' => 'iconsmall')), '',
+    ['tabindex' => 0, 'role' => 'button', 'aria-haspopup' => 'true', 'data-drag-type' => 'move']);
+$dragdrop = $OUTPUT->render_from_template('core/drag_handle', ['movetitle' => get_string('move')]);
 ?>
 
     <div class="container">
@@ -21,7 +22,7 @@ $dragdrop = html_writer::span($OUTPUT->pix_icon('i/dragdrop', get_string('move')
             <?php
             $PAGE->requires->js_amd_inline(<<<EOT1
         require(['core/sortable_list'], function(SortableList) {
-            new SortableList('.sort-example-1');
+            new SortableList('.sort-example-1', {moveHandlerSelector: null});
             $('.sort-example-1 > li').on(SortableList.EVENTS.DROP, function(evt, info) {
                 console.log('Example 1 event ' + evt.type);
                 console.log(info);
@@ -46,9 +47,7 @@ EOT1
             <?php
             $PAGE->requires->js_amd_inline(<<<EOT2
         require(['jquery', 'core/sortable_list'], function($, SortableList) {
-            new SortableList($('.sort-example-2 tbody')[0], {
-                moveHandlerSelector: '.draghandle'
-            });
+            new SortableList($('.sort-example-2 tbody')[0]);
             $('.sort-example-2 tr').on(SortableList.EVENTS.DROP, function(evt, info) {
                 console.log('Example 2 event ' + evt.type);
                 console.log(info);
@@ -77,7 +76,7 @@ EOT2
             <?php
             $PAGE->requires->js_amd_inline(<<<EOT3
         require(['core/sortable_list'], function(SortableList) {
-            new SortableList('.sort-example-3[data-sort-enabled=1]');
+            new SortableList('.sort-example-3[data-sort-enabled=1]', {moveHandlerSelector: null});
             $('.sort-example-3 > li').on(SortableList.EVENTS.DROP, function(evt, info) {
                 console.log('Example 3 event ' + evt.type);
                 console.log(info);
@@ -124,7 +123,8 @@ EOT3
             $PAGE->requires->js_amd_inline(<<<EOT4
         require(['core/sortable_list'], function(SortableList) {
             new SortableList('.sort-example-4', {
-                currentPositionClass: 'current-position'
+                currentPositionClass: 'current-position',
+                moveHandlerSelector: null
             });
             $('.sort-example-4 > li').on(SortableList.EVENTS.DROP, function(evt, info) {
                 info.element.addClass('temphighlight');
@@ -189,10 +189,7 @@ EOT4
     <?php
     $PAGE->requires->js_amd_inline(<<<EOT3
         require(['core/sortable_list'], function(SortableList) {
-            new SortableList('.sort-example-5', {
-                isHorizontal: true,
-                moveHandlerSelector: '.draghandle'
-            });
+            new SortableList('.sort-example-5', {isHorizontal: true});
             $('.sort-example-5 > li').on(SortableList.EVENTS.DROP, function(evt, info) {
                 console.log('Example 5 event ' + evt.type);
                 console.log(info);
@@ -222,9 +219,7 @@ EOT3
                 var name = element.attr('data-destination-name');
                 return $.Deferred().resolve(name ? name : element.text());
             };
-            var sort = new SortableList('.sort-example-6 ul', {
-                moveHandlerSelector: '.draghandle'
-            });
+            var sort = new SortableList('.sort-example-6 ul');
 
             sort.getElementName = elementName;
             sort.getDestinationName = function(parentElement, afterElement) {
@@ -284,12 +279,6 @@ EOT3
         <!-- =========================================== Example 7 Embedded lists (examples of callbacks) ============================================ -->
         <h2>Example 7. Embedded lists (examples of callbacks) </h2>
         <?php
-        $dragdrop1 = html_writer::span($OUTPUT->pix_icon('i/dragdrop', get_string('move'), 'moodle',
-            array('class' => 'iconsmall', 'title' => 'Move')), 'draghandle-section',
-            ['tabindex' => 0, 'role' => 'button', 'aria-haspopup' => 'true', 'aria-title' => 'Move', 'data-drag-type' => 'move']);
-        $dragdrop2 = html_writer::span($OUTPUT->pix_icon('i/dragdrop', get_string('move'), 'moodle',
-            array('class' => 'iconsmall', 'title' => 'Move')), 'draghandle-activity',
-            ['tabindex' => 0, 'role' => 'button', 'aria-haspopup' => 'true', 'aria-title' => 'Move', 'data-drag-type' => 'move']);
         $PAGE->requires->js_amd_inline(<<<EOT3
         require(['core/sortable_list', 'core/str'], function(SortableList, str) {
             var sectionName = function(element) {
@@ -297,9 +286,7 @@ EOT3
             };
             
             // Sort sections.
-            var sortSections = new SortableList('.sort-example-7a', {
-                moveHandlerSelector: '.draghandle-section'
-            });
+            var sortSections = new SortableList('.sort-example-7a');
             sortSections.getElementName = sectionName;
             $('.sort-example-7a > *').on('sortablelist-drop sortablelist-dragstart sortablelist-drag sortablelist-dragend', function(evt, info) {
                 console.log('Example 7 section event ' + evt.type);
@@ -308,9 +295,7 @@ EOT3
             });
 
             // Sort activities.
-            var sortActivities = new SortableList('.sort-example-7b', {
-                moveHandlerSelector: '.draghandle-activity'
-            });
+            var sortActivities = new SortableList('.sort-example-7b');
             sortActivities.getDestinationName = function(parentElement, afterElement) {
                 if (!afterElement.length) {
                     return sectionName(parentElement.parent()).then(function (txt) {
@@ -344,25 +329,25 @@ EOT3
         <div>
             <ul class="sort-example-7a">
                 <li data-sectionname="Section A">
-                    <h3><?=$dragdrop1?> Section A</h3>
+                    <h3><?=$dragdrop?> Section A</h3>
                     <ul class="sort-example-7b">
 
                     </ul>
                 </li>
                 <li data-sectionname="Section B">
-                    <h3><?=$dragdrop1?> Section B</h3>
+                    <h3><?=$dragdrop?> Section B</h3>
                     <ul class="sort-example-7b">
-                        <li><?=$dragdrop2?> Item B-1</li>
-                        <li><?=$dragdrop2?> Item B-2</li>
-                        <li><?=$dragdrop2?> Item B-3</li>
+                        <li><?=$dragdrop?> Item B-1</li>
+                        <li><?=$dragdrop?> Item B-2</li>
+                        <li><?=$dragdrop?> Item B-3</li>
                     </ul>
                 </li>
                 <li data-sectionname="Section C">
-                    <h3><?=$dragdrop1?> Section C</h3>
+                    <h3><?=$dragdrop?> Section C</h3>
                     <ul class="sort-example-7b">
-                        <li><?=$dragdrop2?> Item C-1</li>
-                        <li><?=$dragdrop2?> Item C-2</li>
-                        <li><?=$dragdrop2?> Item C-3</li>
+                        <li><?=$dragdrop?> Item C-1</li>
+                        <li><?=$dragdrop?> Item C-2</li>
+                        <li><?=$dragdrop?> Item C-3</li>
                     </ul>
                 </li>
             </ul>
@@ -383,7 +368,6 @@ $PAGE->requires->js_amd_inline(<<<EOT3
         require(['jquery', 'core/sortable_list', 'core/str'], function($, SortableList, str) {
             var s = new SortableList('.sort-example-8', {
                 targetListSelector: '.sort-example-8#selectto',
-                moveHandlerSelector: '.draghandle',
                 isHorizontal: true
             });
             $('#selectto').on('click', '.quickmoveback', function(evt) {
