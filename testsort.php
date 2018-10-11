@@ -120,7 +120,6 @@ EOT3
             $PAGE->requires->js_amd_inline(<<<EOT4
         require(['core/sortable_list'], function(SortableList) {
             new SortableList('.sort-example-4', {
-                currentPositionClass: 'current-position',
                 moveHandlerSelector: null
             });
             $('.sort-example-4 > li').on(SortableList.EVENTS.DROP, function(evt, info) {
@@ -137,7 +136,7 @@ EOT4
             ?>
             <style type="text/css">
                 .sort-example-4 li { padding: 3px; border: 1px solid #eee; }
-                .sort-example-4 li.current-position { opacity: 0.5; }
+                .sort-example-4 li.sortable-list-current-position { opacity: 0.5; }
                 .temphighlight {
                     -webkit-animation: target-fade 1s;
                     -moz-animation: target-fade 1s;
@@ -283,7 +282,10 @@ EOT3
             };
             
             // Sort sections.
-            var sortSections = new SortableList('.sort-example-7a');
+            var sortSections = new SortableList('.sort-example-7a', {
+                // We need a specific handler here because otherwise the handler from embedded activities triggers section move.
+                moveHandlerSelector: '.sort-example-7a > li > h3 > [data-drag-type=move]'
+            });
             sortSections.getElementName = sectionName;
             $('.sort-example-7a > *').on('sortablelist-drop sortablelist-dragstart sortablelist-drag sortablelist-dragend', function(evt, info) {
                 console.log('Example 7 section event ' + evt.type);
@@ -348,71 +350,6 @@ EOT3
                     </ul>
                 </li>
             </ul>
-        </div>
-    </div>
-
-    <!-- =========================================== Example 8 vertical and horizontal ============================================ -->
-    <h2>Example 8. Drag elements from vertical list into horizontal list</h2>
-<?php
-$moveback = html_writer::span($OUTPUT->pix_icon('i/delete', get_string('delete'), 'moodle',
-    array('class' => 'iconsmall', 'title' => 'Remove')), 'quickmoveback',
-    ['tabindex' => 0, 'role' => 'button', 'aria-title' => 'Delete']);
-$moveto = html_writer::span($OUTPUT->pix_icon('t/add', get_string('add'), 'moodle',
-    array('class' => 'iconsmall', 'title' => 'Add')), 'quickmoveto',
-    ['tabindex' => 0, 'role' => 'button', 'aria-title' => 'Add']);
-
-$PAGE->requires->js_amd_inline(<<<EOT3
-        require(['jquery', 'core/sortable_list', 'core/str'], function($, SortableList, str) {
-            var s = new SortableList('.sort-example-8', {
-                targetListSelector: '.sort-example-8#selectto',
-                isHorizontal: true
-            });
-            $('#selectto').on('click', '.quickmoveback', function(evt) {
-                if (evt.which === 1) {
-                    $('#selectfrom').append($(evt.currentTarget).closest('li').detach());
-                }
-            });
-            $('#selectfrom').on('click', '.quickmoveto', function(evt) {
-                if (evt.which === 1) {
-                    $('#selectto').append($(evt.currentTarget).closest('li').detach());
-                }
-            });
-            $('.sort-example-8 > li').on(SortableList.EVENTS.DROP, function(evt, info) {
-                console.log('Example 8 event ' + evt.type);
-                console.log(info);
-            });
-        })
-EOT3
-);
-?>
-    <style type="text/css">
-        .sort-example-8 li { padding: 3px; border: 1px solid #eee; min-width: 50px; }
-        .sort-example-8 { background: #d6f8cd; width: 100%; min-height: 30px; }
-        .quickmoveback, .quickmoveto { cursor: pointer; }
-        #selectfrom .quickmoveback { display: none; }
-        #selectto .quickmoveto { display: none; }
-    </style>
-
-    <div class="container">
-        <div class="row">
-            <div class="col-sm-3">
-                <ul class="sort-example-8 unlist" id="selectfrom">
-                    <li><?=$dragdrop?> Apple <?=$moveback?> <?=$moveto?></li>
-                    <li><?=$dragdrop?> Orange <?=$moveback?> <?=$moveto?></li>
-                    <li><?=$dragdrop?> Banana <a href="#">link</a> <?=$moveback?> <?=$moveto?></li>
-                    <li><?=$dragdrop?> Strawberry <?=$moveback?> <?=$moveto?></li>
-                    <li><?=$dragdrop?> Blueberry <?=$moveback?> <?=$moveto?></li>
-                    <li><?=$dragdrop?> Peach <?=$moveback?> <?=$moveto?></li>
-                    <li><?=$dragdrop?> Lemon <?=$moveback?> <?=$moveto?></li>
-
-                </ul>
-            </div>
-            <div class="col-sm-9">
-                <br><br>
-                <ul class="sort-example-8 inline-list" id="selectto">
-
-                </ul>
-            </div>
         </div>
     </div>
 
