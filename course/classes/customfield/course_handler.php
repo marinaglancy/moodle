@@ -106,7 +106,7 @@ class course_handler extends \core_customfield\handler {
      * @param int $instanceid id of the course to test edit permission
      * @return bool true if the current can edit custom fields, false otherwise
      */
-    public function can_view(field_controller $field, int $instanceid): bool {
+    public function can_view(field_controller $field, int $instanceid) : bool {
         $visibility = $field->get_configdata_property('visibility');
         if ($visibility == self::NOTVISIBLE) {
             return false;
@@ -148,7 +148,7 @@ class course_handler extends \core_customfield\handler {
      *
      * @return \context the context for configuration
      */
-    public function get_configuration_context(): \context {
+    public function get_configuration_context() : \context {
         return \context_system::instance();
     }
 
@@ -157,7 +157,7 @@ class course_handler extends \core_customfield\handler {
      *
      * @return \moodle_url The URL to configure custom fields for this component
      */
-    public function get_configuration_url(): \moodle_url {
+    public function get_configuration_url() : \moodle_url {
         return new \moodle_url('/course/customfield.php');
     }
 
@@ -167,7 +167,7 @@ class course_handler extends \core_customfield\handler {
      * @param int $instanceid id of the record to get the context for
      * @return \context the context for the given record
      */
-    public function get_instance_context(int $instanceid = 0): \context {
+    public function get_instance_context(int $instanceid = 0) : \context {
         if ($instanceid > 0) {
             return \context_course::instance($instanceid);
         } else {
@@ -232,7 +232,7 @@ class course_handler extends \core_customfield\handler {
      * @param field_controller $field
      * @return string page heading
      */
-    public function setup_edit_page(field_controller $field): string {
+    public function setup_edit_page(field_controller $field) : string {
         global $CFG, $PAGE;
         require_once($CFG->libdir.'/adminlib.php');
 
