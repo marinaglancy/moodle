@@ -441,6 +441,8 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
         $newcategory->timemodified = time();
 
         $newcategory->id = $DB->insert_record('course_categories', $newcategory);
+        $data->id = $newcategory->id;
+        \core_course\customfield\coursecat_handler::create()->instance_form_save($data, true);
 
         // Update path (only possible after we know the category id.
         $path = $parent->path . '/' . $newcategory->id;
@@ -562,6 +564,8 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
                                                            'coursecat', 'description', 0);
         }
         $DB->update_record('course_categories', $newcategory);
+        $data->id = $this->id;
+        \core_course\customfield\coursecat_handler::create()->instance_form_save($data, false);
 
         $event = \core\event\course_category_updated::create(array(
             'objectid' => $newcategory->id,
@@ -1844,6 +1848,9 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
         // Delete all events in the category.
         $DB->delete_records('event', array('categoryid' => $this->id));
 
+        // Delete custom fields data.
+        \core_course\customfield\coursecat_handler::create()->delete_instance($this->id);
+
         // Finally delete the category and it's context.
         $DB->delete_records('course_categories', array('id' => $this->id));
 
@@ -2881,5 +2888,15 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
             return false;
         }
         return true;
+    }
+
+    /**
+     * Returns custom fields
+     *
+     * @return \core_customfield\data_controller[]
+     */
+    public function get_custom_fields(bool $returnall = false) : array {
+        $handler = \core_course\customfield\coursecat_handler::create();
+        return $handler->get_instance_data($this->id, $returnall);
     }
 }

@@ -1624,10 +1624,13 @@ class core_course_renderer extends plugin_renderer_base {
             }
         }
 
-        // Print current category description
+        // Print current category description and custom fields.
         $chelper = new coursecat_helper();
-        if ($description = $chelper->get_category_formatted_description($coursecat)) {
-            $output .= $this->box($description, array('class' => 'generalbox info'));
+        $description = $chelper->get_category_formatted_description($coursecat);
+        $handler = \core_course\customfield\coursecat_handler::create();
+        $customfields = $handler->display_custom_fields_data($coursecat->get_custom_fields());
+        if ($description || $customfields) {
+            $output .= $this->box($description . $customfields, array('class' => 'generalbox info'));
         }
 
         // Prepare parameters for courses and categories lists in the tree

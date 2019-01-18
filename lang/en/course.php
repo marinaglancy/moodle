@@ -35,6 +35,7 @@ $string['customfield_visibility_help'] = 'Who should be able able to see the dat
 $string['customfield_visibletoall'] = 'Everyone';
 $string['customfield_visibletoteachers'] = 'Course editors';
 $string['customfieldsettings'] = 'Settings for course custom fields';
+$string['customfieldsettingscat'] = 'Settings for category custom fields';
 $string['favourite'] = 'Starred course';
 $string['privacy:perpage'] = 'The number of courses to show per page.';
 $string['privacy:completionpath'] = 'Course completion';

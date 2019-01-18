@@ -392,6 +392,7 @@ $string['cookiehttponly'] = 'Only http cookies';
 $string['cookiesecure'] = 'Secure cookies only';
 $string['country'] = 'Default country';
 $string['course_customfield'] = 'Course custom fields';
+$string['coursecat_customfield'] = 'Category custom fields';
 $string['coursecontact'] = 'Course contacts';
 $string['coursecontact_desc'] = 'This setting allows you to control who appears on the course description. Users need to have at least one of these roles in a course to be shown on the course description for that course.';
 $string['coursecontactduplicates'] = 'Display all course contact roles';
