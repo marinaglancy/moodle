@@ -125,7 +125,7 @@ $options->maxmark = $quba->get_question_max_mark($slot);
 
 // Create the settings form, and initialise the fields.
 $optionsform = new preview_options_form(question_preview_form_url($question->id, $context, $previewid),
-        array('quba' => $quba, 'maxvariant' => $maxvariant));
+        array('quba' => $quba, 'maxvariant' => $maxvariant), 'post', '', ['id' => 'previewoptionsform']);
 $optionsform->set_data($options);
 
 // Process change of settings, if that was requested.
@@ -287,6 +287,7 @@ $PAGE->requires->js_module('core_question_engine');
 $PAGE->requires->strings_for_js(array(
     'closepreview',
 ), 'question');
-$PAGE->requires->yui_module('moodle-question-preview', 'M.question.preview.init');
+$PAGE->requires->yui_module('moodle-question-preview', 'M.question.preview.init',
+    ['#previesoptionsform']);
 echo $OUTPUT->footer();
 

@@ -30,7 +30,7 @@ M.question.preview = M.question.preview || {};
 /*
  * Initialise JavaScript-specific parts of the question preview popup.
  */
-M.question.preview.init = function() {
+M.question.preview.init = function(form) {
     M.core_question_engine.init_form(Y, '#responseform');
 
     // Add a close button to the window.
@@ -43,5 +43,5 @@ M.question.preview.init = function() {
     Y.one('#previewcontrols').append(closebutton);
 
     // Stop a question form being submitted more than once.
-    Y.on('submit', M.core_question_engine.prevent_repeat_submission, '#mform1', null, Y);
+    Y.on('submit', M.core_question_engine.prevent_repeat_submission, form, null, Y);
 };
