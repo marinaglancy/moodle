@@ -656,6 +656,13 @@ $functions = array(
         'loginrequired' => false,
         'ajax' => true,
     ),
+    'core_form_modal' => array(
+        'classname' => 'core_form\external',
+        'methodname' => 'modal',
+        'description' => 'Process submission of a modal form',
+        'type' => 'write',
+        'ajax' => true,
+    ),
     'core_get_component_strings' => array(
         'classname' => 'core_external',
         'methodname' => 'get_component_strings',
