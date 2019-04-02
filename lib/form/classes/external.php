@@ -48,7 +48,7 @@ class external extends external_api {
     /**
      * Describes the input paramaters of the get_filetypes_browser_data external function.
      *
-     * @return external_description
+     * @return external_function_parameters
      */
     public static function get_filetypes_browser_data_parameters() {
         return new external_function_parameters([
@@ -65,7 +65,7 @@ class external extends external_api {
      * @param string $onlytypes Allow selection from these file types only; for example 'web_image'.
      * @param bool $allowall Allow to select 'All file types'. Does not apply if onlytypes is set.
      * @param string $current Current values that should be selected.
-     * @return object
+     * @return array
      */
     public static function get_filetypes_browser_data($onlytypes, $allowall, $current) {
 
@@ -80,7 +80,7 @@ class external extends external_api {
     /**
      * Describes the output of the get_filetypes_browser_data external function.
      *
-     * @return external_description
+     * @return external_single_structure
      */
     public static function get_filetypes_browser_data_returns() {
 
@@ -104,5 +104,75 @@ class external extends external_api {
         return new external_single_structure([
             'groups' => new external_multiple_structure($group, 'List of file type groups'),
         ]);
+    }
+
+    /**
+     * Parameters for modal form
+     *
+     * @return external_function_parameters
+     */
+    public static function modal_parameters(): external_function_parameters {
+        return new external_function_parameters([
+            'form' => new external_value(PARAM_RAW_TRIMMED, 'Form class', VALUE_REQUIRED),
+            'formdata' => new external_value(PARAM_RAW, 'url-encoded form data', VALUE_REQUIRED),
+        ]);
+    }
+
+    /**
+     * Submit a form from a modal dialogue.
+     *
+     * @param string $formclass
+     * @param string $formdatastr
+     * @return array
+     * @throws \moodle_exception
+     */
+    public static function modal(string $formclass, string $formdatastr): array {
+        global $PAGE, $OUTPUT;
+
+        $params = self::validate_parameters(self::modal_parameters(), [
+            'form' => $formclass,
+            'formdata' => $formdatastr,
+        ]);
+        $formclass = $params['form'];
+        parse_str($params['formdata'], $formdata);
+
+        if (!class_exists($formclass) || !is_subclass_of($formclass, \core_form\modal::class)) {
+            // For security reason we don't throw exception "class does not exist" but rather an access exception.
+            throw new \moodle_exception('nopermissionform', 'core_form');
+        }
+
+        /** @var \core_form\modal $form */
+        $form = new $formclass(null, null, 'post', '', null, true, $formdata, true);
+        $form->set_data_for_ajax_submission();
+        if (!$form->is_cancelled() && $form->is_submitted() && $form->is_validated()) {
+            // Form was properly submitted, process and return results of processing. No need to render it again.
+            return ['submitted' => true, 'data' => json_encode($form->process_ajax_submission())];
+        }
+
+        // Render actual form.
+
+        // Hack alert: Forcing bootstrap_renderer to initiate moodle page.
+        $OUTPUT->header();
+
+        $PAGE->start_collecting_javascript_requirements();
+        $data = $form->render();
+        $jsfooter = $PAGE->requires->get_end_code();
+        $output = ['submitted' => false, 'html' => $data, 'javascript' => $jsfooter];
+        return $output;
+    }
+
+    /**
+     * Return for modal
+     * @return external_single_structure
+     */
+    public static function modal_returns() {
+        return new external_single_structure(
+            array(
+                'submitted' => new external_value(PARAM_BOOL, 'If form was submitted and validated'),
+                'data' => new external_value(PARAM_RAW, 'JSON-encoded return data from form processing method', VALUE_OPTIONAL),
+                'html' => new external_value(PARAM_RAW, 'HTML fragment of the form', VALUE_OPTIONAL),
+                'javascript' => new external_value(PARAM_RAW, 'JavaScript fragment of the form', VALUE_OPTIONAL)
+            )
+        );
     }
 }
