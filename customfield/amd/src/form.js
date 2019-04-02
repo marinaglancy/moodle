@@ -21,8 +21,8 @@
  * @copyright  2018 Toni Barbera
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-define(['jquery', 'core/str', 'core/notification', 'core/ajax', 'core/templates', 'core/sortable_list'], function(
-        $, Str, Notification, Ajax, Templates, SortableList) {
+define(['jquery', 'core/str', 'core/notification', 'core/ajax', 'core/templates', 'core/sortable_list',
+    'core_form/modal'], function($, Str, Notification, Ajax, Templates, SortableList, ModalForm) {
 
     /**
      * Display confirmation dialogue
@@ -83,6 +83,40 @@ define(['jquery', 'core/str', 'core/notification', 'core/ajax', 'core/templates'
         }).fail(Notification.exception);
     };
 
+    /**
+     * Create new custom field
+     *
+     * @param {jQuery} element
+     */
+    var createNewField = function(element) {
+        var modal = new ModalForm({
+            formClass: 'core_customfield\\field_config_form',
+            args: {categoryid: element.data('categoryid'), type: element.data('type')},
+            modalConfig: {title: Str.get_string('addingnewcustomfield', 'core_customfield', element.data('typename'))},
+            triggerElement: element
+        });
+        modal.onSubmitSuccess = function() {
+            window.location.reload();
+        };
+    };
+
+    /**
+     * Edit custom field
+     *
+     * @param {jQuery} element
+     */
+    var editField = function(element) {
+        var modal = new ModalForm({
+            formClass: 'core_customfield\\field_config_form',
+            args: {id: element.data('id')},
+            modalConfig: {title: Str.get_string('editingfield', 'core_customfield', element.data('name'))},
+            triggerElement: element
+        });
+        modal.onSubmitSuccess = function() {
+            window.location.reload();
+        };
+    };
+
     return {
         /**
          * Initialise the custom fields manager
@@ -102,6 +136,14 @@ define(['jquery', 'core/str', 'core/notification', 'core/ajax', 'core/templates'
             });
             $('[data-role=addnewcategory]').on('click', function() {
                 createNewCategory(component, area, itemid);
+            });
+            $('[data-role=addfield]').on('click', function(e) {
+                createNewField($(e.currentTarget));
+                e.preventDefault();
+            });
+            $('[data-role=editfield]').on('click', function(e) {
+                editField($(e.currentTarget));
+                e.preventDefault();
             });
 
             var categoryName = function(element) {

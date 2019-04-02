@@ -42,7 +42,7 @@ Feature: Default value for the textarea custom field can contain images
     And I click on "Select this file" "button"
     And I set the field "Describe this image for someone who cannot see it" to "Example"
     And I click on "Save image" "button"
-    And I press "Save changes"
+    And I click on "Save changes" "button" in the "Adding a new Text area" "dialogue"
     And I log out
 
   Scenario: For the courses that existed before the custom field was created the default value is displayed
