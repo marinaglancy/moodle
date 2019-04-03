@@ -2382,6 +2382,10 @@ require(["core/event", "jquery"], function(Event, $) {
     document.getElementById(\'' . $elem->_attributes['id'] . '\').addEventListener(\'change\', function(ev) {
         ' . $valFunc . '
     });
+    var form = $(document.getElementById(\'' . $elem->_attributes['id'] . '\')).closest(\'form\');
+    form.on(M.core.event.FORM_SUBMIT_AJAX, function() {
+    var ev = { target: document.getElementById(\''. $elem->_attributes['id'] . '\') };
+    ' . $valFunc . ' });
 ';
                 }
             }
