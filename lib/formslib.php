@@ -2382,10 +2382,6 @@ require(["core/event", "jquery"], function(Event, $) {
     document.getElementById(\'' . $elem->_attributes['id'] . '\').addEventListener(\'change\', function(ev) {
         ' . $valFunc . '
     });
-    var form = $(document.getElementById(\'' . $elem->_attributes['id'] . '\')).closest(\'form\');
-    form.on(M.core.event.FORM_SUBMIT_AJAX, function() {
-    var ev = { target: document.getElementById(\''. $elem->_attributes['id'] . '\') };
-    ' . $valFunc . ' });
 ';
                 }
             }
@@ -2425,6 +2421,13 @@ require(["core/event", "jquery"], function(Event, $) {
       return ret;
     }
 
+    var form = $(document.getElementById(\'' . $elem->_attributes['id'] . '\')).closest(\'form\');
+    form.on(M.core.event.FORM_SUBMIT_AJAX, function() {
+        var myValidator = validate_' . $this->_formName . ';
+        if (myValidator) {
+            myValidator();
+        }
+    });
 
     document.getElementById(\'' . $this->_attributes['id'] . '\').addEventListener(\'submit\', function(ev) {
         try {
