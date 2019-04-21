@@ -45,6 +45,7 @@ $string['couldnotresolvecatgorybypath'] = 'Could not resolve category by path';
 $string['coursecreated'] = 'Course created';
 $string['coursedeleted'] = 'Course deleted';
 $string['coursedeletionnotallowed'] = 'Course deletion is not allowed';
+$string['courseuploadnotallowed'] = 'No permission to upload this course in category: {$a->name}';
 $string['coursedoesnotexistandcreatenotallowed'] = 'The course does not exist and creating course is not allowed';
 $string['courseexistsanduploadnotallowed'] = 'The course exists and update is not allowed';
 $string['coursefile'] = 'File';

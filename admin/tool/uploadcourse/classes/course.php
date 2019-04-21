@@ -479,6 +479,13 @@ class tool_uploadcourse_course {
             return false;
         }
 
+        // Validate the permission on category-context.
+        if (isset($catid) && !has_capability('moodle/course:upload', context_coursecat::instance($catid))) {
+            $catname = $DB->get_record('course_categories', array('id' => $catid), 'name');
+            $this->error('courseuploadnotallowed', new lang_string('courseuploadnotallowed', 'tool_uploadcourse', $catname));
+            return false;
+        }
+
         // If the course does not exist, or will be forced created.
         if (!$exists || $mode === tool_uploadcourse_processor::MODE_CREATE_ALL) {
 
