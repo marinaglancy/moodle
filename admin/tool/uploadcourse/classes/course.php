@@ -501,6 +501,13 @@ class tool_uploadcourse_course {
             return false;
         }
 
+        // Validate the permission on category-context.
+        if (isset($catid) && !has_capability('moodle/course:upload', context_coursecat::instance($catid))) {
+            $catname = $DB->get_record('course_categories', array('id' => $catid), 'name');
+            $this->error('courseuploadnotallowed', new lang_string('courseuploadnotallowed', 'tool_uploadcourse', $catname));
+            return false;
+        }
+
         // Ensure we don't overflow the maximum length of the fullname field.
         if (!empty($coursedata['fullname']) && core_text::strlen($coursedata['fullname']) > 254) {
             $this->error('invalidfullnametoolong', new lang_string('invalidfullnametoolong', 'tool_uploadcourse', 254));
