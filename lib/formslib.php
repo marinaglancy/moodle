@@ -2431,6 +2431,9 @@ require(["core/event", "jquery"], function(Event, $) {
                     return sprintf("_%2x", ord($matches[0]));
                 },
                 $elementName);
+            if (is_object($element) && ($element instanceof HTML_QuickForm_element) && $element->getAttribute('id')) {
+                $escapedElementName = preg_replace('/^id_/', '', $element->getAttribute('id'));
+            }
             $valFunc = 'validate_' . $this->_formName . '_' . $escapedElementName . '(ev.target, \''.$escapedElementName.'\')';
 
             if (!is_array($element)) {
