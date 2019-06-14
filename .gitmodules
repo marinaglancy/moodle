@@ -1,0 +1,84 @@
+[submodule "tool_dynamicrule"]
+    path = admin/tool/dynamicrule
+    url = git@git.in.moodle.com:workplace/moodle-tool_dynamicrule.git
+    branch = WORKPLACE_ROLLING_404
+[submodule "tool_certificate"]
+    path = admin/tool/certificate
+    url = git@git.in.moodle.com:workplace/moodle-tool_certificate.git
+    branch = MOODLE_400_STABLE
+[submodule "tool_certification"]
+    path = admin/tool/certification
+    url = git@git.in.moodle.com:workplace/moodle-tool_certification.git
+    branch = WORKPLACE_ROLLING_404
+[submodule "tool_datastore"]
+    path = admin/tool/datastore
+    url = git@git.in.moodle.com:workplace/moodle-tool_datastore.git
+    branch = WORKPLACE_ROLLING_404
+[submodule "tool_organisation"]
+    path = admin/tool/organisation
+    url = git@git.in.moodle.com:workplace/moodle-tool_organisation.git
+    branch = WORKPLACE_ROLLING_404
+[submodule "tool_program"]
+    path = admin/tool/program
+    url = git@git.in.moodle.com:workplace/moodle-tool_program.git
+    branch = WORKPLACE_ROLLING_404
+[submodule "tool_reportbuilder"]
+    path = admin/tool/reportbuilder
+    url = git@git.in.moodle.com:workplace/moodle-tool_reportbuilder.git
+    branch = WORKPLACE_ROLLING_404
+[submodule "tool_tenant"]
+    path = admin/tool/tenant
+    url = git@git.in.moodle.com:workplace/moodle-tool_tenant.git
+    branch = WORKPLACE_ROLLING_404
+[submodule "tool_wp"]
+    path = admin/tool/wp
+    url = git@git.in.moodle.com:workplace/moodle-tool_wp.git
+    branch = WORKPLACE_ROLLING_404
+[submodule "enrol_dynamicrule"]
+    path = enrol/dynamicrule
+    url = git@git.in.moodle.com:workplace/moodle-enrol_dynamicrule.git
+    branch = WORKPLACE_ROLLING_404
+[submodule "enrol_program"]
+    path = enrol/program
+    url = git@git.in.moodle.com:workplace/moodle-enrol_program.git
+    branch = WORKPLACE_ROLLING_404
+[submodule "theme_workplace"]
+    path = theme/workplace
+    url = git@git.in.moodle.com:workplace/moodle-theme_workplace.git
+    branch = WORKPLACE_ROLLING_404
+[submodule "mod_appointment"]
+    path = mod/appointment
+    url = git@git.in.moodle.com:workplace/moodle-mod_appointment.git
+    branch = WORKPLACE_ROLLING_404
+[submodule "mod_coursecertificate"]
+    path = mod/coursecertificate
+    url = git@git.in.moodle.com:workplace/moodle-mod_coursecertificate.git
+    branch = MOODLE_400_STABLE
+[submodule "block_myteams"]
+    path = blocks/myteams
+    url = git@git.in.moodle.com:workplace/moodle-block_myteams.git
+    branch = WORKPLACE_ROLLING_404
+[submodule "block_rbreport"]
+    path = blocks/rbreport
+    url = git@git.in.moodle.com:workplace/moodle-block_rbreport.git
+    branch = MOODLE_402_STABLE
+[submodule "tool_datewatch"]
+    path = admin/tool/datewatch
+    url = git@git.in.moodle.com:workplace/moodle-tool_datewatch.git
+    branch = MOODLE_39_STABLE
+[submodule "tool_catalogue"]
+    path = admin/tool/catalogue
+    url = git@git.in.moodle.com:workplace/moodle-tool_catalogue.git
+    branch = WORKPLACE_ROLLING_404
+[submodule "tool_custompage"]
+    path = admin/tool/custompage
+    url = git@git.in.moodle.com:workplace/moodle-tool_custompage.git
+    branch = WORKPLACE_ROLLING_404
+[submodule "block_myavailable"]
+    path = blocks/myavailable
+    url = git@git.in.moodle.com:workplace/moodle-block_myavailable.git
+    branch = WORKPLACE_ROLLING_404
+[submodule "block_myinprogress"]
+    path = blocks/myinprogress
+    url = git@git.in.moodle.com:workplace/moodle-block_myinprogress.git
+    branch = WORKPLACE_ROLLING_404
