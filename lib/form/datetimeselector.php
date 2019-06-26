@@ -100,11 +100,6 @@ class MoodleQuickForm_date_time_selector extends MoodleQuickForm_group {
                 }
             }
         }
-
-        // The YUI2 calendar only supports the gregorian calendar type.
-        if ($calendartype->get_name() === 'gregorian') {
-            form_init_date_js();
-        }
     }
 
     /**
