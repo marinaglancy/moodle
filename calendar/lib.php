@@ -3405,7 +3405,7 @@ function calendar_get_view(\calendar_information $calendar, $view, $includenavig
                     return $cminfo->uservisible;
                 }
 
-                if ($proxy = $event->get_category()) {
+                if (($proxy = $event->get_category()) && $proxy->get('id')) {
                     $category = $proxy->get_proxied_instance();
 
                     return $category->is_uservisible();
