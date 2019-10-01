@@ -464,6 +464,14 @@ class tool_uploadcourse_course {
                     $this->error('cannotupdatefrontpage', new lang_string('cannotupdatefrontpage', 'tool_uploadcourse'));
                     return false;
                 }
+                $originalcategoryid = $DB->get_field('course', 'category', ['shortname' => $this->shortname]);
+                $originalcategory = core_course_category::get($originalcategoryid, IGNORE_MISSING);
+                if (!$originalcategory ||
+                    !has_capability('tool/uploadcourse:uploadcourses', context_coursecat::instance($originalcategoryid))) {
+                    $this->error('courseuploadupdatenotallowed',
+                        new lang_string('courseuploadupdatenotallowed', 'tool_uploadcourse'));
+                    return false;
+                }
             }
         } else {
             if (!$this->can_create()) {
@@ -501,13 +509,6 @@ class tool_uploadcourse_course {
             return false;
         }
 
-        // Validate the permission on category-context.
-        if (isset($catid) && !has_capability('moodle/course:upload', context_coursecat::instance($catid))) {
-            $catname = $DB->get_record('course_categories', array('id' => $catid), 'name');
-            $this->error('courseuploadnotallowed', new lang_string('courseuploadnotallowed', 'tool_uploadcourse', $catname));
-            return false;
-        }
-
         // Ensure we don't overflow the maximum length of the fullname field.
         if (!empty($coursedata['fullname']) && core_text::strlen($coursedata['fullname']) > 254) {
             $this->error('invalidfullnametoolong', new lang_string('invalidfullnametoolong', 'tool_uploadcourse', 254));
@@ -530,6 +531,15 @@ class tool_uploadcourse_course {
                     implode(', ', $errors)));
                 return false;
             }
+        }
+
+        // Validate the capability to upload courses on target category.
+        // Variable $catid may be empty if we update the course and do not change category or if we use default category.
+        // Capability is already checked for the course original category and the default category, so we can skip it.
+        if ($catid && !has_capability('tool/uploadcourse:uploadcourses', context_coursecat::instance($catid))) {
+            $this->error('courseuploadnotallowed', new lang_string('courseuploadnotallowed', 'tool_uploadcourse',
+                core_course_category::get($catid)->get_formatted_name()));
+            return false;
         }
 
         // Should the course be renamed?
