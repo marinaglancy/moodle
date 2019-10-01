@@ -438,6 +438,11 @@ class tool_uploadcourse_helper {
             $params = array('idnumber' => $idnumber);
             $id = $DB->get_field_select('course_categories', 'id', 'idnumber = :idnumber', $params, IGNORE_MISSING);
 
+            if ($id && !core_course_category::get($id, IGNORE_MISSING)) {
+                // Category is not visible to the current user.
+                $id = false;
+            }
+
             // Little hack to be able to differenciate between the cache not set and a category not found.
             if ($id === false) {
                 $id = -1;
@@ -476,6 +481,11 @@ class tool_uploadcourse_helper {
                         break;
                     }
                     $record = reset($records);
+                    if (!core_course_category::get($id, IGNORE_MISSING)) {
+                        // Category is not visible to the current user.
+                        $id = -1;
+                        break;
+                    }
                     $id = $record->id;
                     $parent = $record->id;
                 } else {

@@ -42,3 +42,40 @@ Feature: An admin can create courses using a CSV file
     And I should see "Course 1"
     And I should see "Course 2"
     And I should see "Course 3"
+
+  @javascript
+  Scenario: Manager can use upload user tool in course category
+    Given the following "users" exist:
+      | username | firstname | lastname | email                  |
+      | user1    | User      | 1        | user1@example.com |
+    And the following "categories" exist:
+      | name  | category | idnumber |
+      | Cat 1 | 0        | CAT1     |
+      | Cat 2 | 0        | CAT2     |
+      | Cat 3 | CAT1     | CAT3     |
+    And the following "role assigns" exist:
+      | user  | role    | contextlevel | reference |
+      | user1 | manager | Category     | CAT1      |
+    When I log out
+    And I log in as "user1"
+    And I am on course index
+    And I follow "Cat 1"
+    And I navigate to "Upload courses" in current page administration
+    And I upload "admin/tool/uploadcourse/tests/fixtures/courses_manager1.csv" file to "File" filemanager
+    And I click on "Preview" "button"
+    Then I should see "The course exists and update is not allowed" in the "C1" "table_row"
+    And I should see "No permission to upload courses in category: Cat 2" in the "C2" "table_row"
+    And I set the field "Course category" to "Cat 1 / Cat 3"
+    And I click on "Upload courses" "button"
+    And I should see "Course created"
+    And I should see "Courses total: 5"
+    And I should see "Courses created: 3"
+    And I should see "Courses errors: 2"
+    And I am on course index
+    And I follow "Cat 1"
+    And I should see "Course 4"
+    And I follow "Cat 3"
+    And I should see "Course 5"
+    # Course 3 did not have category specified in CSV file and it was uploaded to the default category.
+    And I should see "Course 3"
+    And I log out

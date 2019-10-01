@@ -770,18 +770,6 @@ $capabilities = array(
         )
     ),
 
-    'moodle/course:upload' => array(
-
-        'riskbitmask' => RISK_SPAM,
-
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COURSECAT,
-        'archetypes' => array(
-            'coursecreator' => CAP_ALLOW,
-            'manager' => CAP_ALLOW
-        )
-    ),
-
     'moodle/course:creategroupconversations' => array(
         'riskbitmask' => RISK_XSS,
         'captype' => 'write',

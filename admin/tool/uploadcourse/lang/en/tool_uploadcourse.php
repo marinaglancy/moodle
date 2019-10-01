@@ -45,7 +45,8 @@ $string['couldnotresolvecatgorybypath'] = 'Could not resolve category by path';
 $string['coursecreated'] = 'Course created';
 $string['coursedeleted'] = 'Course deleted';
 $string['coursedeletionnotallowed'] = 'Course deletion is not allowed';
-$string['courseuploadnotallowed'] = 'No permission to upload this course in category: {$a->name}';
+$string['courseuploadnotallowed'] = 'No permission to upload courses in category: {$a}';
+$string['courseuploadupdatenotallowed'] = "Course with this shortname exists and you don't have permission to use upload course tool to update it";
 $string['coursedoesnotexistandcreatenotallowed'] = 'The course does not exist and creating course is not allowed';
 $string['courseexistsanduploadnotallowed'] = 'The course exists and update is not allowed';
 $string['coursefile'] = 'File';
@@ -118,6 +119,7 @@ $string['updatemodedoessettonothing'] = 'Update mode does not allow anything to 
 $string['updateonly'] = 'Only update existing courses';
 $string['updatewithdataordefaults'] = 'Update with CSV data and defaults';
 $string['updatewithdataonly'] = 'Update with CSV data only';
+$string['uploadcourse:uploadcourses'] = 'Upload courses from file';
 $string['uploadcourses'] = 'Upload courses';
 $string['uploadcourses_help'] = 'Courses may be uploaded via text file. The format of the file should be as follows:
 

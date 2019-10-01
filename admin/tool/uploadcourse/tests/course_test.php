@@ -124,7 +124,7 @@ class tool_uploadcourse_course_testcase extends advanced_testcase {
     public function test_invalid_role() {
         global $DB;
 
-        $rolesallowed = array('manager', 'coursecreator');
+        $rolesallowed = array('manager');
         $roles = get_all_roles();
 
         $mode = tool_uploadcourse_processor::MODE_CREATE_NEW;
