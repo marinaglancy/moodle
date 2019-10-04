@@ -37,7 +37,7 @@ if ($categoryid) {
     require_login(null, false);
     $category = core_course_category::get($categoryid);
     $context = context_coursecat::instance($categoryid);
-    require_capability('tool/uploadcourse:uploadcourses', $context);
+    require_capability('tool/uploadcourse:use', $context);
     $PAGE->set_context($context);
     $PAGE->set_url(new moodle_url('/admin/tool/uploadcourse/index.php', ['categoryid' => $categoryid]));
     $PAGE->set_pagelayout('admin');
