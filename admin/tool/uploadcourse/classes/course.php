@@ -426,6 +426,11 @@ class tool_uploadcourse_course {
                 return false;
             }
 
+            if ($error = tool_uploadcourse_permissions::check_permission_to_delete($this->shortname)) {
+                $this->error('coursedeletionpermission', $error);
+                return false;
+            }
+
             $this->do = self::DO_DELETE;
             return true;
         }
@@ -440,14 +445,6 @@ class tool_uploadcourse_course {
                 // We can never allow for any front page changes!
                 if ($this->shortname == $SITE->shortname) {
                     $this->error('cannotupdatefrontpage', new lang_string('cannotupdatefrontpage', 'tool_uploadcourse'));
-                    return false;
-                }
-                $originalcategoryid = $DB->get_field('course', 'category', ['shortname' => $this->shortname]);
-                $originalcategory = core_course_category::get($originalcategoryid, IGNORE_MISSING);
-                if (!$originalcategory ||
-                    !has_capability('tool/uploadcourse:uploadcourses', context_coursecat::instance($originalcategoryid))) {
-                    $this->error('courseuploadupdatenotallowed',
-                        new lang_string('courseuploadupdatenotallowed', 'tool_uploadcourse'));
                     return false;
                 }
             }
@@ -503,15 +500,6 @@ class tool_uploadcourse_course {
                     implode(', ', $errors)));
                 return false;
             }
-        }
-
-        // Validate the capability to upload courses on target category.
-        // Variable $catid may be empty if we update the course and do not change category or if we use default category.
-        // Capability is already checked for the course original category and the default category, so we can skip it.
-        if ($catid && !has_capability('tool/uploadcourse:uploadcourses', context_coursecat::instance($catid))) {
-            $this->error('courseuploadnotallowed', new lang_string('courseuploadnotallowed', 'tool_uploadcourse',
-                core_course_category::get($catid)->get_formatted_name()));
-            return false;
         }
 
         // Should the course be renamed?
@@ -609,23 +597,6 @@ class tool_uploadcourse_course {
             $coursedata['enddate'] = strtotime($coursedata['enddate']);
         }
 
-        // If lang is specified, check the user is allowed to set that field.
-        if (!empty($coursedata['lang'])) {
-            if ($exists) {
-                $courseid = $DB->get_field('course', 'id', ['shortname' => $this->shortname]);
-                if (!has_capability('moodle/course:setforcedlanguage', context_course::instance($courseid))) {
-                    $this->error('cannotforcelang', new lang_string('cannotforcelang', 'tool_uploadcourse'));
-                    return false;
-                }
-            } else {
-                $catcontext = context_coursecat::instance($coursedata['category']);
-                if (!guess_if_creator_will_have_course_capability('moodle/course:setforcedlanguage', $catcontext)) {
-                    $this->error('cannotforcelang', new lang_string('cannotforcelang', 'tool_uploadcourse'));
-                    return false;
-                }
-            }
-        }
-
         // Ultimate check mode vs. existence.
         switch ($mode) {
             case tool_uploadcourse_processor::MODE_CREATE_NEW:
@@ -669,9 +640,20 @@ class tool_uploadcourse_course {
                 return false;
             }
 
+            if ($error = tool_uploadcourse_permissions::check_permission_to_update($coursedata)) {
+                $this->error('cannotupdatepermission', $error);
+                return false;
+            }
+
             $this->do = self::DO_UPDATE;
         } else {
             $coursedata = $this->get_final_create_data($coursedata);
+
+            if ($error = tool_uploadcourse_permissions::check_permission_to_create($coursedata)) {
+                $this->error('courseuploadnotallowed', $error);
+                return false;
+            }
+
             $this->do = self::DO_CREATE;
         }
 
@@ -741,6 +723,11 @@ class tool_uploadcourse_course {
         $this->data = $coursedata;
         $this->enrolmentdata = tool_uploadcourse_helper::get_enrolment_data($this->rawdata);
 
+        if ($error = tool_uploadcourse_permissions::check_permission_to_enrol($this->do, $this->data, $this->enrolmentdata)) {
+            $this->error('courseenrolpermission', $error);
+            return false;
+        }
+
         if (isset($this->rawdata['tags']) && strval($this->rawdata['tags']) !== '') {
             $this->data['tags'] = preg_split('/\s*,\s*/', trim($this->rawdata['tags']), -1, PREG_SPLIT_NO_EMPTY);
         }
@@ -753,6 +740,11 @@ class tool_uploadcourse_course {
             return false;
         }
 
+        if ($this->restoredata && ($error = tool_uploadcourse_permissions::check_permission_to_restore($this->do, $this->data))) {
+            $this->error('courserestorepermission', $error);
+            return false;
+        }
+
         // We can only reset courses when allowed and we are updating the course.
         if ($this->importoptions['reset'] || $this->options['reset']) {
             if ($this->do !== self::DO_UPDATE) {
@@ -761,6 +753,11 @@ class tool_uploadcourse_course {
                 return false;
             } else if (!$this->can_reset()) {
                 $this->error('courseresetnotallowed', new lang_string('courseresetnotallowed', 'tool_uploadcourse'));
+                return false;
+            }
+
+            if ($error = tool_uploadcourse_permissions::check_permission_to_reset($this->data)) {
+                $this->error('courseresetpermission', $error);
                 return false;
             }
         }

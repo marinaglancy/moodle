@@ -39,6 +39,7 @@ class tool_uploadcourse_processor_testcase extends advanced_testcase {
     public function test_basic() {
         global $DB;
         $this->resetAfterTest(true);
+        $this->setAdminUser();
 
         $content = array(
             "shortname,fullname,summary",
@@ -138,6 +139,7 @@ class tool_uploadcourse_processor_testcase extends advanced_testcase {
     public function test_shortname_template() {
         global $DB;
         $this->resetAfterTest(true);
+        $this->setAdminUser();
 
         $content = array(
             "shortname,fullname,summary,idnumber",

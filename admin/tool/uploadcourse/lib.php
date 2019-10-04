@@ -31,7 +31,7 @@ defined('MOODLE_INTERNAL') || die();
  * @param context $coursecategorycontext The context of the course category
  */
 function tool_uploadcourse_extend_navigation_category_settings($navigation, $coursecategorycontext) {
-    if (has_capability('tool/uploadcourse:uploadcourses', $coursecategorycontext)) {
+    if (has_capability('tool/uploadcourse:use', $coursecategorycontext)) {
         $title = get_string('uploadcourses', 'tool_uploadcourse');
         $path = new moodle_url("/admin/tool/uploadcourse/index.php", ['categoryid' => $coursecategorycontext->instanceid]);
         $settingsnode = navigation_node::create($title,

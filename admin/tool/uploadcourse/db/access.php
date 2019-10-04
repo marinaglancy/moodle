@@ -25,7 +25,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $capabilities = [
-    'tool/uploadcourse:uploadcourses' => [
+    'tool/uploadcourse:use' => [
 
         'riskbitmask' => RISK_SPAM,
 
