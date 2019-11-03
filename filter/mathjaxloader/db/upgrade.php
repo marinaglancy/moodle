@@ -163,5 +163,34 @@ MathJax.Hub.Config({
     // Automatically generated Moodle v3.7.0 release upgrade line.
     // Put any upgrade step following this.
 
+    if ($oldversion < 2019110300) {
+        // Add directive "positionToHash: false" - this will prevent MathJax to scroll the page after updating contents.
+        $previousdefault = '
+MathJax.Hub.Config({
+    config: ["Accessible.js", "Safe.js"],
+    errorSettings: { message: ["!"] },
+    skipStartupTypeset: true,
+    messageStyle: "none"
+});
+';
+        $newdefault = '
+MathJax.Hub.Config({
+    config: ["Accessible.js", "Safe.js"],
+    errorSettings: { message: ["!"] },
+    skipStartupTypeset: true,
+    messageStyle: "none",
+    positionToHash: false
+});
+';
+
+        $mathjaxconfig = get_config('filter_mathjaxloader', 'mathjaxconfig');
+
+        if (empty($mathjaxconfig) || filter_mathjaxloader_upgrade_mathjaxconfig_equal($mathjaxconfig, $previousdefault)) {
+            set_config('mathjaxconfig', $newdefault, 'filter_mathjaxloader');
+        }
+
+        upgrade_plugin_savepoint(true, 2019110300, 'filter', 'mathjaxloader');
+    }
+
     return true;
 }

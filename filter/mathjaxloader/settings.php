@@ -48,7 +48,8 @@ MathJax.Hub.Config({
     config: ["Accessible.js", "Safe.js"],
     errorSettings: { message: ["!"] },
     skipStartupTypeset: true,
-    messageStyle: "none"
+    messageStyle: "none",
+    positionToHash: false
 });
 ';
 
