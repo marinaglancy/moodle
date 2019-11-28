@@ -127,6 +127,9 @@ class course_modinfo {
         'groups' => 'get_groups_all',
     );
 
+    /** @var array course ids for which we are currently building cache */
+    private static $isbuilding = [];
+
     /**
      * Magic method getter
      *
@@ -452,7 +455,16 @@ class course_modinfo {
 
         // Retrieve modinfo from cache. If not present or cacherev mismatches, call rebuild and retrieve again.
         $coursemodinfo = $cachecoursemodinfo->get($course->id);
-        if ($coursemodinfo === false || ($course->cacherev != $coursemodinfo->cacherev)) {
+        $courseid = $course->id;
+        if (self::is_building_course_cache($courseid)) {
+            // We have detected recursive call of get_fast_modinfo().
+            debugging('Recursion while building course cache for course with id ' . $courseid,
+                DEBUG_DEVELOPER);
+            $coursemodinfo = get_course($courseid);
+            $coursemodinfo->modinfo = [];
+            $coursemodinfo->sectioncache = [];
+        } else if ($coursemodinfo === false || ($course->cacherev != $coursemodinfo->cacherev)) {
+            self::$isbuilding[$courseid] = true;
             $lock = self::get_course_cache_lock($course->id);
             try {
                 // Only actually do the build if it's still needed after getting the lock (not if
@@ -464,6 +476,7 @@ class course_modinfo {
             } finally {
                 $lock->release();
             }
+            unset(self::$isbuilding[$courseid]);
         }
 
         // Set initial values
@@ -543,6 +556,19 @@ class course_modinfo {
             $this->sectioninfo[$number] = new section_info($data, $number, null, null,
                     $this, null);
         }
+    }
+
+    /**
+     * Are we currently inside the course cache building process?
+     *
+     * Some functions may call it to disable some functionality, for example format_string() and
+     * format_text() should not apply any filters
+     *
+     * @param int $courseid course in question
+     * @return bool
+     */
+    public static function is_building_course_cache($courseid): bool {
+        return array_key_exists($courseid, self::$isbuilding);
     }
 
     /**

@@ -1281,6 +1281,10 @@ function format_text($text, $format = FORMAT_MOODLE, $options = null, $courseidd
         // Either install/upgrade or something has gone really wrong because context does not exist (yet?).
         $options['nocache'] = true;
         $options['filter']  = false;
+    } else if ($options['filter'] && class_exists('course_modinfo') && $context->get_course_context(false) &&
+            course_modinfo::is_building_course_cache($context->get_course_context()->instanceid)) {
+        debugging('Using filters when building course cache is prohibited', DEBUG_DEVELOPER);
+        $options['filter'] = false;
     }
 
     if ($options['filter']) {
@@ -1459,6 +1463,11 @@ function format_string($string, $striplinks = true, $options = null) {
     }
     if (!isset($options['filter'])) {
         $options['filter'] = true;
+    }
+    if ($options['filter'] && class_exists('course_modinfo') && $options['context']->get_course_context(false) &&
+            course_modinfo::is_building_course_cache($options['context']->get_course_context()->instanceid)) {
+        debugging('Using filters when building course cache is prohibited', DEBUG_DEVELOPER);
+        $options['filter'] = false;
     }
 
     $options['escape'] = !isset($options['escape']) || $options['escape'];
