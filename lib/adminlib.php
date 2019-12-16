@@ -8507,6 +8507,34 @@ class admin_setting_managecontentbankcontenttypes extends admin_setting {
 }
 
 /**
+ * Generic class for managing plugins in a table that allows re-ordering and enable/disable of each plugin.
+ */
+class admin_setting_manage_pg_plugins extends admin_setting_manage_plugins {
+    public function get_section_title() {
+        return get_string('type_pg_plural', 'plugin');
+    }
+
+    public function get_plugin_type() {
+        return 'pg';
+    }
+
+    public function get_info_column_name() {
+        return get_string('supportedcurrencies', 'core_payment');
+    }
+
+    public function get_info_column($plugininfo) {
+        $codes = $plugininfo->get_supported_currencies();
+
+        $currencies = [];
+        foreach ($codes as $c) {
+            $currencies[$c] = new \lang_string($c, 'core_currencies');
+        }
+
+        return implode(get_string('listsep', 'langconfig') . ' ', $currencies);
+    }
+}
+
+/**
  * Initialise admin page - this function does require login and permission
  * checks specified in page definition.
  *
