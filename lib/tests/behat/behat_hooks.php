@@ -304,15 +304,14 @@ class behat_hooks extends behat_base {
         }
 
         $moreinfo = 'More info in ' . behat_command::DOCS_URL;
-        $driverexceptionmsg = 'Selenium server is not running, you need to start it to run tests that involve Javascript. ' . $moreinfo;
         try {
             $session = $this->getSession();
         } catch (CurlExec $e) {
             // Exception thrown by WebDriver, so only @javascript tests will be caugth; in
             // behat_util::check_server_status() we already checked that the server is running.
-            throw new behat_stop_exception($driverexceptionmsg);
+            throw new behat_stop_exception($e->getMessage() . '. ' . $moreinfo);
         } catch (DriverException $e) {
-            throw new behat_stop_exception($driverexceptionmsg);
+            throw new behat_stop_exception($e->getMessage() . '. ' . $moreinfo);
         } catch (UnknownError $e) {
             // Generic 'I have no idea' Selenium error. Custom exception to provide more feedback about possible solutions.
             throw new behat_stop_exception($e->getMessage());
