@@ -1121,6 +1121,7 @@ $string['ip_address'] = 'IP address';
 $string['jump'] = 'Jump';
 $string['jumpto'] = 'Jump to...';
 $string['keep'] = 'Keep';
+$string['labelvalue'] = '{$a->label}: {$a->value}';
 $string['langltr'] = 'Language direction left-to-right';
 $string['langrtl'] = 'Language direction right-to-left';
 $string['language'] = 'Language';

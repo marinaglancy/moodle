@@ -87,7 +87,8 @@ class helper {
             return;
         }
 
-        $PAGE->requires->js_call_amd('core_payment/gateways_modal', 'registerEventListeners', ['#gateways-modal-trigger']);
+        $PAGE->requires->js_call_amd('core_payment/gateways_modal', 'registerEventListenersBySelector',
+                ['#gateways-modal-trigger']);
         $done = true;
     }
 
