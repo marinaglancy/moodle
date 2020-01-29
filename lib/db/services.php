@@ -2706,6 +2706,14 @@ $functions = array(
         'ajax'          => 'true',
         'capabilities'  => '',
     ],
+    'core_payment_get_gateways_for_currency' => [
+        'classname'   => 'core_payment\external\get_gateways_for_currency',
+        'methodname'  => 'execute',
+        'classpath'   => '',
+        'description' => 'Get the list of payment gateways that support the given currency',
+        'type'        => 'read',
+        'ajax'        => 'true',
+    ],
 );
 
 $services = array(
