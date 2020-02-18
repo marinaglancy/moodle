@@ -490,13 +490,10 @@ class phpunit_util extends testing_util {
         global $CFG;
 
         $template = '
-        <testsuite name="@component@_testsuite">
-            <directory suffix="_test.php">@dir@</directory>
+        <testsuite name="@component@_testsuite">@dirs@
         </testsuite>';
-        $filtertemplate = '
-        <testsuite name="@component@_testsuite">
-            <directory suffix="_test.php">@dir@</directory>
-        </testsuite>';
+        $dirtemplate = '
+            <directory suffix="_test.php">@dir@</directory>';
         $data = file_get_contents("$CFG->dirroot/phpunit.xml.dist");
 
         $suites = '';
@@ -527,17 +524,36 @@ class phpunit_util extends testing_util {
             $plugs = core_component::get_plugin_list($type);
             ksort($plugs);
             foreach ($plugs as $plug => $plugindir) {
-                if (!file_exists("{$plugindir}/tests/")) {
-                    // There are no tests - skip this directory.
-                    continue;
-                }
-
                 $dir = substr($plugindir, strlen($CFG->dirroot) + 1);
                 $testdir = "{$dir}/tests";
                 $component = "{$type}_{$plug}";
+                $testdirs = [];
+
+                if (file_exists("{$plugindir}/tests/")) {
+                    $testdirs[] = str_replace('@dir@', $testdir, $dirtemplate);
+                }
+
+                $subplugintypes = core_component::get_subplugins($component);
+                if ($subplugintypes) {
+                    foreach ($subplugintypes as $subplugintype => $subplugins) {
+                        foreach ($subplugins as $subplugin) {
+                            $splugindir = core_component::get_component_directory($subplugintype.'_'.$subplugin);
+                            $sdir = substr($splugindir, strlen($CFG->dirroot) + 1);
+                            $stestdir = "{$sdir}/tests";
+                            if (file_exists("{$splugindir}/tests/")) {
+                                $testdirs[] = str_replace('@dir@', $stestdir, $dirtemplate);
+                            }
+                        }
+                    }
+                }
+
+                if (empty($testdirs)) {
+                    // There are no tests - skip this plugin.
+                    continue;
+                }
 
                 $suite = str_replace('@component@', $component, $template);
-                $suite = str_replace('@dir@', $testdir, $suite);
+                $suite = str_replace('@dirs@', join('', $testdirs), $suite);
 
                 $suites .= $suite;
 
