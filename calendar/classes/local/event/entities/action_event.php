@@ -125,4 +125,8 @@ class action_event implements action_event_interface {
     public function get_action() {
         return $this->action;
     }
+
+    public function get_component() {
+        return $this->event->get_component();
+    }
 }

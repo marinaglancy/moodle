@@ -156,6 +156,10 @@ class core_calendar_action_event_test_event implements event_interface {
     public function is_visible() {
         return true;
     }
+
+    public function get_component() {
+        return null;
+    }
 }
 
 /**

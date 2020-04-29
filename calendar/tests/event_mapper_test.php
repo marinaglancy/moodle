@@ -255,6 +255,10 @@ class event_mapper_test_action_event implements action_event_interface {
             true
         );
     }
+
+    public function get_component() {
+        return $this->event->get_component();
+    }
 }
 
 /**
@@ -373,6 +377,10 @@ class event_mapper_test_event implements event_interface {
 
     public function is_visible() {
         return true;
+    }
+
+    public function get_component() {
+        return null;
     }
 }
 

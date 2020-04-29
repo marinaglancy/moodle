@@ -396,7 +396,8 @@ const renderEventSummaryModal = (eventId) => {
                 candelete: eventData.candelete,
                 headerclasses: typeClass,
                 isactionevent: eventData.isactionevent,
-                url: eventData.url
+                url: eventData.url,
+                action: eventData.action
             }
         };
 

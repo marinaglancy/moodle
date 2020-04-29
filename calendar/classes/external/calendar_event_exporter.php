@@ -27,6 +27,7 @@ namespace core_calendar\external;
 defined('MOODLE_INTERNAL') || die();
 
 use \core_calendar\local\event\container;
+use core_calendar\local\event\entities\action_event_interface;
 use \core_course\external\course_summary_exporter;
 use \renderer_base;
 require_once($CFG->dirroot . '/course/lib.php');
@@ -109,7 +110,6 @@ class calendar_event_exporter extends event_exporter_base {
         } else if ($event->get_type() == 'category') {
             $url = $event->get_category()->get_proxied_instance()->get_view_link();
         } else {
-            // TODO MDL-58866 We do not have any way to find urls for events outside of course modules.
             $url = course_get_url($hascourse ? $course : SITEID);
         }
 

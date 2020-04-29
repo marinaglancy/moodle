@@ -89,6 +89,7 @@ class event_exporter_base extends exporter {
         $data->timesort = $event->get_times()->get_sort_time()->getTimestamp();
         $data->visible = $event->is_visible() ? 1 : 0;
         $data->timemodified = $event->get_times()->get_modified_time()->getTimestamp();
+        $data->component = $event->get_component();
 
         if ($repeats = $event->get_repeats()) {
             $data->repeatid = $repeats->get_id();
@@ -156,6 +157,12 @@ class event_exporter_base extends exporter {
             ],
             'eventcount' => [
                 'type' => PARAM_INT,
+                'optional' => true,
+                'default' => null,
+                'null' => NULL_ALLOWED
+            ],
+            'component' => [
+                'type' => PARAM_COMPONENT,
                 'optional' => true,
                 'default' => null,
                 'null' => NULL_ALLOWED
@@ -242,6 +249,10 @@ class event_exporter_base extends exporter {
             'normalisedeventtypetext' => [
                 'type' => PARAM_TEXT
             ],
+            'action' => [
+                'type' => event_action_exporter::read_properties_definition(),
+                'optional' => true,
+            ],
         ];
     }
 
@@ -257,15 +268,14 @@ class event_exporter_base extends exporter {
         $legacyevent = container::get_event_mapper()->from_event_to_legacy_event($event);
         $context = $this->related['context'];
         $course = $this->related['course'];
-        $values['isactionevent'] = false;
+        // We need a separate property to flag if an event is action event.
+        // That's required because canedit return true but action action events cannot be edited on the calendar UI.
+        // But they are considered editable because you can drag and drop the event on the month view.
+        $values['isactionevent'] = ($event instanceof action_event_interface);
         $values['iscourseevent'] = false;
         $values['iscategoryevent'] = false;
         $values['normalisedeventtype'] = $event->get_type();
         if ($moduleproxy = $event->get_course_module()) {
-            // We need a separate property to flag if an event is action event.
-            // That's required because canedit return true but action action events cannot be edited on the calendar UI.
-            // But they are considered editable because you can drag and drop the event on the month view.
-            $values['isactionevent'] = true;
             // Activity events are normalised to "look" like course events.
             $values['normalisedeventtype'] = 'course';
         } else if ($event->get_type() == 'course') {
@@ -317,6 +327,15 @@ class event_exporter_base extends exporter {
         if ($group = $event->get_group()) {
             $values['groupname'] = format_string($group->get('name'), true,
                 ['context' => \context_course::instance($event->get_course()->get('id'))]);
+        }
+
+        if ($event instanceof action_event_interface) {
+            $actionrelated = [
+                'context' => $this->related['context'],
+                'event' => $event
+            ];
+            $actionexporter = new event_action_exporter($event->get_action(), $actionrelated);
+            $values['action'] = $actionexporter->export($output);
         }
 
         return $values;

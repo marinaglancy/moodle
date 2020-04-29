@@ -134,6 +134,7 @@ $headingstr = ($iscoursecalendar) ? get_string('coursecalendar', 'core_calendar'
         get_string('calendar', 'core_calendar');
 $PAGE->set_heading($headingstr);
 
+/** @var core_calendar_renderer $renderer */
 $renderer = $PAGE->get_renderer('core_calendar');
 $calendar->add_sidecalendar_blocks($renderer, true, $view);
 

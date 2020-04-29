@@ -133,4 +133,6 @@ interface event_interface {
      * @return bool true if the event is visible, false otherwise
      */
     public function is_visible();
+
+    public function get_component();
 }

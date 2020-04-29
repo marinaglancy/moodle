@@ -451,6 +451,7 @@ class core_calendar_external extends external_api {
             $params['aftereventid'] = null;
         }
 
+        /** @var core_calendar_renderer $renderer */
         $renderer = $PAGE->get_renderer('core_calendar');
         $events = local_api::get_action_events_by_timesort(
             $params['timesortfrom'],
@@ -536,6 +537,7 @@ class core_calendar_external extends external_api {
         }
 
         $course = $courses[0];
+        /** @var core_calendar_renderer $renderer */
         $renderer = $PAGE->get_renderer('core_calendar');
         $events = local_api::get_action_events_by_course(
             $course,
@@ -610,6 +612,7 @@ class core_calendar_external extends external_api {
             return ['groupedbycourse' => []];
         }
 
+        /** @var core_calendar_renderer $renderer */
         $renderer = $PAGE->get_renderer('core_calendar');
         $courses = enrol_get_my_courses('*', null, 0, $params['courseids']);
         $courses = array_values($courses);
@@ -797,19 +800,21 @@ class core_calendar_external extends external_api {
         self::validate_context($context);
         $warnings = array();
 
-        $legacyevent = calendar_event::load($eventid);
-        // Must check we can see this event.
-        if (!calendar_view_event_allowed($legacyevent)) {
+        $eventvault = event_container::get_event_vault();
+        /** @var core_calendar\local\event\entities\event $event */
+        if ($event = $eventvault->get_event_by_id($eventid)) {
+            $mapper = event_container::get_event_mapper();
+            if (!calendar_view_event_allowed($mapper->from_event_to_legacy_event($event))) {
+                $event = null;
+            }
+        }
+
+        if (!$event) {
             // We can't return a warning in this case because the event is not optional.
             // We don't know the context for the event and it's not worth loading it.
             $syscontext = context_system::instance();
             throw new \required_capability_exception($syscontext, 'moodle/course:view', 'nopermission', '');
         }
-
-        $legacyevent->count_repeats();
-
-        $eventmapper = event_container::get_event_mapper();
-        $event = $eventmapper->from_legacy_event_to_event($legacyevent);
 
         $cache = new events_related_objects_cache([$event]);
         $relatedobjects = [
@@ -954,6 +959,7 @@ class core_calendar_external extends external_api {
                 'course' => $cache->get_course($event),
             ];
             $exporter = new event_exporter($event, $relatedobjects);
+            /** @var core_calendar_renderer $renderer */
             $renderer = $PAGE->get_renderer('core_calendar');
 
             return [ 'event' => $exporter->export($renderer) ];
@@ -1185,6 +1191,7 @@ class core_calendar_external extends external_api {
             'course' => $cache->get_course($event),
         ];
         $exporter = new event_exporter($event, $relatedobjects);
+        /** @var core_calendar_renderer $renderer */
         $renderer = $PAGE->get_renderer('core_calendar');
 
         return array('event' => $exporter->export($renderer));

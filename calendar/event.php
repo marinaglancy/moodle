@@ -194,6 +194,7 @@ $PAGE->navbar->add($title);
 $PAGE->set_title($course->shortname.': '.$strcalendar.': '.$title);
 $PAGE->set_heading($course->fullname);
 
+/** @var core_calendar_renderer $renderer */
 $renderer = $PAGE->get_renderer('core_calendar');
 $calendar->add_sidecalendar_blocks($renderer);
 

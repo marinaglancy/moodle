@@ -30,7 +30,7 @@
             <button type="button" class="btn btn-secondary" data-action="delete">{{#str}} delete {{/str}}</button>
         {{/candelete}}
         {{#isactionevent}}
-            <a href="{{url}}">{{#str}} gotoactivity, core_calendar {{/str}}</a>
+            <a href="{{action.url}}">{{{action.name}}}</a>
         {{/isactionevent}}
         {{^isactionevent}}
             {{#canedit}}

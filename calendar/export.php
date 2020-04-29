@@ -116,6 +116,7 @@ $PAGE->set_title($course->shortname.': '.get_string('calendar', 'calendar').': '
 $PAGE->set_heading($course->fullname);
 $PAGE->set_pagelayout('standard');
 
+/** @var core_calendar_renderer $renderer */
 $renderer = $PAGE->get_renderer('core_calendar');
 $calendar->add_sidecalendar_blocks($renderer);
 
