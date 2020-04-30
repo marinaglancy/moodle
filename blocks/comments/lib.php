@@ -81,3 +81,25 @@ function block_comments_comment_display($comments, $args) {
     }
     return $comments;
 }
+
+function block_comments_core_calendar_provide_event_action(calendar_event $event,
+                                                         \core_calendar\action_factory $factory, $userid = 0) {
+    return $factory->create_instance('My action', new \moodle_url('/my'), 5, true);
+}
+
+function block_comments_core_calendar_is_event_visible(calendar_event $event, $userid = 0) {
+    return true;
+}
+
+function block_comments_core_calendar_event_action_shows_item_count(calendar_event $event, $itemcount = 0) {
+    return true;
+}
+
+/**
+ * Map icons for font-awesome themes.
+ */
+function block_comments_get_fontawesome_icon_map() {
+    return [
+        'block_comments:mytype' => 'fa-external-link'
+    ];
+}

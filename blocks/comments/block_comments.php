@@ -50,6 +50,42 @@ class block_comments extends block_base {
         if ($this->content !== NULL) {
             return $this->content;
         }
+
+        global $DB;
+        $instanceid = 13;
+        $DB->delete_records('event', ['component' => 'block_comments']);
+        $ev = $DB->get_record('event', ['component' => 'block_comments', 'eventtype' => 'mytype', 'instance' => $instanceid]);
+        if (!$ev) {
+            $event = new stdClass();
+            $event->eventtype = 'mytype';
+            $event->type = CALENDAR_EVENT_TYPE_STANDARD;
+            $event->name = $event->description = 'Test event ' . $instanceid;
+            $event->instance = $instanceid;
+            $event->timestart = $event->timesort = time() + DAYSECS;
+            $event->courseid = SITEID;
+            $event->visible = 1;
+            $event->timeduration = 0;
+            $event->context = context_system::instance();
+            $event->component = 'block_comments';
+            calendar_event::create($event, false);
+        }
+        $instanceid = 14;
+        $ev = $DB->get_record('event', ['component' => 'block_comments', 'eventtype' => 'mytype', 'instance' => $instanceid]);
+        if (!$ev) {
+            $event = new stdClass();
+            $event->eventtype = 'mytype';
+            $event->type = CALENDAR_EVENT_TYPE_ACTION;
+            $event->name = $event->description = 'Test event ' . $instanceid;
+            $event->instance = $instanceid;
+            $event->timestart = $event->timesort = time() + DAYSECS;
+            $event->courseid = SITEID;
+            $event->visible = 1;
+            $event->timeduration = 0;
+            $event->context = context_system::instance();
+            $event->component = 'block_comments';
+            calendar_event::create($event, false);
+        }
+
         if (!$CFG->usecomments) {
             $this->content = new stdClass();
             $this->content->text = '';
