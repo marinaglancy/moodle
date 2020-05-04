@@ -66,6 +66,7 @@ function message_popup_render_navbar_output(\renderer_base $renderer) {
             'unreadcount' => $unreadcount + $requestcount
         ];
         $output .= $renderer->render_from_template('core_message/message_popover', $context);
+        component_class_callback('tool_polling_notification', 'init', []);
     }
 
     return $output;

@@ -453,6 +453,8 @@ class manager {
                 $savemessage->id,
                 $eventdata->courseid
             )->trigger();
+            component_class_callback('tool_polling_notification', 'add_for_user',
+                [$eventdata->userto->id, 'message-received', true]);
         } else { // Must be a message.
             // If the message is a group conversation, then trigger the 'group_message_sent' event.
             if ($eventdata->convid) {
@@ -464,6 +466,7 @@ class manager {
                         $savemessage->id,
                         $eventdata->courseid
                     )->trigger();
+                    // TODO polling notification to all users in the conversation.
                     return;
                 }
                 // Individual type conversations fall through to the default 'message_sent' event.
@@ -474,6 +477,8 @@ class manager {
                 $savemessage->id,
                 $eventdata->courseid
             )->trigger();
+            component_class_callback('tool_polling_notification', 'add_for_user',
+                [$eventdata->userto->id, 'message-received', true]);
         }
     }
 

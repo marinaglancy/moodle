@@ -69,6 +69,21 @@ function(
         };
     };
 
+    var showConversationCount = function(root) {
+        return function() {
+            var countContainer = root.find(SELECTORS.COUNT_CONTAINER);
+            var count = parseInt(countContainer.text(), 10);
+
+            if (isNaN(count) || countContainer.hasClass('hidden')) {
+                count = 1;
+            } else {
+                count = count + 1;
+            }
+            countContainer.removeClass('hidden');
+            countContainer.text(count);
+        };
+    };
+
     /**
      * Add events listeners for when the popover icon is clicked and when conversations
      * are read.
@@ -87,6 +102,7 @@ function(
         PubSub.subscribe(MessageDrawerEvents.CONVERSATION_READ, handleDecrementConversationCount(button));
         PubSub.subscribe(MessageDrawerEvents.CONTACT_REQUEST_ACCEPTED, handleDecrementConversationCount(button));
         PubSub.subscribe(MessageDrawerEvents.CONTACT_REQUEST_DECLINED, handleDecrementConversationCount(button));
+        PubSub.subscribe('message-received', showConversationCount(button));
     };
 
     /**
