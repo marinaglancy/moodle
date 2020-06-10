@@ -133,6 +133,7 @@ $string['backpackimport_help'] = 'After the backpack connection is successfully 
 
 In this area, you can select collections of badges from your backpack that you would like to display in your profile.';
 $string['backpacksettings'] = 'Backpack settings';
+$string['backpacksettingsinvalid'] = 'Backpack settings are invalid';
 $string['backpackapiurl'] = 'Backpack API URL';
 $string['backpackweburl'] = 'Backpack URL';
 $string['badges'] = 'Badges';

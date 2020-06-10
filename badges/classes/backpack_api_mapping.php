@@ -204,9 +204,19 @@ class backpack_api_mapping {
         } else if (is_array($request)) {
             foreach ($request as $key => $value) {
                 if ($value == '[EMAIL]') {
+                    // Required value but none provided.
+                    if (!$email) {
+                        return null;
+                    }
+
                     $value = $email;
                     $request[$key] = $value;
                 } else if ($value == '[PASSWORD]') {
+                    // Required value but none provided.
+                    if (!$password) {
+                        return null;
+                    }
+
                     $value = $password;
                     $request[$key] = $value;
                 }
@@ -354,6 +364,11 @@ class backpack_api_mapping {
         $options = $this->get_curl_options();
 
         $post = $this->get_post_params($email, $password, $postparam);
+        // Nothing to be requested. Do not perform the request.
+        if (is_null($post)) {
+            self::set_authentication_error(get_string('backpacksettingsinvalid', 'badges'));
+            return null;
+        }
 
         if ($this->method == 'get') {
             $response = $curl->get($url, $post, $options);
