@@ -196,7 +196,9 @@ class external extends external_api {
      * @return external_function_parameters
      */
     public static function load_fontawesome_icon_map_parameters() {
-        return new external_function_parameters([]);
+        return new external_function_parameters([
+            'themename' => new external_value(PARAM_ALPHANUMEXT, 'The current theme.', VALUE_OPTIONAL, null),
+        ]);
     }
 
     /**
@@ -204,8 +206,21 @@ class external extends external_api {
      *
      * @return array the mapping
      */
-    public static function load_fontawesome_icon_map() {
-        $instance = icon_system::instance(icon_system::FONTAWESOME);
+    public static function load_fontawesome_icon_map(?string $themename = null) {
+        [
+            'themename' => $themename,
+        ] = self::validate_parameters(self::load_fontawesome_icon_map_parameters(), [
+            'themename' => $themename,
+        ]);
+
+        if ($themename === null) {
+            $iconsystem = icon_system::FONTAWESOME;
+        } else {
+            $theme = theme_config::load($themename);
+            $iconsystem = $theme->get_icon_system();
+        }
+
+        $instance = icon_system::instance($iconsystem);
 
         $map = $instance->get_icon_name_map();
 
