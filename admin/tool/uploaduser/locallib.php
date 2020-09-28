@@ -55,7 +55,8 @@ define('UU_PWRESET_ALL', 2);
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class uu_progress_tracker {
-    private $_row;
+    /** @var array */
+    protected $_row;
 
     /**
      * The columns shown on the table.
