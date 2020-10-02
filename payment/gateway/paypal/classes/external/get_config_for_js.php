@@ -45,19 +45,23 @@ class get_config_for_js extends external_api {
      */
     public static function execute_parameters(): external_function_parameters {
         return new external_function_parameters([
-            'component' => new external_value(PARAM_COMPONENT, ''),
-            'componentid' => new external_value(PARAM_INT, ''),
+            'component' => new external_value(PARAM_COMPONENT, 'Component'),
+            'paymentarea' => new external_value(PARAM_AREA, 'Payment area in the component'),
+            'componentid' => new external_value(PARAM_INT, 'An identifier for payment area in the component'),
         ]);
     }
 
     /**
-     * Returns the full URL of the PayPal JavaScript SDK.
+     * Returns the config values required by the PayPal JavaScript SDK.
      *
+     * @param string $component
+     * @param string $paymentarea
+     * @param int $componentid
      * @return string[]
      */
-    public static function execute($component, $componentid): array {
-        $config = helper::get_gateway_configuration($component, $componentid, 'paypal');
-        $cost = helper::get_cost($component, $componentid);
+    public static function execute(string $component, string $paymentarea, int $componentid): array {
+        $config = helper::get_gateway_configuration($component, $paymentarea, $componentid, 'paypal');
+        $cost = helper::get_cost($component, $paymentarea, $componentid);
         $surcharge = helper::get_gateway_surcharge('paypal');
 
         return [
