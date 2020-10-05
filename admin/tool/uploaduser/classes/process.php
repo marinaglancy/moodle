@@ -24,8 +24,6 @@
 
 namespace tool_uploaduser;
 
-defined('MOODLE_INTERNAL') || die();
-
 use tool_uploaduser\local\field_value_validators;
 
 require_once($CFG->dirroot.'/user/profile/lib.php');
@@ -36,7 +34,7 @@ require_once($CFG->libdir.'/csvlib.class.php');
 require_once($CFG->dirroot.'/'.$CFG->admin.'/tool/uploaduser/locallib.php');
 
 /**
- * Class process
+ * Process CSV file with users data, this will create/update users, enrol them into courses, etc
  *
  * @package     tool_uploaduser
  * @copyright   2020 Moodle
@@ -174,6 +172,7 @@ class process {
                 $proffields[$profilefieldname] = $proffield;
                 unset($proffields[$key]);
             }
+            $this->allprofilefields = $proffields;
         }
     }
 

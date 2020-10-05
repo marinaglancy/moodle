@@ -24,10 +24,8 @@
 
 namespace tool_uploaduser\local;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
- * Class text_progress_tracker
+ * Tracks the progress of the user upload and echos it in a text format
  *
  * @package     tool_uploaduser
  * @copyright   2020 Marina Glancy

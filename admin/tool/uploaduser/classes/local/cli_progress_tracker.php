@@ -24,10 +24,8 @@
 
 namespace tool_uploaduser\local;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
- * Class cli_progress_tracker
+ * Tracks the progress of the user upload and outputs it in CLI script (writes to STDOUT)
  *
  * @package     tool_uploaduser
  * @copyright   2020 Marina Glancy

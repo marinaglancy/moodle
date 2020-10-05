@@ -24,8 +24,6 @@
 
 namespace tool_uploaduser;
 
-defined('MOODLE_INTERNAL') || die();
-
 use tool_uploaduser\local\cli_progress_tracker;
 
 require_once($CFG->dirroot.'/user/profile/lib.php');
@@ -38,7 +36,7 @@ require_once($CFG->dirroot.'/'.$CFG->admin.'/tool/uploaduser/user_form.php');
 require_once($CFG->libdir . '/clilib.php');
 
 /**
- * Class cli_helper
+ * Helper method for CLI script to upload users (also has special wrappers for cli* functions for phpunit testing)
  *
  * @package     tool_uploaduser
  * @copyright   2020 Marina Glancy
@@ -84,9 +82,9 @@ class cli_helper {
     /**
      * Options used in this CLI script
      *
-     * @return array|array[]
+     * @return array
      */
-    protected function options_definitions() {
+    protected function options_definitions(): array {
         $options = [
             'help' => [
                 'hasvalue' => false,
@@ -120,7 +118,7 @@ class cli_helper {
     /**
      * Print help for export
      */
-    public function print_help() {
+    public function print_help(): void {
         $this->cli_writeln(get_string('clititle', 'tool_uploaduser'));
         $this->cli_writeln('');
         $this->print_help_options($this->options_definitions());
@@ -144,7 +142,7 @@ class cli_helper {
      *
      * @param string $text text to be written
      */
-    protected function cli_write($text) {
+    protected function cli_write($text): void {
         if (PHPUNIT_TEST) {
             echo $text;
         } else {
@@ -157,7 +155,7 @@ class cli_helper {
      * @param string $text
      * @return void
      */
-    protected function cli_problem($text) {
+    protected function cli_problem($text): void {
         if (PHPUNIT_TEST) {
             echo $text;
         } else {
@@ -170,7 +168,7 @@ class cli_helper {
      *
      * @param string $text text to be written
      */
-    protected function cli_writeln($text) {
+    protected function cli_writeln($text): void {
         $this->cli_write($text . PHP_EOL);
     }
 
@@ -181,7 +179,7 @@ class cli_helper {
      * @param int $errorcode
      * @return void (does not return)
      */
-    protected function cli_error($text, $errorcode=1) {
+    protected function cli_error($text, $errorcode = 1): void {
         $this->cli_problem($text);
         $this->die($errorcode);
     }
@@ -192,7 +190,7 @@ class cli_helper {
      * @param mixed $errorcode
      * @throws \moodle_exception
      */
-    protected function die($errorcode) {
+    protected function die($errorcode): void {
         if (!PHPUNIT_TEST) {
             die($errorcode);
         } else {
@@ -208,7 +206,7 @@ class cli_helper {
      * @param int $indent
      * @return string
      */
-    protected function convert_to_table(array $column1, array $column2, int $indent = 0) {
+    protected function convert_to_table(array $column1, array $column2, int $indent = 0): string {
         $maxlengthleft = 0;
         $left = [];
         $column1 = array_values($column1);
@@ -238,7 +236,7 @@ class cli_helper {
      *
      * @param array $options
      */
-    protected function print_help_options(array $options) {
+    protected function print_help_options(array $options): void {
         $left = [];
         $right = [];
         foreach ($options as $key => $option) {
@@ -258,7 +256,7 @@ class cli_helper {
     /**
      * Process the upload
      */
-    public function process() {
+    public function process(): void {
         // First, validate all arguments.
         $definitions = $this->options_definitions();
         foreach ($this->clioptions as $key => $value) {
@@ -321,8 +319,9 @@ class cli_helper {
      *
      * @param \HTML_QuickForm_element[] $elements
      * @param array $defaults
+     * @return array
      */
-    protected function prepare_form_elements_for_cli(array $elements, array $defaults) {
+    protected function prepare_form_elements_for_cli(array $elements, array $defaults): array {
         $options = [];
         foreach ($elements as $element) {
             if ($element instanceof \HTML_QuickForm_submit || $element instanceof \HTML_QuickForm_static) {
@@ -395,7 +394,7 @@ class cli_helper {
      *
      * @return array
      */
-    public function get_stats() {
+    public function get_stats(): array {
         return $this->process->get_stats();
     }
 }
