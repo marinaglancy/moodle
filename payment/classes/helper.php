@@ -67,7 +67,7 @@ class helper {
      * @param int $componentid
      * @return string[]
      */
-    public static function get_gateways_for_currency(string $component, string $paymentarea, int $componentid): array {
+    public static function get_available_gateways(string $component, string $paymentarea, int $componentid): array {
         $gateways = [];
 
         [
@@ -97,35 +97,22 @@ class helper {
     }
 
     /**
-     * Calculates the cost with the surcharge
+     * Rounds the cost based on the currency fractional digits, can also format with the currency symbol and/or apply surcharge
      *
      * @param float $amount amount in the currency units
      * @param float $surcharge surcharge in percents
      * @param string $currency currency, used for calculating the number of fractional digits
-     * @return float
+     * @param bool $asstring if true returns formatted string with currency name, by default returns the float
+     * @return float|string
      */
-    public static function get_cost_with_surcharge(float $amount, float $surcharge, string $currency): float {
-        return round($amount + $amount * $surcharge / 100, 2); // TODO number of digits depends on currency.
-    }
-
-    /**
-     * Returns human-readable amount with fixed number of fractional digits and currency indicator
-     *
-     * @param float $amount
-     * @param string $currency
-     * @return string
-     * @throws \coding_exception
-     */
-    public static function get_cost_as_string(float $amount, string $currency): string {
-        if (class_exists('NumberFormatter') && function_exists('numfmt_format_currency')) {
-            $locale = get_string('localecldr', 'langconfig');
-            $fmt = \NumberFormatter::create($locale, \NumberFormatter::CURRENCY);
-            $localisedcost = numfmt_format_currency($fmt, $amount, $currency);
-        } else {
-            $localisedcost = sprintf("%.2f %s", $amount, $currency); // TODO number of digits depends on currency.
+    public static function get_rounded_cost(float $amount, float $surcharge, string $currency, bool $asstring = false) {
+        $locale = get_string('localecldr', 'langconfig');
+        $fmt = \NumberFormatter::create($locale, \NumberFormatter::CURRENCY);
+        $localisedcost = numfmt_format_currency($fmt, $amount * (100 + $surcharge) / 100, $currency);
+        if ($asstring) {
+            return $localisedcost;
         }
-
-        return $localisedcost;
+        return numfmt_parse_currency($fmt, $localisedcost, $currency);
     }
 
     /**
@@ -175,7 +162,7 @@ class helper {
             'data-component' => $component,
             'data-paymentarea' => $paymentarea,
             'data-componentid' => $componentid,
-            'data-cost' => self::get_cost_as_string($amount, $currency),
+            'data-cost' => self::get_rounded_cost($amount, 0, $currency, true),
             'data-description' => $description,
         ];
     }
