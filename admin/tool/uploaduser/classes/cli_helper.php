@@ -24,6 +24,8 @@
 
 namespace tool_uploaduser;
 
+defined('MOODLE_INTERNAL') || die();
+
 use tool_uploaduser\local\cli_progress_tracker;
 
 require_once($CFG->dirroot.'/user/profile/lib.php');

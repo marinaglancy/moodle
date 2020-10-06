@@ -209,9 +209,9 @@ class tool_uploaduser_cli_testcase extends advanced_testcase {
     }
 
     /**
-     * Testing update mode
+     * Testing update mode - do not update user records but allow enrolments
      */
-    public function test_udpate_when_user_exists() {
+    public function test_enrolments_when_user_exists() {
         global $CFG;
         require_once($CFG->dirroot.'/'.$CFG->admin.'/tool/uploaduser/locallib.php');
 
@@ -224,7 +224,8 @@ class tool_uploaduser_cli_testcase extends advanced_testcase {
         $g2 = $this->getDataGenerator()->create_group(['courseid' => $course->id, 'name' => 'Section 3', 'idnumber' => 'S3']);
 
         // Create a user with username jonest.
-        $user1 = $this->getDataGenerator()->create_user(['username' => 'jonest', 'email' => 'jonest@someplace.edu']);
+        $this->getDataGenerator()->create_user(['username' => 'jonest', 'email' => 'jonest@someplace.edu',
+            'firstname' => 'OLDNAME']);
 
         $filepath = $CFG->dirroot.'/lib/tests/fixtures/upload_users.csv';
 
@@ -240,8 +241,55 @@ class tool_uploaduser_cli_testcase extends advanced_testcase {
         $this->assertEquals('Users updated: 0', $stats[0]);
         $this->assertEquals('Users skipped: 1', $stats[1]);
 
-        // Trent Reznor is enrolled into the course, Tom Jones is not!
+        // Tom Jones is enrolled into the course.
         $enrols = array_values(enrol_get_course_users($course->id));
         $this->assertEqualsCanonicalizing(['jonest'], [$enrols[0]->username]);
+        // User reznor is not created.
+        $this->assertFalse(core_user::get_user_by_username('reznor'));
+        // User jonest is not updated.
+        $this->assertEquals('OLDNAME', core_user::get_user_by_username('jonest')->firstname);
+    }
+
+    /**
+     * Testing update mode - update user records and perform enrolments.
+     */
+    public function test_udpate_user() {
+        global $CFG;
+        require_once($CFG->dirroot.'/'.$CFG->admin.'/tool/uploaduser/locallib.php');
+
+        $this->resetAfterTest();
+        set_config('passwordpolicy', 0);
+        $this->setAdminUser();
+
+        $course = $this->getDataGenerator()->create_course(['fullname' => 'Maths', 'shortname' => 'math102']);
+        $g1 = $this->getDataGenerator()->create_group(['courseid' => $course->id, 'name' => 'Section 1', 'idnumber' => 'S1']);
+        $g2 = $this->getDataGenerator()->create_group(['courseid' => $course->id, 'name' => 'Section 3', 'idnumber' => 'S3']);
+
+        // Create a user with username jonest.
+        $this->getDataGenerator()->create_user(['username' => 'jonest',
+            'email' => 'jonest@someplace.edu', 'firstname' => 'OLDNAME']);
+
+        $filepath = $CFG->dirroot.'/lib/tests/fixtures/upload_users.csv';
+
+        $clihelper = $this->construct_helper(["--file=$filepath", '--uutype='.UU_USER_UPDATE,
+            '--uuupdatetype='.UU_UPDATE_FILEOVERRIDE]);
+        ob_start();
+        $clihelper->process();
+        $output = ob_get_contents();
+        ob_end_clean();
+
+        // CLI output suggests that 1 user was created and 1 skipped.
+        $stats = $clihelper->get_stats();
+        $this->assertEquals(0, preg_match_all('/New user/', $output));
+        $this->assertEquals('Users updated: 1', $stats[0]);
+        $this->assertEquals('Users skipped: 1', $stats[1]);
+
+        // Tom Jones is enrolled into the course.
+        $enrols = array_values(enrol_get_course_users($course->id));
+        $this->assertEqualsCanonicalizing(['jonest'], [$enrols[0]->username]);
+        // User reznor is not created.
+        $this->assertFalse(core_user::get_user_by_username('reznor'));
+        // User jonest is updated, new first name is Tom.
+        $this->assertEquals('Tom', core_user::get_user_by_username('jonest')->firstname);
     }
 }
