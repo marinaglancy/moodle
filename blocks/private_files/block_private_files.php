@@ -61,8 +61,28 @@ class block_private_files extends block_base {
             $this->content->text = $renderer->private_files_tree();
             if (has_capability('moodle/user:manageownfiles', $this->context)) {
                 $this->content->footer = html_writer::link(
-                    new moodle_url('/user/files.php', array('returnurl' => $this->page->url->out())),
-                    get_string('privatefilesmanage') . '...');
+                    new moodle_url('/user/files.php'),
+                    get_string('privatefilesmanage') . '...',
+                ['data-action' => 'manageprivatefiles']);
+                $this->page->requires->js_amd_inline(<<<EOT
+require(['core_form/modal', 'core/str'], function(ModalForm, Str) {
+    document.querySelector('[data-action=manageprivatefiles]').addEventListener('click', function(e) {
+        e.preventDefault();
+        var form = new ModalForm({
+            formClass: "core_user\\\\form\\\\private_files",
+            args: {nosubmit: true},
+            modalConfig: {title: Str.get_string('privatefilesmanage')},
+            returnFocus: e.currentTarget
+        });
+        form.onSubmitSuccess = function() {
+            // TODO refresh only block.
+            window.location.reload();
+        };
+    });
+});
+EOT
+                );
+
             }
 
         }
