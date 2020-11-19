@@ -2358,4 +2358,27 @@ EOF;
         }
     }
 
+    /**
+     * Ignore exceptions from this point in the scenario till the end of the scenario or until the "stop" step
+     *
+     * Normally exceptions output on the page should mean that there is something wrong and the scenario should
+     * fail. However sometimes it helps to make sure that exception did happen, especially when users visit
+     * the pages that don't have links to, for example using step {@see i_visit()}
+     *
+     * @When I start ignoring exceptions
+     */
+    public function i_start_ignoring_exceptions(): void {
+        self::$allowexceptionsonpage = true;
+    }
+
+    /**
+     * Stop ignoring exception
+     *
+     * Make sure you have left the page with exception when calling this step, otherwise it will fail
+     *
+     * @When I stop ignoring exceptions
+     */
+    public function i_stop_ignoring_exceptions(): void {
+        self::$allowexceptionsonpage = false;
+    }
 }

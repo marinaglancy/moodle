@@ -48,7 +48,10 @@ Feature: Restricting access to course lists
     And I am on site homepage
     Then I should not see "Available courses"
     And "Courses" "link" should not exist in the "Navigation" "block"
-    And I log out
+    And I start ignoring exceptions
+    And I am on course index
+    And I should see "You don't have permission to view this list of courses"
+    And I follow "Site home"
 
   Scenario: Browse own courses as a user without any browse capability
     Given the following "course enrolments" exist:

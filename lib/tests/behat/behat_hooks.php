@@ -401,6 +401,8 @@ EOF;
             return;
         }
 
+        self::$allowexceptionsonpage = false;
+
         $suitename = $scope->getSuite()->getName();
 
         // Register behat selectors for theme, if suite is changed. We do it for every suite change.

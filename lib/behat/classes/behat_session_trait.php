@@ -57,6 +57,10 @@ class_alias('Facebook\WebDriver\WebDriverKeys', 'behat_keys');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 trait behat_session_trait {
+    /**
+     * @var bool Flag that can be temporarily set to stop automatic scanning of pages for exceptions
+     */
+    protected static $allowexceptionsonpage = false;
 
     /**
      * Locates url, based on provided path.
@@ -897,6 +901,10 @@ EOF;
      * @see Moodle\BehatExtension\Tester\MoodleStepTester
      */
     public function look_for_exceptions() {
+        if (self::$allowexceptionsonpage) {
+            return;
+        }
+
         // Wrap in try in case we were interacting with a closed window.
         try {
 
