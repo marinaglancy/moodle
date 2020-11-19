@@ -82,7 +82,7 @@ class behat_hooks extends behat_base {
      * failure, but we can store them here to fail the step in i_look_for_exceptions()
      * which result will be parsed by the framework as the last step result.
      *
-     * @var Null or the exception last step throw in the before or after hook.
+     * @var Exception null or the exception last step throw in the before or after hook.
      */
     protected static $currentstepexception = null;
 
@@ -395,6 +395,8 @@ EOF;
             // Skip this hook as it will likely fail.
             return;
         }
+
+        self::$allowexceptionsonpage = false;
 
         $suitename = $scope->getSuite()->getName();
 

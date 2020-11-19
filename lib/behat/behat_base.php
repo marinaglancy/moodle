@@ -99,6 +99,13 @@ class behat_base extends Behat\MinkExtension\Context\RawMinkContext {
         "typeof M.util.pending_js === 'undefined' || M.util.pending_js.length === 0)";
 
     /**
+     * Flag that can be temporarily set to stop automatic scanning of pages for exceptions
+     *
+     * @var bool
+     */
+    protected static $allowexceptionsonpage = false;
+
+    /**
      * Locates url, based on provided path.
      * Override to provide custom routing mechanism.
      *
@@ -873,6 +880,10 @@ EOF;
      * @see Moodle\BehatExtension\Tester\MoodleStepTester
      */
     public function look_for_exceptions() {
+        if (self::$allowexceptionsonpage) {
+            return;
+        }
+
         // Wrap in try in case we were interacting with a closed window.
         try {
 
