@@ -49,7 +49,9 @@ Feature: Fields locked control who is able to edit it
     And I log in as "teacher1"
     And I am on "Course 1" course homepage
     And I navigate to "Edit settings" in current page administration
+    And I expand all fieldsets
     And the field "Test field1" matches value "testcontent1"
+    And I should not see "Test field2"
     And I press "Save and display"
     And I am on site homepage
     And I should see "Test field1: testcontent1"
