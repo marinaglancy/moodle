@@ -45,8 +45,9 @@ $PAGE->set_pagetype('user-files');
 echo $OUTPUT->header();
 echo $OUTPUT->box_start('generalbox');
 
-$formclass = str_replace("\\", "\\\\", \core_user\form\private_files::class);
-echo $OUTPUT->render_from_template('core_user/private_files', ['formclass' => $formclass]);
+echo html_writer::div('', '', ['id' => 'userfilesform']);
+$PAGE->requires->js_call_amd('core_user/private_files', 'initAjax',
+    ['#userfilesform', \core_user\form\private_files::class]);
 
 echo $OUTPUT->box_end();
 echo $OUTPUT->footer();
