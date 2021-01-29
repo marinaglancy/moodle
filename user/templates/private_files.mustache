@@ -27,11 +27,10 @@
 <div id="userfilesform"></div>
 {{#js}}
 require(['core_form/ajaxform'], function(AjaxForm) {
-    form = new AjaxForm(document.getElementById('userfilesform'), '{{formclass}}', {});
+    form = new AjaxForm(document.getElementById('userfilesform'), '{{formclass}}');
+    // Load the private files form immediately when page is displayed:
     form.load();
-    form.onSubmitSuccess = function(response) {
-        form.load(); // To remove validation errors, if any.
-        M.core_formchangechecker.set_form_submitted();
-    }
+    // When form is saved, refresh it to remove validation errors, if any:
+    form.onSubmitSuccess = (response) => form.load();
 });
 {{/js}}
