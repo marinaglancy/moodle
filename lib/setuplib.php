@@ -422,7 +422,8 @@ function default_exception_handler($ex) {
  * @param array $errcontext
  * @return bool false means use default error handler
  */
-function default_error_handler($errno, $errstr, $errfile, $errline, $errcontext) {
+function default_error_handler(int $errno, string $errstr, string $errfile = null, int $errline = 0,
+                               array $errcontext = null): bool {
     if ($errno == 4096) {
         //fatal catchable error
         throw new coding_exception('PHP catchable fatal error', $errstr);
