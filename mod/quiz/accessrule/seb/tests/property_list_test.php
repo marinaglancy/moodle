@@ -415,11 +415,11 @@ class quizaccess_seb_property_list_testcase extends advanced_testcase {
             'empty dict' => ["<key>bool</key><true/><key>emptydict</key><dict/>", "{\"bool\":true}"],
             'unordered elements' => ["<key>testKey</key>"
                     . "<string>testValue</string>"
-                    . "<key>allowWLAN</key>"
+                    . "<key>allowW2</key>"
                     . "<string>testValue2</string>"
-                    . "<key>allowWlan</key>"
+                    . "<key>allowW1</key>"
                     . "<string>testValue3</string>"
-                    , "{\"allowWlan\":\"testValue3\",\"allowWLAN\":\"testValue2\",\"testKey\":\"testValue\"}"],
+                    , "{\"allowW1\":\"testValue3\",\"allowW2\":\"testValue2\",\"testKey\":\"testValue\"}"],
             'url' => ["<key>url</key><string>http://test.com</string>", "{\"url\":\"http://test.com\"}"],
             'assoc dict' => ["<key>dict</key><dict><key>banana</key><false/><key>apple</key><true/></dict>",
                     "{\"dict\":{\"apple\":true,\"banana\":false}}"],
