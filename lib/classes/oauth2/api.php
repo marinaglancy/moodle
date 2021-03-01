@@ -369,9 +369,12 @@ class api {
 
     /**
      * List all the issuers, ordered by the sortorder field
+     *
+     * @param bool $includeloginonly include issues that are configured for login only
      * @return \core\oauth2\issuer[]
      */
-    public static function get_all_issuers() {
+    public static function get_all_issuers(bool $includeloginonly = false) {
+        // TODO implement $includeloginonly
         return issuer::get_records([], 'sortorder');
     }
 

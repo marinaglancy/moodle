@@ -45,7 +45,7 @@ if ($action == 'new') {
     $issuerid = required_param('issuerid', PARAM_INT);
     $issuer = \core\oauth2\api::get_issuer($issuerid);
 
-    if (!$issuer->is_authentication_supported() || !$issuer->get('showonloginpage') || !$issuer->get('enabled')) {
+    if (!$issuer->is_available_for_login()) {
         throw new \moodle_exception('issuernologin', 'auth_oauth2');
     }
 
@@ -89,12 +89,12 @@ $linkedlogin = null;
 
 auth_oauth2\api::clean_orphaned_linked_logins();
 
-$issuers = \core\oauth2\api::get_all_issuers();
+$issuers = \core\oauth2\api::get_all_issuers(true);
 
 $anyshowinloginpage = false;
 $issuerbuttons = array();
 foreach ($issuers as $issuer) {
-    if (!$issuer->is_authentication_supported() || !$issuer->get('showonloginpage') || !$issuer->get('enabled')) {
+    if (!$issuer->is_available_for_login()) {
         continue;
     }
     $anyshowinloginpage = true;

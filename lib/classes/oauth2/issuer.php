@@ -168,7 +168,23 @@ class issuer extends persistent {
      * @return boolean
      */
     public function is_authentication_supported() {
+        debugging('Method is_authentication_supported() is deprecated, please use is_available_for_login()',
+            DEBUG_DEVELOPER);
         return (!empty($this->get_endpoint_url('userinfo')));
+    }
+
+    /**
+     * Is this issue fully configured and enabled and can be used for login/signup
+     *
+     * @return bool
+     * @throws \coding_exception
+     */
+    public function is_available_for_login() {
+        return $this->get('id') &&
+            $this->is_configured() &&
+            $this->get('showonloginpage') &&
+            $this->get('enabled') &&
+            !empty($this->get_endpoint_url('userinfo'));
     }
 
     /**

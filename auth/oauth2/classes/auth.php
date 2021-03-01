@@ -168,14 +168,15 @@ class auth extends \auth_plugin_base {
 
     /**
      * Do some checks on the identity provider before showing it on the login page.
-     * @param core\oauth2\issuer $issuer
+     * @param \core\oauth2\issuer $issuer
      * @return boolean
      */
-    private function is_ready_for_login_page(\core\oauth2\issuer $issuer) {
-        return $issuer->get('enabled') &&
-                $issuer->is_configured() &&
-                !empty($issuer->get('showonloginpage'));
-    }
+//    private function is_ready_for_login_page(\core\oauth2\issuer $issuer) {
+//        return $issuer->get('enabled') &&
+//                $issuer->is_configured() &&
+//                !empty($issuer->get('showonloginpage')) &&
+//                \tool_tenant\auth_manager::oauth2_issuer_available($issuer->get('id'));
+//    }
 
     /**
      * Return a list of identity providers to display on the login page.
@@ -184,13 +185,13 @@ class auth extends \auth_plugin_base {
      * @return array List of arrays with keys url, iconurl and name.
      */
     public function loginpage_idp_list($wantsurl) {
-        $providers = \core\oauth2\api::get_all_issuers();
+        $providers = \core\oauth2\api::get_all_issuers(true);
         $result = [];
         if (empty($wantsurl)) {
             $wantsurl = '/';
         }
         foreach ($providers as $idp) {
-            if ($this->is_ready_for_login_page($idp)) {
+            if ($idp->is_available_for_login()) {
                 $params = ['id' => $idp->get('id'), 'wantsurl' => $wantsurl, 'sesskey' => sesskey()];
                 $url = new moodle_url('/auth/oauth2/login.php', $params);
                 $icon = $idp->get('image');
