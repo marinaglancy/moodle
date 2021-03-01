@@ -52,7 +52,7 @@ class api {
             'baseurl' => '',
             'loginscopes' => 'public_profile email',
             'loginscopesoffline' => 'public_profile email',
-            'showonloginpage' => true,
+            'showonloginpage' => issuer::EVERYWHERE,
             'servicetype' => 'facebook',
         ];
 
@@ -131,7 +131,7 @@ class api {
             'baseurl' => '',
             'loginscopes' => 'openid profile email user.read',
             'loginscopesoffline' => 'openid profile email user.read offline_access',
-            'showonloginpage' => true,
+            'showonloginpage' => issuer::EVERYWHERE,
             'servicetype' => 'microsoft',
         ];
 
@@ -356,10 +356,16 @@ class api {
 
     /**
      * List all the issuers, ordered by the sortorder field
+     *
+     * @param bool $showall also include issues that are configured to be shown only on login page
      * @return \core\oauth2\issuer[]
      */
-    public static function get_all_issuers() {
-        return issuer::get_records([], 'sortorder');
+    public static function get_all_issuers(bool $showall = false) {
+        if ($showall) {
+            return issuer::get_records([], 'sortorder');
+        } else {
+            return array_values(issuer::get_records_select('showonloginpage<>?', [issuer::LOGINONLY], 'sortorder'));
+        }
     }
 
     /**
