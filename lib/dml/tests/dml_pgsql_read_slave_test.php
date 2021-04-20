@@ -108,32 +108,6 @@ class core_dml_pgsql_read_slave_testcase extends base_testcase {
     }
 
     /**
-     * Test readonly handle is not used for reading from temptables
-     * and getting temptables metadata.
-     * This test is only possible because of no pg_query error reporting.
-     * It may need to be removed in the future if we decide to handle null
-     * results in pgsql_native_moodle_database differently.
-     *
-     * @return void
-     */
-    public function test_temp_table() : void {
-        $DB = new read_slave_moodle_database_mock_pgsql();
-
-        $this->assertEquals(0, $DB->perf_get_reads_slave());
-
-        $dbman = $DB->get_manager();
-        $table = new xmldb_table('silly_test_table');
-        $table->add_field('id', XMLDB_TYPE_INTEGER, 10, null, XMLDB_NOTNULL, XMLDB_SEQUENCE);
-        $table->add_field('msg', XMLDB_TYPE_CHAR, 255);
-        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
-        $dbman->create_temp_table($table);
-
-        $DB->get_columns('silly_test_table');
-        $DB->get_records('silly_test_table');
-        $this->assertEquals(0, $DB->perf_get_reads_slave());
-    }
-
-    /**
      * Test readonly connection failure with real pgsql connection
      *
      * @return void
