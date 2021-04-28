@@ -42,6 +42,9 @@ class accessibility {
     /** @var string Supported format of weeks */
     const TOOL_BRICKFIELD_FORMAT_WEEKLY = 'weeks';
 
+    /** @var string Supported format of wplist */
+    const TOOL_BRICKFIELD_FORMAT_WPLIST = 'wplist';
+
     /**
      * Return the state of the site enable condition.
      * @return bool
