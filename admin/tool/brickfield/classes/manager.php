@@ -193,7 +193,8 @@ class manager {
                         return null;
                     }
                 },
-                array_keys(\core_component::get_component_classes_in_namespace('tool_brickfield', 'local\areas'))
+                array_keys(\core_component::get_component_classes_in_namespace('tool_brickfield', 'local\areas') +
+                    \core_component::get_component_classes_in_namespace(null, 'local\tool_brickfield\areas'))
             )
         );
     }
