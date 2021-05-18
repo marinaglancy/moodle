@@ -1092,17 +1092,18 @@ function grade_recover_history_grades($userid, $courseid) {
         $sql = "SELECT h.id, gi.itemtype, gi.itemmodule, gi.iteminstance as iteminstance, gi.itemnumber, h.source, h.itemid, h.userid, h.rawgrade, h.rawgrademax,
                        h.rawgrademin, h.rawscaleid, h.usermodified, h.finalgrade, h.hidden, h.locked, h.locktime, h.exported, h.overridden, h.excluded, h.feedback,
                        h.feedbackformat, h.information, h.informationformat, h.timemodified, itemcreated.tm AS timecreated
-                  FROM {grade_grades_history} h
-                  JOIN (SELECT itemid, MAX(id) AS id
-                          FROM {grade_grades_history}
-                         WHERE userid = :userid1
-                      GROUP BY itemid) maxquery ON h.id = maxquery.id AND h.itemid = maxquery.itemid
-                  JOIN {grade_items} gi ON gi.id = h.itemid
+                  FROM (SELECT i.id, i.itemtype, i.itemmodule, i.iteminstance, i.itemnumber,
+                               MAX(hm.id) AS maxhistoryid
+                          FROM {grade_items} i
+                          JOIN {grade_grades_history} hm ON hm.itemid = i.id
+                         WHERE i.courseid = :courseid AND hm.userid = :userid1
+                      GROUP BY i.id, i.itemtype, i.itemmodule, i.iteminstance, i.itemnumber
+                       ) gi
+                  JOIN {grade_grades_history} h ON h.id = gi.maxhistoryid
                   JOIN (SELECT itemid, MAX(timemodified) AS tm
                           FROM {grade_grades_history}
                          WHERE userid = :userid2 AND action = :insertaction
-                      GROUP BY itemid) itemcreated ON itemcreated.itemid = h.itemid
-                 WHERE gi.courseid = :courseid";
+                      GROUP BY itemid) itemcreated ON itemcreated.itemid = gi.id";
         $params = array('userid1' => $userid, 'userid2' => $userid , 'insertaction' => GRADE_HISTORY_INSERT, 'courseid' => $courseid);
         $oldgrades = $DB->get_records_sql($sql, $params);
 

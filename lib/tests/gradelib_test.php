@@ -301,4 +301,76 @@ class core_gradelib_testcase extends advanced_testcase {
 
         $this->assertEquals($expected, $actual);
     }
+
+    /**
+     * Updates the grade of a user in the given assign module instance.
+     *
+     * @param stdClass $assignrow Assignment row from database
+     * @param int $userid User id
+     * @param float $grade Grade
+     */
+    protected function set_grade_in_course(stdClass $assignrow, int $userid, float $grade) {
+        $grades = [];
+        $grades[$userid] = (object)[
+            'rawgrade' => $grade,
+            'userid' => $userid
+        ];
+        $assignrow->cmidnumber = null;
+        return assign_grade_item_update($assignrow, $grades);
+    }
+
+    /**
+     * Unenrol user enrolled with manual enrolment method
+     *
+     * @param int $userid
+     * @param int $courseid
+     */
+    protected function unenrol_user(int $userid, int $courseid) {
+        global $DB;
+        $enrolplugin = enrol_get_plugin('manual');
+        $instance = $DB->get_record_sql("SELECT e.* FROM {enrol} e WHERE e.enrol = ? AND e.courseid = ?",
+            ['manual', $courseid]);
+        $enrolplugin->unenrol_user($instance, $userid);
+    }
+
+    /**
+     * Test for the function to recover course grades
+     */
+    public function test_grade_recover_history_grades() {
+        global $CFG;
+        $this->resetAfterTest();
+
+        // Set to recover grades on re-enrolment.
+        $CFG->recovergradesdefault = 1;
+
+        // Create two users, course and assignment, enrol users.
+        $user = $this->getDataGenerator()->create_user();
+        $user2 = $this->getDataGenerator()->create_user();
+        $course1 = $this->getDataGenerator()->create_course();
+        $assignrow = $this->getDataGenerator()->create_module('assign', ['course' => $course1->id]);
+        $this->getDataGenerator()->enrol_user($user->id, $course1->id, 'student');
+        $this->getDataGenerator()->enrol_user($user2->id, $course1->id, 'student');
+
+        // Add grades for both users.
+        $this->assertEquals(GRADE_UPDATE_OK, $this->set_grade_in_course($assignrow, $user->id, 50));
+        $gradinginfo = grade_get_grades($course1->id, 'mod', 'assign', $assignrow->id, $user->id);
+        $this->assertEquals(50, $gradinginfo->items[0]->grades[$user->id]->grade);
+
+        $this->assertEquals(GRADE_UPDATE_OK, $this->set_grade_in_course($assignrow, $user2->id, 30));
+        $gradinginfo = grade_get_grades($course1->id, 'mod', 'assign', $assignrow->id, $user2->id);
+        $this->assertEquals(30, $gradinginfo->items[0]->grades[$user2->id]->grade);
+
+        // Unenrol first user, their grade is removed.
+        $this->unenrol_user($user->id, $course1->id);
+        $gradinginfo = grade_get_grades($course1->id, 'mod', 'assign', $assignrow->id, $user->id);
+        $this->assertNull($gradinginfo->items[0]->grades[$user->id]->grade);
+
+        // Enrol the first again. This will call grade_recover_history_grades(). Check that grades are restored.
+        $this->getDataGenerator()->enrol_user($user->id, $course1->id, 'student');
+        $gradinginfo = grade_get_grades($course1->id, 'mod', 'assign', $assignrow->id, $user->id);
+        $this->assertEquals(50, $gradinginfo->items[0]->grades[$user->id]->grade);
+        // Check that second user's grades are intact.
+        $gradinginfo = grade_get_grades($course1->id, 'mod', 'assign', $assignrow->id, $user2->id);
+        $this->assertEquals(30, $gradinginfo->items[0]->grades[$user2->id]->grade);
+    }
 }
