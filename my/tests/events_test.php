@@ -84,13 +84,23 @@ class dashboard_events_testcase extends advanced_testcase {
      * trigger the event and ensure data is returned as expected.
      */
     public function test_dashboard_reset() {
-        global $CFG;
+        global $CFG, $DB;
         require_once($CFG->dirroot . '/my/lib.php');
         $user = $this->user;
         $sink = $this->redirectEvents();
 
+        // Create at least one dashboard.
+        my_copy_page($this->user->id);
+        $usercontext = context_user::instance($this->user->id);
+        $this->assertNotEmpty($DB->get_records('my_pages', ['userid' => $this->user->id, 'private' => 1, 'name' => '__default']));
+        $this->assertNotEmpty($DB->get_records('block_instances', ['parentcontextid' => $usercontext->id]));
+
         // Reset the dashboard.
         my_reset_page($user->id);
+
+        // Assert that the page and all th blocks were deleted.
+        $this->assertEmpty($DB->get_records('my_pages', ['userid' => $this->user->id, 'private' => 1, 'name' => '__default']));
+        $this->assertEmpty($DB->get_records('block_instances', ['parentcontextid' => $usercontext->id]));
 
         // Trigger and capture the event.
         $events = $sink->get_events();
@@ -106,6 +116,7 @@ class dashboard_events_testcase extends advanced_testcase {
         // Reset the dashboard with private parameter is set to MY_PAGE_PUBLIC and pagetype set to 'user-profile'.
         $sink = $this->redirectEvents();
         my_reset_page($user->id, MY_PAGE_PUBLIC, 'user-profile');
+        // TODO: create blocks on the public page and assert that they were actually deleted.
 
         // Trigger and capture the event.
         $events = $sink->get_events();
@@ -121,13 +132,23 @@ class dashboard_events_testcase extends advanced_testcase {
      * trigger the event and ensure data is returned as expected.
      */
     public function test_dashboards_reset() {
-        global $CFG, $USER;
+        global $CFG, $USER, $DB;
         require_once($CFG->dirroot . '/my/lib.php');
+
+        // Create at least one dashboard.
+        my_copy_page($this->user->id);
+        $usercontext = context_user::instance($this->user->id);
+        $this->assertNotEmpty($DB->get_records('my_pages', ['userid' => $this->user->id, 'private' => 1, 'name' => '__default']));
+        $this->assertNotEmpty($DB->get_records('block_instances', ['parentcontextid' => $usercontext->id]));
 
         $sink = $this->redirectEvents();
 
         // Reset all dashbaords.
         my_reset_page_for_all_users();
+
+        // Assert that the page and all th blocks were deleted.
+        $this->assertEmpty($DB->get_records('my_pages', ['userid' => $this->user->id, 'private' => 1, 'name' => '__default']));
+        $this->assertEmpty($DB->get_records('block_instances', ['parentcontextid' => $usercontext->id]));
 
         // Trigger and capture the event.
         $events = $sink->get_events();
@@ -143,6 +164,7 @@ class dashboard_events_testcase extends advanced_testcase {
         // Reset the dashboards with private parameter is set to MY_PAGE_PUBLIC and pagetype set to 'user-profile'.
         $sink = $this->redirectEvents();
         my_reset_page_for_all_users(MY_PAGE_PUBLIC, 'user-profile');
+        // TODO: create blocks on the public page and assert that they were actually deleted.
 
         // Trigger and capture the event.
         $events = $sink->get_events();
