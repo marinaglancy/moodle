@@ -4273,6 +4273,16 @@ EOD;
         $this->assertCount(3, $records);
         $this->assertSame('111', $records[1]->result);
 
+        // How to implement cast int to string.
+        $sql = 'SELECT id, ' . $DB->sql_concat("?", 'id') . ' AS result FROM {' . $tablename . '}';
+        $records = $DB->get_records_sql($sql, array(''));
+        $this->assertCount(3, $records);
+        $this->assertSame('1', $records[1]->result);
+
+        $sql = 'SELECT id, ' . $DB->sql_concat("''", 'id') . ' AS result FROM {' . $tablename . '}';
+        $records = $DB->get_records_sql($sql, array());
+        $this->assertCount(3, $records);
+        $this->assertSame('1', $records[1]->result);
     }
 
     public function sql_concat_join_provider() {
