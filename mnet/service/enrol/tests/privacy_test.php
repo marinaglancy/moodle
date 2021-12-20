@@ -105,8 +105,8 @@ class mnetservice_enrol_privacy_testcase extends provider_testcase {
         $this->assertFalse($writer->has_any_data());
         $approvedlist = new approved_contextlist($user, 'mnetservice_enrol', [$usercontext->id]);
         provider::export_user_data($approvedlist);
-        $data = $writer->get_data($subcontexts);
-        $this->assertCount(1, (array)$data);
+        $data = (array)$writer->get_data($subcontexts);
+        $this->assertCount(1, $data);
         $this->assertEquals($this->mnethost->name, reset($data)->host);
         $remotecoursename = $DB->get_field('mnetservice_enrol_courses', 'fullname',
             array('remoteid' => $this->enrolment->remotecourseid));
