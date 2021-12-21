@@ -85,6 +85,7 @@ class BSONIterator implements Iterator
      * @see http://php.net/iterator.current
      * @return mixed
      */
+    #[\ReturnTypeWillChange]
     public function current()
     {
         return $this->current;

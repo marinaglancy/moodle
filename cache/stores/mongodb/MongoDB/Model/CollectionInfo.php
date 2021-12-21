@@ -115,7 +115,7 @@ class CollectionInfo implements ArrayAccess
      * @param mixed $key
      * @return boolean
      */
-    public function offsetExists($key)
+    public function offsetExists($key): bool
     {
         return array_key_exists($key, $this->info);
     }

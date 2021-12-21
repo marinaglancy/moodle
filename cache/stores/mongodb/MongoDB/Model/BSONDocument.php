@@ -101,6 +101,7 @@ class BSONDocument extends ArrayObject implements JsonSerializable, Serializable
      * @see http://php.net/jsonserializable.jsonserialize
      * @return object
      */
+    #[\ReturnTypeWillChange]
     public function jsonSerialize()
     {
         return (object) $this->getArrayCopy();
