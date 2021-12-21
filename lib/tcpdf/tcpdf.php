@@ -4176,7 +4176,7 @@ class TCPDF {
 			// SHY character will not be printed
 			return (0);
 		}
-		if (isset($this->CurrentFont['cw'][$char])) {
+		if (is_int($char) && isset($this->CurrentFont['cw'][$char])) {
 			$w = $this->CurrentFont['cw'][$char];
 		} elseif (isset($this->CurrentFont['dw'])) {
 			// default width
