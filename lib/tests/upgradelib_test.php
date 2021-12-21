@@ -707,6 +707,10 @@ class upgradelib_test extends advanced_testcase {
      */
     public function create_testthemes() {
         global $CFG;
+        if (version_compare(PHP_VERSION, '8.1', '>=')) {
+            $this->markTestSkipped('PHP 8.1 not supported yet in \org\bovigo\vfs\vfsStream');
+            return;
+        }
 
         $themedircontent = [
             'testtheme' => [

@@ -56,6 +56,10 @@ class core_files_file_system_testcase extends advanced_testcase {
      * @return  \org\bovigo\vfs\vfsStream
      */
     protected function setup_vfile_root($content = []) {
+        if (version_compare(PHP_VERSION, '8.1', '>=')) {
+            $this->markTestSkipped('PHP 8.1 not supported yet in \org\bovigo\vfs\vfsStream');
+            return '';
+        }
         $vfileroot = \org\bovigo\vfs\vfsStream::setup('root', null, $content);
 
         return $vfileroot;

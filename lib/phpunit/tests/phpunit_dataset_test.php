@@ -84,6 +84,10 @@ class phpunit_dataset_test extends advanced_testcase {
      * test_from_file() data provider.
      */
     public function from_file_provider() {
+        if (version_compare(PHP_VERSION, '8.1', '>=')) {
+            $this->markTestSkipped('PHP 8.1 not supported yet in \org\bovigo\vfs\vfsStream');
+            return;
+        }
         // Create an unreadable file with vfsStream.
         $vfsfile = vfsStream::newFile('unreadable', 0222);
         vfsStream::setup('root')->addChild($vfsfile);
