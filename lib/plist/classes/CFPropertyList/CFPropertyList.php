@@ -667,7 +667,7 @@ class CFPropertyList extends CFBinaryPropertyList implements Iterator
    * @uses $iteratorPosition set to 0
    * @uses $iteratorKeys store keys of {@link $value}
    */
-    public function rewind()
+    public function rewind(): void
     {
         $this->iteratorPosition = 0;
         $this->iteratorKeys = array_keys($this->value);
@@ -680,6 +680,7 @@ class CFPropertyList extends CFBinaryPropertyList implements Iterator
    * @uses $iteratorPosition identify current key
    * @uses $iteratorKeys identify current value
    */
+    #[\ReturnTypeWillChange]
     public function current()
     {
         return $this->value[$this->iteratorKeys[$this->iteratorPosition]];
@@ -692,6 +693,7 @@ class CFPropertyList extends CFBinaryPropertyList implements Iterator
    * @uses $iteratorPosition identify current key
    * @uses $iteratorKeys identify current value
    */
+    #[\ReturnTypeWillChange]
     public function key()
     {
         return $this->iteratorKeys[$this->iteratorPosition];
@@ -703,7 +705,7 @@ class CFPropertyList extends CFBinaryPropertyList implements Iterator
    * @return void
    * @uses $iteratorPosition increment by 1
    */
-    public function next()
+    public function next(): void
     {
         $this->iteratorPosition++;
     }
@@ -715,7 +717,7 @@ class CFPropertyList extends CFBinaryPropertyList implements Iterator
    * @uses $iteratorPosition test if within {@link $iteratorKeys}
    * @uses $iteratorPosition test if within {@link $value}
    */
-    public function valid()
+    public function valid(): bool
     {
         return isset($this->iteratorKeys[$this->iteratorPosition]) && isset($this->value[$this->iteratorKeys[$this->iteratorPosition]]);
     }

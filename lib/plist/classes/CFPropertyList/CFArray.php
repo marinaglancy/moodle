@@ -177,7 +177,7 @@ class CFArray extends CFType implements Iterator, ArrayAccess
    * @return void
    * @uses $iteratorPosition set to 0
    */
-    public function rewind()
+    public function rewind(): void
     {
         $this->iteratorPosition = 0;
     }
@@ -188,6 +188,7 @@ class CFArray extends CFType implements Iterator, ArrayAccess
    * @return CFType current Item
    * @uses $iteratorPosition identify current key
    */
+    #[\ReturnTypeWillChange]
     public function current()
     {
         return $this->value[$this->iteratorPosition];
@@ -199,6 +200,7 @@ class CFArray extends CFType implements Iterator, ArrayAccess
    * @return string key of the current Item
    * @uses $iteratorPosition identify current key
    */
+    #[\ReturnTypeWillChange]
     public function key()
     {
         return $this->iteratorPosition;
@@ -210,7 +212,7 @@ class CFArray extends CFType implements Iterator, ArrayAccess
    * @return void
    * @uses $iteratorPosition increment by 1
    */
-    public function next()
+    public function next(): void
     {
         $this->iteratorPosition++;
     }
@@ -222,7 +224,7 @@ class CFArray extends CFType implements Iterator, ArrayAccess
    * @uses $iteratorPosition test if within {@link $iteratorKeys}
    * @uses $iteratorPosition test if within {@link $value}
    */
-    public function valid()
+    public function valid(): bool
     {
         return isset($this->value[$this->iteratorPosition]);
     }
@@ -239,7 +241,7 @@ class CFArray extends CFType implements Iterator, ArrayAccess
    * @uses $value to check if $key exists
    * @author Sean Coates <sean@php.net>
    */
-    public function offsetExists($key)
+    public function offsetExists($key): bool
     {
         return isset($this->value[$key]);
     }
@@ -252,6 +254,7 @@ class CFArray extends CFType implements Iterator, ArrayAccess
    * @uses get() to get the key's value
    * @author Sean Coates <sean@php.net>
    */
+    #[\ReturnTypeWillChange]
     public function offsetGet($key)
     {
         return $this->get($key);
@@ -266,9 +269,9 @@ class CFArray extends CFType implements Iterator, ArrayAccess
    * @uses setValue() to set the key's new value
    * @author Sean Coates <sean@php.net>
    */
-    public function offsetSet($key, $value)
+    public function offsetSet($key, $value): void
     {
-        return $this->setValue($value);
+        $this->setValue($value);
     }
 
   /**
@@ -279,7 +282,7 @@ class CFArray extends CFType implements Iterator, ArrayAccess
    * @link http://php.net/manual/en/arrayaccess.offsetunset.php
    * @author Sean Coates <sean@php.net>
    */
-    public function offsetUnset($key)
+    public function offsetUnset($key): void
     {
     }
 }
