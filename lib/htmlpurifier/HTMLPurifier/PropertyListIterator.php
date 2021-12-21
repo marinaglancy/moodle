@@ -29,7 +29,7 @@ class HTMLPurifier_PropertyListIterator extends FilterIterator
     /**
      * @return bool
      */
-    public function accept()
+    public function accept(): bool
     {
         $key = $this->getInnerIterator()->key();
         if (strncmp($key, $this->filter, $this->l) !== 0) {
