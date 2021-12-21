@@ -130,6 +130,6 @@ class Mustache_Loader_FilesystemLoader implements Mustache_Loader
      */
     protected function shouldCheckPath()
     {
-        return strpos($this->baseDir, '://') === false || strpos($this->baseDir, 'file://') === 0;
+        return strpos((string)$this->baseDir, '://') === false || strpos((string)$this->baseDir, 'file://') === 0;
     }
 }
