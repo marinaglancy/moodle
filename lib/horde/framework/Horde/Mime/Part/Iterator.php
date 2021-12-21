@@ -62,7 +62,7 @@ implements Countable, Iterator
      *
      * @return integer  Number of message parts.
      */
-    public function count()
+    public function count(): int
     {
         return count(iterator_to_array($this));
     }
@@ -71,6 +71,7 @@ implements Countable, Iterator
 
     /**
      */
+    #[\ReturnTypeWillChange]
     public function current()
     {
         return $this->valid()
@@ -80,6 +81,7 @@ implements Countable, Iterator
 
     /**
      */
+    #[\ReturnTypeWillChange]
     public function key()
     {
         return ($curr = $this->current())
@@ -89,7 +91,7 @@ implements Countable, Iterator
 
     /**
      */
-    public function next()
+    public function next(): void
     {
         if (!isset($this->_state)) {
             return;
@@ -115,7 +117,7 @@ implements Countable, Iterator
 
     /**
      */
-    public function rewind()
+    public function rewind(): void
     {
         $this->_state = new stdClass;
         $this->_state->current = $this->_part;
@@ -129,7 +131,7 @@ implements Countable, Iterator
 
     /**
      */
-    public function valid()
+    public function valid(): bool
     {
         return !empty($this->_state);
     }

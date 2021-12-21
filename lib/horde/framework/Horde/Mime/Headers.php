@@ -420,6 +420,14 @@ implements ArrayAccess, IteratorAggregate, Serializable
         $this->_eol = $data[2];
     }
 
+    public function __serialize() {
+        return $this->serialize();
+    }
+
+    public function __unserialize($data): void {
+        $this->unserialize($data);
+    }
+
     /* ArrayAccess methods. */
 
     /**
@@ -431,7 +439,7 @@ implements ArrayAccess, IteratorAggregate, Serializable
      *
      * @return boolean  True if header exists.
      */
-    public function offsetExists($offset)
+    public function offsetExists($offset): bool
     {
         return isset($this->_headers[trim($offset)]);
     }
@@ -446,6 +454,7 @@ implements ArrayAccess, IteratorAggregate, Serializable
      * @return Horde_Mime_Headers_Element  Element object, or null if not
      *                                     found.
      */
+    #[\ReturnTypeWillChange]
     public function offsetGet($offset)
     {
         return $this->_headers[trim($offset)];
@@ -459,7 +468,7 @@ implements ArrayAccess, IteratorAggregate, Serializable
      * @param string $offset                   Not used.
      * @param Horde_Mime_Headers_Element $elt  Header element.
      */
-    public function offsetSet($offset, $value)
+    public function offsetSet($offset, $value): void
     {
         $this->addHeaderOb($value);
     }
@@ -471,7 +480,7 @@ implements ArrayAccess, IteratorAggregate, Serializable
      *
      * @param string $offset  Header name.
      */
-    public function offsetUnset($offset)
+    public function offsetUnset($offset): void
     {
         unset($this->_headers[trim($offset)]);
     }
@@ -481,7 +490,7 @@ implements ArrayAccess, IteratorAggregate, Serializable
     /**
      * @since 2.5.0
      */
-    public function getIterator()
+    public function getIterator(): \Traversable
     {
         return new ArrayIterator($this->_headers);
     }

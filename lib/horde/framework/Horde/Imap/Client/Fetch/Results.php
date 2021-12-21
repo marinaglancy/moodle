@@ -132,13 +132,14 @@ implements ArrayAccess, Countable, IteratorAggregate
 
     /**
      */
-    public function offsetExists($offset)
+    public function offsetExists($offset): bool
     {
         return isset($this->_data[$offset]);
     }
 
     /**
      */
+    #[\ReturnTypeWillChange]
     public function offsetGet($offset)
     {
         return isset($this->_data[$offset])
@@ -148,14 +149,14 @@ implements ArrayAccess, Countable, IteratorAggregate
 
     /**
      */
-    public function offsetSet($offset, $value)
+    public function offsetSet($offset, $value): void
     {
         $this->_data[$offset] = $value;
     }
 
     /**
      */
-    public function offsetUnset($offset)
+    public function offsetUnset($offset): void
     {
         unset($this->_data[$offset]);
     }
@@ -164,7 +165,7 @@ implements ArrayAccess, Countable, IteratorAggregate
 
     /**
      */
-    public function count()
+    public function count(): int
     {
         return count($this->_data);
     }
@@ -173,7 +174,7 @@ implements ArrayAccess, Countable, IteratorAggregate
 
     /**
      */
-    public function getIterator()
+    public function getIterator(): \Traversable
     {
         ksort($this->_data);
         return new ArrayIterator($this->_data);

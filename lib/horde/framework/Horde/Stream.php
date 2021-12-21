@@ -621,4 +621,12 @@ class Horde_Stream implements Serializable
         $this->_params = $data[1];
     }
 
+    public function __serialize() {
+        return $this->serialize();
+    }
+
+    public function __unserialize($data): void {
+        $this->unserialize($data);
+    }
+
 }

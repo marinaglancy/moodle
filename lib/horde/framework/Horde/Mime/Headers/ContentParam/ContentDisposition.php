@@ -90,7 +90,7 @@ extends Horde_Mime_Headers_ContentParam
 
     /**
      */
-    public function offsetSet($offset, $value)
+    public function offsetSet($offset, $value): void
     {
         if (strcasecmp($offset, 'size') === 0) {
             // RFC 2183 [2.7] - size parameter
