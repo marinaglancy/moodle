@@ -3390,21 +3390,23 @@ http://www.stanford.edu/dept/itss/docs/oracle/10g/server.101/b10759/statements_1
 			$this->rs = $rs;
 		}
 
-		function rewind() {}
+		function rewind(): void {}
 
-		function valid() {
+		function valid(): bool {
 			return !$this->rs->EOF;
 		}
 
+        #[\ReturnTypeWillChange]
 		function key() {
 			return false;
 		}
 
-		function current() {
+        #[\ReturnTypeWillChange]
+        function current() {
 			return false;
 		}
 
-		function next() {}
+		function next(): void {}
 
 		function __call($func, $params) {
 			return call_user_func_array(array($this->rs, $func), $params);
@@ -3456,7 +3458,7 @@ http://www.stanford.edu/dept/itss/docs/oracle/10g/server.101/b10759/statements_1
 
 		function Init() {}
 
-		function getIterator() {
+		function getIterator(): \Traversable {
 			return new ADODB_Iterator_empty($this);
 		}
 
@@ -3516,23 +3518,25 @@ http://www.stanford.edu/dept/itss/docs/oracle/10g/server.101/b10759/statements_1
 			$this->rs = $rs;
 		}
 
-		function rewind() {
+		function rewind(): void {
 			$this->rs->MoveFirst();
 		}
 
-		function valid() {
+		function valid(): bool {
 			return !$this->rs->EOF;
 		}
 
+        #[\ReturnTypeWillChange]
 		function key() {
 			return $this->rs->_currentRow;
 		}
 
+        #[\ReturnTypeWillChange]
 		function current() {
 			return $this->rs->fields;
 		}
 
-		function next() {
+		function next(): void {
 			$this->rs->MoveNext();
 		}
 
@@ -3609,7 +3613,7 @@ http://www.stanford.edu/dept/itss/docs/oracle/10g/server.101/b10759/statements_1
 		$this->Close();
 	}
 
-	function getIterator() {
+	function getIterator(): \Traversable {
 		return new ADODB_Iterator($this);
 	}
 
