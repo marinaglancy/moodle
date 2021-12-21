@@ -1565,7 +1565,7 @@ class cm_info implements IteratorAggregate {
      *
      * @return ArrayIterator
      */
-    public function getIterator() {
+    public function getIterator(): Traversable {
         // Make sure dynamic properties are retrieved prior to view properties.
         $this->obtain_dynamic_data();
         $ret = array();
@@ -3203,7 +3203,7 @@ class section_info implements IteratorAggregate {
      *
      * @return ArrayIterator
      */
-    public function getIterator() {
+    public function getIterator(): Traversable {
         $ret = array();
         foreach (get_object_vars($this) as $key => $value) {
             if (substr($key, 0, 1) == '_') {
