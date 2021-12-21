@@ -1039,6 +1039,8 @@ class completion_info {
                 } else if (isset($cacheddata[$cm->id])) {
                     return (object)$cacheddata[$cm->id];
                 }
+            } else {
+                $cacheddata = [];
             }
         }
 

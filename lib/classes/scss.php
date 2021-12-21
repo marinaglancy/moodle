@@ -143,7 +143,7 @@ class core_scss extends \ScssPhp\ScssPhp\Compiler {
             }
         }
 
-        return parent::compile($code, $path);
+        return parent::compile($code, (string)$path);
     }
 
     /**

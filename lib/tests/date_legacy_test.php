@@ -285,7 +285,7 @@ class core_date_legacy_testcase extends advanced_testcase {
                     $expected->setTimezone(new DateTimeZone(($user->timezone == 99 ? 'Pacific/Auckland' : $user->timezone)));
                     $result = userdate($expected->getTimestamp(), '', 99, false, false);
                     date_default_timezone_set($expected->getTimezone()->getName());
-                    $ex = strftime($format, $expected->getTimestamp());
+                    $ex = @strftime($format, $expected->getTimestamp());
                     date_default_timezone_set($CFG->timezone);
                     $this->assertSame($ex, $result);
                 }

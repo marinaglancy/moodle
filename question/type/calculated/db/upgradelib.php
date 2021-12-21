@@ -270,7 +270,7 @@ class qtype_calculated_qe2_attempt_updater extends question_qtype_attempt_update
      *      corresponding value.
      */
     protected function substitute_values_for_eval($expression) {
-        return str_replace($this->search, $this->safevalue, $expression);
+        return str_replace($this->search ?? '', $this->safevalue ?? '', (string)$expression);
     }
 
     /**

@@ -294,7 +294,7 @@ class qtype_calculatedmulti_qe2_attempt_updater extends question_qtype_attempt_u
      *      corresponding value.
      */
     protected function substitute_values_for_eval($expression) {
-        return str_replace($this->search, $this->safevalue, $expression);
+        return str_replace($this->search ?? '', $this->safevalue ?? '', (string)$expression);
     }
 
     /**
@@ -306,7 +306,7 @@ class qtype_calculatedmulti_qe2_attempt_updater extends question_qtype_attempt_u
      *      corresponding value.
      */
     protected function substitute_values_pretty($text) {
-        return str_replace($this->search, $this->prettyvalue, $text);
+        return str_replace($this->search ?? '', $this->prettyvalue ?? '', (string)$text);
     }
 
     /**

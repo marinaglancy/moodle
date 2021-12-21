@@ -296,7 +296,7 @@ class entry extends \core_search\base_mod {
         foreach ($filteredcontents as $content) {
             $classname = $this->get_field_class_name($content->fieldtype);
             $content->priority = $classname::get_priority();
-            $content->addtemplateposition = strpos($template, '[['.$content->fldname.']]');
+            $content->addtemplateposition = strpos((string)$template, '[['.$content->fldname.']]');
         }
 
         $orderqueue = new \SPLPriorityQueue();

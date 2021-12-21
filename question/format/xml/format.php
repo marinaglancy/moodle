@@ -1205,7 +1205,7 @@ class qformat_xml extends qformat_default {
         // Check question type.
         $questiontype = $this->get_qtype($question->qtype);
 
-        $idnumber = htmlspecialchars($question->idnumber);
+        $idnumber = htmlspecialchars((string)$question->idnumber);
 
         // Categories are a special case.
         if ($question->qtype == 'category') {
