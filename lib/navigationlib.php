@@ -1174,7 +1174,7 @@ class navigation_node_collection implements IteratorAggregate, Countable {
      *
      * @return int
      */
-    public function count() {
+    public function count(): int {
         return $this->count;
     }
     /**
@@ -1185,7 +1185,7 @@ class navigation_node_collection implements IteratorAggregate, Countable {
      *
      * @return ArrayIterator
      */
-    public function getIterator() {
+    public function getIterator(): Traversable {
         return new ArrayIterator($this->collection);
     }
 }
