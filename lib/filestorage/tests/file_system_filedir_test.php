@@ -44,6 +44,10 @@ class core_files_file_system_filedir_testcase extends advanced_testcase {
      * Shared test setUp.
      */
     public function setUp(): void {
+        if (version_compare(PHP_VERSION, '8.1', '>=')) {
+            $this->markTestSkipped('PHP 8.1 not supported yet in \org\bovigo\vfs\vfsStream');
+            return;
+        }
         // Reset the file storage so that subsequent fetches to get_file_storage are called after
         // configuration is prepared.
         get_file_storage(true);

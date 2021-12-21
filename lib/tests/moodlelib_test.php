@@ -5115,6 +5115,10 @@ EOF;
      * @param   string $exclude Any additional folder to exclude
      */
     public function test_get_list_of_plugins(array $expectedlist, array $content, string $dir, string $exclude): void {
+        if (version_compare(PHP_VERSION, '8.1', '>=')) {
+            $this->markTestSkipped('PHP 8.1 not supported yet in \org\bovigo\vfs\vfsStream');
+            return;
+        }
         $vfileroot = \org\bovigo\vfs\vfsStream::setup('root', null, $content);
         $base = \org\bovigo\vfs\vfsStream::url('root');
 

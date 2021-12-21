@@ -1220,6 +1220,10 @@ class moodle_content_writer_test extends advanced_testcase {
      * @return  \org\bovigo\vfs\vfsStreamDirectory
      */
     protected function fetch_exported_content(moodle_content_writer $writer) {
+        if (version_compare(PHP_VERSION, '8.1', '>=')) {
+            $this->markTestSkipped('PHP 8.1 not supported yet in \org\bovigo\vfs\vfsStream');
+            return;
+        }
         $export = $writer
             ->set_context(\context_system::instance())
             ->finalise_content();
