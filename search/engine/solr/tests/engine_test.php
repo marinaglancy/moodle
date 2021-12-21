@@ -68,6 +68,10 @@ class engine_test extends \advanced_testcase {
         set_config('enableglobalsearch', true);
         set_config('searchengine', 'solr');
 
+        if (version_compare(PHP_VERSION, '8.1', '>=')) {
+            $this->markTestSkipped('PHP 8.1 not supported yet in Solr');
+            return;
+        }
         if (!function_exists('solr_get_version')) {
             $this->markTestSkipped('Solr extension is not loaded.');
         }
