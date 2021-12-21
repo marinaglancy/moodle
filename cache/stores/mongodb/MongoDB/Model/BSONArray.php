@@ -94,6 +94,7 @@ class BSONArray extends ArrayObject implements JsonSerializable, Serializable, U
      * @see http://php.net/jsonserializable.jsonserialize
      * @return array
      */
+    #[\ReturnTypeWillChange]
     public function jsonSerialize()
     {
         return array_values($this->getArrayCopy());

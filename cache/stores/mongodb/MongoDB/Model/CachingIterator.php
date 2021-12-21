@@ -81,6 +81,7 @@ class CachingIterator implements Countable, Iterator
      * @see http://php.net/iterator.current
      * @return mixed
      */
+    #[\ReturnTypeWillChange]
     public function current()
     {
         return current($this->items);

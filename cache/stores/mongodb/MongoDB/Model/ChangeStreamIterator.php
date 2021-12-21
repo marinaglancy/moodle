@@ -138,6 +138,7 @@ class ChangeStreamIterator extends IteratorIterator implements CommandSubscriber
      * @see https://php.net/iteratoriterator.current
      * @return mixed
      */
+    #[\ReturnTypeWillChange]
     public function current()
     {
         return $this->isValid ? parent::current() : null;
