@@ -143,7 +143,7 @@ class Number extends Node implements \ArrayAccess
     /**
      * {@inheritdoc}
      */
-    public function offsetExists($offset)
+    public function offsetExists($offset): bool
     {
         if ($offset === -3) {
             return ! \is_null($this->sourceColumn);
@@ -168,6 +168,7 @@ class Number extends Node implements \ArrayAccess
     /**
      * {@inheritdoc}
      */
+    #[\ReturnTypeWillChange]
     public function offsetGet($offset)
     {
         switch ($offset) {
@@ -189,12 +190,13 @@ class Number extends Node implements \ArrayAccess
             case 2:
                 return array('numerator_units' => $this->numeratorUnits, 'denominator_units' => $this->denominatorUnits);
         }
+        return null;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function offsetSet($offset, $value)
+    public function offsetSet($offset, $value): void
     {
         throw new \BadMethodCallException('Number is immutable');
     }
@@ -202,7 +204,7 @@ class Number extends Node implements \ArrayAccess
     /**
      * {@inheritdoc}
      */
-    public function offsetUnset($offset)
+    public function offsetUnset($offset): void
     {
         throw new \BadMethodCallException('Number is immutable');
     }
