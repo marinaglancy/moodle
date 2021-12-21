@@ -171,7 +171,7 @@ class mustache_helper_collection extends \Mustache_HelperCollection {
         // "core, move, {{}}".
         return preg_replace_callback($regexes, function() {
             return '';
-        }, $string);
+        }, (string)$string);
     }
 
     /**

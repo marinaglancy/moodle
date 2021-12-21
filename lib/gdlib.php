@@ -216,8 +216,8 @@ function process_new_icon($context, $component, $filearea, $itemid, $originalfil
         $im3 = imagecreate(512, 512);
     }
 
-    $cx = $image->width / 2;
-    $cy = $image->height / 2;
+    $cx = floor($image->width / 2);
+    $cy = floor($image->height / 2);
 
     if ($image->width < $image->height) {
         $half = floor($image->width / 2.0);
@@ -238,6 +238,11 @@ function process_new_icon($context, $component, $filearea, $itemid, $originalfil
         // number of arguments, otherwise PHP8 throws an error.
         $imagefnc = function($image, $filename, $quality, $unused) {
             return imagejpeg($image, $filename, $quality);
+        };
+    } else if ($imagefnc === 'imagepng') {
+        // PHP8.1 is very strict on the type.
+        $imagefnc = function($image, $filename, $quality, $filters) {
+            return imagepng($image, $filename, $quality, (int)$filters);
         };
     }
 

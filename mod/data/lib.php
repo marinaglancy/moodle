@@ -1558,7 +1558,7 @@ function data_print_template($template, $records, $data, $search='', $page=0, $r
         }
 
         // actual replacement of the tags
-        $newtext = str_ireplace($patterns, $replacement, $data->{$template});
+        $newtext = str_ireplace($patterns, $replacement, (string)$data->{$template});
 
         // no more html formatting and filtering - see MDL-6635
         if ($return) {

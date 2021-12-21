@@ -100,6 +100,9 @@ class calculation_info {
 
             // Update the cached data adding the new indicator data.
             $cacheddata = $cache->get($samplekey);
+            if ($cacheddata === false) {
+                $cacheddata = [];
+            }
             $cacheddata[$calculableclass] = $infokeys;
             $cache->set($samplekey, $cacheddata);
         }

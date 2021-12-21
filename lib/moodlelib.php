@@ -875,27 +875,27 @@ function clean_param($param, $type) {
 
         case PARAM_ALPHA:
             // Remove everything not `a-z`.
-            return preg_replace('/[^a-zA-Z]/i', '', $param);
+            return preg_replace('/[^a-zA-Z]/i', '', (string)$param);
 
         case PARAM_ALPHAEXT:
             // Remove everything not `a-zA-Z_-` (originally allowed "/" too).
-            return preg_replace('/[^a-zA-Z_-]/i', '', $param);
+            return preg_replace('/[^a-zA-Z_-]/i', '', (string)$param);
 
         case PARAM_ALPHANUM:
             // Remove everything not `a-zA-Z0-9`.
-            return preg_replace('/[^A-Za-z0-9]/i', '', $param);
+            return preg_replace('/[^A-Za-z0-9]/i', '', (string)$param);
 
         case PARAM_ALPHANUMEXT:
             // Remove everything not `a-zA-Z0-9_-`.
-            return preg_replace('/[^A-Za-z0-9_-]/i', '', $param);
+            return preg_replace('/[^A-Za-z0-9_-]/i', '', (string)$param);
 
         case PARAM_SEQUENCE:
             // Remove everything not `0-9,`.
-            return preg_replace('/[^0-9,]/i', '', $param);
+            return preg_replace('/[^0-9,]/i', '', (string)$param);
 
         case PARAM_BOOL:
             // Convert to 1 or 0.
-            $tempstr = strtolower($param);
+            $tempstr = strtolower((string)$param);
             if ($tempstr === 'on' or $tempstr === 'yes' or $tempstr === 'true') {
                 $param = 1;
             } else if ($tempstr === 'off' or $tempstr === 'no'  or $tempstr === 'false') {
@@ -908,7 +908,7 @@ function clean_param($param, $type) {
         case PARAM_NOTAGS:
             // Strip all tags.
             $param = fix_utf8($param);
-            return strip_tags($param);
+            return strip_tags((string)$param);
 
         case PARAM_TEXT:
             // Leave only tags needed for multilang.
@@ -916,7 +916,7 @@ function clean_param($param, $type) {
             // If the multilang syntax is not correct we strip all tags because it would break xhtml strict which is required
             // for accessibility standards please note this cleaning does not strip unbalanced '>' for BC compatibility reasons.
             do {
-                if (strpos($param, '</lang>') !== false) {
+                if (strpos((string)$param, '</lang>') !== false) {
                     // Old and future mutilang syntax.
                     $param = strip_tags($param, '<lang>');
                     if (!preg_match_all('/<.*>/suU', $param, $matches)) {
@@ -943,7 +943,7 @@ function clean_param($param, $type) {
                     }
                     return $param;
 
-                } else if (strpos($param, '</span>') !== false) {
+                } else if (strpos((string)$param, '</span>') !== false) {
                     // Current problematic multilang syntax.
                     $param = strip_tags($param, '<span>');
                     if (!preg_match_all('/<.*>/suU', $param, $matches)) {
@@ -972,7 +972,7 @@ function clean_param($param, $type) {
                 }
             } while (false);
             // Easy, just strip all tags, if we ever want to fix orphaned '&' we have to do that in format_string().
-            return strip_tags($param);
+            return strip_tags((string)$param);
 
         case PARAM_COMPONENT:
             // We do not want any guessing here, either the name is correct or not
@@ -1233,7 +1233,7 @@ function clean_param($param, $type) {
 
         case PARAM_EMAIL:
             $param = fix_utf8($param);
-            if (validate_email($param)) {
+            if (validate_email($param ?? '')) {
                 return $param;
             } else {
                 return '';
@@ -1387,7 +1387,7 @@ function get_host_from_url($url) {
  * images, objects, etc.
  */
 function html_is_blank($string) {
-    return trim(strip_tags($string, '<img><object><applet><input><select><textarea><hr>')) == '';
+    return trim(strip_tags((string)$string, '<img><object><applet><input><select><textarea><hr>')) == '';
 }
 
 /**
@@ -2353,7 +2353,7 @@ function date_format_string($date, $format, $tz = 99) {
     }
 
     date_default_timezone_set(core_date::get_user_timezone($tz));
-    $datestring = strftime($format, $date);
+    $datestring = @strftime($format, $date);
     core_date::set_default_server_timezone();
 
     if ($localewincharset) {
@@ -7311,7 +7311,7 @@ function get_string($identifier, $component = '', $a = null, $lazyload = false) 
         debugging('extralocations parameter in get_string() is not supported any more, please use standard lang locations only.');
     }
 
-    if (strpos($component, '/') !== false) {
+    if (strpos((string)$component, '/') !== false) {
         debugging('The module name you passed to get_string is the deprecated format ' .
                 'like mod/mymod or block/myblock. The correct form looks like mymod, or block_myblock.' , DEBUG_DEVELOPER);
         $componentpath = explode('/', $component);
@@ -8780,7 +8780,7 @@ function format_float($float, $decimalpoints=1, $localized=true, $stripzeros=fal
  * @return mixed float|bool - false or the parsed float.
  */
 function unformat_float($localefloat, $strict = false) {
-    $localefloat = trim($localefloat);
+    $localefloat = trim((string)$localefloat);
 
     if ($localefloat == '') {
         return null;

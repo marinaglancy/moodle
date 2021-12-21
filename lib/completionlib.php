@@ -1072,6 +1072,8 @@ class completion_info {
 
                     return $returnfilteredvalue($cacheddata[$cminfo->id]);
                 }
+            } else {
+                $cacheddata = [];
             }
         }
 
