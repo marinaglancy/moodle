@@ -153,7 +153,7 @@ class Horde_Mime_Related implements IteratorAggregate
 
     /* IteratorAggregate method. */
 
-    public function getIterator()
+    public function getIterator(): \Traversable
     {
         return new ArrayIterator($this->_cids);
     }

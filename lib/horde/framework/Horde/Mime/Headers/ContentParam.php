@@ -368,13 +368,14 @@ implements ArrayAccess, Horde_Mime_Headers_Extension_Mime, Serializable
 
     /**
      */
-    public function offsetExists($offset)
+    public function offsetExists($offset): bool
     {
         return isset($this->_params[$offset]);
     }
 
     /**
      */
+    #[\ReturnTypeWillChange]
     public function offsetGet($offset)
     {
         return $this->_params[$offset];
@@ -382,14 +383,14 @@ implements ArrayAccess, Horde_Mime_Headers_Extension_Mime, Serializable
 
     /**
      */
-    public function offsetSet($offset, $value)
+    public function offsetSet($offset, $value): void
     {
         $this->_params[$offset] = $this->_sanityCheck($value);
     }
 
     /**
      */
-    public function offsetUnset($offset)
+    public function offsetUnset($offset): void
     {
         unset($this->_params[$offset]);
     }
@@ -424,6 +425,14 @@ implements ArrayAccess, Horde_Mime_Headers_Extension_Mime, Serializable
                 break;
             }
         }
+    }
+
+    public function __serialize() {
+        return $this->serialize();
+    }
+
+    public function __unserialize($data): void {
+        $this->unserialize($data);
     }
 
 }

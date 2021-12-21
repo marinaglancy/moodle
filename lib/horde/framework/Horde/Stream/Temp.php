@@ -53,4 +53,12 @@ class Horde_Stream_Temp extends Horde_Stream
         }
     }
 
+    public function __serialize() {
+        return $this->serialize();
+    }
+
+    public function __unserialize($data): void {
+        $this->unserialize($data);
+    }
+
 }

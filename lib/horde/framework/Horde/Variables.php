@@ -134,7 +134,7 @@ class Horde_Variables implements ArrayAccess, Countable, IteratorAggregate
      *
      * @see __isset()
      */
-    public function offsetExists($field)
+    public function offsetExists($field): bool
     {
         return $this->__isset($field);
     }
@@ -172,6 +172,7 @@ class Horde_Variables implements ArrayAccess, Countable, IteratorAggregate
      *
      * @see __get()
      */
+    #[\ReturnTypeWillChange]
     public function offsetGet($field)
     {
         return $this->__get($field);
@@ -237,7 +238,7 @@ class Horde_Variables implements ArrayAccess, Countable, IteratorAggregate
      *
      * @see __set()
      */
-    public function offsetSet($field, $value)
+    public function offsetSet($field, $value): void
     {
         $this->__set($field, $value);
     }
@@ -284,7 +285,7 @@ class Horde_Variables implements ArrayAccess, Countable, IteratorAggregate
      *
      * @see __unset()
      */
-    public function offsetUnset($field)
+    public function offsetUnset($field): void
     {
         $this->__unset($field);
     }
@@ -388,14 +389,14 @@ class Horde_Variables implements ArrayAccess, Countable, IteratorAggregate
 
     /**
      */
-    public function count()
+    public function count(): int
     {
         return count($this->_vars);
     }
 
     /* IteratorAggregate method. */
 
-    public function getIterator()
+    public function getIterator(): \Traversable
     {
         return new ArrayIterator($this->_vars);
     }

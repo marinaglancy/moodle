@@ -142,7 +142,7 @@ implements IteratorAggregate
         }
 
         /* Ensure no null characters exist in header data. */
-        return str_replace("\0", '', $data);
+        return str_replace("\0", '', (string)$data);
     }
 
     /**
@@ -173,7 +173,7 @@ implements IteratorAggregate
 
     /**
      */
-    public function getIterator()
+    public function getIterator(): \Traversable
     {
         return new ArrayIterator($this->_values);
     }
