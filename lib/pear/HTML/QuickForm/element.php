@@ -354,7 +354,7 @@ class HTML_QuickForm_element extends HTML_Common
         $elementName = $this->getName();
         if (isset($values[$elementName])) {
             return $values[$elementName];
-        } elseif (strpos($elementName, '[')) {
+        } elseif (strpos((string)$elementName, '[')) {
             $keys = str_replace(
                 array('\\', '\'', ']', '['), array('\\\\', '\\\'', '', "']['"),
                 $elementName
@@ -448,7 +448,7 @@ class HTML_QuickForm_element extends HTML_Common
         }
 
         $id = $this->getName();
-        $id = 'id_' . str_replace(array('qf_', '[', ']'), array('', '_', ''), $id);
+        $id = 'id_' . str_replace(array('qf_', '[', ']'), array('', '_', ''), (string)$id);
         $id = clean_param($id, PARAM_ALPHANUMEXT);
         $this->updateAttributes(array('id' => $id));
     }
