@@ -105,8 +105,8 @@ abstract class section_renderer extends core_course_renderer {
         }
         // Check for special course format templatables.
         if ($widget instanceof templatable) {
-            // Templatables from both core_courseformat\output\xxx_format\* and format_xxx\output\xxx_format\*
-            // use core_crouseformat/local/xxx_format templates by default.
+            // Templatables from both core_courseformat\output\local\WIDGET and format_xxx\output\courseformat\WIDGET
+            // use templates format_xxx/courseformat/local/WIDGET or core_crouseformat/local/WIDGET.
             $corepath = 'core_courseformat\/output\/local';
             $pluginpath = 'format_.+\/output\/courseformat';
             $specialrenderers = '/^(?<componentpath>' . $corepath . '|' . $pluginpath . ')\/(?<template>.+)$/';
@@ -114,11 +114,33 @@ abstract class section_renderer extends core_course_renderer {
 
             if (preg_match($specialrenderers, $fullpath, $matches)) {
                 $data = $widget->export_for_template($this);
-                return $this->render_from_template('core_courseformat/local/' . $matches['template'], $data);
+                return $this->render_from_template($this->get_template_for_widget($matches['template']), $data);
             }
         }
         // If nothing works, let the parent class decide.
         return parent::render($widget);
+    }
+
+    /**
+     * Returns the name of the template that should be used for rendering a courseformat widget
+     *
+     * Can be overridden in the format renderers.
+     *
+     * @param string $widget
+     * @return string
+     */
+    protected function get_template_for_widget(string $widget): string {
+        $template = 'core_courseformat/local/' . $widget;
+        if (preg_match('/^format_([^\\\\]*)\\\\/', get_class($this), $matches) &&
+                ($plugindir = \core_component::get_component_directory('format_' . $matches[1]))) {
+            $plugintemplate = 'format_' . $matches[1] . '/courseformat/local/' . $widget;
+            $filename = $plugindir . "/templates/courseformat/local/{$widget}.mustache";
+            if (file_exists($filename)) {
+                // Ideally we need to call something like template_exists() but this function does not exist.
+                $template = $plugintemplate;
+            }
+        }
+        return $template;
     }
 
     /**
