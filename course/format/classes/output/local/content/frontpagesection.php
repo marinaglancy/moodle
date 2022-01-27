@@ -88,7 +88,7 @@ class frontpagesection implements renderable, templatable {
         }
 
         $data = (object)[
-            'sections' => [$sectionoutput->export_for_template($output)],
+            'sections' => [$output->render($sectionoutput)],
         ];
 
         if ($format->show_editor() && has_capability('moodle/course:update', $context)) {

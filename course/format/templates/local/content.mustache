@@ -162,20 +162,16 @@
     <h2 class="accesshide">{{{title}}}</h2>
     {{{completionhelp}}}
     <ul class="{{format}}" data-for="course_sectionlist">
-        {{#initialsection}}
-            {{> core_courseformat/local/content/section }}
-        {{/initialsection}}
+        {{{initialsection}}}
         {{#sections}}
-            {{> core_courseformat/local/content/section }}
+            {{{.}}}
         {{/sections}}
     </ul>
     {{#hasnavigation}}
     <div class="single-section">
         {{#sectionnavigation}} {{> core_courseformat/local/content/sectionnavigation }} {{/sectionnavigation}}
         <ul class="{{format}}">
-        {{#singlesection}}
-            {{> core_courseformat/local/content/section }}
-        {{/singlesection}}
+        {{{singlesection}}}
         </ul>
         {{#sectionselector}} {{> core_courseformat/local/content/sectionselector }} {{/sectionselector}}
     </div>

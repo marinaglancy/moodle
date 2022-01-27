@@ -148,7 +148,7 @@ class content implements renderable, templatable {
             if ($sectionnum > $numsections) {
                 // Activities inside this section are 'orphaned', this section will be printed as 'stealth' below.
                 if (!empty($modinfo->sections[$sectionnum])) {
-                    $stealthsections[] = $section->export_for_template($output);
+                    $stealthsections[] = $output->render($section);
                 }
                 continue;
             }
@@ -163,7 +163,7 @@ class content implements renderable, templatable {
                 continue;
             }
 
-            $sections[] = $section->export_for_template($output);
+            $sections[] = $output->render($section);
         }
         if (!empty($stealthsections)) {
             $sections = array_merge($sections, $stealthsections);
