@@ -37,6 +37,10 @@ use stdClass;
  */
 class section extends section_base {
 
+    public function get_template_name(): string {
+        return 'format_topics/local/content/section';
+    }
+
     /** @var course_format the course format */
     protected $format;
 
