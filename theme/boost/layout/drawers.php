@@ -29,6 +29,7 @@ require_once($CFG->dirroot . '/course/lib.php');
 
 // Add block button in editing mode.
 $addblockbutton = $OUTPUT->addblockbutton();
+$nav = $PAGE->flatnav;
 
 user_preference_allow_ajax_update('drawer-open-nav', PARAM_ALPHA);
 user_preference_allow_ajax_update('drawer-open-index', PARAM_BOOL);
@@ -107,7 +108,9 @@ $templatecontext = [
     'addblockbutton' => $addblockbutton
 ];
 
-$nav = $PAGE->flatnav;
 $templatecontext['firstcollectionlabel'] = $nav->get_collectionlabel();
 
+foreach ($nav as $node) {
+    $node->isactive();
+}
 echo $OUTPUT->render_from_template('theme_boost/drawers', $templatecontext);
