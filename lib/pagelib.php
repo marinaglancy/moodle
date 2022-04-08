@@ -1631,6 +1631,90 @@ class moodle_page {
     // Initialisation methods =====================================================
     // These set various things up in a default way.
 
+    public function get_edited_page_hash(): ?string {
+        global $USER;
+        if (!$this->user_is_editing()) {
+            return null;
+        }
+        $url = new moodle_url($this->url);
+        $url->set_anchor(null);
+        $data = [
+            'contextid' => $this->context->id,
+            'url' => $url->out_as_local_url(false),
+        ];
+        if (($course = $this->course) && $course->id) {
+            $data['courseid'] = $course->id;
+        }
+        $keys = ['pagelayout', 'pagetype', 'subpage'];
+        foreach ($keys as $key) {
+            if ("{$this->$key}" !== "") {
+                $data[$key] = $this->$key;
+            }
+        }
+        if ($this->_blockseditingcap !== 'moodle/site:manageblocks') {
+            $data['bcap'] = $this->_blockseditingcap;
+        }
+        if (!empty($this->_othereditingcaps)) {
+            $data['caps'] = $this->_othereditingcaps;
+        }
+        if ($this->_forcelockallblocks) {
+            $data['forcelock'] = true;
+        }
+        /** @var cache_session $cache */
+        $cache = \cache::make_from_params(\cache_store::MODE_SESSION, 'core', 'editedpagehash');
+        if (!($key = $cache->get('__key__'))) {
+            $key = random_string(15);
+            $cache->set('__key__', $key);
+        }
+        $hash = md5(json_encode($data + ['userid' => $USER->id, 'sesskey' => sesskey(), '__key__' => $key]));
+        $cache->set($hash, $data);
+        return $hash;
+    }
+
+    public static function retrieve_edited_page(string $hash): ?self {
+        global $CFG;
+        /** @var cache_session $cache */
+        $cache = \cache::make_from_params(\cache_store::MODE_SESSION, 'core', 'editedpagehash');
+        if (!($data = $cache->get($hash))) {
+            return null;
+        }
+
+        if (!empty($CFG->moodlepageclass)) {
+            if (!empty($CFG->moodlepageclassfile)) {
+                require_once($CFG->moodlepageclassfile);
+            }
+            $classname = $CFG->moodlepageclass;
+        } else {
+            $classname = moodle_page::class;
+        }
+        $page = new $classname();
+        $page->set_context(context::instance_by_id($data['contextid']));
+        if (array_key_exists('courseid', $data)) {
+            $page->set_course(get_course($data['courseid']));
+        }
+        $page->set_url(new moodle_url($data['url']));
+        $keys = ['pagelayout', 'pagetype', 'subpage'];
+        foreach ($keys as $key) {
+            if (array_key_exists($key, $data)) {
+                $func = "set_{$key}";
+                $page->$func($data[$key]);
+            }
+        }
+        if (array_key_exists('bcap', $data)) {
+            $page->set_blocks_editing_capability($data['bcap']);
+        }
+        if (array_key_exists('caps', $data)) {
+            foreach ($data['caps'] as $cap) {
+                $page->set_other_editing_capability($cap);
+            }
+        }
+        if (array_key_exists('forcelock', $data)) {
+            $page->force_lock_all_blocks();
+        }
+        $page->blocks->add_custom_regions_for_pagetype($page->pagetype);
+        return $page;
+    }
+
     /**
      * This method is called when the page first moves out of the STATE_BEFORE_HEADER
      * state. This is our last change to initialise things.

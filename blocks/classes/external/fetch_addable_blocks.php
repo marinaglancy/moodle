@@ -72,6 +72,7 @@ class fetch_addable_blocks extends external_api {
     public static function execute(int $pagecontextid, string $pagetype, string $pagelayout, string $subpage = ''): array {
         global $PAGE;
 
+        // TODO use pagehash instead?
         $params = self::validate_parameters(self::execute_parameters(),
             [
                 'pagecontextid' => $pagecontextid,

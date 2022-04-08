@@ -71,13 +71,13 @@ class block_base {
 
     /**
      * An object to contain the information to be displayed in the block.
-     * @var stdObject $content
+     * @var stdClass $content
      */
     var $content       = NULL;
 
     /**
      * The initialized instance of this block object.
-     * @var block $instance
+     * @var stdClass $instance
      */
     var $instance      = NULL;
 
@@ -95,7 +95,7 @@ class block_base {
 
     /**
      * An object containing the instance configuration information for the current instance of this block.
-     * @var stdObject $config
+     * @var stdClass $config
      */
     var $config        = NULL;
 
