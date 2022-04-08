@@ -40,8 +40,6 @@ if (!$page = moodle_page::retrieve_edited_page($pagehash)) {
     // TODO better string.
     throw new moodle_exception('Something went wrong. Try to refresh the page and repeat the operation');
 }
-$page->blocks->get_regions();
-$page->blocks->load_blocks();
 $PAGE->set_url('/lib/ajax/blocks.php', ['pagehash' => $pagehash]);
 
 // Verifying login and session.

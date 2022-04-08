@@ -60,6 +60,7 @@ class edit_form extends \core_form\dynamic_form {
                 // TODO better string?
                 throw new \moodle_exception('Page not found');
             }
+            $this->page->blocks->load_blocks();
         }
         return $this->page;
     }
@@ -67,7 +68,7 @@ class edit_form extends \core_form\dynamic_form {
     protected function get_block(): block_base {
         if (!$this->block) {
             $blockid = $this->optional_param('blockid', null, PARAM_INT);
-            $this->get_page()->blocks->find_instance($blockid);
+            $this->block = $this->get_page()->blocks->find_instance($blockid);
         }
         return $this->block;
     }
@@ -242,7 +243,7 @@ class edit_form extends \core_form\dynamic_form {
             $mform->hardFreeze($pagefields);
         }
 
-        $this->add_action_buttons();
+        // TODO configuring block without capability?
     }
 
     /**
