@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+namespace block_html\form;
+
 /**
  * Form for editing HTML block instances.
  *
@@ -21,14 +23,7 @@
  * @copyright 2009 Tim Hunt
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
-/**
- * Form for editing HTML block instances.
- *
- * @copyright 2009 Tim Hunt
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-class block_html_edit_form extends block_edit_form {
+class edit_form extends \core_block\form\edit_form {
     protected function specific_definition($mform) {
         global $CFG;
 
@@ -80,7 +75,7 @@ class block_html_edit_form extends block_edit_form {
         parent::set_data($defaults);
         // restore $text
         if (!isset($this->block->config)) {
-            $this->block->config = new stdClass();
+            $this->block->config = new \stdClass();
         }
         $this->block->config->text = $text;
         if (isset($title)) {

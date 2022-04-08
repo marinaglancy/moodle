@@ -52,7 +52,7 @@ class edit_form extends \core_form\dynamic_form {
 
     protected function get_page(): moodle_page {
         if (!$this->page) {
-            if (!$pagehash = $this->optional_param('pagehash', '', PARAM_RAW)) {
+            if (!$pagehash = $this->optional_param('pagehash', '', PARAM_ALPHANUMEXT)) {
                 throw new \moodle_exception('missingparam', '', '', 'pagehash');
             }
             $this->page = moodle_page::retrieve_edited_page($pagehash);
@@ -76,6 +76,11 @@ class edit_form extends \core_form\dynamic_form {
     function definition() {
         $mform =& $this->_form;
         $this->get_block();
+
+        $mform->addElement('hidden', 'blockid', $this->get_block()->instance->id);
+        $mform->setType('blockid', PARAM_INT);
+        $mform->addElement('hidden', 'pagehash', $this->optional_param('pagehash', null, PARAM_ALPHANUMEXT));
+        $mform->setType('blockid', PARAM_ALPHANUMEXT);
 
         // First show fields specific to this type of block.
         $this->specific_definition($mform);
@@ -300,7 +305,7 @@ class edit_form extends \core_form\dynamic_form {
 
     /**
      * Override this to create any form fields specific to this type of block.
-     * @param object $mform the form being built.
+     * @param \MoodleQuickForm $mform the form being built.
      */
     protected function specific_definition($mform) {
         // By default, do nothing.
@@ -325,15 +330,6 @@ class edit_form extends \core_form\dynamic_form {
     /**
      * Returns context where this form is used
      *
-     * This context is validated in {@see \external_api::validate_context()}
-     *
-     * If context depends on the form data, it is available in $this->_ajaxformdata or
-     * by calling $this->optional_param()
-     *
-     * Example:
-     *     $cmid = $this->optional_param('cmid', 0, PARAM_INT);
-     *     return context_module::instance($cmid);
-     *
      * @return context
      */
     protected function get_context_for_dynamic_submission(): context {
@@ -342,13 +338,6 @@ class edit_form extends \core_form\dynamic_form {
 
     /**
      * Checks if current user has access to this form, otherwise throws exception
-     *
-     * Sometimes permission check may depend on the action and/or id of the entity.
-     * If necessary, form data is available in $this->_ajaxformdata or
-     * by calling $this->optional_param()
-     *
-     * Example:
-     *     require_capability('dosomething', $this->get_context_for_dynamic_submission());
      */
     protected function check_access_for_dynamic_submission(): void {
         if (!$this->get_block()) {
@@ -359,49 +348,20 @@ class edit_form extends \core_form\dynamic_form {
 
     /**
      * Process the form submission, used if form was submitted via AJAX
-     *
-     * This method can return scalar values or arrays that can be json-encoded, they will be passed to the caller JS.
-     *
-     * Submission data can be accessed as: $this->get_data()
-     *
-     * Example:
-     *     $data = $this->get_data();
-     *     file_postupdate_standard_filemanager($data, ....);
-     *     api::save_entity($data); // Save into the DB, trigger event, etc.
-     *
-     * @return void
      */
     public function process_dynamic_submission() {
-        // TODO: Implement process_dynamic_submission() method.
+        $this->get_page()->blocks->save_block_data($this->get_block(), $this->get_data());
     }
 
     /**
      * Load in existing data as form defaults
-     *
-     * Can be overridden to retrieve existing values from db by entity id and also
-     * to preprocess editor and filemanager elements
-     *
-     * Example:
-     *     $id = $this->optional_param('id', 0, PARAM_INT);
-     *     $data = api::get_entity($id); // For example, retrieve a row from the DB.
-     *     file_prepare_standard_filemanager($data, ...);
-     *     $this->set_data($data);
      */
     public function set_data_for_dynamic_submission(): void {
-        // TODO: Implement set_data_for_dynamic_submission() method.
+        $this->set_data($this->get_block()->instance);
     }
 
     /**
      * Returns url to set in $PAGE->set_url() when form is being rendered or submitted via AJAX
-     *
-     * This is used in the form elements sensitive to the page url, such as Atto autosave in 'editor'
-     *
-     * If the form has arguments (such as 'id' of the element being edited), the URL should
-     * also have respective argument.
-     *
-     * Example:
-     *     $id = $this->optional_param('id', 0, PARAM_INT);
-     *     return new moodle_url('/my/page/where/form/is/used.php', ['id' => $id]);
      *
      * @return moodle_url
      */

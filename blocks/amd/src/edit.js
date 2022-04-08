@@ -22,12 +22,9 @@
  */
 
 import ModalForm from 'core_form/modalform';
-import Notification from 'core/notification';
-import {get_string as getString} from 'core/str';
-import {add as addToast} from 'core/toast';
 
 const SELECTORS = {
-    EDITBLOCK: '[data-action="editblock"][data-blockid]',
+    EDITBLOCK: '[data-action="editblock"][data-blockid][data-blockform]',
 };
 
 /**
@@ -36,36 +33,24 @@ const SELECTORS = {
  */
 export const init = (pagehash) => {
     document.addEventListener('click', e => {
-        /* eslint-disable no-console */
-        console.log(e);
         const target = e.target.closest(SELECTORS.EDITBLOCK);
-        console.log(target);
-        e.preventDefault();
-        if (!target) {
+        if (!target || !target.getAttribute('data-blockform')) {
             return;
         }
+        e.preventDefault();
 
         const modalForm = new ModalForm({
             modalConfig: {
-                title: getString('contactdataprotectionofficer', 'tool_dataprivacy'),
+                title: target.getAttribute('data-header'),
             },
             args: {blockid: target.getAttribute('data-blockid'), pagehash},
-            formClass: 'core_block\\form\\edit_form',
-            saveButtonText: getString('send', 'tool_dataprivacy'),
+            formClass: target.getAttribute('data-blockform'),
             returnFocus: target,
         });
 
         // Show a toast notification when the form is submitted.
-        modalForm.addEventListener(modalForm.events.FORM_SUBMITTED, event => {
-            if (event.detail.result) {
-                getString('requestsubmitted', 'tool_dataprivacy').then(addToast).catch();
-            } else {
-                const warningMessages = event.detail.warnings.map(warning => warning.message);
-                Notification.addNotification({
-                    type: 'error',
-                    message: warningMessages.join('<br>')
-                });
-            }
+        modalForm.addEventListener(modalForm.events.FORM_SUBMITTED, () => {
+            location.reload();
         });
 
         modalForm.show();
