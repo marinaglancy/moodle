@@ -1335,7 +1335,7 @@ class block_manager {
                 $editactionurl,
                 new pix_icon('t/edit', $str, 'moodle', array('class' => 'iconsmall', 'title' => '')),
                 $str,
-                array('class' => 'editing_edit')
+                array('class' => 'editing_edit', 'data-action' => 'editblock', 'data-blockid' => $block->instance->id)
             );
 
         }
@@ -1492,6 +1492,7 @@ class block_manager {
         if ($blocktype === null) {
             return false;
         }
+        error_log(__FUNCTION__." : blocktype=$blocktype, blockregion = $blockregion");
 
         require_sesskey();
 
@@ -1571,6 +1572,7 @@ class block_manager {
         if (!$blockid) {
             return false;
         }
+        error_log(__FUNCTION__." : blockid=$blockid, confirmdelete = $confirmdelete");
 
         $block = $this->page->blocks->find_instance($blockid);
         if (!$this->user_can_delete_block($block)) {
@@ -1660,6 +1662,7 @@ class block_manager {
         } else {
             return false;
         }
+        error_log(__FUNCTION__." : blockid=$blockid");
 
         require_sesskey();
 
@@ -1709,6 +1712,7 @@ class block_manager {
         if (!$blockid) {
             return false;
         }
+        error_log(__FUNCTION__." : blockid=$blockid");
 
         require_once($CFG->dirroot . '/blocks/edit_form.php');
 
@@ -1912,6 +1916,7 @@ class block_manager {
         if (!$blockid) {
             return false;
         }
+        error_log(__FUNCTION__." : blockid=$blockid");
 
         require_sesskey();
 

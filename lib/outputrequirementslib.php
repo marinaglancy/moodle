@@ -388,6 +388,7 @@ class page_requirements_manager {
                 'subpage' => $page->subpage,
                 'regions' => $page->blocks->get_regions(),
                 'contextid' => $page->context->id,
+                'pagehash' => $page->get_edited_page_hash(),
             );
             if (!empty($page->cm->id)) {
                 $params['cmid'] = $page->cm->id;
@@ -398,6 +399,8 @@ class page_requirements_manager {
                                         'emptydragdropregion'),
                                   'moodle');
             $page->requires->yui_module('moodle-core-blocks', 'M.core_blocks.init_dragdrop', array($params), null, true);
+            $page->requires->js_amd_inline('M.util.pagehash = "'.$page->get_edited_page_hash().'"');
+            $page->requires->js_call_amd('core_block/edit', 'init', ['pagehash' => $page->get_edited_page_hash()]);
         }
 
         // Include the YUI CSS Modules.
