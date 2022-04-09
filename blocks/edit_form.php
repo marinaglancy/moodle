@@ -34,6 +34,8 @@ require_once($CFG->libdir . '/blocklib.php');
 /**
  * The base class form used by blocks/edit.php to edit block instance configuration.
  *
+ * @property-read block_base $block
+ * @property-read moodle_page $page
  * @copyright 2009 Tim Hunt
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -42,12 +44,12 @@ class block_edit_form extends \core_form\dynamic_form {
      * The block instance we are editing.
      * @var block_base
      */
-    public $block;
+    private $_block;
     /**
      * The page we are editing this block in association with.
      * @var moodle_page
      */
-    public $page;
+    private $_page;
 
     /**
      * Defaults set in set_data() that need to be returned in get_data() if form elements were not created
@@ -56,26 +58,42 @@ class block_edit_form extends \core_form\dynamic_form {
     protected $defaults = [];
 
     /**
+     * Magic getter for backward compatibility
+     *
+     * @param string $name
+     * @return block_base|moodle_page
+     */
+    public function __get($name) {
+        if ($name === 'page') {
+            return $this->get_page();
+        } else if ($name === 'block') {
+            return $this->get_block();
+        } else {
+            throw new coding_exception('Property '.$name.' does not exist');
+        }
+    }
+
+    /**
      * Page
      *
      * @return moodle_page
      * @throws moodle_exception
      */
     protected function get_page(): moodle_page {
-        if (!$this->page && !empty($this->_customdata['page'])) {
-            $this->page = $this->_customdata['page'];
-        } else if (!$this->page) {
+        if (!$this->_page && !empty($this->_customdata['page'])) {
+            $this->_page = $this->_customdata['page'];
+        } else if (!$this->_page) {
             if (!$pagehash = $this->optional_param('pagehash', '', PARAM_ALPHANUMEXT)) {
                 throw new \moodle_exception('missingparam', '', '', 'pagehash');
             }
-            $this->page = moodle_page::retrieve_edited_page($pagehash);
-            if (!$this->page) {
+            $this->_page = moodle_page::retrieve_edited_page($pagehash);
+            if (!$this->_page) {
                 // TODO better string?
                 throw new \moodle_exception('Page not found');
             }
-            $this->page->blocks->load_blocks();
+            $this->_page->blocks->load_blocks();
         }
-        return $this->page;
+        return $this->_page;
     }
 
     /**
@@ -86,22 +104,19 @@ class block_edit_form extends \core_form\dynamic_form {
      * @throws moodle_exception
      */
     protected function get_block(): block_base {
-        if (!$this->block && !empty($this->_customdata['block'])) {
-            $this->block = $this->_customdata['block'];
-            $this->get_page();
-        } else if (!$this->block) {
+        if (!$this->_block && !empty($this->_customdata['block'])) {
+            $this->_block = $this->_customdata['block'];
+        } else if (!$this->_block) {
             $blockid = $this->optional_param('blockid', null, PARAM_INT);
-            $this->block = $this->get_page()->blocks->find_instance($blockid);
+            $this->_block = $this->page->blocks->find_instance($blockid);
         }
-        return $this->block;
+        return $this->_block;
     }
 
     function definition() {
         $mform =& $this->_form;
 
-        $mform->addElement('hidden', 'bui_editid', $this->get_block()->instance->id);
-        $mform->setType('bui_editid', PARAM_INT);
-        $mform->addElement('hidden', 'blockid', $this->get_block()->instance->id);
+        $mform->addElement('hidden', 'blockid', $this->block->instance->id);
         $mform->setType('blockid', PARAM_INT);
         $mform->addElement('hidden', 'pagehash', $this->optional_param('pagehash', null, PARAM_ALPHANUMEXT));
         $mform->setType('pagehash', PARAM_ALPHANUMEXT);
@@ -359,19 +374,15 @@ class block_edit_form extends \core_form\dynamic_form {
      * @return context
      */
     protected function get_context_for_dynamic_submission(): context {
-        return $this->get_page()->context;
+        return $this->page->context;
     }
 
     /**
      * Checks if current user has access to this form, otherwise throws exception
      */
     protected function check_access_for_dynamic_submission(): void {
-        if (!$this->get_block()) {
-            // TODO better error message.
-            throw new \moodle_exception('Block not found');
-        }
-        if (!$this->get_block()->user_can_edit() && !$this->get_page()->user_can_edit_blocks()) {
-            throw new moodle_exception('nopermissions', '', $this->get_page()->url->out(), get_string('editblock'));
+        if (!$this->block->user_can_edit() && !$this->page->user_can_edit_blocks()) {
+            throw new moodle_exception('nopermissions', '', $this->page->url->out(), get_string('editblock'));
         }
     }
 
@@ -379,14 +390,14 @@ class block_edit_form extends \core_form\dynamic_form {
      * Process the form submission, used if form was submitted via AJAX
      */
     public function process_dynamic_submission() {
-        $this->get_page()->blocks->save_block_data($this->get_block(), $this->get_data());
+        $this->page->blocks->save_block_data($this->block, $this->get_data());
     }
 
     /**
      * Load in existing data as form defaults
      */
     public function set_data_for_dynamic_submission(): void {
-        $this->set_data($this->get_block()->instance);
+        $this->set_data($this->block->instance);
     }
 
     /**
@@ -395,6 +406,6 @@ class block_edit_form extends \core_form\dynamic_form {
      * @return moodle_url
      */
     protected function get_page_url_for_dynamic_submission(): moodle_url {
-        return $this->get_page()->url;
+        return $this->page->url;
     }
 }
