@@ -56,6 +56,7 @@ class fetch_addable_blocks extends external_api {
                 'pagetype' => new external_value(PARAM_ALPHANUMEXT, 'The type of the page.'),
                 'pagelayout' => new external_value(PARAM_ALPHA, 'The layout of the page.'),
                 'subpage' => new external_value(PARAM_TEXT, 'The subpage identifier', VALUE_DEFAULT, ''),
+                'pagehash' => new external_value(PARAM_ALPHANUMEXT, 'Page hash'),
             ]
         );
     }
@@ -69,16 +70,16 @@ class fetch_addable_blocks extends external_api {
      * @param string $subpage The subpage identifier
      * @return array The blocks list
      */
-    public static function execute(int $pagecontextid, string $pagetype, string $pagelayout, string $subpage = ''): array {
+    public static function execute(int $pagecontextid, string $pagetype, string $pagelayout, string $subpage = '', string $pagehash = ''): array {
         global $PAGE;
 
-        // TODO use pagehash instead?
         $params = self::validate_parameters(self::execute_parameters(),
             [
                 'pagecontextid' => $pagecontextid,
                 'pagetype' => $pagetype,
                 'pagelayout' => $pagelayout,
                 'subpage' => $subpage,
+                'pagehash' => $pagehash,
             ]
         );
 
@@ -86,21 +87,22 @@ class fetch_addable_blocks extends external_api {
         // Validate the context. This will also set the context in $PAGE.
         self::validate_context($context);
 
-        // We need to manually set the page layout and page type.
-        $PAGE->set_pagelayout($params['pagelayout']);
-        $PAGE->set_pagetype($params['pagetype']);
+        $page = \moodle_page::retrieve_edited_page($params['pagehash']);
+        self::validate_context($page->context);
         $PAGE->set_subpage($params['subpage']);
 
         // Firstly, we need to load all currently existing page blocks to later determine which blocks are addable.
-        $PAGE->blocks->load_blocks(false);
-        $PAGE->blocks->create_all_block_instances();
+        $page->blocks->load_blocks(false);
+        $page->blocks->create_all_block_instances();
 
-        $addableblocks = $PAGE->blocks->get_addable_blocks();
+        $addableblocks = $page->blocks->get_addable_blocks();
 
-        return array_map(function($block) {
+        return array_map(function($block) use ($page) {
+            $classname = $page->blocks->get_block_edit_form_class($block->name);
             return [
                 'name' => $block->name,
-                'title' => get_string('pluginname', "block_{$block->name}")
+                'title' => get_string('pluginname', "block_{$block->name}"),
+                'blockform' => $classname::display_form_when_adding() ? $classname : null,
             ];
         }, $addableblocks);
     }
@@ -116,6 +118,8 @@ class fetch_addable_blocks extends external_api {
                 [
                     'name' => new external_value(PARAM_PLUGIN, 'The name of the block.'),
                     'title' => new external_value(PARAM_RAW, 'The title of the block.'),
+                    'blockform' => new external_value(PARAM_RAW,
+                        'If this block type has a form when it is being added then the classname of the form',)
                 ]
             ),
             'List of addable blocks in a given page.'

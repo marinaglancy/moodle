@@ -108,7 +108,15 @@ class block_edit_form extends \core_form\dynamic_form {
             $this->_block = $this->_customdata['block'];
         } else if (!$this->_block) {
             $blockid = $this->optional_param('blockid', null, PARAM_INT);
-            $this->_block = $this->page->blocks->find_instance($blockid);
+            $blockname = $this->optional_param('blockname', null, PARAM_PLUGIN);
+            if ($blockname && !$blockid) {
+                $this->_block = block_instance($blockname);
+                $this->_block->page = $this->page;
+                $this->_block->context = $this->page->context;
+                $this->_block->instance = (object)['parentcontextid' => $this->page->context->id, 'id' => null];
+            } else {
+                $this->_block = $this->page->blocks->find_instance($blockid);
+            }
         }
         return $this->_block;
     }
@@ -118,11 +126,19 @@ class block_edit_form extends \core_form\dynamic_form {
 
         $mform->addElement('hidden', 'blockid', $this->block->instance->id);
         $mform->setType('blockid', PARAM_INT);
+        $mform->addElement('hidden', 'blockname', $this->optional_param('blockname', null, PARAM_PLUGIN));
+        $mform->setType('blockname', PARAM_PLUGIN);
+        $mform->addElement('hidden', 'blockregion', $this->optional_param('blockregion', null, PARAM_TEXT));
+        $mform->setType('blockregion', PARAM_TEXT);
         $mform->addElement('hidden', 'pagehash', $this->optional_param('pagehash', null, PARAM_ALPHANUMEXT));
         $mform->setType('pagehash', PARAM_ALPHANUMEXT);
 
         // First show fields specific to this type of block.
         $this->specific_definition($mform);
+
+        if (!$this->block->instance->id) {
+            return;
+        }
 
         // Then show the fields about where this block appears.
         $mform->addElement('header', 'whereheader', get_string('wherethisblockappears', 'block'));
@@ -305,13 +321,13 @@ class block_edit_form extends \core_form\dynamic_form {
         return ($ctxconditions && $issiteindex);
     }
 
-    function set_data($defaults) {
+    function prepare_defaults($defaults) {
         // Prefix bui_ on all the core field names.
         $blockfields = array('showinsubcontexts', 'pagetypepattern', 'subpagepattern', 'parentcontextid',
                 'defaultregion', 'defaultweight', 'visible', 'region', 'weight');
         foreach ($blockfields as $field) {
             $newname = 'bui_' . $field;
-            $defaults->$newname = $defaults->$field;
+            $defaults->$newname = $defaults->$field ?? null;
         }
 
         // Copy block config into config_ fields.
@@ -341,7 +357,11 @@ class block_edit_form extends \core_form\dynamic_form {
             'bui_pagetypepattern' => $defaults->bui_pagetypepattern,
             'bui_subpagepattern' => $defaults->bui_subpagepattern,
         ];
-        parent::set_data($defaults);
+        return $defaults;
+    }
+
+    function set_data($defaults) {
+        parent::set_data($this->prepare_defaults($defaults));
     }
 
     /**
@@ -381,8 +401,19 @@ class block_edit_form extends \core_form\dynamic_form {
      * Checks if current user has access to this form, otherwise throws exception
      */
     protected function check_access_for_dynamic_submission(): void {
-        if (!$this->block->user_can_edit() && !$this->page->user_can_edit_blocks()) {
-            throw new moodle_exception('nopermissions', '', $this->page->url->out(), get_string('editblock'));
+        if ($this->block->instance->id) {
+            if (!$this->page->user_can_edit_blocks() && !$this->block->user_can_edit()) {
+                throw new moodle_exception('nopermissions', '', $this->page->url->out(), get_string('editblock'));
+            }
+        } else {
+            if (!$this->page->user_can_edit_blocks()) {
+                throw new moodle_exception('nopermissions', '', $this->page->url->out(), get_string('addblock'));
+            }
+            $addableblocks = $this->page->blocks->get_addable_blocks();
+            $blocktype = $this->block->name();
+            if (!array_key_exists($blocktype, $addableblocks)) {
+                throw new moodle_exception('cannotaddthisblocktype', '', $this->page->url->out(), $blocktype);
+            }
         }
     }
 
@@ -390,7 +421,20 @@ class block_edit_form extends \core_form\dynamic_form {
      * Process the form submission, used if form was submitted via AJAX
      */
     public function process_dynamic_submission() {
-        $this->page->blocks->save_block_data($this->block, $this->get_data());
+        if ($this->block->instance->id) {
+            $this->page->blocks->save_block_data($this->block, $this->get_data());
+        } else {
+            $blockregion = $this->optional_param('blockregion', null, PARAM_TEXT);
+            $newblock = $this->page->blocks->add_block_at_end_of_default_region($this->block->name(),
+                empty($blockregion) ? null : $blockregion);
+            $this->page->blocks->load_blocks();
+            $newblock = $this->page->blocks->find_instance($newblock->instance->id);
+            $newdata = $this->prepare_defaults($newblock->instance);
+            foreach ($this->get_data() as $key => $value) {
+                $newdata->$key = $value;
+            }
+            $this->page->blocks->save_block_data($newblock, $newdata);
+        }
     }
 
     /**
@@ -407,5 +451,9 @@ class block_edit_form extends \core_form\dynamic_form {
      */
     protected function get_page_url_for_dynamic_submission(): moodle_url {
         return $this->page->url;
+    }
+
+    public static function display_form_when_adding(): bool {
+        return false;
     }
 }

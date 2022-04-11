@@ -821,6 +821,7 @@ class block_manager {
      * @param boolean $showinsubcontexts whether this block appears in subcontexts, or just the current context.
      * @param string|null $pagetypepattern which page types this block should appear on. Defaults to just the current page type.
      * @param string|null $subpagepattern which subpage this block should appear on. NULL = any (the default), otherwise only the specified subpage.
+     * @return block_base
      */
     public function add_block($blockname, $region, $weight, $showinsubcontexts, $pagetypepattern = NULL, $subpagepattern = NULL) {
         global $DB;
@@ -853,6 +854,9 @@ class block_manager {
         if ($block = block_instance($blockname, $blockinstance)) {
             $block->instance_create();
         }
+
+        $this->birecordsbyregion = null;
+        return $block;
     }
 
     /**
@@ -860,11 +864,12 @@ class block_manager {
      *
      * @param string $blockname Name of the block to add.
      * @param null|string $blockregion If defined add the new block to the specified region.
+     * @return ?block_base
      */
     public function add_block_at_end_of_default_region($blockname, $blockregion = null) {
         if (empty($this->birecordsbyregion)) {
             // No blocks or block regions exist yet.
-            return;
+            return null;
         }
 
         if ($blockregion === null) {
@@ -911,7 +916,7 @@ class block_manager {
         // Surely other pages like course-report will need this too, they just are not important
         // enough now. This will be decided in the coming days. (MDL-27829, MDL-28150)
 
-        $this->add_block($blockname, $defaulregion, $weight, false, $pagetypepattern, $subpage);
+        return $this->add_block($blockname, $defaulregion, $weight, false, $pagetypepattern, $subpage);
     }
 
     /**
@@ -2100,7 +2105,7 @@ function block_instance_by_id($blockinstanceid) {
  * Creates a new instance of the specified block class.
  *
  * @param string $blockname the name of the block.
- * @param $instance block_instances DB table row (optional).
+ * @param stdClass $instance block_instances DB table row (optional).
  * @param moodle_page $page the page this block is appearing on.
  * @return block_base the requested block instance.
  */
@@ -2109,6 +2114,7 @@ function block_instance($blockname, $instance = NULL, $page = NULL) {
         return false;
     }
     $classname = 'block_'.$blockname;
+    /** @var block_base $retval */
     $retval = new $classname;
     if($instance !== NULL) {
         if (is_null($page)) {

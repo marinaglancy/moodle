@@ -88,4 +88,8 @@ class block_html_edit_form extends block_edit_form {
             $this->block->config->title = $title;
         }
     }
+
+    public static function display_form_when_adding(): bool {
+        return true;
+    }
 }

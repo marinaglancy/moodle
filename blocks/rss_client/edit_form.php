@@ -76,7 +76,7 @@ class block_rss_client_edit_form extends block_edit_form {
 
         if (has_any_capability(array('block/rss_client:manageanyfeeds', 'block/rss_client:manageownfeeds'), $this->block->context)) {
             $mform->addElement('static', 'nofeedmessage', '',
-                    '<a href="' . $CFG->wwwroot . '/blocks/rss_client/managefeeds.php?courseid=' . $this->page->course->id . '">' .
+                    '<a href="' . $CFG->wwwroot . '/blocks/rss_client/managefeeds.php?courseid=' . $this->page->course->id . '" target="_blank">' .
                     get_string('feedsaddedit', 'block_rss_client') . '</a>');
         }
 
@@ -88,5 +88,9 @@ class block_rss_client_edit_form extends block_edit_form {
 
         $mform->addElement('selectyesno', 'config_block_rss_client_show_channel_image', get_string('clientshowimagelabel', 'block_rss_client'));
         $mform->setDefault('config_block_rss_client_show_channel_image', 0);
+    }
+
+    public static function display_form_when_adding(): bool {
+        return true;
     }
 }

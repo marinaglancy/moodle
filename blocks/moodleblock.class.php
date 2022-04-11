@@ -89,7 +89,7 @@ class block_base {
 
     /**
      * This blocks's context.
-     * @var stdClass
+     * @var context
      */
     public $context    = NULL;
 
@@ -466,7 +466,7 @@ class block_base {
      * table and the current page. (See {@link block_manager::load_blocks()}.)
      *
      * @param stdClass $instance data from block_insances, block_positions, etc.
-     * @param moodle_page $the page this block is on.
+     * @param moodle_page $page the page this block is on.
      */
     function _load_instance($instance, $page) {
         if (!empty($instance->configdata)) {

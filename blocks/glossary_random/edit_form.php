@@ -29,6 +29,14 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class block_glossary_random_edit_form extends block_edit_form {
+    protected function get_course_id() {
+        if ($this->block->instance->id) {
+            return $this->block->course->id;
+        } else if ($parentcontext = $this->block->context->get_course_context()) {
+            return $parentcontext->instanceid;
+        }
+    }
+
     protected function specific_definition($mform) {
         global $DB;
 
@@ -40,7 +48,7 @@ class block_glossary_random_edit_form extends block_edit_form {
         $mform->setType('config_title', PARAM_TEXT);
 
         // Select glossaries to put in dropdown box ...
-        $glossaries = $DB->get_records_select_menu('glossary', 'course = ? OR globalglossary = ?', array($this->block->course->id, 1), 'name', 'id,name');
+        $glossaries = $DB->get_records_select_menu('glossary', 'course = ? OR globalglossary = ?', array($this->get_course_id(), 1), 'name', 'id,name');
         foreach($glossaries as $key => $value) {
             $glossaries[$key] = strip_tags(format_string($value, true));
         }
@@ -75,5 +83,9 @@ class block_glossary_random_edit_form extends block_edit_form {
         $mform->addElement('text', 'config_invisible', get_string('askinvisible', 'block_glossary_random'));
         $mform->setDefault('config_invisible', get_string('invisible', 'block_glossary_random'));
         $mform->setType('config_invisible', PARAM_NOTAGS);
+    }
+
+    public static function display_form_when_adding(): bool {
+        return true;
     }
 }
