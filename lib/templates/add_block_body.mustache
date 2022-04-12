@@ -36,10 +36,9 @@
 <div class="list-group">
 {{#blocks}}
     <a href="{{url}}&amp;bui_addblock={{name}}" class="list-group-item list-group-item-action"
-        data-blockname="{{name}}" data-blockregion="{{blockregion}}"
+        data-blockname="{{name}}" data-blocktitle="{{title}}" data-blockregion="{{blockregion}}"
         {{#blockform}}data-action="showaddblockform" data-blockform="{{blockform}}"{{/blockform}}
-    >{{title}}
-    <span>{{#blockform}}... more...{{/blockform}}</span></a>
+    >{{title}} {{#blockform}}...{{/blockform}}</a>
 {{/blocks}}
 {{^blocks}}
     <div class="alert alert-primary" role="alert">
