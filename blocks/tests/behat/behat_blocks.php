@@ -93,10 +93,8 @@ class behat_blocks extends behat_base {
         $this->execute('behat_blocks::i_add_the_block_to_the_region', [$blockname . ' ...', $region]);
         $this->wait_for_pending_js();
         $dialogname = get_string('addblock', 'core_block', $blockname);
-        $this->execute('behat_forms::i_set_the_following_fields_to_these_values', [$data]);
-        // TODO this does not work for 'editor' field:
-        //$this->execute('behat_forms::i_set_the_following_fields_in_container_to_these_values',
-        //    [$dialogname, "dialogue", $data]);
+        $this->execute('behat_forms::i_set_the_following_fields_in_container_to_these_values',
+            [$dialogname, "dialogue", $data]);
         $this->execute('behat_general::i_click_on_in_the', ["Save changes", 'button', $dialogname, 'dialogue']);
     }
 
