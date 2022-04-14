@@ -453,6 +453,18 @@ class block_edit_form extends \core_form\dynamic_form {
         return $this->page->url;
     }
 
+    /**
+     * Display the configuration form when block is being added to the page
+     *
+     * By default when block is added to the page it is added with the default configuration.
+     * Some block may require configuration, for example, "glossary random entry" block
+     * needs a glossary to be selected, "RSS feed" block needs an RSS feed to be selected, etc.
+     *
+     * Such blocks can override this function and return true. These blocks must
+     * ensure that the function specific_definition() will work if there is no current block id.
+     *
+     * @return bool
+     */
     public static function display_form_when_adding(): bool {
         return false;
     }

@@ -29,6 +29,7 @@ require_once($CFG->dirroot . '/lib/grade/constants.php');
 /**
  * Form for editing activity results block instances.
  *
+ * @property-read block_activity_results $block
  * @copyright 2009 Tim Hunt
  * @copyright 2015 Stephen Bourget
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -125,6 +126,11 @@ class block_activity_results_edit_form extends block_edit_form {
         }
     }
 
+    /**
+     * Display the configuration form when block is being added to the page
+     *
+     * @return bool
+     */
     public static function display_form_when_adding(): bool {
         return true;
     }

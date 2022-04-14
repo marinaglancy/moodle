@@ -1642,7 +1642,9 @@ class moodle_page {
             'contextid' => $this->context->id,
             'url' => $url->out_as_local_url(false),
         ];
-        if (($course = $this->course) && $course->id) {
+        if (($cm = $this->cm) && $cm->id) {
+            $data['cmid'] = $cm->id;
+        } else if (($course = $this->course) && $course->id) {
             $data['courseid'] = $course->id;
         }
         $keys = ['pagelayout', 'pagetype', 'subpage'];
@@ -1689,7 +1691,10 @@ class moodle_page {
         }
         $page = new $classname();
         $page->set_context(context::instance_by_id($data['contextid']));
-        if (array_key_exists('courseid', $data)) {
+        if (array_key_exists('cmid', $data)) {
+            [$course, $cm] = get_course_and_cm_from_cmid($data['cmid']);
+            $page->set_cm($cm, $course);
+        } else if (array_key_exists('courseid', $data)) {
             $page->set_course(get_course($data['courseid']));
         }
         $page->set_url(new moodle_url($data['url']));

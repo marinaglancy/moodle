@@ -62,7 +62,7 @@ Feature: The activity results block displays student scores
     And I should see "Student 3" in the "Activity results" "block"
     And I should see "70.00" in the "Activity results" "block"
 
-  Scenario: Block should select current activity by default
+  Scenario: Block should select current activity by default with javascript off
     Given I follow "Test assignment 1"
     When I add the "Activity results" block
     And I configure the "Activity results" block
@@ -85,3 +85,25 @@ Feature: The activity results block displays student scores
     And I add the "Activity results" block
     And I configure the "Activity results" block
     And the field "config_activitygradeitemid" does not match value "Test page name"
+
+  @javascript
+  Scenario: Block should select current activity by default with javascript on
+    Given I click on "Test assignment 1" "link" in the "region-main" "region"
+    When I add the "Activity results ..." block
+    Then the field "config_activitygradeitemid" in the "Add Activity results block" "dialogue" matches value "Test assignment 1"
+    And I click on "Save changes" "button" in the "Add Activity results block" "dialogue"
+    And I am on "Course 1" course homepage
+    And I click on "Test assignment 2" "link" in the "region-main" "region"
+    And I add the "Activity results ..." block
+    And the field "config_activitygradeitemid" in the "Add Activity results block" "dialogue" matches value "Test assignment 2"
+    And I click on "Save changes" "button" in the "Add Activity results block" "dialogue"
+    And I am on "Course 1" course homepage
+    And I click on "Test assignment 3" "link" in the "region-main" "region"
+    And I add the "Activity results ..." block
+    And the field "config_activitygradeitemid" in the "Add Activity results block" "dialogue" matches value "Test assignment 3"
+    And I click on "Save changes" "button" in the "Add Activity results block" "dialogue"
+    And I am on "Course 1" course homepage
+    And I click on "Test page name" "link" in the "region-main" "region"
+    And I add the "Activity results ..." block
+    And the field "config_activitygradeitemid" in the "Add Activity results block" "dialogue" does not match value "Test page name"
+    And I click on "Save changes" "button" in the "Add Activity results block" "dialogue"
