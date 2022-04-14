@@ -822,7 +822,6 @@ class manager_test extends \advanced_testcase {
         $page->set_pagetype('course-view');
         $page->blocks->load_blocks();
         $page->blocks->add_block_at_end_of_default_region('html');
-        $page->blocks->load_blocks();
         $page->blocks->add_block_at_end_of_default_region('html');
 
         // Student 1 belongs to all 3 courses.

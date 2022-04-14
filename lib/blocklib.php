@@ -855,7 +855,9 @@ class block_manager {
             $block->instance_create();
         }
 
+        // Reload page blocks.
         $this->birecordsbyregion = null;
+        $this->load_blocks();
         return $block;
     }
 
