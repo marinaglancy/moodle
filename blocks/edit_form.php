@@ -124,6 +124,8 @@ class block_edit_form extends \core_form\dynamic_form {
     function definition() {
         $mform =& $this->_form;
 
+        $mform->addElement('hidden', 'bui_editid', $this->block->instance->id);
+        $mform->setType('bui_editid', PARAM_INT);
         $mform->addElement('hidden', 'blockid', $this->block->instance->id);
         $mform->setType('blockid', PARAM_INT);
         $mform->addElement('hidden', 'blockname', $this->optional_param('blockname', null, PARAM_PLUGIN));
