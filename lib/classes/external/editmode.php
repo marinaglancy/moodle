@@ -54,8 +54,6 @@ class editmode extends external_api {
     public static function change_editmode(bool $setmode, int $contextid): array {
         global $USER;
 
-        // TODO use pagehash or page validation?
-
         $params = self::validate_parameters(
             self::change_editmode_parameters(),
             [
