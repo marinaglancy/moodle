@@ -821,6 +821,7 @@ class block_manager {
      * @param boolean $showinsubcontexts whether this block appears in subcontexts, or just the current context.
      * @param string|null $pagetypepattern which page types this block should appear on. Defaults to just the current page type.
      * @param string|null $subpagepattern which subpage this block should appear on. NULL = any (the default), otherwise only the specified subpage.
+     * @return block_base
      */
     public function add_block($blockname, $region, $weight, $showinsubcontexts, $pagetypepattern = NULL, $subpagepattern = NULL) {
         global $DB;
@@ -853,6 +854,13 @@ class block_manager {
         if ($block = block_instance($blockname, $blockinstance)) {
             $block->instance_create();
         }
+
+        if (!is_null($this->birecordsbyregion)) {
+            // If blocks were already loaded on this page, reload them.
+            $this->birecordsbyregion = null;
+            $this->load_blocks();
+        }
+        return $block;
     }
 
     /**
@@ -860,11 +868,12 @@ class block_manager {
      *
      * @param string $blockname Name of the block to add.
      * @param null|string $blockregion If defined add the new block to the specified region.
+     * @return ?block_base
      */
     public function add_block_at_end_of_default_region($blockname, $blockregion = null) {
         if (empty($this->birecordsbyregion)) {
             // No blocks or block regions exist yet.
-            return;
+            return null;
         }
 
         if ($blockregion === null) {
@@ -911,7 +920,7 @@ class block_manager {
         // Surely other pages like course-report will need this too, they just are not important
         // enough now. This will be decided in the coming days. (MDL-27829, MDL-28150)
 
-        $this->add_block($blockname, $defaulregion, $weight, false, $pagetypepattern, $subpage);
+        return $this->add_block($blockname, $defaulregion, $weight, false, $pagetypepattern, $subpage);
     }
 
     /**
@@ -1295,8 +1304,8 @@ class block_manager {
      * Get the appropriate list of editing icons for a block. This is used
      * to set {@link block_contents::$controls} in {@link block_base::get_contents_for_output()}.
      *
-     * @param $output The core_renderer to use when generating the output. (Need to get icon paths.)
-     * @return an array in the format for {@link block_contents::$controls}
+     * @param block_base $block
+     * @return array an array in the format for {@link block_contents::$controls}
      */
     public function edit_controls($block) {
         global $CFG;
@@ -1335,7 +1344,13 @@ class block_manager {
                 $editactionurl,
                 new pix_icon('t/edit', $str, 'moodle', array('class' => 'iconsmall', 'title' => '')),
                 $str,
-                array('class' => 'editing_edit')
+                [
+                    'class' => 'editing_edit',
+                    'data-action' => 'editblock',
+                    'data-blockid' => $block->instance->id,
+                    'data-blockform' => self::get_block_edit_form_class($block->name()),
+                    'data-header' => $str,
+                ]
             );
 
         }
@@ -1698,6 +1713,30 @@ class block_manager {
     }
 
     /**
+     * Returns the name of the class for block editing and makes sure it is autoloaded
+     *
+     * @param string $blockname name of the block plugin (without block_ prefix)
+     * @return string
+     */
+    public static function get_block_edit_form_class(string $blockname) {
+        global $CFG;
+        $blockname = clean_param($blockname, PARAM_PLUGIN);
+        $formfile = $CFG->dirroot . '/blocks/' . $blockname . '/edit_form.php';
+        if (is_readable($formfile)) {
+            require_once($CFG->dirroot . '/blocks/edit_form.php');
+            require_once($formfile);
+            $classname = 'block_' . $blockname . '_edit_form';
+            if (!class_exists($classname)) {
+                $classname = 'block_edit_form';
+            }
+        } else {
+            require_once($CFG->dirroot . '/blocks/edit_form.php');
+            $classname = 'block_edit_form';
+        }
+        return $classname;
+    }
+
+    /**
      * Handle showing/processing the submission from the block editing form.
      * @return boolean true if the form was submitted and the new config saved. Does not
      *      return if the editing form was displayed. False otherwise.
@@ -1741,18 +1780,9 @@ class block_manager {
         $output = $editpage->get_renderer('core');
         $OUTPUT = $output;
 
-        $formfile = $CFG->dirroot . '/blocks/' . $block->name() . '/edit_form.php';
-        if (is_readable($formfile)) {
-            require_once($formfile);
-            $classname = 'block_' . $block->name() . '_edit_form';
-            if (!class_exists($classname)) {
-                $classname = 'block_edit_form';
-            }
-        } else {
-            $classname = 'block_edit_form';
-        }
-
-        $mform = new $classname($editpage->url, $block, $this->page);
+        $classname = self::get_block_edit_form_class($block->name());
+        /** @var block_edit_form $mform */
+        $mform = new $classname($editpage->url->out(false), ['page' => $this->page, 'block' => $block, 'actionbuttons' => true]);
         $mform->set_data($block->instance);
 
         if ($mform->is_cancelled()) {
@@ -2085,7 +2115,7 @@ function block_instance_by_id($blockinstanceid) {
  * Creates a new instance of the specified block class.
  *
  * @param string $blockname the name of the block.
- * @param $instance block_instances DB table row (optional).
+ * @param stdClass $instance block_instances DB table row (optional).
  * @param moodle_page $page the page this block is appearing on.
  * @return block_base the requested block instance.
  */
@@ -2094,6 +2124,7 @@ function block_instance($blockname, $instance = NULL, $page = NULL) {
         return false;
     }
     $classname = 'block_'.$blockname;
+    /** @var block_base $retval */
     $retval = new $classname;
     if($instance !== NULL) {
         if (is_null($page)) {
