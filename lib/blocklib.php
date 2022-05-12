@@ -1759,122 +1759,7 @@ class block_manager {
             redirect($this->page->url);
 
         } else if ($data = $mform->get_data()) {
-            $bi = new stdClass;
-            $bi->id = $block->instance->id;
-
-            // This may get overwritten by the special case handling below.
-            $bi->pagetypepattern = $data->bui_pagetypepattern;
-            $bi->showinsubcontexts = (bool) $data->bui_contexts;
-            if (empty($data->bui_subpagepattern) || $data->bui_subpagepattern == '%@NULL@%') {
-                $bi->subpagepattern = null;
-            } else {
-                $bi->subpagepattern = $data->bui_subpagepattern;
-            }
-
-            $systemcontext = context_system::instance();
-            $frontpagecontext = context_course::instance(SITEID);
-            $parentcontext = context::instance_by_id($data->bui_parentcontextid);
-
-            // Updating stickiness and contexts.  See MDL-21375 for details.
-            if (has_capability('moodle/site:manageblocks', $parentcontext)) { // Check permissions in destination
-
-                // Explicitly set the default context
-                $bi->parentcontextid = $parentcontext->id;
-
-                if ($data->bui_editingatfrontpage) {   // The block is being edited on the front page
-
-                    // The interface here is a special case because the pagetype pattern is
-                    // totally derived from the context menu.  Here are the excpetions.   MDL-30340
-
-                    switch ($data->bui_contexts) {
-                        case BUI_CONTEXTS_ENTIRE_SITE:
-                            // The user wants to show the block across the entire site
-                            $bi->parentcontextid = $systemcontext->id;
-                            $bi->showinsubcontexts = true;
-                            $bi->pagetypepattern  = '*';
-                            break;
-                        case BUI_CONTEXTS_FRONTPAGE_SUBS:
-                            // The user wants the block shown on the front page and all subcontexts
-                            $bi->parentcontextid = $frontpagecontext->id;
-                            $bi->showinsubcontexts = true;
-                            $bi->pagetypepattern  = '*';
-                            break;
-                        case BUI_CONTEXTS_FRONTPAGE_ONLY:
-                            // The user want to show the front page on the frontpage only
-                            $bi->parentcontextid = $frontpagecontext->id;
-                            $bi->showinsubcontexts = false;
-                            $bi->pagetypepattern  = 'site-index';
-                            // This is the only relevant page type anyway but we'll set it explicitly just
-                            // in case the front page grows site-index-* subpages of its own later
-                            break;
-                    }
-                }
-            }
-
-            $bits = explode('-', $bi->pagetypepattern);
-            // hacks for some contexts
-            if (($parentcontext->contextlevel == CONTEXT_COURSE) && ($parentcontext->instanceid != SITEID)) {
-                // For course context
-                // is page type pattern is mod-*, change showinsubcontext to 1
-                if ($bits[0] == 'mod' || $bi->pagetypepattern == '*') {
-                    $bi->showinsubcontexts = 1;
-                } else {
-                    $bi->showinsubcontexts = 0;
-                }
-            } else  if ($parentcontext->contextlevel == CONTEXT_USER) {
-                // for user context
-                // subpagepattern should be null
-                if ($bits[0] == 'user' or $bits[0] == 'my') {
-                    // we don't need subpagepattern in usercontext
-                    $bi->subpagepattern = null;
-                }
-            }
-
-            $bi->defaultregion = $data->bui_defaultregion;
-            $bi->defaultweight = $data->bui_defaultweight;
-            $bi->timemodified = time();
-            $DB->update_record('block_instances', $bi);
-
-            if (!empty($block->config)) {
-                $config = clone($block->config);
-            } else {
-                $config = new stdClass;
-            }
-            foreach ($data as $configfield => $value) {
-                if (strpos($configfield, 'config_') !== 0) {
-                    continue;
-                }
-                $field = substr($configfield, 7);
-                $config->$field = $value;
-            }
-            $block->instance_config_save($config);
-
-            $bp = new stdClass;
-            $bp->visible = $data->bui_visible;
-            $bp->region = $data->bui_region;
-            $bp->weight = $data->bui_weight;
-            $needbprecord = !$data->bui_visible || $data->bui_region != $data->bui_defaultregion ||
-                    $data->bui_weight != $data->bui_defaultweight;
-
-            if ($block->instance->blockpositionid && !$needbprecord) {
-                $DB->delete_records('block_positions', array('id' => $block->instance->blockpositionid));
-
-            } else if ($block->instance->blockpositionid && $needbprecord) {
-                $bp->id = $block->instance->blockpositionid;
-                $DB->update_record('block_positions', $bp);
-
-            } else if ($needbprecord) {
-                $bp->blockinstanceid = $block->instance->id;
-                $bp->contextid = $this->page->context->id;
-                $bp->pagetype = $this->page->pagetype;
-                if ($this->page->subpage) {
-                    $bp->subpage = $this->page->subpage;
-                } else {
-                    $bp->subpage = '';
-                }
-                $DB->insert_record('block_positions', $bp);
-            }
-
+            $this->save_block_data($block, $data);
             redirect($this->page->url);
 
         } else {
@@ -1897,6 +1782,133 @@ class block_manager {
             $mform->display();
             echo $output->footer();
             exit;
+        }
+    }
+
+    /**
+     * Saves block configuration from the form to the block instance record
+     *
+     * @param block_base $block existing block that needs to be modified
+     * @param stdClass $data data from the block_edit_form
+     * @return void
+     */
+    public function save_block_data(block_base $block, stdClass $data): void {
+        global $DB;
+
+        $bi = new stdClass;
+        $bi->id = $block->instance->id;
+
+        // This may get overwritten by the special case handling below.
+        $bi->pagetypepattern = $data->bui_pagetypepattern;
+        $bi->showinsubcontexts = (bool) $data->bui_contexts;
+        if (empty($data->bui_subpagepattern) || $data->bui_subpagepattern == '%@NULL@%') {
+            $bi->subpagepattern = null;
+        } else {
+            $bi->subpagepattern = $data->bui_subpagepattern;
+        }
+
+        $systemcontext = context_system::instance();
+        $frontpagecontext = context_course::instance(SITEID);
+        $parentcontext = context::instance_by_id($data->bui_parentcontextid);
+
+        // Updating stickiness and contexts.  See MDL-21375 for details.
+        if (has_capability('moodle/site:manageblocks', $parentcontext)) { // Check permissions in destination
+
+            // Explicitly set the default context
+            $bi->parentcontextid = $parentcontext->id;
+
+            if ($data->bui_editingatfrontpage) {   // The block is being edited on the front page
+
+                // The interface here is a special case because the pagetype pattern is
+                // totally derived from the context menu.  Here are the excpetions.   MDL-30340
+
+                switch ($data->bui_contexts) {
+                    case BUI_CONTEXTS_ENTIRE_SITE:
+                        // The user wants to show the block across the entire site
+                        $bi->parentcontextid = $systemcontext->id;
+                        $bi->showinsubcontexts = true;
+                        $bi->pagetypepattern  = '*';
+                        break;
+                    case BUI_CONTEXTS_FRONTPAGE_SUBS:
+                        // The user wants the block shown on the front page and all subcontexts
+                        $bi->parentcontextid = $frontpagecontext->id;
+                        $bi->showinsubcontexts = true;
+                        $bi->pagetypepattern  = '*';
+                        break;
+                    case BUI_CONTEXTS_FRONTPAGE_ONLY:
+                        // The user want to show the front page on the frontpage only
+                        $bi->parentcontextid = $frontpagecontext->id;
+                        $bi->showinsubcontexts = false;
+                        $bi->pagetypepattern  = 'site-index';
+                        // This is the only relevant page type anyway but we'll set it explicitly just
+                        // in case the front page grows site-index-* subpages of its own later
+                        break;
+                }
+            }
+        }
+
+        $bits = explode('-', $bi->pagetypepattern);
+        // hacks for some contexts
+        if (($parentcontext->contextlevel == CONTEXT_COURSE) && ($parentcontext->instanceid != SITEID)) {
+            // For course context
+            // is page type pattern is mod-*, change showinsubcontext to 1
+            if ($bits[0] == 'mod' || $bi->pagetypepattern == '*') {
+                $bi->showinsubcontexts = 1;
+            } else {
+                $bi->showinsubcontexts = 0;
+            }
+        } else  if ($parentcontext->contextlevel == CONTEXT_USER) {
+            // for user context
+            // subpagepattern should be null
+            if ($bits[0] == 'user' or $bits[0] == 'my') {
+                // we don't need subpagepattern in usercontext
+                $bi->subpagepattern = null;
+            }
+        }
+
+        $bi->defaultregion = $data->bui_defaultregion;
+        $bi->defaultweight = $data->bui_defaultweight;
+        $bi->timemodified = time();
+        $DB->update_record('block_instances', $bi);
+
+        if (!empty($block->config)) {
+            $config = clone($block->config);
+        } else {
+            $config = new stdClass;
+        }
+        foreach ($data as $configfield => $value) {
+            if (strpos($configfield, 'config_') !== 0) {
+                continue;
+            }
+            $field = substr($configfield, 7);
+            $config->$field = $value;
+        }
+        $block->instance_config_save($config);
+
+        $bp = new stdClass;
+        $bp->visible = $data->bui_visible;
+        $bp->region = $data->bui_region;
+        $bp->weight = $data->bui_weight;
+        $needbprecord = !$data->bui_visible || $data->bui_region != $data->bui_defaultregion ||
+            $data->bui_weight != $data->bui_defaultweight;
+
+        if ($block->instance->blockpositionid && !$needbprecord) {
+            $DB->delete_records('block_positions', array('id' => $block->instance->blockpositionid));
+
+        } else if ($block->instance->blockpositionid && $needbprecord) {
+            $bp->id = $block->instance->blockpositionid;
+            $DB->update_record('block_positions', $bp);
+
+        } else if ($needbprecord) {
+            $bp->blockinstanceid = $block->instance->id;
+            $bp->contextid = $this->page->context->id;
+            $bp->pagetype = $this->page->pagetype;
+            if ($this->page->subpage) {
+                $bp->subpage = $this->page->subpage;
+            } else {
+                $bp->subpage = '';
+            }
+            $DB->insert_record('block_positions', $bp);
         }
     }
 
