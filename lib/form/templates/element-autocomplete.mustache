@@ -19,7 +19,7 @@
         {{#element.frozen}}
             {{#element.options}}
                 {{#selected}}
-                    {{{text}}}
+                    {{#html}}{{{html}}}{{/html}}{{^html}}{{{text}}}{{/html}}
                     {{^element.hardfrozen}}
                         <input type="hidden" name="{{element.name}}" value="{{value}}">
                     {{/element.hardfrozen}}
