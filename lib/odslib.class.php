@@ -1177,8 +1177,8 @@ class MoodleODSWriter {
                         if (isset($cell->formula)) {
                             $buffer .= '<table:table-cell table:formula="of:'.$cell->formula.'"'.$extra.'></table:table-cell>'."\n";
                         } else if ($cell->type == 'date') {
-                            $buffer .= '<table:table-cell office:value-type="date" office:date-value="' . strftime('%Y-%m-%dT%H:%M:%S', $cell->value) . '"'.$extra.'>'
-                                     . $pretext . strftime('%Y-%m-%dT%H:%M:%S', $cell->value) . $posttext
+                            $buffer .= '<table:table-cell office:value-type="date" office:date-value="' . date("Y-m-d\\TH:i:s", $cell->value) . '"'.$extra.'>'
+                                     . $pretext . date("Y-m-d\\TH:i:s", $cell->value) . $posttext
                                      . '</table:table-cell>'."\n";
                         } else if ($cell->type == 'float') {
                             $buffer .= '<table:table-cell office:value-type="float" office:value="' . htmlspecialchars($cell->value, ENT_QUOTES, 'utf-8') . '"'.$extra.'>'
