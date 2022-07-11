@@ -284,6 +284,7 @@ class page_agreedocs implements renderable, templatable {
                 $pendingpolicies = array_diff($currentpolicyversionids, $viewedpolicies);
             } else {
                 $pendingpolicies = $currentpolicyversionids;
+                $viewedpolicies = [];
             }
             if (count($pendingpolicies) > 0) {
                 // Still is needed to show some policies docs. Save in the session and redirect.

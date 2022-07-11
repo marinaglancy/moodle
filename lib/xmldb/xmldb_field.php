@@ -118,7 +118,7 @@ class xmldb_field extends xmldb_object {
         $this->type = $type;
     /// Try to split the precision into length and decimals and apply
     /// each one as needed
-        $precisionarr = explode(',', $precision);
+        $precisionarr = explode(',', (string)$precision);
         if (isset($precisionarr[0])) {
             $this->length = trim($precisionarr[0]);
         }

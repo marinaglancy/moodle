@@ -53,4 +53,15 @@ class mustache_filesystem_loader extends \Mustache_Loader_FilesystemLoader {
         // Call the Moodle template finder.
         return mustache_template_finder::get_template_filepath($name);
     }
+
+    /**
+     * Only check if baseDir is a directory and requested templates are files if
+     * baseDir is using the filesystem stream wrapper.
+     *
+     * @return bool Whether to check `is_dir` and `file_exists`
+     */
+    protected function shouldCheckPath()
+    {
+        return true;
+    }
 }

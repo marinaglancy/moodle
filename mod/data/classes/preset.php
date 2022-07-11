@@ -310,7 +310,7 @@ class preset {
         $instance = $this->manager->get_instance();
         foreach (manager::TEMPLATES_LIST as $templatename => $templatefilename) {
             $templatefile = fopen("$exportdir/$templatefilename", 'w');
-            fwrite($templatefile, $instance->{$templatename});
+            fwrite($templatefile, (string)$instance->{$templatename});
             fclose($templatefile);
         }
 
@@ -709,7 +709,7 @@ class preset {
         $presetxmldata = "<preset>\n\n";
 
         // Add description.
-        $presetxmldata .= '<description>' . htmlspecialchars($this->description, ENT_COMPAT) . "</description>\n\n";
+        $presetxmldata .= '<description>' . htmlspecialchars($this->description ?? '', ENT_COMPAT) . "</description>\n\n";
 
         // Add settings.
         // Raw settings are not preprocessed during saving of presets.

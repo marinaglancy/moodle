@@ -694,7 +694,7 @@ class oci_native_moodle_database extends moodle_database {
                 $value = array('blob' => $value);
             }
 
-        } else if ($column->meta_type == 'X' && strlen($value) > 4000) { // CLOB detected (>4000 optimisation), we return 'clob'
+        } else if ($column->meta_type == 'X' && strlen((string)$value) > 4000) { // CLOB detected (>4000 optimisation), we return 'clob'
             if (!is_null($value)) {                                      // array instead of raw value to allow binding/
                 $value = array('clob' => (string)$value);                // executing code later to know about its nature
             }
