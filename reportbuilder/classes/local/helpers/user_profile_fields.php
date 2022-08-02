@@ -124,6 +124,7 @@ class user_profile_fields {
             $userinfotablealias = database::generate_alias();
 
             $columntype = $this->get_user_field_type($profilefield->field->datatype);
+            [$fieldsql, $params] = $this->get_user_field_sql($userinfotablealias, $profilefield->field->datatype);
 
             $column = (new column(
                 'profilefield_' . $profilefield->field->shortname,
@@ -136,7 +137,7 @@ class user_profile_fields {
                 ->add_join("LEFT JOIN {user_info_data} {$userinfotablealias} " .
                     "ON {$userinfotablealias}.userid = {$this->usertablefieldalias} " .
                     "AND {$userinfotablealias}.fieldid = {$profilefield->fieldid}")
-                ->add_field("{$userinfotablealias}.data")
+                ->add_field($fieldsql, 'data', $params)
                 ->set_type($columntype)
                 ->set_is_sortable($columntype !== column::TYPE_LONGTEXT)
                 ->add_callback([$this, 'format_profile_field'], $profilefield);
@@ -240,6 +241,24 @@ class user_profile_fields {
                 break;
         }
         return $customfieldtype;
+    }
+
+    /**
+     * Get user profile field type for report.
+     *
+     * @param string $userfield user field.
+     * @return int the constant equivalent to this custom field type.
+     */
+    protected function get_user_field_sql(string $userinfotablealias, string $userfield): array {
+        global $DB;
+        $field = "{$userinfotablealias}.data";
+        $params = [];
+        switch ($userfield) {
+            case 'checkbox':
+                $field = "CASE WHEN $field IS NULL THEN NULL ELSE " . $DB->sql_cast_char2int($field, true) . " END";
+                break;
+        }
+        return [$field, $params];
     }
 
     /**

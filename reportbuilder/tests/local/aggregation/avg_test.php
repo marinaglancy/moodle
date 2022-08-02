@@ -44,7 +44,9 @@ class avg_test extends core_reportbuilder_testcase {
         $this->resetAfterTest();
 
         // Test subjects.
-        $this->getDataGenerator()->create_user(['firstname' => 'Bob', 'suspended' => 1]);
+        $this->getDataGenerator()->create_custom_profile_field(['datatype' => 'checkbox',
+            'shortname' => 'areyousure', 'name' => 'Are you sure?']);
+        $this->getDataGenerator()->create_user(['firstname' => 'Bob', 'suspended' => 1, 'profile_field_areyousure' => 1]);
         $this->getDataGenerator()->create_user(['firstname' => 'Bob', 'suspended' => 0]);
 
         /** @var core_reportbuilder_generator $generator */
@@ -61,15 +63,21 @@ class avg_test extends core_reportbuilder_testcase {
             ->set('aggregation', avg::get_class_name())
             ->update();
 
+        $generator->create_column(['reportid' => $report->get('id'), 'uniqueidentifier' => 'user:profilefield_areyousure'])
+            ->set('aggregation', avg::get_class_name())
+            ->update();
+
         $content = $this->get_custom_report_content($report->get('id'));
         $this->assertEquals([
             [
                 'c0_firstname' => 'Admin',
                 'c1_suspended' => '0.0',
+                'c2_data' => null,
             ],
             [
                 'c0_firstname' => 'Bob',
                 'c1_suspended' => '0.5',
+                'c2_data' => '1.0',
             ],
         ], $content);
     }
