@@ -341,6 +341,33 @@ class report_test extends advanced_testcase {
     }
 
     /**
+     * Test setting initial sorting
+     */
+    public function test_set_initial_sorting(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        /** @var core_reportbuilder_generator $generator */
+        $generator = $this->getDataGenerator()->get_plugin_generator('core_reportbuilder');
+        $report = $generator->create_report(['name' => 'My report', 'source' => users::class, 'default' => 1]);
+        [$column0, $column1, $column2] = column::get_records(['reportid' => $report->get('id')], 'columnorder');
+
+        // Confirm columns have correct sortenabled and sortorder.
+        $this->assertEquals('user:fullname', $column0->get('uniqueidentifier'));
+        $this->assertTrue($column0->get('sortenabled'));
+        $this->assertEquals(SORT_ASC, $column0->get('sortdirection'));
+        $this->assertEquals(1, $column0->get('sortorder'));
+
+        $this->assertEquals('user:username', $column1->get('uniqueidentifier'));
+        $this->assertFalse($column1->get('sortenabled'));
+        $this->assertEquals(2, $column1->get('sortorder'));
+
+        $this->assertEquals('user:email', $column2->get('uniqueidentifier'));
+        $this->assertFalse($column2->get('sortenabled'));
+        $this->assertEquals(3, $column2->get('sortorder'));
+    }
+
+    /**
      * Test adding report condition
      */
     public function test_add_report_condition(): void {

@@ -73,7 +73,13 @@ class core_reportbuilder_generator extends component_generator_base {
             throw new coding_exception('Record must contain \'uniqueidentifier\' property');
         }
 
-        return helper::add_report_column($record['reportid'], $record['uniqueidentifier']);
+        $column = helper::add_report_column($record['reportid'], $record['uniqueidentifier']);
+        $extradata = array_intersect_key($record,
+            array_fill_keys(['aggregation', 'heading', 'sortorder', 'sortenabled', 'sortdirection'], 1));
+        if ($extradata) {
+            $column->set_many($extradata)->update();
+        }
+        return $column;
     }
 
     /**
