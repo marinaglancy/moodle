@@ -17,6 +17,7 @@
 namespace mod_data;
 
 use stdClass;
+use mod_data_generator;
 
 /**
  * PHPUnit data generator testcase.
@@ -111,14 +112,6 @@ class generator_test extends \advanced_testcase {
         }
 
         $this->assertEquals(count($fieldtypes), $DB->count_records('data_fields', array('dataid' => $data->id)));
-
-        $addtemplate = $DB->get_record('data', array('id' => $data->id), 'addtemplate');
-        $addtemplate = $addtemplate->addtemplate;
-
-        for ($i = 1; $i < $count; $i++) {
-            $fieldname = 'field-' . $i;
-            $this->assertTrue(strpos($addtemplate, '[[' . $fieldname . ']]') >= 0);
-        }
     }
 
     public function test_create_entry() {
