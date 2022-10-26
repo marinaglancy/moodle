@@ -172,7 +172,9 @@ class behat_mod_workshop extends behat_base {
 
         $selectxpath = $rowxpath.'//select';
         $select = $this->find('xpath', $selectxpath);
-        $select->selectOption($value);
+        $opt = $select->find('named', array('option', $value));
+        $driver = $this->getSession()->getDriver();
+        $driver->selectOption($select->getXpath(), $opt->getAttribute('value'), false);
 
         if (!$this->running_javascript()) {
             $this->execute('behat_general::i_click_on_in_the',

@@ -46,6 +46,6 @@ class behat_form_inplaceeditable_select extends behat_form_select {
 
         // After editing is enabled, set the select field value.
         $select = $this->field->find('css', 'select');
-        $select->selectOption($value);
+        $this->select_option($select, $value);
     }
 }

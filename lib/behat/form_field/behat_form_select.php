@@ -59,12 +59,12 @@ class behat_form_select extends behat_form_field {
             // This is a multiple select, let's pass the multiple flag after first option.
             $afterfirstoption = false;
             foreach ($options as $option) {
-                $this->field->selectOption(trim($option), $afterfirstoption);
+                $this->select_option($this->field, trim($option), $afterfirstoption);
                 $afterfirstoption = true;
             }
         } else {
             // By default, assume the passed value is a non-multiple option.
-            $this->field->selectOption(trim($value));
+            $this->select_option($this->field, trim($value));
        }
     }
 
@@ -154,11 +154,6 @@ class behat_form_select extends behat_form_field {
      */
     protected function get_selected_options($returntexts = true) {
 
-        $method = 'getHtml';
-        if ($returntexts === false) {
-            $method = 'getValue';
-        }
-
         // Is the select multiple?
         $multiple = $this->field->hasAttribute('multiple');
 
@@ -166,7 +161,7 @@ class behat_form_select extends behat_form_field {
 
         // Driver returns the values as an array or as a string depending
         // on whether multiple options are selected or not.
-        $values = $this->field->getValue();
+        $values = $this->get_field_value();
         if (!is_array($values)) {
             $values = array($values);
         }
@@ -175,12 +170,13 @@ class behat_form_select extends behat_form_field {
         $alloptions = $this->field->findAll('xpath', '//option');
         foreach ($alloptions as $option) {
             // Is it selected?
-            if (in_array($option->getValue(), $values)) {
+            if (in_array($option->getAttribute('value'), $values)) {
+                $value = $returntexts === false ? $option->getAttribute('value') : $option->getHtml();
                 if ($multiple) {
                     // If the select is multiple, text commas must be encoded.
-                    $selectedoptions[] = trim(str_replace(',', '\,', $option->{$method}()));
+                    $selectedoptions[] = trim(str_replace(',', '\,', $value));
                 } else {
-                    $selectedoptions[] = trim($option->{$method}());
+                    $selectedoptions[] = trim($value);
                 }
             }
         }

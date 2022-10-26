@@ -53,7 +53,7 @@ class behat_form_text extends behat_form_field {
      * @return string
      */
     public function get_value() {
-        return $this->field->getValue();
+        return $this->get_field_value();
     }
 
     /**

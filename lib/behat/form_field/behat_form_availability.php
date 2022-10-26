@@ -82,7 +82,7 @@ class behat_form_availability extends behat_form_textarea {
                         throw new Exception('Cannot find grouping in dropdown' . count($nodes));
                     }
                     $node = reset($nodes);
-                    $value = $node->getValue();
+                    $value = $this->get_field_value($node);
                     $driver->selectOption(
                             '//span[contains(concat(" " , @class, " "), " availability_grouping ")]//' .
                             'select', $value);

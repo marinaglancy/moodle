@@ -26,7 +26,11 @@
 // NOTE: no MOODLE_INTERNAL test here, this file may be required by behat before including /config.php.
 
 use Behat\Mink\Element\NodeElement;
+use Behat\Mink\Exception\ElementNotFoundException;
 use Behat\Mink\Session;
+use Facebook\WebDriver\Exception\NoSuchElementException;
+use Facebook\WebDriver\WebDriverElement;
+use Facebook\WebDriver\WebDriverSelect;
 
 /**
  * Representation of a form field.
@@ -325,5 +329,75 @@ class behat_form_field implements behat_session_interface {
         }
 
         return $this->fieldlocator;
+    }
+
+    /**
+     * Selects specified option for select field or specified radio button in the group.
+     *
+     * Substitute for the function {@see \Behat\Mink\Element\NodeElement::selectOption()}
+     * that calls {@see \Moodle\BehatExtension\Driver\WebDriver::getValue()} on <option> element
+     * that throws PHP engine exception in PHP 8.1
+     *
+     * @param NodeElement $field
+     * @param string $option
+     * @param boolean $multiple whether the option should be added to the selection for multiple selects
+     *
+     * @throws ElementNotFoundException when the option is not found in the select box
+     */
+    protected function select_option(NodeElement $field, $option, $multiple = false) {
+        $driver = $this->session->getDriver();
+        if (!($driver instanceof \OAndreyev\Mink\Driver\WebDriver)) {
+            $field->selectOption($option, $multiple);
+            return;
+        }
+
+        if ('select' !== $field->getTagName()) {
+            $driver->selectOption($field->getXpath(), $option, $multiple);
+            return;
+        }
+
+        $opt = $field->find('named', array('option', $option));
+
+        if (null === $opt) {
+            throw new ElementNotFoundException($driver, 'select option', 'value|text', $option);
+        }
+
+        $driver->selectOption($field->getXpath(), $opt->getAttribute('value'), $multiple);
+    }
+
+    /**
+     * Temporary wrapper for NodeElement::getValue()
+     *
+     * @param NodeElement|null $node
+     * @return mixed
+     */
+    protected function get_field_value(?NodeElement $node = null) {
+        $field = $node ?? $this->field;
+        $tag = strtolower($field->getTagName() ?? '');
+        if (!($this->session->getDriver() instanceof \OAndreyev\Mink\Driver\WebDriver)) {
+            return $field->getValue();
+        } else if ($tag === 'select') {
+            $element = $this->session->getDriver()->getWebDriver()->findElement(\Facebook\WebDriver\WebDriverBy::xpath($field->getXpath()));
+            $select = new WebDriverSelect($element);
+            if ($select->isMultiple()) {
+                return \array_map(function (WebDriverElement $element) {
+                    return $element->getAttribute('value');
+                }, $select->getAllSelectedOptions());
+            }
+
+            try {
+                return $select->getFirstSelectedOption()->getAttribute('value');
+            } catch (NoSuchElementException $e) {
+                if ($e->getMessage() === 'No options are selected') {
+                    return '';
+                }
+                throw $e;
+            }
+        } else if ($tag === 'input') {
+            return $field->getValue();
+        } else {
+            $element = $this->session->getDriver()->getWebDriver()->findElement(\Facebook\WebDriver\WebDriverBy::xpath($field->getXpath()));
+            return $element->getAttribute('value');
+        }
     }
 }

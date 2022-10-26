@@ -573,7 +573,7 @@ class behat_forms extends behat_base {
         $options = $selectnode->findAll('xpath', '//option');
         $values = array();
         foreach ($options as $opt) {
-            $values[trim($opt->getValue())] = trim($opt->getText());
+            $values[trim($opt->getAttribute('value'))] = trim($opt->getText());
         }
 
         foreach ($optionsarr as $opt) {
@@ -617,7 +617,7 @@ class behat_forms extends behat_base {
         $options = $selectnode->findAll('xpath', '//option');
         $values = array();
         foreach ($options as $opt) {
-            $values[trim($opt->getValue())] = trim($opt->getText());
+            $values[trim($opt->getAttribute('value'))] = trim($opt->getText());
         }
 
         foreach ($optionsarr as $opt) {
