@@ -1156,7 +1156,8 @@ EOF;
             // Mark task failed and throw exception.
             \core\task\manager::scheduled_task_failed($task);
 
-            throw new DriverException('The "' . $taskname . '" scheduled task failed', 0, $e);
+            // TODO added error message for debugging but it seems to be useful anyway.
+            throw new DriverException('The "' . $taskname . '" scheduled task failed: '.$e->getMessage(), 0, $e);
         }
     }
 
