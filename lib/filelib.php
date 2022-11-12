@@ -518,9 +518,9 @@ function file_rewrite_pluginfile_urls($text, $file, $contextid, $component, $fil
     }
 
     if (!empty($options['reverse'])) {
-        return str_replace($baseurl, '@@PLUGINFILE@@/', $text);
+        return str_replace($baseurl, '@@PLUGINFILE@@/', $text ?? '');
     } else {
-        return str_replace('@@PLUGINFILE@@/', $baseurl, (string)$text);
+        return str_replace('@@PLUGINFILE@@/', $baseurl, $text ?? '');
     }
 }
 
@@ -1478,7 +1478,7 @@ function format_postdata_for_curlcall($postdata) {
                 $currentdata = urlencode($k);
                 format_array_postdata_for_curlcall($v, $currentdata, $data);
             }  else {
-                $data[] = urlencode($k).'='.urlencode((string)$v);
+                $data[] = urlencode($k).'='.urlencode($v ?? '');
             }
         }
         $convertedpostdata = implode('&', $data);
@@ -1771,7 +1771,7 @@ function mimeinfo($element, $filename) {
     $mimeinfo = & get_mimetypes_array();
     static $iconpostfixes = array(256=>'-256', 128=>'-128', 96=>'-96', 80=>'-80', 72=>'-72', 64=>'-64', 48=>'-48', 32=>'-32', 24=>'-24', 16=>'');
 
-    $filetype = strtolower(pathinfo((string)$filename, PATHINFO_EXTENSION));
+    $filetype = strtolower(pathinfo($filename ?? '', PATHINFO_EXTENSION));
     if (empty($filetype)) {
         $filetype = 'xxx'; // file without extension
     }
@@ -2028,8 +2028,8 @@ function get_mimetype_description($obj, $capitalise=false) {
     }
 
     // MIME types may include + symbol but this is not permitted in string ids.
-    $safemimetype = str_replace('+', '_', (string)$mimetype);
-    $safemimetypestr = str_replace('+', '_', (string)$mimetypestr);
+    $safemimetype = str_replace('+', '_', $mimetype ?? '');
+    $safemimetypestr = str_replace('+', '_', $mimetypestr ?? '');
     $customdescription = mimeinfo('customdescription', $filename);
     if ($customdescription) {
         // Call format_string on the custom description so that multilang

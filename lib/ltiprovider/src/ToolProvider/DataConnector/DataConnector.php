@@ -501,7 +501,7 @@ class DataConnector
     protected static function getConsumerKey($key)
     {
 
-        $len = strlen((string)$key);
+        $len = strlen($key ?? '');
         if ($len > 255) {
             $key = 'sha512:' . hash('sha512', $key);
         }

@@ -149,7 +149,7 @@ class core_question_renderer extends plugin_renderer_base {
      * @return HTML fragment.
      */
     protected function number($number) {
-        if (trim((string)$number) === '') {
+        if (trim($number ?? '') === '') {
             return '';
         }
         $numbertext = '';
