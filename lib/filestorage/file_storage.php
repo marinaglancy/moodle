@@ -2462,6 +2462,6 @@ class file_storage {
      * @return  string The file's content hash
      */
     public static function hash_from_string($content) {
-        return sha1((string)$content);
+        return sha1($content ?? '');
     }
 }

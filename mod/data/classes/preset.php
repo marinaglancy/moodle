@@ -310,7 +310,7 @@ class preset {
         $instance = $this->manager->get_instance();
         foreach (manager::TEMPLATES_LIST as $templatename => $templatefilename) {
             $templatefile = fopen("$exportdir/$templatefilename", 'w');
-            fwrite($templatefile, (string)$instance->{$templatename});
+            fwrite($templatefile, $instance->{$templatename} ?? '');
             fclose($templatefile);
         }
 
