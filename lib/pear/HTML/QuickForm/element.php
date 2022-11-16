@@ -354,7 +354,7 @@ class HTML_QuickForm_element extends HTML_Common
         $elementName = $this->getName();
         if ($elementName === null) {
             // Temporary exception to see the backtrace of where the empty name comes from.
-            throw new coding_exception('Element name can not be null');
+            throw new coding_exception(__FUNCTION__.': Element name can not be null');
         }
         if (isset($values[$elementName])) {
             return $values[$elementName];
@@ -452,6 +452,10 @@ class HTML_QuickForm_element extends HTML_Common
         }
 
         $id = $this->getName();
+        if ($id === null) {
+            // Temporary exception to see the backtrace of where the empty name comes from.
+            throw new coding_exception(__FUNCTION__.': Element name can not be null');
+        }
         $id = 'id_' . str_replace(array('qf_', '[', ']'), array('', '_', ''), $id);
         $id = clean_param($id, PARAM_ALPHANUMEXT);
         $this->updateAttributes(array('id' => $id));

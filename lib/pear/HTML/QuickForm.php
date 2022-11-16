@@ -813,6 +813,9 @@ class HTML_QuickForm extends HTML_Common {
     function getSubmitValue($elementName)
     {
         $value = null;
+        if ($elementName === null) {
+            throw new coding_exception(__FUNCTION__.': Element name can not be null');
+        }
         if (isset($this->_submitValues[$elementName]) || isset($this->_submitFiles[$elementName])) {
             $value = isset($this->_submitValues[$elementName])? $this->_submitValues[$elementName]: array();
             if (is_array($value) && isset($this->_submitFiles[$elementName])) {
