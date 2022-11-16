@@ -352,6 +352,10 @@ class HTML_QuickForm_element extends HTML_Common
             return null;
         }
         $elementName = $this->getName();
+        if ($elementName === null) {
+            // Temporary exception to see the backtrace of where the empty name comes from.
+            throw new coding_exception('Element name can not be null');
+        }
         if (isset($values[$elementName])) {
             return $values[$elementName];
         } elseif (strpos($elementName, '[')) {
