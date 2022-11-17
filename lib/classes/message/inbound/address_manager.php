@@ -459,10 +459,8 @@ class address_manager {
      */
     protected function pack_int($int) {
         if (PHP_INT_SIZE === 8) {
-            $left = 0xffffffff00000000;
-            $right = 0x00000000ffffffff;
-            $l = ($int & $left) >>32;
-            $r = $int & $right;
+            $l = (int)floor($int / pow(16, 8));
+            $r = $int % pow(16, 8);
 
             return pack('NN', $l, $r);
         } else {
