@@ -193,7 +193,7 @@ abstract class moodleform {
 
         if (empty($action)){
             // do not rely on PAGE->url here because dev often do not setup $actualurl properly in admin_externalpage_setup()
-            $action = strip_querystring($FULLME);
+            $action = strip_querystring($FULLME) ?? '';
             if (!empty($CFG->sslproxy)) {
                 // return only https links when using SSL proxy
                 $action = preg_replace('/^http:/', 'https:', $action, 1);
