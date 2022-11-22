@@ -751,16 +751,16 @@
         },
         {
             "name": "oleg-andreyev/mink-phpwebdriver",
-            "version": "v1.0.1",
+            "version": "v1.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/oleg-andreyev/MinkPhpWebDriver.git",
-                "reference": "66207ad04b45ad4348dd68ab2a918da2875ae46f"
+                "reference": "e265917faf79b649f4e5d4419325e02c096caec2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/oleg-andreyev/MinkPhpWebDriver/zipball/66207ad04b45ad4348dd68ab2a918da2875ae46f",
-                "reference": "66207ad04b45ad4348dd68ab2a918da2875ae46f",
+                "url": "https://api.github.com/repos/oleg-andreyev/MinkPhpWebDriver/zipball/e265917faf79b649f4e5d4419325e02c096caec2",
+                "reference": "e265917faf79b649f4e5d4419325e02c096caec2",
                 "shasum": ""
             },
             "require": {
