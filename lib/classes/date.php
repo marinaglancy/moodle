@@ -708,6 +708,12 @@ class core_date {
      * @author BohwaZ <https://bohwaz.net/>
      */
     public static function strftime(string $format, $timestamp = null, ?string $locale = null) : string {
+        // Moodle-specific modification. For the IntlDateFormatter we need to use unix-style locale
+        // from the string 'locale' even for Windows, so we can not use moodle_getlocale().
+        global $CFG;
+        $locale = $locale ?: $CFG->locale ?: get_string('locale', 'langconfig');
+
+        // The following code is taken from https://github.com/alphp/strftime without modifications.
         // phpcs:disable
         if (!($timestamp instanceof DateTimeInterface)) {
           $timestamp = is_int($timestamp) ? '@' . $timestamp : (string) $timestamp;
