@@ -16,6 +16,7 @@ Description of import of Horde libraries
 
 Notes:
 * 2023-01-20 Horde/Mail is copied from https://github.com/bytestream/Mail/tree/v2.7.1 for PHP 8.1 compatibility
+* 2023-01-20 Applied patch https://github.com/horde/Util/pull/10
 
 ====
 #!/bin/sh
