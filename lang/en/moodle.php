@@ -842,6 +842,7 @@ $string['eventsearchindexed'] = 'Search data indexed';
 $string['eventsearchresultsviewed'] = 'Search results viewed';
 $string['eventunknownlogged'] = 'Unknown event';
 $string['eventusercreated'] = 'User created';
+$string['eventusercreatedonrestore'] = 'User created during course restore';
 $string['eventuserdeleted'] = 'User deleted';
 $string['eventuserfeedbackgiven'] = 'Feedback link clicked';
 $string['eventuserfeedbackremind'] = 'Remind me later feedback link clicked';

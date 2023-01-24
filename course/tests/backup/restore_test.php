@@ -18,6 +18,8 @@ namespace core_course\backup;
 
 use backup;
 use backup_controller;
+use core\event\base;
+use core\event\user_created_on_restore;
 use restore_controller;
 use restore_dbops;
 
@@ -386,6 +388,40 @@ class restore_test extends \advanced_testcase {
         $this->assertEquals('DESC', $c2->summary);
         $this->assertEquals(FORMAT_MOODLE, $c2->summaryformat);
         $this->assertEquals($startdate, $c2->startdate);
+    }
+
+    public function test_restore_course_with_users() {
+        global $DB;
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $dg = $this->getDataGenerator();
+
+        // Create a user and a course, enrol user in the course. Backup this course.
+        $startdate = mktime(12, 0, 0, 7, 1, 2016); // 01-Jul-2016.
+        $u1 = $dg->create_user(['firstname' => 'Olivia']);
+        $c1 = $dg->create_course(['shortname' => 'SN', 'fullname' => 'FN', 'startdate' => $startdate,
+            'summary' => 'DESC', 'summaryformat' => FORMAT_MOODLE]);
+        $dg->enrol_user($u1->id, $c1->id, 'student');
+        $backupid = $this->backup_course($c1->id);
+
+        // Delete the course and the user completely.
+        delete_course($c1, false);
+        delete_user($u1);
+        $DB->delete_records('user', ['id' => $u1->id]);
+
+        // Now restore this course, the user will be created and event user_created_on_restore will be fired.
+        $sink = $this->redirectEvents();
+        $c2 = $this->restore_to_new_course($backupid);
+        $events = $sink->get_events();
+        $sink->close();
+
+        $user = $DB->get_record('user', ['firstname' => 'Olivia'], '*', MUST_EXIST);
+        $events = array_values(array_filter($events, function(base $event) {
+            return is_a($event, user_created_on_restore::class);
+        }));
+        $this->assertEquals(1, count($events));
+        $this->assertEquals($user->id, $events[0]->objectid);
+        $this->assertEquals($c2->id, $events[0]->other['courseid']);
     }
 
     public function test_restore_course_info_in_existing_course() {
