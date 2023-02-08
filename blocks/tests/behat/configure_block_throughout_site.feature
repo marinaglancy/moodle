@@ -64,10 +64,9 @@ Feature: Add and configure blocks throughout the site
     Given I log in as "admin"
     And I am on homepage
     And I turn editing mode on
-    And I add the "Text" block
-    And I configure the "(new text block)" block
+    And I add the "Tags" block
+    And I configure the "Tags" block
     And I set the following fields to these values:
-      | Text block title | Foo " onload="document.getElementsByTagName('body')[0].remove()" alt=" |
-      | Content     | Example |
+      | Tags block title | Foo " onload="document.getElementsByTagName('body')[0].remove()" alt=" |
     When I press "Save changes"
-    Then I should see "Example"
+    Then I should see "document.getElementsByTagName"
