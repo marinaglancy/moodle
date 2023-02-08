@@ -109,11 +109,18 @@ class block_base {
 /// Class Functions
 
     /**
-     * Fake constructor to keep PHP5 happy
-     *
+     * Constructor.
      */
     function __construct() {
         $this->init();
+    }
+
+    /**
+     * Block initialization.
+     */
+    public function init() {
+        // All block plugins must override either constructor or init() method.
+        throw new coding_exception('Class ' . static::class . ' must override init() method.');
     }
 
     /**

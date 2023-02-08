@@ -1135,13 +1135,14 @@ EOD;
      * @param array $data
      * @return stdClass the tool
      */
-    public function create_lti_tool($data = array()) {
+    public function create_lti_tool($data = null) {
         global $DB;
 
         $studentrole = $DB->get_record('role', array('shortname' => 'student'));
         $teacherrole = $DB->get_record('role', array('shortname' => 'teacher'));
 
         // Create a course if no course id was specified.
+        $data = $data ?? new stdClass();
         if (empty($data->courseid)) {
             $course = $this->create_course();
             $data->courseid = $course->id;

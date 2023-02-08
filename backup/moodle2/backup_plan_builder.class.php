@@ -139,7 +139,7 @@ abstract class backup_plan_builder {
                 try {
                     $plan->add_task(backup_factory::get_backup_block_task($controller->get_format(), $blockid, $id));
                 } catch (backup_task_exception $e) {
-                    $a = stdClass();
+                    $a = new stdClass();
                     $a->mid = $id;
                     $a->bid = $blockid;
                     $controller->log(get_string('error_block_for_module_not_found', 'backup', $a), backup::LOG_WARNING);

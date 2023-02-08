@@ -145,8 +145,8 @@ function cron_run_adhoc_tasks(int $timenow, $keepalive = 0, $checklimits = true)
     $maxruns = get_config('core', 'task_adhoc_concurrency_limit');
     $maxruntime = get_config('core', 'task_adhoc_max_runtime');
 
+    $adhoclock = null;
     if ($checklimits) {
-        $adhoclock = null;
         for ($run = 0; $run < $maxruns; $run++) {
             // If we can't get a lock instantly it means runner N is already running
             // so fail as fast as possible and try N+1 so we don't limit the speed at
