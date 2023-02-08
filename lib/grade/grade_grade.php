@@ -172,6 +172,12 @@ class grade_grade extends grade_object {
      */
     public $aggregationweight = null;
 
+    /** @var string */
+    public $feedback;
+
+    /** @var int */
+    public $feedbackformat;
+
     /**
      * Feedback files to copy.
      *

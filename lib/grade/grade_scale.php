@@ -86,6 +86,12 @@ class grade_scale extends grade_object {
      */
     public $description;
 
+    /** @var int */
+    public $descriptionformat;
+
+    /** @var int */
+    public $standard;
+
     /**
      * Finds and returns a grade_scale instance based on params.
      *

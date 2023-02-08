@@ -3949,6 +3949,9 @@ class curl {
         return $this->request($url, $options);
     }
 
+    /** @var array */
+    protected $_tmp_file_post_params;
+
     /**
      * HTTP PATCH method
      *
@@ -4234,6 +4237,8 @@ class curl {
 class curl_cache {
     /** @var string Path to cache directory */
     public $dir = '';
+    /** @var int */
+    public $ttl;
 
     /**
      * Constructor

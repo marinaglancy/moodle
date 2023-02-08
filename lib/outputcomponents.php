@@ -1118,6 +1118,9 @@ class single_select implements renderable, templatable {
      */
     var $helpicon = null;
 
+    /** @var array */
+    public $actions;
+
     /**
      * Constructor
      * @param moodle_url $url form action target, includes hidden fields

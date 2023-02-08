@@ -61,6 +61,18 @@ class oauth_helper {
     protected $http;
     /** @var array options to pass to the next curl request */
     protected $http_options;
+    /** @var moodle_url */
+    public $oauth_callback;
+    /** @var string */
+    public $access_token;
+    /** @var string */
+    public $access_token_secret;
+    /** @var string */
+    public $sign_secret;
+    /** @var string */
+    public $nonce;
+    /** @var int */
+    public $timestamp;
 
     /**
      * Contructor for oauth_helper.

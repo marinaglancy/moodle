@@ -141,6 +141,8 @@ class popup_action extends component_action {
      * @var string The JS function to call for the popup
      */
     public $jsfunction = 'openpopup';
+    /** @var string */
+    public $name;
 
     /**
      * @var array An array of parameters that will be passed to the openpopup JS function

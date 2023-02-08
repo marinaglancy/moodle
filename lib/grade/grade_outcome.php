@@ -87,6 +87,9 @@ class grade_outcome extends grade_object {
      */
     public $description;
 
+    /** @var int */
+    public $descriptionformat;
+
     /**
      * The userid of the person who last modified this outcome.
      *

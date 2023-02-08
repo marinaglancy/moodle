@@ -826,6 +826,9 @@ class block_list extends block_base {
  */
 class block_tree extends block_list {
 
+    /** @var string */
+    public $id;
+
     /**
      * @var int specifies the manner in which contents should be added to this
      * block type. In this case <code>$this->content->items</code> is used with

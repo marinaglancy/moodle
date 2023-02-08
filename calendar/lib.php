@@ -1066,6 +1066,9 @@ class calendar_information {
     /** @var string The calendar's view mode. */
     protected $viewmode;
 
+    /** @var stdClass */
+    public $course;
+
     /**
      * Creates a new instance
      *
