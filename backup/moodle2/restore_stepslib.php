@@ -812,6 +812,8 @@ class restore_rebuild_course_cache extends restore_execution_step {
  * not available when the task was executed.
  */
 class restore_execute_after_restore extends restore_execution_step {
+    /** @var restore_final_task Task this is part of */
+    protected $task;
 
     protected function define_execution() {
 
@@ -1545,6 +1547,8 @@ class restore_process_categories_and_questions extends restore_execution_step {
 class restore_section_structure_step extends restore_structure_step {
     /** @var array Cache: Array of id => course format */
     private static $courseformats = array();
+    /** @var restore_section_task Task this is part of */
+    protected $task;
 
     /**
      * Resets a static cache of course formats. Required for unit testing.
@@ -1784,6 +1788,9 @@ class restore_section_structure_step extends restore_structure_step {
  * the course record (never inserting)
  */
 class restore_course_structure_step extends restore_structure_step {
+    /** @var restore_course_task|null Task this is part of */
+    protected $task;
+
     /**
      * @var bool this gets set to true by {@link process_course()} if we are
      * restoring an old coures that used the legacy 'module security' feature.
@@ -2517,6 +2524,8 @@ class restore_filters_structure_step extends restore_structure_step {
  * That should change allowing to pass $userid
  */
 class restore_comments_structure_step extends restore_structure_step {
+    /** @var restore_activity_task */
+    protected $task;
 
     protected function define_structure() {
 

@@ -28,6 +28,8 @@
  * TODO: Finish phpdocs
  */
 abstract class restore_step extends base_step {
+    /** @var restore_task|null Task this is part of */
+    protected $task;
 
     /**
      * Constructor - instantiates one object of this class

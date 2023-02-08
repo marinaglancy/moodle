@@ -29,6 +29,9 @@
  */
 abstract class backup_step extends base_step {
 
+    /** @var backup_task|null Task this is part of */
+    protected $task;
+
     /**
      * Constructor - instantiates one object of this class
      */

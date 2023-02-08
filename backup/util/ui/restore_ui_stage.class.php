@@ -39,6 +39,10 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 abstract class restore_ui_stage extends base_ui_stage {
+
+    /** @var restore_ui The backuck UI object */
+    protected $ui;
+
     /**
      * Constructor
      * @param restore_ui $ui

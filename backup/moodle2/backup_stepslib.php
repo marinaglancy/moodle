@@ -92,6 +92,9 @@ class create_taskbasepath_directory extends backup_execution_step {
  */
 abstract class backup_activity_structure_step extends backup_structure_step {
 
+    /** @var backup_activity_task|null Task this is part of */
+    protected $task;
+
     /**
      * Wraps any activity backup structure within the common 'activity' element
      * that will include common to all activities information like id, context...
@@ -280,6 +283,9 @@ abstract class backup_questions_activity_structure_step extends backup_activity_
  */
 class backup_calculate_question_categories extends backup_execution_step {
 
+    /** @var backup_question_task|null Task this is part of */
+    protected $task;
+
     protected function define_execution() {
         backup_question_dbops::calculate_question_categories($this->get_backupid(), $this->task->get_contextid());
     }
@@ -301,6 +307,9 @@ class backup_delete_temp_questions extends backup_execution_step {
  * block structure definition within the main <block ...> tag
  */
 abstract class backup_block_structure_step extends backup_structure_step {
+
+    /** @var backup_block_task|null Task this is part of */
+    protected $task;
 
     protected function prepare_block_structure($blockstructure) {
 
@@ -443,6 +452,9 @@ class backup_section_structure_step extends backup_structure_step {
  * and some annotations (files & groupings)
  */
 class backup_course_structure_step extends backup_structure_step {
+
+    /** @var backup_course_task|null Task this is part of */
+    protected $task;
 
     protected function define_structure() {
         global $DB;
@@ -824,6 +836,9 @@ class backup_final_outcomes_structure_step extends backup_structure_step {
  * in activity
  */
 class backup_filters_structure_step extends backup_structure_step {
+
+    /** @var backup_filter_task|null Task this is part of */
+    protected $task;
 
     protected function define_structure() {
 
@@ -1576,6 +1591,9 @@ class backup_users_structure_step extends backup_structure_step {
  */
 class backup_block_instance_structure_step extends backup_structure_step {
 
+    /** @var backup_block_task|null Task this is part of */
+    protected $task;
+
     protected function define_structure() {
         global $DB;
 
@@ -2233,6 +2251,9 @@ class backup_store_backup_file extends backup_execution_step {
  */
 class backup_activity_grade_items_to_ids extends backup_execution_step {
 
+    /** @var backup_activity_task|null Task this is part of */
+    protected $task;
+
     protected function define_execution() {
 
         // Fetch all activity grade items
@@ -2593,6 +2614,9 @@ class backup_annotate_all_user_files extends backup_execution_step {
  * Defines the backup step for advanced grading methods attached to the activity module
  */
 class backup_activity_grading_structure_step extends backup_structure_step {
+
+    /** @var backup_activity_task|null Task this is part of */
+    protected $task;
 
     /**
      * Include the grading.xml only if the module supports advanced grading
