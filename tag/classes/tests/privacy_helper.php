@@ -46,7 +46,7 @@ trait privacy_helper {
      */
     protected function get_tags_on_subcontext(\context $context, array $subcontext) {
         $writer = \core_privacy\local\request\writer::with_context($context);
-        return $writer->get_related_data($subcontext, 'tags');
+        return (array)$writer->get_related_data($subcontext, 'tags');
     }
 
     /**

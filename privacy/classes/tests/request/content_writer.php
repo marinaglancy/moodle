@@ -312,7 +312,7 @@ class content_writer implements \core_privacy\local\request\content_writer {
      *
      * @param   array           $subcontext The location within the current context that this data belongs.
      * @param   string          $filename   The name of the intended filename.
-     * @return  array                       The metadata as a series of keys to value + descrition objects.
+     * @return  \stdClass|null              The metadata as a series of keys to value + descrition objects.
      */
     public function get_related_data(array $subcontext = [], $filename = null) {
         $current = $this->fetch_data_root($this->relateddata, $subcontext);
@@ -325,7 +325,7 @@ class content_writer implements \core_privacy\local\request\content_writer {
             return $current[$filename];
         }
 
-        return [];
+        return null;
     }
 
     /**
