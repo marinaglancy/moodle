@@ -111,7 +111,8 @@ class cli_helper {
         $form = new \admin_uploaduser_form1();
         [$elements, $defaults] = $form->get_form_for_cli();
         $options += $this->prepare_form_elements_for_cli($elements, $defaults);
-        $form = new \admin_uploaduser_form2(null, ['columns' => ['type1'], 'data' => []]);
+        //$form = new \admin_uploaduser_form2(null, ['columns' => ['type1'], 'data' => []]);
+        $form = new \admin_uploaduser_form2(null, ['columns' => [], 'data' => []]);
         [$elements, $defaults] = $form->get_form_for_cli();
         $options += $this->prepare_form_elements_for_cli($elements, $defaults);
         return $options;

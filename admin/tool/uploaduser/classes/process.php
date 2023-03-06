@@ -1209,6 +1209,10 @@ class process {
                 }
             }
 
+            if (!array_key_exists($courseid, $this->rolecache)) {
+                $this->rolecache[$courseid] = uu_allowed_roles_cache(null, (int)$courseid);
+            }
+
             if ($courseid == SITEID) {
                 // Technically frontpage does not have enrolments, but only role assignments,
                 // let's not invent new lang strings here for this rarely used feature.
@@ -1226,7 +1230,7 @@ class process {
 
                     $a = new \stdClass();
                     $a->course = $shortname;
-                    $a->role   = $this->rolecache[$roleid]->name;
+                    $a->role = $rolename;
                     $this->upt->track('enrolments', get_string('enrolledincourserole', 'enrol_manual', $a), 'info');
                 }
 
@@ -1256,7 +1260,15 @@ class process {
                     }
                 } else {
                     // No role specified, use the default from manual enrol plugin.
-                    $roleid = $this->manualcache[$courseid]->roleid;
+                    $defaultenrolroleid = (int)$this->manualcache[$courseid]->roleid;
+                    // Validate the current user can assign this role.
+                    if (array_key_exists($defaultenrolroleid, $this->rolecache[$courseid]) ) {
+                        $roleid = $defaultenrolroleid;
+                    } else {
+                        $role = $this->get_role($defaultenrolroleid);
+                        $this->upt->track('enrolments', get_string('unknownrole', 'error', s($role->shortname)), 'error');
+                        continue;
+                    }
                 }
 
                 if ($roleid) {
