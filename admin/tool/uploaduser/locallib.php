@@ -394,9 +394,9 @@ function uu_allowed_roles() {
 function uu_allowed_roles_cache(?int $categoryid = null, ?int $courseid = null): array {
     if (!is_null($categoryid) && !is_null($courseid)) {
         return [];
-    } else if (is_null($categoryid) && !is_null($courseid)) {
+    } else if (!is_null($courseid)) {
         $allowedroles = get_assignable_roles(context_course::instance($courseid), ROLENAME_SHORT);
-    } else if (is_null($courseid) && !is_null($categoryid)) {
+    } else if (!is_null($categoryid)) {
         $allowedroles = get_assignable_roles(context_coursecat::instance($categoryid), ROLENAME_SHORT);
     } else {
         $allowedroles = get_assignable_roles(context_course::instance(SITEID), ROLENAME_SHORT);

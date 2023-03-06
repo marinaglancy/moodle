@@ -80,21 +80,20 @@ class upload_users_test extends advanced_testcase {
         // User makes assignments.
         $studentarch = get_archetype_roles('student');
         $studentrole = array_shift($studentarch);
-        role_assign($studentrole->id, $user->id, $coursecatcontext->id);
+        core_role_set_assign_allowed($enrolroleid, $studentrole->id);
         accesslib_clear_all_caches_for_unit_testing();
 
-        $assignablerole = get_assignable_roles($coursecatcontext, ROLENAME_SHORT); // DELETEME
+        // Process CSV file as user.
+        $this->setUser($user);
+
+        $assignablerole = get_assignable_roles($coursecontext, ROLENAME_SHORT);
+        $this->assertEquals([$studentrole->id => 'student'], $assignablerole);
 
         $csv = <<<EOF
 username,firstname,lastname,email,course1,role1
 student1,Student,One,s1@example.com,{$course->shortname},{$studentrole->shortname}
 student2,Student,Two,s2@example.com,{$course->shortname},{$studentrole->shortname}
 EOF;
-
-        // Process CSV file as user.
-        $this->setUser($user);
-
-        $assignablerole = get_assignable_roles($coursecatcontext, ROLENAME_SHORT); // DELETEME
 
         $output = $this->process_csv_upload($csv, ['--uutype=' . UU_USER_ADDNEW]);
         $this->assertStringNotContainsString('Error', $output);

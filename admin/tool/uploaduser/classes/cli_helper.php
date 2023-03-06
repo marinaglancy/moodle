@@ -361,7 +361,7 @@ class cli_helper {
                         $postfix .= "\n  ".$option['attr']['value']." - ".$option['text'];
                     }
                 }
-                if (!array_key_exists($name, $defaults)) {
+                if (!array_key_exists($name, $defaults) && $selectoptions) {
                     $firstoption = reset($selectoptions);
                     $default = $firstoption['attr']['value'];
                 }

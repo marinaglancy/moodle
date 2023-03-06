@@ -1219,8 +1219,8 @@ class process {
 
                 if (!empty($user->{'role'.$i})) {
                     $rolename = $user->{'role'.$i};
-                    if (array_key_exists($rolename, $this->rolecache)) {
-                        $roleid = $this->rolecache[$rolename]->id;
+                    if (array_key_exists($rolename, $this->rolecache[$courseid])) {
+                        $roleid = $this->rolecache[$courseid][$rolename]->id;
                     } else {
                         $this->upt->track('enrolments', get_string('unknownrole', 'error', s($rolename)), 'error');
                         continue;
@@ -1240,8 +1240,8 @@ class process {
                 $roleid = false;
                 if (!empty($user->{'role'.$i})) {
                     $rolename = $user->{'role'.$i};
-                    if (array_key_exists($rolename, $this->rolecache)) {
-                        $roleid = $this->rolecache[$rolename]->id;
+                    if (array_key_exists($rolename, $this->rolecache[$courseid])) {
+                        $roleid = $this->rolecache[$courseid][$rolename]->id;
                     } else {
                         $this->upt->track('enrolments', get_string('unknownrole', 'error', s($rolename)), 'error');
                         continue;
@@ -1311,7 +1311,7 @@ class process {
 
                     $a = new \stdClass();
                     $a->course = $shortname;
-                    $a->role   = $this->rolecache[$roleid]->name;
+                    $a->role   = $this->rolecache[$courseid][$roleid]->name;
                     $this->upt->track('enrolments', get_string('enrolledincourserole', 'enrol_manual', $a), 'info');
                 }
             }
