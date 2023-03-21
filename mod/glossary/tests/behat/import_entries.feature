@@ -37,7 +37,8 @@ Feature: Importing glossary entries
   Scenario: Importing glossary entries and checking Tags block
     Given I log in as "teacher1"
     And I am on "Course 1" course homepage with editing mode on
-    And I add the "Tags" block
+    And I add the "Tags" block to the default region with:
+      | Tags block title | Tags |
     And I am on the "Glossary 1" "glossary activity" page
     And I press "Import entries"
     And I upload "mod/glossary/tests/fixtures/musicians.xml" file to "File to import" filemanager

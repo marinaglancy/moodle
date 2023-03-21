@@ -97,4 +97,13 @@ class block_tags_edit_form extends block_edit_form {
         }
         $mform->setDefault('config_tagcoll', 0);
     }
+
+    /**
+     * Display the configuration form when block is being added to the page
+     *
+     * @return bool
+     */
+    public static function display_form_when_adding(): bool {
+        return true;
+    }
 }

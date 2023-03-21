@@ -33,10 +33,27 @@ Feature: Block tags displaying tag cloud
     And I click on "Dogs" "link" in the "Tags" "block"
     And I should see "You are not logged in"
 
-  Scenario: Add Tags block in a course
+  Scenario: Add Tags block in a course with javascript disabled
     When I log in as "teacher1"
     And I am on "Course 1" course homepage with editing mode on
     And I add the "Tags" block
+    And I log out
+    And I log in as "student1"
+    And I am on "Course 1" course homepage
+    Then I should see "Dogs" in the "Tags" "block"
+    And I should see "Cats" in the "Tags" "block"
+    And I should not see "Neverusedtag" in the "Tags" "block"
+    And I click on "Dogs" "link" in the "Tags" "block"
+    And I should see "User interests" in the ".tag-index-items h3" "css_element"
+    And I should see "Teacher 1"
+    And I log out
+
+  @javascript
+  Scenario: Add Tags block in a course with javascript enabled
+    When I log in as "teacher1"
+    And I am on "Course 1" course homepage with editing mode on
+    And I add the "Tags" block to the default region with:
+      | Tags block title | Tags |
     And I log out
     And I log in as "student1"
     And I am on "Course 1" course homepage
