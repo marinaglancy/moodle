@@ -36,4 +36,13 @@ class block_mentees_edit_form extends block_edit_form {
         $mform->addElement('text', 'config_title', get_string('configtitleblankhides', 'block_mentees'));
         $mform->setType('config_title', PARAM_TEXT);
     }
+
+    /**
+     * Display the configuration form when block is being added to the page
+     *
+     * @return bool
+     */
+    public static function display_form_when_adding(): bool {
+        return true;
+    }
 }

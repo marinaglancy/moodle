@@ -9,10 +9,7 @@ Feature: Adding and configuring Mentees blocks
     Given I log in as "admin"
     And I am on site homepage
     When I turn editing mode on
-    And I add the "Mentees" block
-    And I configure the "(new Mentees block)" block
-    Then I should see "Mentees block title (no title if blank)"
-    And I set the field "Mentees block title (no title if blank)" to "The Mentees block header"
-    And I press "Save changes"
+    And I add the "Mentees" block to the default region with:
+      | Mentees block title (no title if blank) | The Mentees block header |
     And "block_mentees" "block" should exist
     Then "The Mentees block header" "block" should exist
