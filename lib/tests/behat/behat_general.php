@@ -388,7 +388,7 @@ class behat_general extends behat_base {
     /**
      * Generic click action. Click on the element of the specified type.
      *
-     * @When /^I click on "(?P<element_string>(?:[^"]|\\")*)" "(?P<selector_string>[^"]*)"$/
+     * @When /^I click on "(?:[^"]|\\")*" "[^"]*"$/
      * @param string $element Element we look for
      * @param string $selectortype The type of what we look for
      */
@@ -604,7 +604,7 @@ class behat_general extends behat_base {
     /**
      * Checks, that page contains specified text. It also checks if the text is visible when running Javascript tests.
      *
-     * @Then /^I should see "(?P<text_string>(?:[^"]|\\")*)"$/
+     * @Then /^I should see "(?:[^"]|\\")*"$/
      * @throws ExpectationException
      * @param string $text
      */
@@ -654,7 +654,7 @@ class behat_general extends behat_base {
     /**
      * Checks, that page doesn't contain specified text. When running Javascript tests it also considers that texts may be hidden.
      *
-     * @Then /^I should not see "(?P<text_string>(?:[^"]|\\")*)"$/
+     * @Then /^I should not see "(?:[^"]|\\")*"$/
      * @throws ExpectationException
      * @param string $text
      */

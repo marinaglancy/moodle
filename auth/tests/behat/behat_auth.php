@@ -41,7 +41,7 @@ class behat_auth extends behat_base {
     /**
      * Logs in the user. There should exist a user with the same value as username and password.
      *
-     * @Given /^I log in as "(?P<username_string>(?:[^"]|\\")*)"$/
+     * @Given /^I log in as "(?:[^"]|\\")*"$/
      * @Given I am logged in as :username
      * @param string $username the user to log in as.
      * @param moodle_url|null $wantsurl optional, URL to go to after logging in.

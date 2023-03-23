@@ -483,7 +483,7 @@ class behat_navigation extends behat_base {
     /**
      * Go to site administration item
      *
-     * @Given /^I navigate to "(?P<nodetext_string>(?:[^"]|\\")*)" in site administration$/
+     * @Given /^I navigate to "(?:[^"]|\\")*" in site administration$/
      *
      * @throws ExpectationException
      * @param string $nodetext navigation node to click, may contain path, for example "Reports > Overview"
