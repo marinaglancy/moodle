@@ -401,7 +401,7 @@ EOF;
             return;
         }
 
-        self::$allowexceptionsonpage = false;
+        unset_config('behat_allowexceptionsonpage');
 
         $suitename = $scope->getSuite()->getName();
 

@@ -2365,10 +2365,10 @@ EOF;
      * fail. However sometimes it helps to make sure that exception did happen, especially when users visit
      * the pages that don't have links to, for example using step {@see i_visit()}
      *
-     * @When I start ignoring exceptions
+     * @When I start allowing exceptions to be tested
      */
-    public function i_start_ignoring_exceptions(): void {
-        self::$allowexceptionsonpage = true;
+    public function i_start_allowing_exceptions_to_be_tested(): void {
+        set_config('behat_allowexceptionsonpage', '', 1);
     }
 
     /**
@@ -2376,9 +2376,9 @@ EOF;
      *
      * Make sure you have left the page with exception when calling this step, otherwise it will fail
      *
-     * @When I stop ignoring exceptions
+     * @When I stop allowing exceptions to be tested
      */
-    public function i_stop_ignoring_exceptions(): void {
-        self::$allowexceptionsonpage = false;
+    public function i_stop_allowing_exceptions_to_be_tested(): void {
+        unset_config('behat_allowexceptionsonpage');
     }
 }
