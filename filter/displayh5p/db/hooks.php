@@ -15,20 +15,20 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Display H5P filter settings
+ * Hook callbacks for Display H5P
  *
  * @package    filter_displayh5p
- * @copyright  2019 Victor Deniz <victor@moodle.com>
+ * @copyright  2023 Marina Glancy
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die;
+defined('MOODLE_INTERNAL') || die();
 
-if ($ADMIN->fulltree) {
-    $settings->add(new admin_setting_configtextarea(
-        'filter_displayh5p/allowedsources',
-            get_string('allowedsourceslist',
-            'filter_displayh5p'),
-            get_string('allowedsourceslistdesc', 'filter_displayh5p'),
-            ''));
-}
+$callbacks = [
+
+    [
+        'hook' => core\hook\navigation\site_administration_extend::class,
+        'callback' => 'filter_displayh5p\local\hooks\navigation\site_administration_extend::callback',
+        'priority' => 0,
+    ],
+];
