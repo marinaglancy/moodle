@@ -15,18 +15,20 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Admin tool presets plugin to load some settings.
+ * Hook callbacks for Site admin presets
  *
- * @package          tool_admin_presets
- * @copyright        2021 Pimenko <support@pimenko.com><pimenko.com>
- * @author           Jordan Kesraoui | Sylvain Revenu | Pimenko based on David Monllaó <david.monllao@urv.cat> code
- * @license          http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    tool_admin_presets
+ * @copyright  2023 Marina Glancy
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-if ($hassiteconfig) {
-    $ADMIN->add('root', new admin_externalpage('tool_admin_presets',
-    get_string('pluginname', 'tool_admin_presets'),
-    new moodle_url('/admin/tool/admin_presets/index.php')));
-}
+$callbacks = [
+
+    [
+        'hook' => core\hook\navigation\site_administration_extend::class,
+        'callback' => 'tool_admin_presets\local\hooks\navigation\site_administration_extend::callback',
+        'priority' => 0,
+    ],
+];
