@@ -52,6 +52,7 @@ reports,core_reportbuilder|/reportbuilder/index.php',
 
     // settings for each theme
     foreach (core_component::get_plugin_list('theme') as $theme => $themedir) {
+        // TODO MDL-80100 convert to API.
         $settings_path = "$themedir/settings.php";
         if (file_exists($settings_path)) {
             $settings = new admin_settingpage('themesetting'.$theme, new lang_string('pluginname', 'theme_'.$theme));

@@ -62,6 +62,7 @@ if ($ADMIN->fulltree) {
     // include the settings of allocation subplugins
     $allocators = core_component::get_plugin_list('workshopallocation');
     foreach ($allocators as $allocator => $path) {
+        // TODO MDL-80100 convert to API.
         if (file_exists($settingsfile = $path . '/settings.php')) {
             $settings->add(new admin_setting_heading('workshopallocationsetting'.$allocator,
                     get_string('allocation', 'workshop') . ' - ' . get_string('pluginname', 'workshopallocation_' . $allocator), ''));
@@ -72,6 +73,7 @@ if ($ADMIN->fulltree) {
     // include the settings of grading strategy subplugins
     $strategies = core_component::get_plugin_list('workshopform');
     foreach ($strategies as $strategy => $path) {
+        // TODO MDL-80100 convert to API.
         if (file_exists($settingsfile = $path . '/settings.php')) {
             $settings->add(new admin_setting_heading('workshopformsetting'.$strategy,
                     get_string('strategy', 'workshop') . ' - ' . get_string('pluginname', 'workshopform_' . $strategy), ''));
@@ -82,6 +84,7 @@ if ($ADMIN->fulltree) {
     // include the settings of grading evaluation subplugins
     $evaluations = core_component::get_plugin_list('workshopeval');
     foreach ($evaluations as $evaluation => $path) {
+        // TODO MDL-80100 convert to API.
         if (file_exists($settingsfile = $path . '/settings.php')) {
             $settings->add(new admin_setting_heading('workshopevalsetting'.$evaluation,
                     get_string('evaluation', 'workshop') . ' - ' . get_string('pluginname', 'workshopeval_' . $evaluation), ''));

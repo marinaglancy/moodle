@@ -1344,11 +1344,17 @@ function filter_delete_all_for_context($contextid) {
  * Does this filter have a global settings page in the admin tree?
  * (The settings page for a filter must be called, for example, filtersettingfiltertex.)
  *
+ * @deprecated since Moodle 4.4
+ *
  * @param string $filter The filter name, for example 'tex'.
  * @return boolean Whether there should be a 'Settings' link on the config page.
  */
 function filter_has_global_settings($filter) {
     global $CFG;
+
+    debugging('filter_has_global_settings() is deprecated, use \core\plugininfo\filter::get_settings_url() instead.',
+        DEBUG_DEVELOPER);
+
     $settingspath = $CFG->dirroot . '/filter/' . $filter . '/settings.php';
     if (is_readable($settingspath)) {
         return true;

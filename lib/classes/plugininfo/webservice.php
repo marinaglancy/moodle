@@ -24,6 +24,7 @@
 namespace core\plugininfo;
 
 use admin_settingpage;
+use moodle_url;
 use part_of_admin_tree;
 
 /**
@@ -122,5 +123,13 @@ class webservice extends base {
 
     public function is_uninstall_allowed() {
         return true;
+    }
+
+    /**
+     * Return URL used for management of plugins of this type.
+     * @return moodle_url
+     */
+    public static function get_manage_url() {
+        return new moodle_url('/admin/settings.php', ['section' => 'webserviceprotocols']);
     }
 }

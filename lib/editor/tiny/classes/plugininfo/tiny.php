@@ -99,6 +99,7 @@ class tiny extends \core\plugininfo\base {
      * @return null|string the settings section name.
      */
     public function get_settings_section_name(): ?string {
+        // TODO MDL-80100 convert to API.
         if (!file_exists($this->full_path('settings.php'))) {
             return null;
         }

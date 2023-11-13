@@ -124,6 +124,7 @@ class admin_setting_managemfa extends \admin_setting {
 
         foreach ($factors as $factor) {
             $settingsparams = ['section' => 'factor_'.$factor->name];
+            // TODO MDL-80100 why is it done this way?
             $settingsurl = new \moodle_url('settings.php', $settingsparams);
             $settingslink = \html_writer::link($settingsurl, $txt->settings);
 

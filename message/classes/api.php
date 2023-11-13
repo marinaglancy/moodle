@@ -1846,6 +1846,7 @@ class api {
                     $processor->configured = 1;
                 }
                 $processor->hassettings = 0;
+                // TODO MDL-80100 convert to API.
                 if (is_readable($CFG->dirroot.'/message/output/'.$processor->name.'/settings.php')) {
                     $processor->hassettings = 1;
                 }

@@ -202,6 +202,7 @@ if (has_capability('moodle/grade:manage', $systemcontext)
     $ADMIN->add('grades', new admin_category('gradereports', new lang_string('reportsettings', 'grades')));
     foreach (core_component::get_plugin_list('gradereport') as $plugin => $plugindir) {
      // Include all the settings commands for this plugin if there are any
+        // TODO MDL-80100 convert to API.
         if (file_exists($plugindir.'/settings.php')) {
             $settings = new admin_settingpage('gradereport'.$plugin, new lang_string('pluginname', 'gradereport_'.$plugin), 'moodle/grade:manage');
             include($plugindir.'/settings.php');
@@ -216,6 +217,7 @@ if (has_capability('moodle/grade:manage', $systemcontext)
     foreach (core_component::get_plugin_list('gradeimport') as $plugin => $plugindir) {
 
      // Include all the settings commands for this plugin if there are any
+        // TODO MDL-80100 convert to API.
         if (file_exists($plugindir.'/settings.php')) {
             $settings = new admin_settingpage('gradeimport'.$plugin, new lang_string('pluginname', 'gradeimport_'.$plugin), 'moodle/grade:manage');
             include($plugindir.'/settings.php');
@@ -230,6 +232,7 @@ if (has_capability('moodle/grade:manage', $systemcontext)
     $ADMIN->add('grades', new admin_category('gradeexports', new lang_string('exportsettings', 'grades')));
     foreach (core_component::get_plugin_list('gradeexport') as $plugin => $plugindir) {
      // Include all the settings commands for this plugin if there are any
+        // TODO MDL-80100 convert to API.
         if (file_exists($plugindir.'/settings.php')) {
             $settings = new admin_settingpage('gradeexport'.$plugin, new lang_string('pluginname', 'gradeexport_'.$plugin), 'moodle/grade:manage');
             include($plugindir.'/settings.php');

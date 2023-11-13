@@ -215,10 +215,9 @@ class assign_plugin_manager {
             }
             $row[] = $movelinks;
 
-            $exists = file_exists($CFG->dirroot . '/mod/assign/' . $shortsubtype . '/' . $plugin . '/settings.php');
-            if ($row[1] != '' && $exists) {
-                $row[] = html_writer::link(new moodle_url('/admin/settings.php',
-                        array('section' => $this->subtype . '_' . $plugin)), get_string('settings'));
+            $plugininfo = core_plugin_manager::instance()->get_plugin_info($this->subtype . '_' . $plugin);
+            if ($row[1] != '' && $plugininfo && ($url = $plugininfo->get_settings_url())) {
+                $row[] = html_writer::link($url, get_string('settings'));
             } else {
                 $row[] = '&nbsp;';
             }

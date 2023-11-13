@@ -30,6 +30,7 @@ require_once($CFG->dirroot . '/mod/quiz/lib.php');
 
 // First get a list of quiz reports with there own settings pages. If there none,
 // we use a simpler overall menu structure.
+// TODO MDL-80100 convert to API.
 $reports = core_component::get_plugin_list_with_file('quiz', 'settings.php', false);
 $reportsbyname = [];
 foreach ($reports as $report => $reportdir) {
@@ -40,6 +41,7 @@ core_collator::ksort($reportsbyname);
 
 // First get a list of quiz reports with there own settings pages. If there none,
 // we use a simpler overall menu structure.
+// TODO MDL-80100 convert to API.
 $rules = core_component::get_plugin_list_with_file('quizaccess', 'settings.php', false);
 $rulesbyname = [];
 foreach ($rules as $rule => $ruledir) {
@@ -297,6 +299,7 @@ if (empty($reportsbyname) && empty($rulesbyname)) {
 
         $settings = new admin_settingpage('modsettingsquizcat'.$reportname,
                 $strreportname, 'moodle/site:config', $module->is_enabled() === false);
+        // TODO MDL-80100 convert to API.
         include($CFG->dirroot . "/mod/quiz/report/$reportname/settings.php");
         if (!empty($settings)) {
             $ADMIN->add('modsettingsquizcat', $settings);
@@ -307,6 +310,7 @@ if (empty($reportsbyname) && empty($rulesbyname)) {
     foreach ($rulesbyname as $strrulename => $rule) {
         $settings = new admin_settingpage('modsettingsquizcat' . $rule,
                 $strrulename, 'moodle/site:config', $module->is_enabled() === false);
+        // TODO MDL-80100 convert to API.
         include($CFG->dirroot . "/mod/quiz/accessrule/$rule/settings.php");
         if (!empty($settings)) {
             $ADMIN->add('modsettingsquizcat', $settings);

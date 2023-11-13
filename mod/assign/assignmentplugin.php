@@ -301,10 +301,14 @@ abstract class assign_plugin {
     /**
      * Has this plugin got a custom settings.php file?
      *
+     * @deprecated since Moodle 4.4
      * @return bool
      */
     public final function has_admin_settings() {
         global $CFG;
+
+        debugging('has_admin_settings() is deprecated, since it was not used. You can check if settings exist by calling '.
+            'core_plugin_manager::instance()->get_plugin_info($pluginname)->get_settings_url()', DEBUG_DEVELOPER);
 
         $pluginroot = $CFG->dirroot . '/mod/assign/' . substr($this->get_subtype(), strlen('assign')) . '/' . $this->get_type();
         $settingsfile = $pluginroot . '/settings.php';

@@ -2196,9 +2196,9 @@ class admin_setting_flag {
     private $shortname = '';
     /** @var string String used as the label for this flag */
     private $displayname = '';
-    /** @var Checkbox for this flag is displayed in admin page */
+    /** @var bool Checkbox for this flag is displayed in admin page */
     const ENABLED = true;
-    /** @var Checkbox for this flag is not displayed in admin page */
+    /** @var bool Checkbox for this flag is not displayed in admin page */
     const DISABLED = false;
 
     /**
@@ -7368,8 +7368,10 @@ class admin_setting_manageauths extends admin_setting {
             }
 
             // settings link
-            if (file_exists($CFG->dirroot.'/auth/'.$auth.'/settings.php')) {
-                $settings = "<a href=\"settings.php?section=authsetting$auth\">{$txt->settings}</a>";
+            /** @var \core\plugininfo\auth $plugin */
+            $plugin = core_plugin_manager::instance()->get_plugin_info('auth_'.$auth);
+            if ($plugin && ($url = $plugin->get_settings_url())) {
+                $settings = "<a href=\"{$url}\">{$txt->settings}</a>";
             } else if (file_exists($CFG->dirroot.'/auth/'.$auth.'/config.html')) {
                 throw new \coding_exception('config.html is no longer supported, please use settings.php instead.');
             } else {
@@ -7557,8 +7559,9 @@ class admin_setting_manageantiviruses extends admin_setting {
             }
 
             // Settings link.
-            if (file_exists($CFG->dirroot.'/lib/antivirus/'.$antivirus.'/settings.php')) {
-                $eurl = new moodle_url('/admin/settings.php', array('section' => 'antivirussettings'.$antivirus));
+            /** @var \core\plugininfo\antivirus $plugin */
+            $plugin = core_plugin_manager::instance()->get_plugin_info('antivirus_'.$antivirus);
+            if ($plugin && ($eurl = $plugin->get_settings_url())) {
                 $settings = html_writer::link($eurl, $txt->settings);
             } else {
                 $settings = '';
@@ -10363,8 +10366,10 @@ class admin_setting_managewebserviceprotocols extends admin_setting {
             }
 
             // settings link
-            if (file_exists($CFG->dirroot.'/webservice/'.$protocol.'/settings.php')) {
-                $settings = "<a href=\"settings.php?section=webservicesetting$protocol\">$strsettings</a>";
+            /** @var \core\plugininfo\webservice $plugin */
+            $plugin = core_plugin_manager::instance()->get_plugin_info('webservice_'.$protocol);
+            if ($plugin && ($url = $plugin->get_settings_url())) {
+                $settings = "<a href=\"{$url}\">{$strsettings}</a>";
             } else {
                 $settings = '';
             }

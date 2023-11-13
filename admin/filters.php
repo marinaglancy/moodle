@@ -244,9 +244,10 @@ function get_table_row(\core\plugininfo\filter $plugininfo, stdClass $state,
     $row[] = $OUTPUT->render($select);
 
     // Settings link, if required.
-    if ($active and filter_has_global_settings($filter)) {
-        $row[] = html_writer::link(new moodle_url('/admin/settings.php',
-                ['section' => 'filtersetting'.$filter]), get_string('settings'));
+    /** @var \core\plugininfo\filter $plugin */
+    $plugin = core_plugin_manager::instance()->get_plugin_info('filter_' . $filter);
+    if ($active && $plugin && ($url = $plugin->get_settings_url())) {
+        $row[] = html_writer::link($url, get_string('settings'));
     } else {
         $row[] = '';
     }

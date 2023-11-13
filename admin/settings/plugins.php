@@ -24,6 +24,8 @@
 * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
 */
 
+$plugintypesections = [];
+
 if ($hassiteconfig) {
     /* @var admin_root $ADMIN */
     $ADMIN->locate('modules')->set_sorting(true);
@@ -40,46 +42,26 @@ if ($hassiteconfig) {
         get_string('requiremodintro', 'admin'), get_string('requiremodintro_desc', 'admin'), 0));
     $ADMIN->add('modsettings', $temp);
 
-    $plugins = core_plugin_manager::instance()->get_plugins_of_type('mod');
-    core_collator::asort_objects_by_property($plugins, 'displayname');
-    foreach ($plugins as $plugin) {
-        /** @var \core\plugininfo\mod $plugin */
-        $plugin->load_settings($ADMIN, 'modsettings', $hassiteconfig);
-    }
+    $plugintypesections['mod'] = 'modsettings';
 
     // course formats
     $ADMIN->add('modules', new admin_category('formatsettings', new lang_string('courseformats')));
     $temp = new admin_settingpage('manageformats', new lang_string('manageformats', 'core_admin'));
     $temp->add(new admin_setting_manageformats());
     $ADMIN->add('formatsettings', $temp);
-    $plugins = core_plugin_manager::instance()->get_plugins_of_type('format');
-    core_collator::asort_objects_by_property($plugins, 'displayname');
-    foreach ($plugins as $plugin) {
-        /** @var \core\plugininfo\format $plugin */
-        $plugin->load_settings($ADMIN, 'formatsettings', $hassiteconfig);
-    }
+    $plugintypesections['format'] = 'formatsettings';
 
     // Custom fields.
     $ADMIN->add('modules', new admin_category('customfieldsettings', new lang_string('customfields', 'core_customfield')));
     $temp = new admin_settingpage('managecustomfields', new lang_string('managecustomfields', 'core_admin'));
     $temp->add(new admin_setting_managecustomfields());
     $ADMIN->add('customfieldsettings', $temp);
-    $plugins = core_plugin_manager::instance()->get_plugins_of_type('customfield');
-    core_collator::asort_objects_by_property($plugins, 'displayname');
-    foreach ($plugins as $plugin) {
-        /** @var \core\plugininfo\customfield $plugin */
-        $plugin->load_settings($ADMIN, 'customfieldsettings', $hassiteconfig);
-    }
+    $plugintypesections['customfield'] = 'customfieldsettings';
 
     // blocks
     $ADMIN->add('modules', new admin_category('blocksettings', new lang_string('blocks')));
     $ADMIN->add('blocksettings', new admin_page_manageblocks());
-    $plugins = core_plugin_manager::instance()->get_plugins_of_type('block');
-    core_collator::asort_objects_by_property($plugins, 'displayname');
-    foreach ($plugins as $plugin) {
-        /** @var \core\plugininfo\block $plugin */
-        $plugin->load_settings($ADMIN, 'blocksettings', $hassiteconfig);
-    }
+    $plugintypesections['block'] = 'blocksettings';
 
     // authentication plugins
     $ADMIN->add('modules', new admin_category('authsettings', new lang_string('authentication', 'admin')));
@@ -138,12 +120,7 @@ if ($hassiteconfig) {
     $temp = new admin_externalpage('authtestsettings', get_string('testsettings', 'core_auth'), new moodle_url("/auth/test_settings.php"), 'moodle/site:config', true);
     $ADMIN->add('authsettings', $temp);
 
-    $plugins = core_plugin_manager::instance()->get_plugins_of_type('auth');
-    core_collator::asort_objects_by_property($plugins, 'displayname');
-    foreach ($plugins as $plugin) {
-        /** @var \core\plugininfo\auth $plugin */
-        $plugin->load_settings($ADMIN, 'authsettings', $hassiteconfig);
-    }
+    $plugintypesections['auth'] = 'authsettings';
 
     // Enrolment plugins
     $ADMIN->add('modules', new admin_category('enrolments', new lang_string('enrolments', 'enrol')));
@@ -154,12 +131,7 @@ if ($hassiteconfig) {
     $temp = new admin_externalpage('enroltestsettings', get_string('testsettings', 'core_enrol'), new moodle_url("/enrol/test_settings.php"), 'moodle/site:config', true);
     $ADMIN->add('enrolments', $temp);
 
-    $plugins = core_plugin_manager::instance()->get_plugins_of_type('enrol');
-    core_collator::asort_objects_by_property($plugins, 'displayname');
-    foreach ($plugins as $plugin) {
-        /** @var \core\plugininfo\enrol $plugin */
-        $plugin->load_settings($ADMIN, 'enrolments', $hassiteconfig);
-    }
+    $plugintypesections['enrol'] = 'enrolments';
 
 
 /// Editor plugins
@@ -172,12 +144,7 @@ if ($hassiteconfig) {
         get_string('editorsettings', 'editor'),
     ));
     $ADMIN->add('editorsettings', $temp);
-    $plugins = core_plugin_manager::instance()->get_plugins_of_type('editor');
-    core_collator::asort_objects_by_property($plugins, 'displayname');
-    foreach ($plugins as $plugin) {
-        /** @var \core\plugininfo\editor $plugin */
-        $plugin->load_settings($ADMIN, 'editorsettings', $hassiteconfig);
-    }
+    $plugintypesections['editor'] = 'editorsettings';
 
     // Antivirus plugins.
     $ADMIN->add('modules', new admin_category('antivirussettings', new lang_string('antiviruses', 'antivirus')));
@@ -240,19 +207,11 @@ if ($hassiteconfig) {
     );
 
     $ADMIN->add('antivirussettings', $temp);
-    $plugins = core_plugin_manager::instance()->get_plugins_of_type('antivirus');
-    core_collator::asort_objects_by_property($plugins, 'displayname');
-    foreach ($plugins as $plugin) {
-        /* @var \core\plugininfo\antivirus $plugin */
-        $plugin->load_settings($ADMIN, 'antivirussettings', $hassiteconfig);
-    }
+    $plugintypesections['antivirus'] = 'antivirussettings';
 
     // Machine learning backend plugins.
     $ADMIN->add('modules', new admin_category('mlbackendsettings', new lang_string('mlbackendsettings', 'admin')));
-    $plugins = core_plugin_manager::instance()->get_plugins_of_type('mlbackend');
-    foreach ($plugins as $plugin) {
-        $plugin->load_settings($ADMIN, 'mlbackendsettings', $hassiteconfig);
-    }
+    $plugintypesections['mlbackend'] = 'mlbackendsettings';
 
 /// Filter plugins
     $ADMIN->add('modules', new admin_category('filtersettings', new lang_string('managefilters')));
@@ -277,12 +236,7 @@ if ($hassiteconfig) {
     }
     $ADMIN->add('filtersettings', $temp);
 
-    $plugins = core_plugin_manager::instance()->get_plugins_of_type('filter');
-    core_collator::asort_objects_by_property($plugins, 'displayname');
-    foreach ($plugins as $plugin) {
-        /** @var \core\plugininfo\filter $plugin */
-        $plugin->load_settings($ADMIN, 'filtersettings', $hassiteconfig);
-    }
+    $plugintypesections['filter'] = 'filtersettings';
 
     // Media players.
     $ADMIN->add('modules', new admin_category('mediaplayers', new lang_string('type_media_plural', 'plugin')));
@@ -310,19 +264,9 @@ if ($hassiteconfig) {
     $temp->add(new admin_setting_manage_fileconverter_plugins());
     $ADMIN->add('fileconverterplugins', $temp);
 
-    $plugins = core_plugin_manager::instance()->get_plugins_of_type('fileconverter');
-    core_collator::asort_objects_by_property($plugins, 'displayname');
-    foreach ($plugins as $plugin) {
-        /** @var \core\plugininfo\media $plugin */
-        $plugin->load_settings($ADMIN, 'fileconverterplugins', $hassiteconfig);
-    }
+    $plugintypesections['fileconverter'] = 'fileconverterplugins';
 
-    $plugins = core_plugin_manager::instance()->get_plugins_of_type('media');
-    core_collator::asort_objects_by_property($plugins, 'displayname');
-    foreach ($plugins as $plugin) {
-        /** @var \core\plugininfo\media $plugin */
-        $plugin->load_settings($ADMIN, 'mediaplayers', $hassiteconfig);
-    }
+    $plugintypesections['media'] = 'mediaplayers';
 
     // Payment gateway plugins.
     $ADMIN->add('modules', new admin_category('paymentgateways', new lang_string('type_paygw_plural', 'plugin')));
@@ -336,12 +280,7 @@ if ($hassiteconfig) {
     ));
     $ADMIN->add('paymentgateways', $temp);
 
-    $plugins = core_plugin_manager::instance()->get_plugins_of_type('paygw');
-    core_collator::asort_objects_by_property($plugins, 'displayname');
-    foreach ($plugins as $plugin) {
-        /** @var \core\plugininfo\paygw $plugin */
-        $plugin->load_settings($ADMIN, 'paymentgateways', $hassiteconfig);
-    }
+    $plugintypesections['paygw'] = 'paymentgateways';
 
     // Data format settings.
     $ADMIN->add('modules', new admin_category('dataformatsettings', new lang_string('dataformats')));
@@ -349,12 +288,7 @@ if ($hassiteconfig) {
     $temp->add(new admin_setting_managedataformats());
     $ADMIN->add('dataformatsettings', $temp);
 
-    $plugins = core_plugin_manager::instance()->get_plugins_of_type('dataformat');
-    core_collator::asort_objects_by_property($plugins, 'displayname');
-    foreach ($plugins as $plugin) {
-        /** @var \core\plugininfo\dataformat $plugin */
-        $plugin->load_settings($ADMIN, 'dataformatsettings', $hassiteconfig);
-    }
+    $plugintypesections['dataformat'] = 'dataformatsettings';
 
     //== Portfolio settings ==
     require_once($CFG->libdir. '/portfoliolib.php');
@@ -446,12 +380,7 @@ if ($hassiteconfig) {
         new lang_string('createrepository', 'repository'), $url, 'moodle/site:config', true));
     $ADMIN->add('repositorysettings', new admin_externalpage('repositoryinstanceedit',
         new lang_string('editrepositoryinstance', 'repository'), $url, 'moodle/site:config', true));
-    $plugins = core_plugin_manager::instance()->get_plugins_of_type('repository');
-    core_collator::asort_objects_by_property($plugins, 'displayname');
-    foreach ($plugins as $plugin) {
-        /** @var \core\plugininfo\repository $plugin */
-        $plugin->load_settings($ADMIN, 'repositorysettings', $hassiteconfig);
-    }
+    $plugintypesections['repository'] = 'repositorysettings';
 }
 
 // Question bank settings.
@@ -461,12 +390,7 @@ if ($hassiteconfig || has_capability('moodle/question:config', $systemcontext)) 
     $temp = new admin_settingpage('manageqbanks', new lang_string('manageqbanks', 'admin'));
     $temp->add(new \core_question\admin\manage_qbank_plugins_page());
     $ADMIN->add('qbanksettings', $temp);
-    $plugins = core_plugin_manager::instance()->get_plugins_of_type('qbank');
-
-    foreach ($plugins as $plugin) {
-        /** @var \core\plugininfo\qbank $plugin */
-        $plugin->load_settings($ADMIN, 'qbanksettings', $hassiteconfig);
-    }
+    $plugintypesections['qbank'] = 'qbanksettings';
 }
 
 // Question type settings
@@ -527,12 +451,7 @@ if ($hassiteconfig || has_capability('moodle/question:config', $systemcontext)) 
             get_string('responsehistory', 'question'), '', 0, $hiddenofvisible));
 
     // Settings for particular question types.
-    $plugins = core_plugin_manager::instance()->get_plugins_of_type('qtype');
-    core_collator::asort_objects_by_property($plugins, 'displayname');
-    foreach ($plugins as $plugin) {
-        /** @var \core\plugininfo\qtype $plugin */
-        $plugin->load_settings($ADMIN, 'qtypesettings', $hassiteconfig);
-    }
+    $plugintypesections['qtype'] = 'qtypesettings';
 }
 
 // Plagiarism plugin settings
@@ -541,12 +460,7 @@ if ($hassiteconfig && !empty($CFG->enableplagiarism)) {
     $ADMIN->add('plagiarism', new admin_externalpage('manageplagiarismplugins', new lang_string('manageplagiarism', 'plagiarism'),
         $CFG->wwwroot . '/' . $CFG->admin . '/plagiarism.php'));
 
-    $plugins = core_plugin_manager::instance()->get_plugins_of_type('plagiarism');
-    core_collator::asort_objects_by_property($plugins, 'displayname');
-    foreach ($plugins as $plugin) {
-        /** @var \core\plugininfo\plagiarism $plugin */
-        $plugin->load_settings($ADMIN, 'plagiarism', $hassiteconfig);
-    }
+    $plugintypesections['plagiarism'] = 'plagiarism';
 }
 
 // Comments report, note this page is really just a means to delete comments so check that.
@@ -557,6 +471,7 @@ $ADMIN->add('reports', new admin_externalpage('comments', new lang_string('comme
 if ($hassiteconfig) {
     $pages = array();
     foreach (core_component::get_plugin_list('coursereport') as $report => $path) {
+        // TODO MDL-80100 convert to API.
         $file = $CFG->dirroot . '/course/report/' . $report . '/settings.php';
         if (file_exists($file)) {
             $settings = new admin_settingpage('coursereport' . $report,
@@ -581,6 +496,7 @@ if ($hassiteconfig) {
 // Now add reports
 $pages = array();
 foreach (core_component::get_plugin_list('report') as $report => $plugindir) {
+    // TODO MDL-80100 convert to API.
     $settings_path = "$plugindir/settings.php";
     if (file_exists($settings_path)) {
         $settings = new admin_settingpage('report' . $report,
@@ -608,6 +524,7 @@ if ($hassiteconfig) {
     $engines = array();
     foreach (core_component::get_plugin_list('search') as $engine => $plugindir) {
         $engines[$engine] = new lang_string('pluginname', 'search_' . $engine);
+        // TODO MDL-80100 convert to API.
         $settingspath = "$plugindir/settings.php";
         if (file_exists($settingspath)) {
             $settings = new admin_settingpage('search' . $engine,
@@ -772,6 +689,7 @@ if ($hassiteconfig) {
     $ADMIN->add('cache', new admin_category('cachestores', new lang_string('cachestores', 'cache')));
     $ADMIN->locate('cachestores')->set_sorting(true);
     foreach (core_component::get_plugin_list('cachestore') as $plugin => $path) {
+        // TODO MDL-80100 convert to API.
         $settingspath = $path.'/settings.php';
         if (file_exists($settingspath)) {
             $settings = new admin_settingpage('cachestore_'.$plugin.'_settings', new lang_string('pluginname', 'cachestore_'.$plugin), 'moodle/site:config');
@@ -784,12 +702,7 @@ if ($hassiteconfig) {
 // Add Calendar type settings.
 if ($hassiteconfig) {
     $ADMIN->add('modules', new admin_category('calendartype', new lang_string('calendartypes', 'calendar')));
-    $plugins = core_plugin_manager::instance()->get_plugins_of_type('calendartype');
-    core_collator::asort_objects_by_property($plugins, 'displayname');
-    foreach ($plugins as $plugin) {
-        /** @var \core\plugininfo\calendartype $plugin */
-        $plugin->load_settings($ADMIN, 'calendartype', $hassiteconfig);
-    }
+    $plugintypesections['calendartype'] = 'calendartype';
 }
 
 // Communication plugins.
@@ -799,11 +712,7 @@ if ($hassiteconfig && core_communication\api::is_available()) {
         new lang_string('managecommunicationproviders', 'core_communication'));
     $temp->add(new \core_communication\admin\manage_communication_providers_page());
     $ADMIN->add('communicationsettings', $temp);
-    $plugins = core_plugin_manager::instance()->get_plugins_of_type('communication');
-    foreach ($plugins as $plugin) {
-        /** @var \core\plugininfo\communication $plugin */
-        $plugin->load_settings($ADMIN, 'communicationsettings', $hassiteconfig);
-    }
+    $plugintypesections['communication'] = 'communicationsettings';
 }
 
 // Content bank content types.
@@ -812,11 +721,7 @@ if ($hassiteconfig) {
     $temp = new admin_settingpage('managecontentbanktypes', new lang_string('managecontentbanktypes'));
     $temp->add(new admin_setting_managecontentbankcontenttypes());
     $ADMIN->add('contentbanksettings', $temp);
-    $plugins = core_plugin_manager::instance()->get_plugins_of_type('contenttype');
-    foreach ($plugins as $plugin) {
-        /** @var \core\plugininfo\contentbank $plugin */
-        $plugin->load_settings($ADMIN, 'contentbanksettings', $hassiteconfig);
-    }
+    $plugintypesections['contenttype'] = 'contentbanksettings';
 }
 
 /// Add all local plugins - must be always last!
@@ -834,3 +739,9 @@ foreach ($plugins as $plugin) {
     /** @var \core\plugininfo\local $plugin */
     $plugin->load_settings($ADMIN, null, $hassiteconfig);
 }
+
+// Finally allow any plugins to extend site administration. This should gradually
+// replace the need to implement settings.php in individual plugins.
+$hook = new \core\hook\navigation\site_administration_extend($ADMIN, $plugintypesections);
+\core\hook\manager::get_instance()->dispatch($hook);
+$hook->post_dispatch();

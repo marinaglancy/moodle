@@ -59,6 +59,7 @@ $table->attributes['class'] = 'manageplagiarismtable generaltable';
 // Iterate through auth plugins and add to the display table.
 $authcount = count($plagiarismplugins);
 foreach ($plagiarismplugins as $plugin => $dir) {
+    // TODO MDL-80100 convert to API.
     if (file_exists($dir.'/settings.php')) {
         $displayname = "<span>".get_string($plugin, 'plagiarism_'.$plugin)."</span>";
         // Settings link.

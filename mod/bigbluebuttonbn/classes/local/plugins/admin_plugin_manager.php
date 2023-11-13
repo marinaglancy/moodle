@@ -144,6 +144,7 @@ class admin_plugin_manager {
             }
             $row[] = $movelinks;
 
+            // TODO MDL-80100 convert to API.
             $exists = file_exists($typebasedir . '/' . $plugin . '/settings.php');
             // We do not display settings for plugin who have not yet been installed (so have no version yet).
             if (!empty($pluginversion) && $exists) {
