@@ -50,19 +50,6 @@ reports,core_reportbuilder|/reportbuilder/index.php',
     $ADMIN->add('themes', new admin_externalpage('themeselector',
         new lang_string('themeselector', 'admin'), $CFG->wwwroot . '/admin/themeselector.php'));
 
-    // settings for each theme
-    foreach (core_component::get_plugin_list('theme') as $theme => $themedir) {
-        // TODO MDL-80100 convert to API.
-        $settings_path = "$themedir/settings.php";
-        if (file_exists($settings_path)) {
-            $settings = new admin_settingpage('themesetting'.$theme, new lang_string('pluginname', 'theme_'.$theme));
-            include($settings_path);
-            if ($settings) {
-                $ADMIN->add('themes', $settings);
-            }
-        }
-    }
-
     // Logos section.
     $temp = new admin_settingpage('logos', new lang_string('logossettings', 'admin'));
 

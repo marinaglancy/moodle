@@ -23,7 +23,9 @@
  */
 namespace core\plugininfo;
 
+use admin_settingpage;
 use moodle_url;
+use part_of_admin_tree;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -92,5 +94,32 @@ class theme extends base {
      */
     public static function get_manage_url() {
         return new moodle_url('/admin/themeselector.php');
+    }
+
+    /**
+     * Returns the node name used in admin settings menu for this plugin settings (if applicable)
+     *
+     * @return null|string node name or null if plugin does not create settings node (default)
+     */
+    public function get_settings_section_name() {
+        return 'themesetting' . $this->name;
+    }
+
+    public function load_settings(part_of_admin_tree $adminroot, $parentnodename, $hassiteconfig) {
+        global $CFG, $USER, $DB, $OUTPUT, $PAGE; // In case settings.php wants to refer to them.
+        /** @var \admin_root $ADMIN */
+        $ADMIN = $adminroot; // May be used in settings.php.
+
+        $section = $this->get_settings_section_name();
+
+        $settings = null;
+        if (file_exists($this->full_path('settings.php'))) {
+            $settings = new admin_settingpage($section, $this->displayname);
+            include($this->full_path('settings.php')); // This may also set $settings to null.
+        }
+
+        if ($settings) {
+            $ADMIN->add($parentnodename, $settings);
+        }
     }
 }

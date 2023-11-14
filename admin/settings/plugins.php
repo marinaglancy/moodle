@@ -26,6 +26,10 @@
 
 $plugintypesections = [];
 
+if ($ADMIN->locate('themes')) {
+    $plugintypesections['theme'] = 'themes';
+}
+
 if ($hassiteconfig) {
     /* @var admin_root $ADMIN */
     $ADMIN->locate('modules')->set_sorting(true);
