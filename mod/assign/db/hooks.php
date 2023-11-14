@@ -15,14 +15,20 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * This file defines the admin settings for this plugin
+ * Hook callbacks for Assignment
  *
- * @package   assignfeedback_offline
- * @copyright 2012 NetSpot {@link http://www.netspot.com.au}
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    mod_assign
+ * @copyright  2023 Marina Glancy
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$settings->add(new admin_setting_configcheckbox('assignfeedback_offline/default',
-                   new lang_string('default', 'assignfeedback_offline'),
-                   new lang_string('default_help', 'assignfeedback_offline'), 0));
+defined('MOODLE_INTERNAL') || die();
 
+$callbacks = [
+
+    [
+        'hook' => core\hook\navigation\site_administration_extend::class,
+        'callback' => 'mod_assign\local\hooks\navigation\site_administration_extend::callback',
+        'priority' => 10, // Higher priority since it has subplugins and this hook must be called before subplugins.
+    ],
+];

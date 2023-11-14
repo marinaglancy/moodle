@@ -15,14 +15,20 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * This file defines the admin settings for this plugin
+ * Hook callbacks for Offline grading worksheet
  *
- * @package   assignsubmission_onlinetext
- * @copyright 2012 NetSpot {@link http://www.netspot.com.au}
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    assignfeedback_offline
+ * @copyright  2023 Marina Glancy
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$settings->add(new admin_setting_configcheckbox('assignsubmission_onlinetext/default',
-                   new lang_string('default', 'assignsubmission_onlinetext'),
-                   new lang_string('default_help', 'assignsubmission_onlinetext'), 0));
+defined('MOODLE_INTERNAL') || die();
 
+$callbacks = [
+
+    [
+        'hook' => core\hook\navigation\site_administration_extend::class,
+        'callback' => 'assignfeedback_offline\local\hooks\navigation\site_administration_extend::callback',
+        'priority' => 0, // Must be lower priority than of mod_assign hook.
+    ],
+];
