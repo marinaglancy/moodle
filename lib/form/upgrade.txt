@@ -1,6 +1,10 @@
 This files describes API changes in core_form libraries and APIs,
 information provided here is intended especially for developers.
 
+=== 4.1.10 ===
+
+* New method `setHiddenLabel` added to the group form element type
+
 === 4.1.7 ===
 
 * The group element has a new method `getAttributesForFormElement` which should be used in conjunction
