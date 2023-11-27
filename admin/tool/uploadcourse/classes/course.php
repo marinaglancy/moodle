@@ -800,6 +800,7 @@ class tool_uploadcourse_course {
         $this->data = $coursedata;
 
         // Get enrolment data. Where the course already exists, we can also perform validation.
+        // Some data is impossible to validate without the existing course, we will do it again during actual upload.
         $this->enrolmentdata = tool_uploadcourse_helper::get_enrolment_data($this->rawdata);
         $courseid = $coursedata['id'] ?? 0;
         $errors = $this->validate_enrolment_data($courseid, $this->enrolmentdata);
@@ -809,11 +810,6 @@ class tool_uploadcourse_course {
                 $this->error($key, $message);
             }
 
-            return false;
-        }
-
-        if ($error = permissions::check_permission_to_enrol($this->do, $this->data, $this->enrolmentdata)) {
-            $this->error('courseenrolpermission', $error);
             return false;
         }
 
@@ -1066,8 +1062,13 @@ class tool_uploadcourse_course {
                 // Create/update enrolment.
                 $plugin = $enrolmentplugins[$enrolmethod];
 
-                if ($plugin->is_csv_upload_supported()) {
+                // In case we could not properly validate enrolment data before the course existed
+                // let's repeat it again here.
+                $errors = $plugin->validate_enrol_plugin_data($method, $course->id);
+
+                if (!$errors) {
                     $status = ($todisable) ? ENROL_INSTANCE_DISABLED : ENROL_INSTANCE_ENABLED;
+                    $method += ['status' => $status, 'courseid' => $course->id, 'id' => $instance->id ?? null];
                     $method = $plugin->fill_enrol_custom_fields($method, $course->id);
 
                     // Create a new instance if necessary.
@@ -1166,9 +1167,9 @@ class tool_uploadcourse_course {
 
                     $plugin->update_instance($instance, $modifiedinstance);
                 } else {
-                    $this->error('errorunsupportedmethod',
-                        new lang_string('errorunsupportedmethod', 'tool_uploadcourse',
-                            $enrolmethod));
+                    foreach ($errors as $key => $message) {
+                        $this->error($key, $message);
+                    }
                 }
             }
         }

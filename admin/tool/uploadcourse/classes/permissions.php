@@ -259,20 +259,4 @@ class permissions {
     public static function check_permission_to_restore(int $do, array $coursedata): ?lang_string {
         return self::check_capability($do, $coursedata, 'moodle/restore:restorecourse');
     }
-
-    /**
-     * Check if the user is able to enrol in a course
-     *
-     * @param int $do one of tool_uploadcourse_course::DO_UPDATE or tool_uploadcourse_course::DO_ADD
-     * @param array $coursedata data to update/create course with, must contain either 'id' or 'category' respectively
-     * @param array $enrolmentdata
-     * @return lang_string|null
-     */
-    public static function check_permission_to_enrol(int $do, array $coursedata, array $enrolmentdata): ?lang_string {
-
-        // TODO.
-
-        return null;
-    }
-
 }
