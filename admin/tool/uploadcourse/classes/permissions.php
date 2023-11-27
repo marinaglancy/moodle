@@ -14,24 +14,23 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+namespace tool_uploadcourse;
+
+use context_course;
+use context_coursecat;
+use core_course_category;
+use core_tag_tag;
+use lang_string;
+use tool_uploadcourse_course;
+
 /**
- * Class permissions
+ * Checks various permissions related to the course upload process
  *
  * @package     tool_uploadcourse
  * @copyright   2019 Marina Glancy
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
-defined('MOODLE_INTERNAL') || die();
-
-/**
- * Class permissions
- *
- * @package     tool_uploadcourse
- * @copyright   2019 Marina Glancy
- * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-class tool_uploadcourse_permissions {
+class permissions {
 
     /**
      * Check permission to use tool_uploadcourse in a given category
@@ -40,7 +39,10 @@ class tool_uploadcourse_permissions {
      * @param lang_string|null $customerror
      * @return lang_string|null
      */
-    protected static function check_permission_to_use_uploadcourse_tool(int $catid, ?lang_string $customerror = null): ?lang_string {
+    protected static function check_permission_to_use_uploadcourse_tool(
+                int $catid,
+                ?lang_string $customerror = null
+            ): ?lang_string {
         $category = core_course_category::get($catid, IGNORE_MISSING);
         if (!$category || !has_capability('tool/uploadcourse:use', $category->get_context())) {
             if ($customerror) {
@@ -60,7 +62,7 @@ class tool_uploadcourse_permissions {
      */
     public static function check_permission_to_delete(string $shortname): ?lang_string {
         global $DB;
-        $course = $DB->get_record('course', array('shortname' => $shortname));
+        $course = $DB->get_record('course', ['shortname' => $shortname]);
         if ($error = self::check_permission_to_use_uploadcourse_tool($course->category)) {
             return $error;
         }
@@ -76,6 +78,7 @@ class tool_uploadcourse_permissions {
      *
      * @param int $do one of tool_uploadcourse_course::DO_UPDATE or tool_uploadcourse_course::DO_ADD
      * @param array $coursedata data to update/create course with, must contain either 'id' or 'category' respectively
+     * @param string $capability capability to check
      * @return lang_string|null error string or null
      */
     protected static function check_capability(int $do, array $coursedata, string $capability): ?lang_string {
@@ -208,7 +211,6 @@ class tool_uploadcourse_permissions {
         if (!has_capability('moodle/course:create', $catcontext)) {
             return new lang_string('nopermissions', 'error', get_capability_string('moodle/course:create'));
         }
-
 
         // If lang is specified, check the user is allowed to set that field.
         if (!empty($coursedata['lang'])) {

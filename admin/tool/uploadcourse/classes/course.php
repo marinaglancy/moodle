@@ -22,6 +22,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+ use tool_uploadcourse\permissions;
+
 defined('MOODLE_INTERNAL') || die();
 require_once($CFG->dirroot . '/backup/util/includes/restore_includes.php');
 require_once($CFG->dirroot . '/course/lib.php');
@@ -448,7 +450,7 @@ class tool_uploadcourse_course {
                 return false;
             }
 
-            if ($error = tool_uploadcourse_permissions::check_permission_to_delete($this->shortname)) {
+            if ($error = permissions::check_permission_to_delete($this->shortname)) {
                 $this->error('coursedeletionpermission', $error);
                 return false;
             }
@@ -668,7 +670,7 @@ class tool_uploadcourse_course {
                 return false;
             }
 
-            if ($error = tool_uploadcourse_permissions::check_permission_to_update($coursedata)) {
+            if ($error = permissions::check_permission_to_update($coursedata)) {
                 $this->error('cannotupdatepermission', $error);
                 return false;
             }
@@ -677,7 +679,7 @@ class tool_uploadcourse_course {
         } else {
             $coursedata = $this->get_final_create_data($coursedata);
 
-            if ($error = tool_uploadcourse_permissions::check_permission_to_create($coursedata)) {
+            if ($error = permissions::check_permission_to_create($coursedata)) {
                 $this->error('courseuploadnotallowed', $error);
                 return false;
             }
@@ -810,7 +812,7 @@ class tool_uploadcourse_course {
             return false;
         }
 
-        if ($error = tool_uploadcourse_permissions::check_permission_to_enrol($this->do, $this->data, $this->enrolmentdata)) {
+        if ($error = permissions::check_permission_to_enrol($this->do, $this->data, $this->enrolmentdata)) {
             $this->error('courseenrolpermission', $error);
             return false;
         }
@@ -827,7 +829,7 @@ class tool_uploadcourse_course {
             return false;
         }
 
-        if ($this->restoredata && ($error = tool_uploadcourse_permissions::check_permission_to_restore($this->do, $this->data))) {
+        if ($this->restoredata && ($error = permissions::check_permission_to_restore($this->do, $this->data))) {
             $this->error('courserestorepermission', $error);
             return false;
         }
@@ -843,7 +845,7 @@ class tool_uploadcourse_course {
                 return false;
             }
 
-            if ($error = tool_uploadcourse_permissions::check_permission_to_reset($this->data)) {
+            if ($error = permissions::check_permission_to_reset($this->data)) {
                 $this->error('courseresetpermission', $error);
                 return false;
             }
@@ -903,7 +905,7 @@ class tool_uploadcourse_course {
                 $rc->execute_plan();
                 $this->status('courserestored', new lang_string('courserestored', 'tool_uploadcourse'));
             } else {
-                $this->error('errorwhilerestoringcourse', new lang_string('errorwhilerestoringthecourse', 'tool_uploadcourse'));
+                $this->error('errorwhilerestoringcourse', new lang_string('errorwhilerestoringcourse', 'tool_uploadcourse'));
             }
             $rc->destroy();
         }
@@ -927,7 +929,7 @@ class tool_uploadcourse_course {
     /**
      * Validate passed enrolment data against an existing course
      *
-     * @param int $courseid
+     * @param int $courseid id of the course where enrolment methods are created/updated or 0 if it is a new course
      * @param array[] $enrolmentdata
      * @return lang_string[] Errors keyed on error code
      */
