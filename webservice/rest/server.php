@@ -47,9 +47,9 @@ die;
 /**
  * Raises Early WS Exception in REST format.
  *
- * @param  Exception $ex Raised exception.
+ * @param  Throwable $ex Raised exception.
  */
-function raise_early_ws_exception(Exception $ex): void {
+function raise_early_ws_exception(Throwable $ex): void {
     global $CFG;
     require_once("$CFG->dirroot/webservice/rest/locallib.php");
     $server = new webservice_rest_server(WEBSERVICE_AUTHMETHOD_PERMANENT_TOKEN);

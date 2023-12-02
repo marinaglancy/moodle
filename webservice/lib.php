@@ -1362,7 +1362,7 @@ abstract class webservice_base_server extends webservice_server {
      * Specialised exception handler, we can not use the standard one because
      * it can not just print html to output.
      *
-     * @param exception $ex
+     * @param Throwable $ex
      * $uses exit
      */
     public function exception_handler($ex) {
@@ -1819,10 +1819,10 @@ EOD;
  * It handles exceptions during setup and returns the Exception text in the WS format.
  * If a raise function is found nothing is returned. Throws Exception otherwise.
  *
- * @param  Exception $ex Raised exception.
- * @throws Exception
+ * @param  Throwable $ex Raised exception.
+ * @throws Throwable
  */
-function early_ws_exception_handler(Exception $ex): void {
+function early_ws_exception_handler(Throwable $ex): void {
     if (function_exists('raise_early_ws_exception')) {
         raise_early_ws_exception($ex);
         die;
