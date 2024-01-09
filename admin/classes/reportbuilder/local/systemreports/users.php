@@ -106,7 +106,7 @@ class users extends system_report {
         $this->add_actions();
 
         // Set if report can be downloaded.
-        $this->set_downloadable(false);
+        $this->set_downloadable(true);
     }
 
     /**
@@ -128,17 +128,15 @@ class users extends system_report {
         $entityuser = $this->get_entity('user');
         $entityuseralias = $entityuser->get_table_alias('user');
 
-        $this->add_column($entityuser->get_column('fullnamewithlink'));
+        $this->add_column($entityuser->get_column('fullnamewithpicturelink'));
 
         // Include identity field columns.
-        $identitycolumns = $entityuser->get_identity_columns($this->get_context(), ['city', 'country', 'lastaccesstime']);
+        $identitycolumns = $entityuser->get_identity_columns($this->get_context());
         foreach ($identitycolumns as $identitycolumn) {
             $this->add_column($identitycolumn);
         }
 
-        // These columns are always shown in the users list.
-        $this->add_column($entityuser->get_column('city'));
-        $this->add_column($entityuser->get_column('country'));
+        // Add "Last access" column.
         $this->add_column(($entityuser->get_column('lastaccess'))
             ->set_callback(static function ($value, \stdClass $row): string {
                 if ($row->lastaccess) {
@@ -148,7 +146,7 @@ class users extends system_report {
             })
         );
 
-        if ($column = $this->get_column('user:fullnamewithlink')) {
+        if ($column = $this->get_column('user:fullnamewithpicturelink')) {
             $column
                 ->add_fields("{$entityuseralias}.suspended, {$entityuseralias}.confirmed")
                 ->add_callback(static function(string $fullname, \stdClass $row): string {
@@ -164,7 +162,7 @@ class users extends system_report {
                 });
         }
 
-        $this->set_initial_sort_column('user:fullnamewithlink', SORT_ASC);
+        $this->set_initial_sort_column('user:fullnamewithpicturelink', SORT_ASC);
         $this->set_default_no_results_notice(new lang_string('nousersfound', 'moodle'));
     }
 
