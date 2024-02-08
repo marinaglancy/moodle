@@ -560,6 +560,7 @@ class weblib_test extends advanced_testcase {
             format_text($text, FORMAT_HTML, ['trusted' => false]));
 
         $CFG->enabletrusttext = 1;
+        $CFG->forceclean = 0;
 
         $this->assertSame(s($text),
             format_text($text, FORMAT_PLAIN, ['trusted' => true]));

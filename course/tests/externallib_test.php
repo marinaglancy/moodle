@@ -1266,8 +1266,6 @@ class externallib_test extends externallib_advanced_testcase {
         $this->assertEquals(2, $sections[2]['section']);
         $this->assertEquals(3, $sections[3]['section']);
         $this->assertEquals(4, $sections[4]['section']);
-        $this->assertStringContainsString('<iframe', $sections[2]['summary']);
-        $this->assertStringContainsString('</iframe>', $sections[2]['summary']);
         $this->assertNotEmpty($sections[2]['modules'][0]['availabilityinfo']);
         try {
             $sections = core_course_external::get_course_contents($course->id,
@@ -1278,6 +1276,25 @@ class externallib_test extends externallib_advanced_testcase {
         }
     }
 
+    /**
+     * Test get_course_contents with dangerous HTML and the forceclean disabled
+     */
+    public function test_get_course_contents_no_forceclean() {
+        global $CFG;
+        $this->resetAfterTest(true);
+
+        $CFG->forceclean = 0;
+        $CFG->forum_allowforcedreadtracking = 1;
+        [$course, $forumcm, $datacm, $pagecm, $labelcm, $urlcm] = $this->prepare_get_course_contents_test();
+
+        $this->setAdminUser();
+        $sections = core_course_external::get_course_contents($course->id, array());
+        // We need to execute the return values cleaning process to simulate the web service server.
+        $sections = external_api::clean_returnvalue(core_course_external::get_course_contents_returns(), $sections);
+
+        $this->assertStringContainsString('<iframe', $sections[2]['summary']);
+        $this->assertStringContainsString('</iframe>', $sections[2]['summary']);
+    }
 
     /**
      * Test get_course_contents as student

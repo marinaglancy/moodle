@@ -158,23 +158,23 @@ class weblib_format_text_test extends \advanced_testcase {
             ],
             'Link with rel' => [
                 '<a href="https://www.youtube.com/watch?v=JeimE8Wz6e4" rel="nofollow">Hey, that\'s pretty good!</a>',
-                '<div class="text_to_html"><a href="https://www.youtube.com/watch?v=JeimE8Wz6e4" rel="nofollow noreferrer"' .
-                    ' target="_blank">Hey, that\'s pretty good!</a></div>'
+                '<div class="text_to_html"><a href="https://www.youtube.com/watch?v=JeimE8Wz6e4"' .
+                    ' target="_blank" rel="noreferrer">Hey, that\'s pretty good!</a></div>'
             ],
             'Link with rel noreferrer' => [
                 '<a href="https://www.youtube.com/watch?v=JeimE8Wz6e4" rel="noreferrer">Hey, that\'s pretty good!</a>',
-                '<div class="text_to_html"><a href="https://www.youtube.com/watch?v=JeimE8Wz6e4" rel="noreferrer"' .
-                 ' target="_blank">Hey, that\'s pretty good!</a></div>'
+                '<div class="text_to_html"><a href="https://www.youtube.com/watch?v=JeimE8Wz6e4"' .
+                 ' target="_blank" rel="noreferrer">Hey, that\'s pretty good!</a></div>'
             ],
             'Link with target' => [
                 '<a href="https://www.youtube.com/watch?v=JeimE8Wz6e4" target="_self">Hey, that\'s pretty good!</a>',
-                '<div class="text_to_html"><a href="https://www.youtube.com/watch?v=JeimE8Wz6e4" target="_self">' .
-                    'Hey, that\'s pretty good!</a></div>'
+                '<div class="text_to_html"><a href="https://www.youtube.com/watch?v=JeimE8Wz6e4" target="_blank" '.
+                    'rel="noreferrer">Hey, that\'s pretty good!</a></div>'
             ],
             'Link with target blank' => [
                 '<a href="https://www.youtube.com/watch?v=JeimE8Wz6e4" target="_blank">Hey, that\'s pretty good!</a>',
                 '<div class="text_to_html"><a href="https://www.youtube.com/watch?v=JeimE8Wz6e4" target="_blank"' .
-                    ' rel="noreferrer">Hey, that\'s pretty good!</a></div>'
+                    ' rel="noreferrer noopener">Hey, that\'s pretty good!</a></div>'
             ],
             'Link with Frank\'s casket inscription' => [
                 '<a href="https://en.wikipedia.org/wiki/Franks_Casket">ᚠᛁᛋᚳ᛫ᚠᛚᚩᛞᚢ᛫ᚪᚻᚩᚠᚩᚾᚠᛖᚱᚷ ᛖᚾᛒᛖᚱᛁᚷ ᚹᚪᚱᚦᚷᚪ᛬ᛋᚱᛁᚳᚷᚱᚩᚱᚾᚦᚫᚱᚻᛖᚩᚾᚷᚱᛖᚢᛏᚷᛁᛋᚹᚩᛗ ᚻ' .

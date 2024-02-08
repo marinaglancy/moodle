@@ -2092,6 +2092,7 @@ class externallib_test extends externallib_advanced_testcase {
 
         $this->resetAfterTest(true);
         $CFG->enabletrusttext = 1;
+        $CFG->forceclean = 0;
 
         $dangeroustext = '<button>Untrusted text</button>';
         $cleantext = 'Untrusted text';

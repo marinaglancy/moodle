@@ -225,7 +225,7 @@ class external_test extends externallib_advanced_testcase {
         // Second quiz.
         $record = new \stdClass();
         $record->course = $course2->id;
-        $record->intro = '<button>Test with HTML allowed.</button>';
+        $record->intro = '<p>Test with HTML allowed.</p>';
         $quiz2 = self::getDataGenerator()->create_module('quiz', $record);
 
         // Execute real Moodle enrolment as we'll call unenrol() method on the instance later.

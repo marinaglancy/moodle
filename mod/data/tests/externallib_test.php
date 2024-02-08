@@ -156,7 +156,7 @@ class externallib_test extends externallib_advanced_testcase {
         $record->course = $course1->id;
         // Set multilang text to check that is properly filtered to "en" only.
         $record->name = '<span lang="en" class="multilang">English</span><span lang="es" class="multilang">Español</span>';
-        $record->intro = '<button>Test with HTML allowed.</button>';
+        $record->intro = '<div>Test with HTML allowed.</div>';
         $database1 = self::getDataGenerator()->create_module('data', $record);
 
         // Second database.
