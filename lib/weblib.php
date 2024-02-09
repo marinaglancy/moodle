@@ -1046,6 +1046,14 @@ function break_up_long_words($string, $maxsize=20, $cutchar=' ') {
     $wordlength = 0;
 
     for ($i=0; $i<$length; $i++) {
+        if (preg_match('/^(\{-\{.*?\}-\})/', core_text::substr($string, $i), $matches)
+                && array_key_exists($matches[1], $tags)) {
+            // Skip the tag replacements and treat them as word separators.
+            $i += strlen($matches[1]) - 1;
+            $wordlength = 0;
+            $output .= $matches[1];
+            continue;
+        }
         $char = core_text::substr($string, $i, 1);
         if ($char == ' ' or $char == "\t" or $char == "\n" or $char == "\r" or $char == "<" or $char == ">") {
             $wordlength = 0;
@@ -1060,9 +1068,7 @@ function break_up_long_words($string, $maxsize=20, $cutchar=' ') {
     }
 
     // Finally load the tags back again.
-    if (!empty($tags)) {
-        $output = str_replace(array_keys($tags), $tags, $output);
-    }
+    filter_restore_saved_tags($output, $tags);
 
     return $output;
 }

@@ -1447,4 +1447,33 @@ EXPECTED;
     public function test_strip_querystring($value, $expected): void {
         $this->assertEquals($expected, strip_querystring($value));
     }
+
+    /**
+     * Data provider for the test of the break_up_long_words function.
+     *
+     * @return array
+     */
+    public function break_up_long_words_provider(): array {
+        return [
+            'Empty string' => ['', 3, ''],
+            'Short string' => ['This is a test', 3, 'Thi s is a tes t'],
+            'Long string' => ['This is a test', 2, 'Th is is a te st'],
+            'String with tags' => ['<p>This <a href="#">is</a>atest</p>', 3, '<p>Thi s <a href="#">is</a>ate st</p>']
+        ];
+    }
+
+    /**
+     * Test for function break_up_long_words.
+     *
+     * @param string $string
+     * @param int $length
+     * @param string $expected
+     * @return void
+     *
+     * @dataProvider break_up_long_words_provider
+     */
+    public function test_break_up(string $string, int $length, string $expected): void {
+        $result = break_up_long_words($string, $length);
+        $this->assertEquals($expected, $result);
+    }
 }

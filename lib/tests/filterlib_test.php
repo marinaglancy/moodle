@@ -902,4 +902,167 @@ class filterlib_test extends \advanced_testcase {
         $this->assertEquals(['test1a' => 'In root', 'test1b' => 'In root'], $actual['one']);
         $this->assertEquals([], $actual['three']);
     }
+
+    /**
+     * Data provider for {@link self::test_filter_save_ignore_tags()}.
+     *
+     * @return array
+     */
+    public function filter_save_ignore_tags_provider() {
+        return [
+            'no tags' => [
+                'This is a test',
+                [],
+                [],
+            ],
+            'one tag single' => [
+                'This <a href="#1">is</a> a test',
+                ['<a(\s[^>]*?)?>'],
+                ['</a>'],
+            ],
+            'one tag double' => [
+                'This <a href="#1">is</a> a <a href="#2">test</a>',
+                ['<a(\s[^>]*?)?>'],
+                ['</a>'],
+            ],
+            'embedded tags' => [
+                '<p>This <a href="#1">is</a> a <a href="#2">test</a></p>',
+                ['<a(\s[^>]*?)?>', '<p>'],
+                ['</a>', '</p>'],
+            ],
+            'preserving dangerous tags' => [
+                'This <a href="#1">is</a> a test <object></object>',
+                ['<a(\s[^>]*?)?>', '<object>'],
+                ['</a>', '</object>'],
+            ],
+            'stripping dangerous tags' => [
+                'This <a href="#1">is</a> a test <object></object>',
+                ['<a(\s[^>]*?)?>'],
+                ['</a>'],
+                'This <a href="#1">is</a> a test ',
+            ],
+            'dangerous tags inside excluded tags stay' => [
+                'This <a href="#1">is a test <object></object></a>',
+                ['<a(\s[^>]*?)?>'],
+                ['</a>'],
+            ],
+        ];
+    }
+
+    /**
+     * Test for function filter_save_ignore_tags()
+     *
+     * @param string $text
+     * @param array $filterignoretagsopen
+     * @param array $filterignoretagsclose
+     * @param string $expectedwithformat expected result after format_text (null if same as $text)
+     * @return void
+     *
+     * @dataProvider filter_save_ignore_tags_provider
+     */
+    public function test_filter_save_ignore_tags(string $text, array $filterignoretagsopen, array $filterignoretagsclose,
+            ?string $expectedwithformat = null): void {
+
+        $excluded = [];
+        $text1 = $text;
+        filter_save_ignore_tags($text1, $filterignoretagsopen, $filterignoretagsclose, $excluded);
+        if ($text !== 'This is a test') {
+            $this->assertNotEquals($text, $text1);
+            $this->assertNotEmpty($excluded);
+        } else {
+            $this->assertEquals($text, $text1);
+            $this->assertEmpty($excluded);
+        }
+        filter_restore_saved_tags($text1, $excluded);
+        // Must always be the same text as before.
+        $this->assertEquals($text, $text1);
+
+        $excluded = [];
+        $text2 = $text;
+        filter_save_ignore_tags($text2, $filterignoretagsopen, $filterignoretagsclose, $excluded);
+        $text2 = format_text($text2, FORMAT_HTML);
+        filter_restore_saved_tags($text2, $excluded);
+        $this->assertEquals($expectedwithformat ?? $text, $text2);
+    }
+
+    /**
+     * Data provider for {@link self::test_filter_save_tags()}.
+     *
+     * @return array
+     */
+    public function filter_save_tags_provider() {
+        return [
+            'no tags' => [
+                'This is a test',
+            ],
+            'one tag single' => [
+                'This <a href="#1">is</a> a test',
+            ],
+            'embedded and mixed-case tags' => [
+                '<P>This <A href="#1">is</A> a test</p>',
+            ],
+            'dangerous tags' => [
+                '<p>This <a href="#1">is</a> a <textarea>something</textarea> test</p>',
+            ],
+        ];
+    }
+
+    /**
+     * Tests for function filter_save_tags()
+     *
+     * @param string $text
+     * @return void
+     *
+     * @dataProvider filter_save_tags_provider
+     */
+    public function test_filter_save_tags(string $text): void {
+
+        $excluded = [];
+        $text1 = $text;
+        filter_save_tags($text1, $excluded);
+        if ($text !== 'This is a test') {
+            $this->assertNotEquals($text, $text1);
+            $this->assertNotEmpty($excluded);
+        } else {
+            $this->assertEquals($text, $text1);
+            $this->assertEmpty($excluded);
+        }
+        filter_restore_saved_tags($text1, $excluded);
+        // Must always be the same text as before.
+        $this->assertEquals($text, $text1);
+    }
+
+    /**
+     * Test demonstrating difference between filter_save_ignore_tags() and filter_save_tags().
+     *
+     * @return void
+     */
+    public function test_filter_tags_uppercase() {
+        $text = '<p>This <a href="#1">is</a> a <textarea>something</textarea> test</p>';
+
+        $excluded = [];
+        $text1 = $text;
+        // Uppercase everything except for contents of the <a> and <textarea> tags.
+        filter_save_ignore_tags($text1, ['<a(\s[^>]*?)?>', '<textarea>'], ['</a>', '</textarea>'], $excluded);
+        $text1 = strtoupper($text1);
+        filter_restore_saved_tags($text1, $excluded);
+        $this->assertEquals('<P>THIS <a href="#1">is</a> A <textarea>something</textarea> TEST</P>', $text1);
+
+        $excluded = [];
+        $text2 = $text;
+        // Uppercase everything except for tags.
+        filter_save_tags($text2, $excluded);
+        $text2 = strtoupper($text2);
+        filter_restore_saved_tags($text2, $excluded);
+        $this->assertEquals('<p>THIS <a href="#1">IS</a> A <textarea>SOMETHING</textarea> TEST</p>', $text2);
+
+        $excluded = [];
+        $text3 = $text;
+        // Uppercase everything except for contents of the <textarea> tags and any tags.
+        filter_save_ignore_tags($text3, ['<textarea>'], ['</textarea>'], $excluded);
+        filter_save_tags($text3, $excluded);
+        $text3 = strtoupper($text3);
+        filter_restore_saved_tags($text3, $excluded);
+        $this->assertEquals('<p>THIS <a href="#1">IS</a> A <textarea>something</textarea> TEST</p>', $text3);
+    }
 }

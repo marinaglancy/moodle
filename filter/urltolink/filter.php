@@ -144,10 +144,7 @@ class filter_urltolink extends moodle_text_filter {
 
         $text = implode('', $matches);
 
-        if (!empty($ignoretags)) {
-            $ignoretags = array_reverse($ignoretags); /// Reversed so "progressive" str_replace() will solve some nesting problems.
-            $text = str_replace(array_keys($ignoretags),$ignoretags,$text);
-        }
+        filter_restore_saved_tags($text, $ignoretags);
 
         if (get_config('filter_urltolink', 'embedimages')) {
             // now try to inject the images, this code was originally in the mediapluing filter
