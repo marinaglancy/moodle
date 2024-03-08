@@ -1240,7 +1240,7 @@ abstract class moodleform_mod extends moodleform {
             $buttonarray[] = &$mform->createElement('cancel');
         }
 
-        $mform->addGroup($buttonarray, 'buttonar', '', array(' '), false);
+        $mform->addGroup($buttonarray, 'buttonar', get_string('formactions', 'form'), array(' '), false);
         $mform->setType('buttonar', PARAM_RAW);
     }
 
