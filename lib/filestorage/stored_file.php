@@ -1101,7 +1101,7 @@ class stored_file {
         global $CFG;
         require_once($CFG->libdir . '/gdlib.php');
 
-        if (empty($width) or empty($height)) {
+        if (empty($width) && empty($height)) {
             return false;
         }
 
@@ -1117,7 +1117,7 @@ class stored_file {
         $original = @imagecreatefromstring($content);
 
         // Generate the thumbnail.
-        return generate_image_thumbnail_from_image($original, $imageinfo, $width, $height);
+        return generate_image_thumbnail_from_image($original, $imageinfo, $width, $height, $width > 0 && $height > 0);
     }
 
     /**

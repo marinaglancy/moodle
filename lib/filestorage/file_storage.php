@@ -466,6 +466,9 @@ class file_storage {
         } else if ($mode === 'bigthumb') {
             $data = $file->generate_image_thumbnail(250, 250);
 
+        } else if (preg_match('/^(\d*)x(\d*)$/', $mode, $matches) && strlen($matches[1] . $matches[2])) {
+            $data = $file->generate_image_thumbnail((int)$matches[1], (int)$matches[2]);
+
         } else {
             throw new file_exception('storedfileproblem', 'Invalid preview mode requested');
         }

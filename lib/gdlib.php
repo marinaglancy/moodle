@@ -470,8 +470,9 @@ function generate_image_thumbnail_from_string($filedata, $width, $height) {
  * @param   array $imageinfo Contains [0] => originalwidth, [1] => originalheight.
  * @param   int $width The width of the requested thumbnail.
  * @param   int $height The height of the requested thumbnail.
+ * @param   bool $forcecanvas Whether the final dimensions should be set to $width and $height.
  * @return  string|bool False if a problem occurs, the thumbnail image data otherwise.
  */
-function generate_image_thumbnail_from_image($original, $imageinfo, $width, $height) {
-    return resize_image_from_image($original, $imageinfo, $width, $height, true);
+function generate_image_thumbnail_from_image($original, $imageinfo, $width, $height, bool $forcecanvas = true) {
+    return resize_image_from_image($original, $imageinfo, $width, $height, $forcecanvas);
 }
