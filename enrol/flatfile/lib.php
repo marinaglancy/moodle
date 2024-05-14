@@ -438,7 +438,7 @@ class enrol_flatfile_plugin extends enrol_plugin {
                 // Send welcome notification to enrolled users.
                 $a = new stdClass();
                 $a->coursename = format_string($course->fullname, true, array('context' => $context));
-                $a->profileurl = "$CFG->wwwroot/user/view.php?id=$user->id&amp;course=$course->id";
+                $a->profileurl = new moodle_url("/user/view.php?id=$user->id&course=$course->id");
                 $subject = get_string('enrolmentnew', 'enrol', format_string($course->shortname, true, array('context' => $context)));
 
                 $eventdata = new \core\message\message();
