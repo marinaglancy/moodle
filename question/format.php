@@ -1027,7 +1027,7 @@ class qformat_default {
 
         // continue path for following error checks
         $course = $this->course;
-        $continuepath = "{$CFG->wwwroot}/question/bank/exportquestions/export.php?courseid={$course->id}";
+        $continuepath = new moodle_url("/question/bank/exportquestions/export.php?courseid={$course->id}");
 
         // did we actually process anything
         if ($count==0) {
