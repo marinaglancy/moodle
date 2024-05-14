@@ -30,7 +30,7 @@ admin_externalpage_setup('profilefields');
 
 $action   = optional_param('action', '', PARAM_ALPHA);
 
-$redirect = $CFG->wwwroot.'/user/profile/index.php';
+$redirect = new moodle_url('/user/profile/index.php');
 
 $strdefaultcategory = get_string('profiledefaultcategory', 'admin');
 $strcreatefield     = get_string('profilecreatefield', 'admin');
