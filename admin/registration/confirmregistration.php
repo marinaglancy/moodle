@@ -59,7 +59,7 @@ if (parse_url($url, PHP_URL_HOST) !== parse_url(HUB_MOODLEORGHUBURL, PHP_URL_HOS
 
 if (!empty($error) and $error == 'urlalreadyexist') {
     throw new moodle_exception('urlalreadyregistered', 'hub',
-            $CFG->wwwroot . '/' . $CFG->admin . '/registration/index.php');
+            new moodle_url('/admin/registration/index.php'));
 }
 
 //check that we are waiting a confirmation from this hub, and check that the token is correct
