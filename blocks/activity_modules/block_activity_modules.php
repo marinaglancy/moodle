@@ -76,10 +76,10 @@ class block_activity_modules extends block_list {
         foreach ($modfullnames as $modname => $modfullname) {
             if ($modname === 'resources') {
                 $icon = $OUTPUT->pix_icon('monologo', '', 'mod_page', array('class' => 'icon'));
-                $this->content->items[] = '<a href="'.$CFG->wwwroot.'/course/resources.php?id='.$course->id.'">'.$icon.$modfullname.'</a>';
+                $this->content->items[] = '<a href="'.(new moodle_url('/course/resources.php?id='.$course->id)).'">'.$icon.$modfullname.'</a>';
             } else {
                 $icon = $OUTPUT->image_icon('monologo', get_string('pluginname', $modname), $modname);
-                $this->content->items[] = '<a href="'.$CFG->wwwroot.'/mod/'.$modname.'/index.php?id='.$course->id.'">'.$icon.$modfullname.'</a>';
+                $this->content->items[] = '<a href="'.(new moodle_url('/mod/'.$modname.'/index.php?id='.$course->id)).'">'.$icon.$modfullname.'</a>';
             }
         }
 

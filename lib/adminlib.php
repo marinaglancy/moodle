@@ -9904,9 +9904,9 @@ class admin_setting_manageexternalservices extends admin_setting {
         $strusers = get_string('users');
         $strserviceusers = get_string('serviceusers', 'webservice');
 
-        $esurl = "$CFG->wwwroot/$CFG->admin/webservice/service.php";
-        $efurl = "$CFG->wwwroot/$CFG->admin/webservice/service_functions.php";
-        $euurl = "$CFG->wwwroot/$CFG->admin/webservice/service_users.php";
+        $esurl = new moodle_url("/admin/webservice/service.php");
+        $efurl = new moodle_url("/admin/webservice/service_functions.php");
+        $euurl = new moodle_url("/admin/webservice/service_users.php");
 
         // built in services
          $services = $DB->get_records_select('external_services', 'component IS NOT NULL', null, 'name');
