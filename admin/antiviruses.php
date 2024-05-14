@@ -35,7 +35,7 @@ $PAGE->set_context(context_system::instance());
 
 require_admin();
 
-$returnurl = "$CFG->wwwroot/$CFG->admin/settings.php?section=manageantiviruses";
+$returnurl = new moodle_url("/admin/settings.php?section=manageantiviruses");
 
 // Get currently installed and enabled antivirus plugins.
 $availableantiviruses = \core\antivirus\manager::get_available();

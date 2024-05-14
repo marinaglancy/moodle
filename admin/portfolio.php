@@ -35,8 +35,8 @@ if ($action == 'newon') {
 
 admin_externalpage_setup($pagename);
 
-$baseurl    = "$CFG->wwwroot/$CFG->admin/portfolio.php";
-$sesskeyurl = "$CFG->wwwroot/$CFG->admin/portfolio.php?sesskey=" . sesskey();
+$baseurl    = new moodle_url("/admin/portfolio.php");
+$sesskeyurl = new moodle_url("/admin/portfolio.php?sesskey=" . sesskey());
 $configstr  = get_string('manageportfolios', 'portfolio');
 
 $return = true; // direct back to the main page
