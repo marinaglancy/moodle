@@ -268,7 +268,7 @@ abstract class page_wiki {
     protected function create_navbar() {
         global $PAGE, $CFG;
 
-        $PAGE->navbar->add(format_string($this->title), $CFG->wwwroot . '/mod/wiki/view.php?pageid=' . $this->page->id);
+        $PAGE->navbar->add(format_string($this->title), new moodle_url('/mod/wiki/view.php?pageid=' . $this->page->id));
     }
 
     /**
