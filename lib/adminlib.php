@@ -6921,7 +6921,7 @@ class admin_page_manageblocks extends admin_externalpage {
      */
     public function __construct() {
         global $CFG;
-        parent::__construct('manageblocks', get_string('blocksettings', 'admin'), "$CFG->wwwroot/$CFG->admin/blocks.php");
+        parent::__construct('manageblocks', get_string('blocksettings', 'admin'), new moodle_url("/admin/blocks.php"));
     }
 
     /**
