@@ -88,7 +88,7 @@ if (is_enrolled($context, $USER, '', true)) {
         $destination = $SESSION->wantsurl;
         unset($SESSION->wantsurl);
     } else {
-        $destination = "$CFG->wwwroot/course/view.php?id=$course->id";
+        $destination = new moodle_url("/course/view.php?id=$course->id");
     }
     redirect($destination);   // Bye!
 }
