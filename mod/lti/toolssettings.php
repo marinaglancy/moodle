@@ -71,7 +71,7 @@ $PAGE->set_url($pageurl);
 
 admin_externalpage_setup('managemodules'); // Hacky solution for printing the admin page.
 
-$redirect = "$CFG->wwwroot/$CFG->admin/settings.php?section=modsettinglti&tab={$tab}";
+$redirect = new moodle_url("/admin/settings.php?section=modsettinglti&tab={$tab}");
 if (!empty($returnurl)) {
     $redirect = $returnurl;
 }
