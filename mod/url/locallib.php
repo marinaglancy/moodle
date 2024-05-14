@@ -217,7 +217,7 @@ function url_display_frame($url, $cm, $course) {
         $config = get_config('url');
         $context = context_module::instance($cm->id);
         $exteurl = url_get_full_url($url, $cm, $course, $config);
-        $navurl = "$CFG->wwwroot/mod/url/view.php?id=$cm->id&amp;frameset=top";
+        $navurl = new moodle_url("/mod/url/view.php?id=$cm->id&frameset=top");
         $coursecontext = context_course::instance($course->id);
         $courseshortname = format_string($course->shortname, true, array('context' => $coursecontext));
         $title = strip_tags($courseshortname.': '.format_string($url->name));
