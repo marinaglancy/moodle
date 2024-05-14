@@ -50,7 +50,7 @@ $strportfolios = get_string('portfolios', 'portfolio');
 $configstr = get_string('manageyourportfolios', 'portfolio');
 $namestr = get_string('name');
 $pluginstr = get_string('plugin', 'portfolio');
-$baseurl = $CFG->wwwroot . '/user/portfolio.php';
+$baseurl = new moodle_url('/user/portfolio.php');
 $introstr = get_string('intro', 'portfolio');
 $showhide = get_string('showhide', 'portfolio');
 

@@ -120,7 +120,7 @@ $timeoptions = stats_get_time_options($now,$lastweekend,$lastmonthend,$earliestd
 
 if (empty($timeoptions)) {
     throw new \moodle_exception('nostatstodisplay', '',
-        $CFG->wwwroot.'/course/user.php?id='.$course->id.'&user='.$user->id.'&mode=outline');
+        new moodle_url('/course/user.php?id='.$course->id.'&user='.$user->id.'&mode=outline'));
 }
 
 // use the earliest.
@@ -161,7 +161,7 @@ $stats = $DB->get_records_sql($sql, $params);
 
 if (empty($stats)) {
     throw new \moodle_exception('nostatstodisplay', '',
-        $CFG->wwwroot.'/course/user.php?id='.$course->id.'&user='.$user->id.'&mode=outline');
+        new moodle_url('/course/user.php?id='.$course->id.'&user='.$user->id.'&mode=outline'));
 }
 
 report_stats_print_chart($course->id, STATS_REPORT_USER_VIEW, $time, STATS_MODE_DETAILED, $user->id);
