@@ -55,7 +55,7 @@ class factor extends object_factor_base {
         global $CFG, $SITE;
         parent::__construct($name);
 
-        $this->rpid = (new \moodle_url($CFG->wwwroot))->get_host();
+        $this->rpid = (new \moodle_url('/'))->get_host();
         $this->webauthn = new WebAuthn($SITE->fullname, $this->rpid);
 
         $this->userverification = get_config('factor_webauthn', 'userverification');

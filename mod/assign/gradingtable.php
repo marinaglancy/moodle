@@ -114,7 +114,7 @@ class assign_grading_table extends table_sql implements renderable {
         $this->output = $PAGE->get_renderer('mod_assign');
 
         $urlparams = array('action' => 'grading', 'id' => $assignment->get_course_module()->id);
-        $url = new moodle_url($CFG->wwwroot . '/mod/assign/view.php', $urlparams);
+        $url = new moodle_url('/mod/assign/view.php', $urlparams);
         $this->define_baseurl($url);
 
         // Do some business - then set the sql.

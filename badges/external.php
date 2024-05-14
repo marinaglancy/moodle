@@ -94,7 +94,7 @@ $PAGE->navbar->add($badgename);
 if (isloggedin() && $USER->id == $userid) {
     $url = new moodle_url('/badges/mybadges.php');
 } else {
-    $url = new moodle_url($CFG->wwwroot);
+    $url = new moodle_url('/');
 }
 navigation_node::override_active_url($url);
 

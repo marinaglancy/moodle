@@ -278,7 +278,7 @@ class navigationlib_test extends \advanced_testcase {
         $this->setup_node();
 
         $node1 = $this->node->add('active node 1', null, navigation_node::TYPE_CUSTOM, null, 'anode1');
-        $node2 = $this->node->add('active node 2', new \moodle_url($CFG->wwwroot), navigation_node::TYPE_COURSE, null, 'anode2');
+        $node2 = $this->node->add('active node 2', new \moodle_url('/'), navigation_node::TYPE_COURSE, null, 'anode2');
         $node1->make_active();
         $this->node->get('anode2')->make_active();
         $this->assertTrue($node1->isactive);

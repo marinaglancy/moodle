@@ -513,7 +513,7 @@ class seb_quiz_settings extends persistent {
     private function process_required_enforced_settings() {
         global $CFG;
 
-        $quizurl = new moodle_url($CFG->wwwroot . "/mod/quiz/view.php", ['id' => $this->get('cmid')]);
+        $quizurl = new moodle_url("/mod/quiz/view.php", ['id' => $this->get('cmid')]);
         $this->plist->set_or_update_value('startURL', new CFString($quizurl->out(true)));
         $this->plist->set_or_update_value('sendBrowserExamKey', new CFBoolean(true));
 

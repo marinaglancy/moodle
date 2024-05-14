@@ -355,7 +355,9 @@ class moodle_url {
             }
 
             // Normalise shortened form of our url ex.: '/course/view.php'.
-            if (strpos($url, '/') === 0) {
+            if ($url === '/') {
+                $url = $CFG->wwwroot;
+            } else if (strpos($url, '/') === 0) {
                 $url = $CFG->wwwroot.$url;
             }
 

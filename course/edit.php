@@ -37,26 +37,26 @@ if ($returnto === 'url' && confirm_sesskey() && $returnurl) {
     $returnurl = new moodle_url($returnurl);
 } else {
     if (!empty($id)) {
-        $returnurl = new moodle_url($CFG->wwwroot . '/course/view.php', array('id' => $id));
+        $returnurl = new moodle_url('/course/view.php', array('id' => $id));
     } else {
-        $returnurl = new moodle_url($CFG->wwwroot . '/course/');
+        $returnurl = new moodle_url('/course/');
     }
     if ($returnto !== 0) {
         switch ($returnto) {
             case 'category':
-                $returnurl = new moodle_url($CFG->wwwroot . '/course/index.php', array('categoryid' => $categoryid));
+                $returnurl = new moodle_url('/course/index.php', array('categoryid' => $categoryid));
                 break;
             case 'catmanage':
-                $returnurl = new moodle_url($CFG->wwwroot . '/course/management.php', array('categoryid' => $categoryid));
+                $returnurl = new moodle_url('/course/management.php', array('categoryid' => $categoryid));
                 break;
             case 'topcatmanage':
-                $returnurl = new moodle_url($CFG->wwwroot . '/course/management.php');
+                $returnurl = new moodle_url('/course/management.php');
                 break;
             case 'topcat':
-                $returnurl = new moodle_url($CFG->wwwroot . '/course/');
+                $returnurl = new moodle_url('/course/');
                 break;
             case 'pending':
-                $returnurl = new moodle_url($CFG->wwwroot . '/course/pending.php');
+                $returnurl = new moodle_url('/course/pending.php');
                 break;
         }
     }

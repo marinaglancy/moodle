@@ -404,7 +404,7 @@ class factor extends object_factor_base {
         global $CFG, $SITE;
 
         // Here we should get the information, then construct the message.
-        $url = new moodle_url($CFG->wwwroot);
+        $url = new moodle_url('/');
         $content = [
             'fullname' => $SITE->fullname,
             'url' => $url->get_host(),

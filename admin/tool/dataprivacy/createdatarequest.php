@@ -41,14 +41,14 @@ if (isguestuser()) {
 // Return URL and context.
 if ($manage) {
     // For the case where DPO creates data requests on behalf of another user.
-    $returnurl = new moodle_url($CFG->wwwroot . '/admin/tool/dataprivacy/datarequests.php');
+    $returnurl = new moodle_url('/admin/tool/dataprivacy/datarequests.php');
     $context = context_system::instance();
     // Make sure the user has the proper capability.
     require_capability('tool/dataprivacy:managedatarequests', $context);
     navigation_node::override_active_url($returnurl);
 } else {
     // For the case where a user makes request for themselves (or for their children if they are the parent).
-    $returnurl = new moodle_url($CFG->wwwroot . '/admin/tool/dataprivacy/mydatarequests.php');
+    $returnurl = new moodle_url('/admin/tool/dataprivacy/mydatarequests.php');
     $context = context_user::instance($USER->id);
 }
 

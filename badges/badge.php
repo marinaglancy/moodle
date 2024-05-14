@@ -55,13 +55,13 @@ if (!empty($badge->recipient->id)) {
         if ($badge->recipient->id == $USER->id) {
             $url = new moodle_url('/badges/mybadges.php');
         } else {
-            $url = new moodle_url($CFG->wwwroot);
+            $url = new moodle_url('/');
         }
         navigation_node::override_active_url($url);
     } else {
         $PAGE->set_heading($badge->badgeclass['name']);
         $PAGE->navbar->add($badge->badgeclass['name']);
-        $url = new moodle_url($CFG->wwwroot);
+        $url = new moodle_url('/');
         navigation_node::override_active_url($url);
     }
 

@@ -171,20 +171,20 @@ class renderable extends \table_sql implements \renderable {
         // for a course, and not the site. Note - we don't need to check for the capability at a course level since
         // the user is never shown this page otherwise.
         if ($this->hassystemcap || ($rule->courseid != 0)) {
-            $editurl = new \moodle_url($CFG->wwwroot. '/admin/tool/monitor/edit.php', array('ruleid' => $rule->id,
+            $editurl = new \moodle_url('/admin/tool/monitor/edit.php', array('ruleid' => $rule->id,
                     'courseid' => $rule->courseid, 'sesskey' => sesskey()));
             $icon = $OUTPUT->render(new \pix_icon('t/edit', get_string('editrule', 'tool_monitor')));
             $manage .= \html_writer::link($editurl, $icon, array('class' => 'action-icon'));
         }
 
         // The user should always be able to copy the rule if they are able to view the page.
-        $copyurl = new \moodle_url($CFG->wwwroot. '/admin/tool/monitor/managerules.php',
+        $copyurl = new \moodle_url('/admin/tool/monitor/managerules.php',
                 array('ruleid' => $rule->id, 'action' => 'copy', 'courseid' => $this->courseid, 'sesskey' => sesskey()));
         $icon = $OUTPUT->render(new \pix_icon('t/copy', get_string('duplicaterule', 'tool_monitor')));
         $manage .= \html_writer::link($copyurl, $icon, array('class' => 'action-icon'));
 
         if ($this->hassystemcap || ($rule->courseid != 0)) {
-            $deleteurl = new \moodle_url($CFG->wwwroot. '/admin/tool/monitor/managerules.php', array('ruleid' => $rule->id,
+            $deleteurl = new \moodle_url('/admin/tool/monitor/managerules.php', array('ruleid' => $rule->id,
                     'action' => 'delete', 'courseid' => $rule->courseid, 'sesskey' => sesskey()));
             $icon = $OUTPUT->render(new \pix_icon('t/delete', get_string('deleterule', 'tool_monitor')));
             $manage .= \html_writer::link($deleteurl, $icon, array('class' => 'action-icon'));

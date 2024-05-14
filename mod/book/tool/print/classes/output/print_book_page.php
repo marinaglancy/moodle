@@ -82,7 +82,7 @@ class print_book_page implements renderable, templatable {
         $introtext = file_rewrite_pluginfile_urls($this->book->intro, 'pluginfile.php', $context->id, 'mod_book', 'intro', null);
         $data->bookintro = format_text($introtext, $this->book->introformat,
                 array('noclean' => true, 'context' => $context));
-        $data->sitelink = \html_writer::link(new moodle_url($CFG->wwwroot),
+        $data->sitelink = \html_writer::link(new moodle_url('/'),
                 format_string($SITE->fullname, true, array('context' => $context)));
         $data->coursename = format_string($course->fullname, true, array('context' => $context));
         $data->modulename = format_string($this->book->name, true, array('context' => $context));

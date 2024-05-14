@@ -217,7 +217,7 @@ if ($PAGE->user_allowed_editing() && !$PAGE->theme->haseditswitch) {
         $urlediting = 'on';
         $strediting = get_string('blocksediton');
     }
-    $editurl = new moodle_url($CFG->wwwroot.'/mod/data/view.php', ['id' => $cm->id, 'edit' => $urlediting]);
+    $editurl = new moodle_url('/mod/data/view.php', ['id' => $cm->id, 'edit' => $urlediting]);
     $PAGE->set_button($OUTPUT->single_button($editurl, $strediting));
 }
 

@@ -367,7 +367,7 @@ class page_wiki_view extends page_wiki {
         } else {
             throw new \moodle_exception(get_string('invalidparameters', 'wiki'));
         }
-        $PAGE->set_url(new moodle_url($CFG->wwwroot . '/mod/wiki/view.php', $params));
+        $PAGE->set_url(new moodle_url('/mod/wiki/view.php', $params));
     }
 
     protected function create_navbar() {

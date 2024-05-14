@@ -87,10 +87,10 @@ if (!empty($action) && $ruleid) {
             break;
         case 'delete':
             if ($rule->can_manage_rule()) {
-                $confirmurl = new moodle_url($CFG->wwwroot. '/admin/tool/monitor/managerules.php',
+                $confirmurl = new moodle_url('/admin/tool/monitor/managerules.php',
                     array('ruleid' => $ruleid, 'courseid' => $courseid, 'action' => 'delete',
                         'confirm' => true, 'sesskey' => sesskey()));
-                $cancelurl = new moodle_url($CFG->wwwroot. '/admin/tool/monitor/managerules.php',
+                $cancelurl = new moodle_url('/admin/tool/monitor/managerules.php',
                     array('courseid' => $courseid));
                 if ($confirm) {
                     $rule->delete_rule();

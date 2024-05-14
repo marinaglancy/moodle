@@ -187,11 +187,11 @@ final class moodle_url_test extends \advanced_testcase {
         $this->assertSame('/login/profile.php', $url2->out_as_local_url());
 
         // Test http url matching wwwroot.
-        $url3 = new \moodle_url($CFG->wwwroot);
+        $url3 = new \moodle_url('/');
         $this->assertSame('', $url3->out_as_local_url());
 
         // Test http url matching wwwroot ending with slash (/).
-        $url3 = new \moodle_url($CFG->wwwroot.'/');
+        $url3 = new \moodle_url('/');
         $this->assertSame('/', $url3->out_as_local_url());
     }
 

@@ -61,7 +61,7 @@ if ($logout) {
         $wantsurl = $SESSION->wantsurl;
     } else {
         // Else redirect home.
-        $wantsurl = new \moodle_url($CFG->wwwroot);
+        $wantsurl = new \moodle_url('/');
     }
 
     manager::mfa_logout();

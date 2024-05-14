@@ -92,7 +92,7 @@ echo resourcelib_embed_general($sitepolicy, $strpolicyagreement, $clicktoopen, $
 echo '</div>';
 
 $formcontinue = new single_button(new moodle_url('policy.php', array('agree' => 1)), get_string('yes'));
-$formcancel = new single_button(new moodle_url($CFG->wwwroot.'/login/logout.php', array('agree' => 0)), get_string('no'));
+$formcancel = new single_button(new moodle_url('/login/logout.php', array('agree' => 0)), get_string('no'));
 echo $OUTPUT->confirm($strpolicyagree, $formcontinue, $formcancel);
 
 echo $OUTPUT->footer();

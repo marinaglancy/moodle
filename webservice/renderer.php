@@ -181,7 +181,7 @@ class core_webservice_renderer extends plugin_renderer_base {
         $formcontinue = new single_button(new moodle_url('service.php', $optionsyes),
                         get_string('delete'), 'post');
         $formcancel = new single_button(
-                        new moodle_url($CFG->wwwroot . "/" . $CFG->admin . "/settings.php", $optionsno),
+                        new moodle_url("/admin/settings.php", $optionsno),
                         get_string('cancel'), 'get');
         return $this->output->confirm(get_string('deleteserviceconfirm', 'webservice', $service->name),
                 $formcontinue, $formcancel);

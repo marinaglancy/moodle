@@ -37,7 +37,7 @@ $PAGE->set_title(get_string('badgedetails', 'badges'));
 
 if (!empty($badgeclass->badge)) {
     $PAGE->navbar->add($badgeclass->badge->name);
-    $url = new moodle_url($CFG->wwwroot);
+    $url = new moodle_url('/');
     navigation_node::override_active_url($url);
 
     echo $OUTPUT->header();

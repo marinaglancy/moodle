@@ -47,7 +47,7 @@ if (!in_array($action, ['add', 'view', 'edit', 'delete'])) {
 }
 
 // The page to go back to when the respective action has been performed.
-$toolregistrationurl = new moodle_url($CFG->wwwroot . "/" . $CFG->admin . "/settings.php",
+$toolregistrationurl = new moodle_url("/admin/settings.php",
     ['section' => 'enrolsettingslti_registrations']);
 
 // Local anon helper to extend the nav for this page and call admin_externalpage_setup.

@@ -170,7 +170,7 @@ class subs extends \table_sql implements \renderable {
     public function col_unsubscribe(\tool_monitor\subscription $sub) {
         global $OUTPUT, $CFG;
 
-        $deleteurl = new \moodle_url($CFG->wwwroot. '/admin/tool/monitor/index.php', array('subscriptionid' => $sub->id,
+        $deleteurl = new \moodle_url('/admin/tool/monitor/index.php', array('subscriptionid' => $sub->id,
                 'action' => 'unsubscribe', 'courseid' => $this->courseid, 'sesskey' => sesskey()));
         $icon = $OUTPUT->render(new \pix_icon('t/delete', get_string('deletesubscription', 'tool_monitor')));
 

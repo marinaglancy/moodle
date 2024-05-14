@@ -41,7 +41,7 @@ if (!theme_usage_form::validate_theme_choice_param($themechoice)) {
 }
 
 // Set up the page.
-$pageurl = new moodle_url($CFG->wwwroot . '/report/themeusage/index.php');
+$pageurl = new moodle_url('/report/themeusage/index.php');
 $PAGE->set_url($pageurl);
 $PAGE->set_context(context_system::instance());
 $PAGE->set_pagelayout('report');

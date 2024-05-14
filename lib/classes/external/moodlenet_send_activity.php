@@ -99,7 +99,7 @@ class moodlenet_send_activity extends external_api {
         // Get the OAuth Client.
         if (!$oauthclient = api::get_user_oauth_client(
             $issuer,
-            new moodle_url($CFG->wwwroot),
+            new moodle_url('/'),
             moodlenet_client::API_SCOPE_CREATE_RESOURCE
         )) {
             return self::return_errors($issuerid, 'erroroauthclient', get_string('invalidparameter', 'debug'));

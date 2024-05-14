@@ -3059,7 +3059,7 @@ class global_navigation extends navigation_node {
 
         // Badges.
         if ($navoptions->badges) {
-            $url = new moodle_url($CFG->wwwroot . '/badges/view.php', array('type' => 1));
+            $url = new moodle_url('/badges/view.php', array('type' => 1));
             $coursenode->add(get_string('sitebadges', 'badges'), $url, navigation_node::TYPE_CUSTOM);
         }
 
@@ -3664,7 +3664,7 @@ class navbar extends navigation_node {
         $this->page = $page;
         $this->text = get_string('home');
         $this->shorttext = get_string('home');
-        $this->action = new moodle_url($CFG->wwwroot);
+        $this->action = new moodle_url('/');
         $this->nodetype = self::NODETYPE_BRANCH;
         $this->type = self::TYPE_SYSTEM;
     }
