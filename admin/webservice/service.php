@@ -48,7 +48,7 @@ $action = optional_param('action', '', PARAM_ALPHANUMEXT);
 $confirm = optional_param('confirm', 0, PARAM_BOOL);
 $webservicemanager = new webservice;
 $renderer = $PAGE->get_renderer('core', 'webservice');
-$returnurl = $CFG->wwwroot . "/" . $CFG->admin . "/settings.php?section=externalservices";
+$returnurl = new moodle_url("/admin/settings.php?section=externalservices");
 $service = $id ? $webservicemanager->get_external_service_by_id($id, MUST_EXIST) : null;
 
 /// DELETE operation

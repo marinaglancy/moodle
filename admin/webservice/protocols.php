@@ -32,7 +32,7 @@ $PAGE->set_url('/' . $CFG->admin . '/webservice/protocols.php');
 
 require_admin();
 
-$returnurl = $CFG->wwwroot . "/" . $CFG->admin . "/settings.php?section=webserviceprotocols";
+$returnurl = new moodle_url("/admin/settings.php?section=webserviceprotocols");
 
 $action     = optional_param('action', '', PARAM_ALPHANUMEXT);
 $webservice = optional_param('webservice', '', PARAM_SAFEDIR);
