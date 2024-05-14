@@ -35,8 +35,8 @@ $groupid    = optional_param('group', 0, PARAM_INT);
 $groupingid = optional_param('grouping', 0, PARAM_INT);
 $dataformat = optional_param('dataformat', '', PARAM_ALPHA);
 
-$returnurl = $CFG->wwwroot.'/group/index.php?id='.$courseid;
-$rooturl   = $CFG->wwwroot.'/group/overview.php?id='.$courseid;
+$returnurl = new moodle_url('/group/index.php?id='.$courseid);
+$rooturl   = new moodle_url('/group/overview.php?id='.$courseid);
 
 if (!$course = $DB->get_record('course', array('id'=>$courseid))) {
     throw new \moodle_exception('invalidcourse');
@@ -289,7 +289,7 @@ $options[0] = get_string('all');
 foreach ($groupings as $grouping) {
     $options[$grouping->id] = strip_tags($grouping->formattedname);
 }
-$popupurl = new moodle_url($rooturl.'&group='.$groupid);
+$popupurl = new moodle_url($rooturl, ['group' => $groupid]));
 $select = new single_select($popupurl, 'grouping', $options, $groupingid, array());
 $select->label = $strgrouping;
 $select->formid = 'selectgrouping';
@@ -300,7 +300,7 @@ $options[0] = get_string('all');
 foreach ($groups as $group) {
     $options[$group->id] = $group->formattedname;
 }
-$popupurl = new moodle_url($rooturl.'&grouping='.$groupingid);
+$popupurl = new moodle_url($rooturl, ['grouping' => $groupingid]);
 $select = new single_select($popupurl, 'group', $options, $groupid, array());
 $select->label = $strgroup;
 $select->formid = 'selectgroup';

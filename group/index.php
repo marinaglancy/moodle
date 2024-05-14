@@ -38,7 +38,7 @@ if ($groupid) {
 }
 $singlegroup = (count($groupids) == 1);
 
-$returnurl = $CFG->wwwroot.'/group/index.php?id='.$courseid;
+$returnurl = new moodle_url('/group/index.php?id='.$courseid);
 
 // Get the course information so we can print the header and
 // check the course id is valid.

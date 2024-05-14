@@ -43,7 +43,7 @@ require_login($course);
 $context = context_course::instance($courseid);
 require_capability('moodle/course:managegroups', $context);
 
-$returnurl = $CFG->wwwroot.'/group/groupings.php?id='.$courseid;
+$returnurl = new moodle_url('/group/groupings.php?id='.$courseid);
 
 
 if ($frm = data_submitted() and confirm_sesskey()) {

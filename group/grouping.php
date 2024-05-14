@@ -72,7 +72,7 @@ $PAGE->set_heading($course->fullname. ': '.$strgroupings);
 $PAGE->set_pagelayout('admin');
 navigation_node::override_active_url(new moodle_url('/group/index.php', array('id' => $course->id)));
 
-$returnurl = $CFG->wwwroot.'/group/groupings.php?id='.$course->id;
+$returnurl = new moodel_url('/group/groupings.php?id='.$course->id);
 
 if ($id and $delete) {
     if (!empty($grouping->idnumber) && !has_capability('moodle/course:changeidnumber', $context)) {

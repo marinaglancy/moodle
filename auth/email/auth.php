@@ -149,7 +149,7 @@ class auth_plugin_email extends auth_plugin_base {
             $PAGE->set_title($emailconfirm);
             $PAGE->set_heading($PAGE->course->fullname);
             echo $OUTPUT->header();
-            notice(get_string('emailconfirmsent', '', $user->email), "$CFG->wwwroot/index.php");
+            notice(get_string('emailconfirmsent', '', $user->email), new moodle_url("/index.php"));
         } else {
             return true;
         }

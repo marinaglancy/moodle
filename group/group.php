@@ -80,7 +80,7 @@ $PAGE->set_heading($course->fullname . ': '.$strgroups);
 $PAGE->set_pagelayout('admin');
 navigation_node::override_active_url(new moodle_url('/group/index.php', array('id' => $course->id)));
 
-$returnurl = $CFG->wwwroot.'/group/index.php?id='.$course->id.'&group='.$id;
+$returnurl = new moodle_url('/group/index.php?id='.$course->id.'&group='.$id);
 
 // Prepare the description editor: We do support files for group descriptions
 $editoroptions = array('maxfiles'=>EDITOR_UNLIMITED_FILES, 'maxbytes'=>$course->maxbytes, 'trust'=>false, 'context'=>$context, 'noclean'=>true);
@@ -109,7 +109,7 @@ if ($editform->is_cancelled()) {
         groups_update_group($data, $editform, $editoroptions);
     } else {
         $id = groups_create_group($data, $editform, $editoroptions);
-        $returnurl = $CFG->wwwroot.'/group/index.php?id='.$course->id.'&group='.$id;
+        $returnurl = new moodle_url('/group/index.php?id='.$course->id.'&group='.$id);
     }
 
     redirect($returnurl);

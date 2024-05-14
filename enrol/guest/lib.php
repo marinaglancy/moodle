@@ -186,7 +186,7 @@ class enrol_guest_plugin extends enrol_plugin {
                     $destination = $SESSION->wantsurl;
                     unset($SESSION->wantsurl);
                 } else {
-                    $destination = "$CFG->wwwroot/course/view.php?id=$instance->courseid";
+                    $destination = new moodle_url("course/view.php?id=$instance->courseid");
                 }
                 redirect($destination);
             }

@@ -44,7 +44,7 @@ require_login($course);
 $context       = context_course::instance($courseid);
 require_capability('moodle/course:managegroups', $context);
 
-$returnurl = $CFG->wwwroot.'/group/index.php?id='.$course->id;
+$returnurl = new moodle_url('/group/index.php?id='.$course->id);
 
 $strgroups           = get_string('groups');
 $strparticipants     = get_string('participants');

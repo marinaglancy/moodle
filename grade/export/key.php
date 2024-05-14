@@ -74,7 +74,7 @@ if (!empty($key->userid) and $USER->id != $key->userid) {
     throw new \moodle_exception('notownerofkey');
 }
 
-$returnurl = $CFG->wwwroot.'/grade/export/keymanager.php?id='.$course->id;
+$returnurl = new moodle_url('/grade/export/keymanager.php?id='.$course->id);
 
 $strkeys   = get_string('keymanager', 'userkey');
 $strexportgrades = get_string('export', 'grades');

@@ -49,15 +49,15 @@ if (!$edit) {
 $PAGE->set_url($url);
 
 $returnurl = null;
-$editparam = null;
+$editparam = [];
 if ($context->contextlevel == CONTEXT_SYSTEM or $context->contextlevel == CONTEXT_COURSECAT) {
     require_once $CFG->libdir.'/adminlib.php';
 
     admin_externalpage_setup('letters');
 
     $admin = true;
-    $returnurl = "$CFG->wwwroot/grade/edit/letter/index.php";
-    $editparam = '?edit=1';
+    $returnurl = new moodle_url("/grade/edit/letter/index.php");
+    $editparam['edit'] = 1;
     $PAGE->set_primary_active_tab('siteadminnode');
 } else if ($context->contextlevel == CONTEXT_COURSE) {
 
@@ -66,8 +66,8 @@ if ($context->contextlevel == CONTEXT_SYSTEM or $context->contextlevel == CONTEX
     require_login($context->instanceid, false, $cm);
 
     $admin = false;
-    $returnurl = $CFG->wwwroot.'/grade/edit/letter/index.php?id='.$context->id;
-    $editparam = '&edit=1';
+    $returnurl = new moodle_url('/grade/edit/letter/index.php?id='.$context->id);
+    $editparam['edit'] = 1;
 
     $gpr = new grade_plugin_return(array('type'=>'edit', 'plugin'=>'letter', 'courseid'=>$course->id));
 } else {
@@ -139,7 +139,7 @@ if (!$edit) {
     // Count number of letters, used to build the repeated elements of the form.
     $lettercount = count($letters);
 
-    $mform = new edit_letter_form($returnurl.$editparam, ['lettercount' => $lettercount, 'admin' => $admin]);
+    $mform = new edit_letter_form(new moodle_url($returnurl, $editparam), ['lettercount' => $lettercount, 'admin' => $admin]);
     $mform->set_data($data);
 
     if ($mform->is_cancelled()) {
