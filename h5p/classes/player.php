@@ -496,7 +496,7 @@ class player {
                     $url = $h5ppath . $url;
                 }
                 $settings['loadedJs'][] = $url;
-                $this->jsrequires[] = new \moodle_url($isexternal ? $url : $CFG->wwwroot . $url);
+                $this->jsrequires[] = new \moodle_url($url);
             }
 
             // Schedule stylesheets for loading through Moodle.
@@ -509,7 +509,7 @@ class player {
                     $url = $h5ppath . $url;
                 }
                 $settings['loadedCss'][] = $url;
-                $this->cssrequires[] = new \moodle_url($isexternal ? $url : $CFG->wwwroot . $url);
+                $this->cssrequires[] = new \moodle_url($url);
             }
 
         } else {
