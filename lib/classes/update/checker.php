@@ -759,7 +759,7 @@ class checker {
 
             $a = array('url' => $CFG->wwwroot.'/'.$CFG->admin.'/index.php');
             $text .= get_string('updateavailabledetailslink', 'core_admin', $a) . PHP_EOL;
-            $a = array('url' => html_writer::link($CFG->wwwroot.'/'.$CFG->admin.'/index.php', $CFG->wwwroot.'/'.$CFG->admin.'/index.php'));
+            $a = array('url' => html_writer::link(new \moodle_url('/admin/index.php'), new \moodle_url('/admin/index.php')));
             $html .= html_writer::tag('p', get_string('updateavailabledetailslink', 'core_admin', $a)) . PHP_EOL;
 
             $text .= PHP_EOL . get_string('updateavailablerecommendation', 'core_admin') . PHP_EOL;
@@ -790,13 +790,13 @@ class checker {
 
             $a = array('url' => $CFG->wwwroot.'/'.$CFG->admin.'/plugins.php');
             $text .= get_string('updateavailabledetailslink', 'core_admin', $a) . PHP_EOL;
-            $a = array('url' => html_writer::link($CFG->wwwroot.'/'.$CFG->admin.'/plugins.php', $CFG->wwwroot.'/'.$CFG->admin.'/plugins.php'));
+            $a = array('url' => html_writer::link(new \moodle_url('/admin/plugins.php'), $CFG->wwwroot.'/'.$CFG->admin.'/plugins.php'));
             $html .= html_writer::tag('p', get_string('updateavailabledetailslink', 'core_admin', $a)) . PHP_EOL;
         }
 
         $a = array('siteurl' => $CFG->wwwroot);
         $text .= PHP_EOL . get_string('updatenotificationfooter', 'core_admin', $a) . PHP_EOL;
-        $a = array('siteurl' => html_writer::link($CFG->wwwroot, $CFG->wwwroot));
+        $a = array('siteurl' => html_writer::link(new \moodle_url('/'), $CFG->wwwroot));
         $html .= html_writer::tag('footer', html_writer::tag('p', get_string('updatenotificationfooter', 'core_admin', $a),
             array('style' => 'font-size:smaller; color:#333;')));
 

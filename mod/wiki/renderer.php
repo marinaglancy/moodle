@@ -60,7 +60,7 @@ class mod_wiki_renderer extends plugin_renderer_base {
         $totalcount = count($records);
         $html = $this->output->heading("$strsearchresults $totalcount", 3);
         foreach ($records as $page) {
-            $table->head = array('title' => format_string($page->title) . ' (' . html_writer::link($CFG->wwwroot . '/mod/wiki/view.php?pageid=' . $page->id, get_string('view', 'wiki')) . ')');
+            $table->head = array('title' => format_string($page->title) . ' (' . html_writer::link(new moodle_url('/mod/wiki/view.php?pageid=' . $page->id), get_string('view', 'wiki')) . ')');
             $table->align = array('title' => 'left');
             $table->width = '100%';
             $table->data = array(array(file_rewrite_pluginfile_urls(format_text($page->cachedcontent, FORMAT_HTML), 'pluginfile.php', $context->id, 'mod_wiki', 'attachments', $subwiki->id)));
@@ -96,7 +96,7 @@ class mod_wiki_renderer extends plugin_renderer_base {
         // userinfo container
         $oldheading = $this->output->container_start('wiki_diffuserleft');
         // username
-        $oldheading .= html_writer::link($CFG->wwwroot . '/user/view.php?id=' . $olduser->id, fullname($olduser)) . '&nbsp;';
+        $oldheading .= html_writer::link(new moodle_url('/user/view.php?id=' . $olduser->id), fullname($olduser)) . '&nbsp;';
         // user picture
         $oldheading .= html_writer::link($userlink->out(false), $this->output->user_picture($olduser, array('popup' => true)), array('class' => 'notunderlined'));
         $oldheading .= $this->output->container_end();

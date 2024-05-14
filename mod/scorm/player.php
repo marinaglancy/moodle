@@ -236,8 +236,8 @@ if (empty($scorm->popup) || $displaymode == 'popup') {
 } else {
     // Added incase javascript popups are blocked we don't provide a direct link
     // to the pop-up as JS communication can fail - the user must disable their pop-up blocker.
-    $linkcourse = html_writer::link($CFG->wwwroot.'/course/view.php?id='.
-                    $scorm->course, get_string('finishscormlinkname', 'scorm'));
+    $linkcourse = html_writer::link(new moodle_url('/course/view.php?id='.
+                    $scorm->course), get_string('finishscormlinkname', 'scorm'));
     echo $OUTPUT->box(get_string('finishscorm', 'scorm', $linkcourse), 'generalbox', 'altfinishlink');
 }
 echo html_writer::end_div(); // Toc tree ends.
