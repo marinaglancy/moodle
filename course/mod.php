@@ -161,7 +161,7 @@ if (!empty($add)) {
 
         echo $OUTPUT->header();
         echo $OUTPUT->box_start('noticebox');
-        $formcontinue = new single_button(new moodle_url("$CFG->wwwroot/course/mod.php", $optionsyes), get_string('yes'));
+        $formcontinue = new single_button(new moodle_url("/course/mod.php", $optionsyes), get_string('yes'));
         $formcancel = new single_button($return, get_string('no'), 'get');
         echo $OUTPUT->confirm($strdeletechecktypename, $formcontinue, $formcancel);
         echo $OUTPUT->box_end();

@@ -809,7 +809,7 @@ class blog_listing {
                 $courseid = optional_param('courseid', null, PARAM_INT);
                 $modid = optional_param('modid', null, PARAM_INT);
 
-                $addurl = new moodle_url("$CFG->wwwroot/blog/edit.php");
+                $addurl = new moodle_url("/blog/edit.php");
                 $urlparams = array('action' => 'add',
                                    'userid' => $userid,
                                    'courseid' => $courseid,

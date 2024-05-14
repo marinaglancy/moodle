@@ -1051,7 +1051,7 @@ function quiz_question_edit_button($cmid, $question, $returnurl, $contentafteric
             $returnurl = $returnurl->out_as_local_url(false);
         }
         $questionparams = ['returnurl' => $returnurl, 'cmid' => $cmid, 'id' => $question->id];
-        $questionurl = new moodle_url("$CFG->wwwroot/question/bank/editquestion/question.php", $questionparams);
+        $questionurl = new moodle_url("/question/bank/editquestion/question.php", $questionparams);
         return '<a title="' . $action . '" href="' . $questionurl->out() . '" class="questioneditbutton">' .
                 $OUTPUT->pix_icon($icon, $action) . $contentaftericon .
                 '</a>';

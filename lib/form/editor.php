@@ -471,7 +471,7 @@ class MoodleQuickForm_editor extends HTML_QuickForm_element implements templatab
                         'value' => $draftitemid));
 
                 // used by non js editor only
-                $editorurl = new moodle_url("$CFG->wwwroot/repository/draftfiles_manager.php", array(
+                $editorurl = new moodle_url("/repository/draftfiles_manager.php", array(
                     'action'=>'browse',
                     'env'=>'editor',
                     'itemid'=>$draftitemid,

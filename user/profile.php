@@ -172,7 +172,7 @@ if ($PAGE->user_allowed_editing()) {
 
     $resetbutton = '';
     $resetstring = get_string('resetpage', 'my');
-    $reseturl = new moodle_url("$CFG->wwwroot/user/profile.php", array('edit' => 1, 'reset' => 1, 'id' => $userid));
+    $reseturl = new moodle_url("/user/profile.php", array('edit' => 1, 'reset' => 1, 'id' => $userid));
 
     if (!$currentpage->userid) {
         // Viewing a system page -- let the user customise it.
@@ -186,7 +186,7 @@ if ($PAGE->user_allowed_editing()) {
         $resetbutton = $OUTPUT->single_button($reseturl, $resetstring);
     }
 
-    $url = new moodle_url("$CFG->wwwroot/user/profile.php", $params);
+    $url = new moodle_url("/user/profile.php", $params);
     $button = '';
     if (!$PAGE->theme->haseditswitch) {
         $button = $OUTPUT->single_button($url, $editstring);
