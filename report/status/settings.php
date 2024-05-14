@@ -25,6 +25,6 @@
 defined('MOODLE_INTERNAL') || die();
 
 $ADMIN->add('reports', new admin_externalpage('reportstatus', get_string('pluginname', 'report_status'),
-    "$CFG->wwwroot/report/status/index.php", 'report/status:view'));
+    new moodle_url("/report/status/index.php"), 'report/status:view'));
 
 $settings = null;

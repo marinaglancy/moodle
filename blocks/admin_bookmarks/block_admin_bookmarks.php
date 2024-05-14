@@ -92,7 +92,7 @@ class block_admin_bookmarks extends block_base {
                     $contentlink = html_writer::link($contenturl, $temp->visiblename);
                     $contents[] = html_writer::tag('li', $contentlink);
                 } else if ($temp instanceof admin_externalpage) {
-                    $contenturl = new moodle_url($temp->url);
+                    $contenturl = $temp->get_settings_page_url();
                     $contentlink = html_writer::link($contenturl, $temp->visiblename);
                     $contents[] = html_writer::tag('li', $contentlink);
                 } else if ($temp instanceof admin_category) {

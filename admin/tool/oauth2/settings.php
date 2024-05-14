@@ -26,5 +26,5 @@ defined('MOODLE_INTERNAL') || die;
 
 if ($hassiteconfig) {
     $ADMIN->add('server', new admin_externalpage('oauth2', new lang_string('pluginname', 'tool_oauth2'),
-         "$CFG->wwwroot/$CFG->admin/tool/oauth2/issuers.php"));
+    new moodle_url("/admin/tool/oauth2/issuers.php")));
 }

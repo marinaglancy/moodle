@@ -42,7 +42,7 @@ $ADMIN->add(
     'reportbuilder', new accesscallback(
         'customreports',
         get_string('customreports', 'core_reportbuilder'),
-        (new moodle_url('/reportbuilder/index.php'))->out(),
+        new moodle_url('/reportbuilder/index.php'),
         static function(accesscallback $accesscallback): bool {
             return permission::can_view_reports_list();
         },

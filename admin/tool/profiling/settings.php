@@ -32,5 +32,5 @@ $hasextension = $hasextension || extension_loaded('xhprof');
 $isenabled = !empty($CFG->profilingenabled) || !empty($CFG->earlyprofilingenabled);
 if ($hasextension && $isenabled) {
     $ADMIN->add('development', new admin_externalpage('toolprofiling', get_string('pluginname', 'tool_profiling'),
-            "$CFG->wwwroot/$CFG->admin/tool/profiling/index.php", 'moodle/site:config'));
+            new moodle_url("/admin/tool/profiling/index.php"), 'moodle/site:config'));
 }

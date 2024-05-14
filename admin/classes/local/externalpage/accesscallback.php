@@ -47,12 +47,12 @@ class accesscallback extends admin_externalpage {
      *
      * @param string $name
      * @param string $visiblename
-     * @param string $url
+     * @param string|\moodle_url $url
      * @param callable $accesscheckcallback The callback method that will be executed to check whether user has access to
      *     this page. The setting instance ($this) is passed as an argument to the callback. Should return boolean value
      * @param bool $hidden
      */
-    public function __construct(string $name, string $visiblename, string $url, callable $accesscheckcallback,
+    public function __construct(string $name, string $visiblename, string|\moodle_url $url, callable $accesscheckcallback,
             bool $hidden = false) {
 
         $this->accesscheckcallback = $accesscheckcallback;

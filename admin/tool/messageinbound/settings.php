@@ -100,5 +100,5 @@ if ($hassiteconfig) {
     // Link to the external page for Inbound Message handler configuration.
     $ADMIN->add('email', new admin_externalpage('messageinbound_handlers',
             new lang_string('message_handlers', 'tool_messageinbound'),
-            "$CFG->wwwroot/$CFG->admin/tool/messageinbound/index.php"));
+            new moodle_url("/admin/tool/messageinbound/index.php")));
 }

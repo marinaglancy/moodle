@@ -28,7 +28,7 @@ $ADMIN->add('reports',
     new admin_externalpage(
         'reportthemeusage',
         get_string('pluginname', 'report_themeusage'),
-        "$CFG->wwwroot/report/themeusage/index.php",
+        new moodle_url("/report/themeusage/index.php"),
         'moodle/site:config',
     ),
 );

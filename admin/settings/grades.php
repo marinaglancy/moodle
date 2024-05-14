@@ -169,13 +169,13 @@ if (has_capability('moodle/grade:manage', $systemcontext)
 
     /// Scales and outcomes
 
-    $scales = new admin_externalpage('scales', new lang_string('scales'), $CFG->wwwroot.'/grade/edit/scale/index.php', 'moodle/grade:manage');
+    $scales = new admin_externalpage('scales', new lang_string('scales'), new moodle_url('/grade/edit/scale/index.php'), 'moodle/grade:manage');
     $ADMIN->add('grades', $scales);
     if (!empty($CFG->enableoutcomes)) {
-        $outcomes = new admin_externalpage('outcomes', new lang_string('outcomes', 'grades'), $CFG->wwwroot.'/grade/edit/outcome/index.php', 'moodle/grade:manage');
+        $outcomes = new admin_externalpage('outcomes', new lang_string('outcomes', 'grades'), new moodle_url('/grade/edit/outcome/index.php'), 'moodle/grade:manage');
         $ADMIN->add('grades', $outcomes);
     }
-    $letters = new admin_externalpage('letters', new lang_string('letters', 'grades'), $CFG->wwwroot.'/grade/edit/letter/index.php', 'moodle/grade:manageletters');
+    $letters = new admin_externalpage('letters', new lang_string('letters', 'grades'), new moodle_url('/grade/edit/letter/index.php'), 'moodle/grade:manageletters');
     $ADMIN->add('grades', $letters);
 
     // The plugins must implement a settings.php file that adds their admin settings to the $settings object

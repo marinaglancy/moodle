@@ -39,7 +39,7 @@ if ($hassiteconfig or has_any_capability($capabilities, $systemcontext)) {
     // Speedup for non-admins, add all caps used on this page.
     $ADMIN->add('courses',
         new admin_externalpage('coursemgmt', new lang_string('coursemgmt', 'admin'),
-            $CFG->wwwroot . '/course/management.php',
+            new moodle_url('/course/management.php'),
             array('moodle/category:manage', 'moodle/course:create')
         )
     );
@@ -100,7 +100,7 @@ if ($hassiteconfig or has_any_capability($capabilities, $systemcontext)) {
     // Pending course requests.
     if (!empty($CFG->enablecourserequests)) {
         $ADMIN->add('courses', new admin_externalpage('coursespending', new lang_string('pendingrequests'),
-                $CFG->wwwroot . '/course/pending.php', array('moodle/site:approvecourse')));
+        new moodle_url('/course/pending.php'), array('moodle/site:approvecourse')));
     }
 
     // Add a category for the course Default settings.
@@ -275,7 +275,7 @@ if ($hassiteconfig or has_any_capability($capabilities, $systemcontext)) {
     $ADMIN->add('coursedefaultsettings', new admin_externalpage(
         'course_customfield',
         new lang_string('course_customfield', 'admin'),
-        $CFG->wwwroot . '/course/customfield.php',
+        new moodle_url('/course/customfield.php'),
         ['moodle/course:configurecustomfields'])
     );
 
@@ -305,7 +305,7 @@ if ($hassiteconfig or has_any_capability($capabilities, $systemcontext)) {
         new admin_externalpage(
             'group_customfield',
             new lang_string('group_customfield', 'admin'),
-            $CFG->wwwroot . '/group/customfield.php',
+            new moodle_url('/group/customfield.php'),
             ['moodle/group:configurecustomfields']
         )
     );
@@ -314,7 +314,7 @@ if ($hassiteconfig or has_any_capability($capabilities, $systemcontext)) {
         new admin_externalpage(
             'grouping_customfield',
             new lang_string('grouping_customfield', 'admin'),
-            $CFG->wwwroot . '/group/grouping_customfield.php',
+            new moodle_url('/group/grouping_customfield.php'),
             ['moodle/group:configurecustomfields']
         )
     );

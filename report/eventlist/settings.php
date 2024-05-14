@@ -25,7 +25,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 if ($hassiteconfig) {
-    $url = $CFG->wwwroot . '/report/eventlist/index.php';
+    $url = new moodle_url('/report/eventlist/index.php');
     $ADMIN->add('reports', new admin_externalpage('reporteventlists', get_string('pluginname', 'report_eventlist'), $url));
 
     // No report settings.

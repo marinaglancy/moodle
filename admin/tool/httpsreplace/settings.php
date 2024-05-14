@@ -27,10 +27,10 @@ defined('MOODLE_INTERNAL') || die;
 if ($hassiteconfig) {
 
     $pluginname = get_string('pluginname', 'tool_httpsreplace');
-    $url = $CFG->wwwroot.'/'.$CFG->admin.'/tool/httpsreplace/index.php';
+    $url = new moodle_url('/admin/tool/httpsreplace/index.php');
     $ADMIN->add('security', new admin_externalpage('toolhttpsreplace', $pluginname, $url, 'moodle/site:config', true));
 
-    $httpsreplaceurl = $CFG->wwwroot.'/'.$CFG->admin.'/tool/httpsreplace/index.php';
+    $httpsreplaceurl = new moodle_url('/admin/tool/httpsreplace/index.php');
     $ADMIN->locate('httpsecurity')->add(
         new admin_setting_heading(
             'tool_httpsreplaceheader',

@@ -8,12 +8,12 @@
 $systemcontext = context_system::instance();
 $hassiteconfig = has_capability('moodle/site:config', $systemcontext);
 
-$ADMIN->add('root', new admin_externalpage('adminnotifications', new lang_string('notifications'), "$CFG->wwwroot/$CFG->admin/index.php"));
+$ADMIN->add('root', new admin_externalpage('adminnotifications', new lang_string('notifications'), new moodle_url("/admin/index.php")));
 
 $ADMIN->add('root', new admin_externalpage('registrationmoodleorg', new lang_string('registration', 'admin'),
         new moodle_url("/admin/registration/index.php")));
  // hidden upgrade script
-$ADMIN->add('root', new admin_externalpage('upgradesettings', new lang_string('upgradesettings', 'admin'), "$CFG->wwwroot/$CFG->admin/upgradesettings.php", 'moodle/site:config', true));
+$ADMIN->add('root', new admin_externalpage('upgradesettings', new lang_string('upgradesettings', 'admin'), new moodle_url("/admin/upgradesettings.php"), 'moodle/site:config', true));
 $userfeedback = new admin_settingpage('userfeedback', new lang_string('feedbacksettings', 'admin'));
 $ADMIN->add('root', $userfeedback);
 
@@ -47,4 +47,4 @@ $ADMIN->add('root', new admin_category('development', new lang_string('developme
 $ADMIN->add('root', new admin_category('unsupported', new lang_string('unsupported', 'admin'), true));
 
 // hidden search script
-$ADMIN->add('root', new admin_externalpage('search', new lang_string('search', 'admin'), "$CFG->wwwroot/$CFG->admin/search.php", 'moodle/site:configview', true));
+$ADMIN->add('root', new admin_externalpage('search', new lang_string('search', 'admin'), new moodle_url("/admin/search.php"), 'moodle/site:configview', true));

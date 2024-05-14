@@ -227,7 +227,7 @@ foreach ($sortedqtypes as $qtypename => $localname) {
     // Settings link, if available.
     $settings = admin_get_root()->locate('qtypesetting' . $qtypename);
     if ($settings instanceof admin_externalpage) {
-        $row[] = html_writer::link($settings->url, get_string('settings'));
+        $row[] = html_writer::link($settings->get_settings_page_url(), get_string('settings'));
     } else if ($settings instanceof admin_settingpage) {
         $row[] = html_writer::link(new moodle_url('/admin/settings.php',
                 array('section' => 'qtypesetting' . $qtypename)), get_string('settings'));

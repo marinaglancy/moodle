@@ -93,12 +93,12 @@ $ADMIN->add('enrolltifolder', $settings);
 // This adds a settings page to the 'publish as LTI tool' folder, hidden.
 // On this page, we'll  override the active node to force a match on enrolsettingslti_registrations settings page.
 $ADMIN->add('enrolltifolder', new admin_externalpage('enrolsettingslti_registrations_edit',
-    get_string('registerplatformadd', 'enrol_lti'), "$CFG->wwwroot/$CFG->admin/enrol/lti/register_platform.php",
+    get_string('registerplatformadd', 'enrol_lti'), new moodle_url("/admin/enrol/lti/register_platform.php"),
     'moodle/site:config', true));
 
 // And deployments add/edit.
 $ADMIN->add('enrolltifolder', new admin_externalpage('enrolsettingslti_deployment_manage',
-    get_string('deployments', 'enrol_lti'), "$CFG->wwwroot/$CFG->admin/enrol/lti/manage_deployment.php",
+    get_string('deployments', 'enrol_lti'), new moodle_url("/admin/enrol/lti/manage_deployment.php"),
     'moodle/site:config', true));
 
 // Tell core we're finished.

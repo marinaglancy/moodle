@@ -223,12 +223,12 @@ if ($hassiteconfig or has_any_capability($capabilities, $systemcontext)) { // sp
     $ADMIN->add('appearance', $temp);
 
     if (!empty($CFG->enabledashboard)) {
-        $temp = new admin_externalpage('mypage', new lang_string('mypage', 'admin'), $CFG->wwwroot . '/my/indexsys.php',
+        $temp = new admin_externalpage('mypage', new lang_string('mypage', 'admin'), new moodle_url('/my/indexsys.php'),
                 'moodle/my:configsyspages');
         $ADMIN->add('appearance', $temp);
     }
 
-    $temp = new admin_externalpage('profilepage', new lang_string('myprofile', 'admin'), $CFG->wwwroot . '/user/profilesys.php',
+    $temp = new admin_externalpage('profilepage', new lang_string('myprofile', 'admin'), new moodle_url('/user/profilesys.php'),
             'moodle/my:configsyspages');
     $ADMIN->add('appearance', $temp);
 
@@ -346,7 +346,7 @@ if ($hassiteconfig or has_any_capability($capabilities, $systemcontext)) { // sp
 
     // Theme selector page.
     $ADMIN->add('appearance', new admin_externalpage('themeselector',
-        new lang_string('themeselector', 'admin'), $CFG->wwwroot . '/admin/themeselector.php'));
+        new lang_string('themeselector', 'admin'), new moodle_url('/admin/themeselector.php')));
 
     // Settings page for each theme.
     $ADMIN->add('appearance', new admin_category('themes', new lang_string('themesettingscustom', 'admin')));

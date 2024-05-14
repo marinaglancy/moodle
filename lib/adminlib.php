@@ -1226,7 +1226,7 @@ class admin_externalpage implements part_of_admin_tree, linkable_settings_page {
     /** @var string The displayed name for this external page. Usually obtained through get_string(). */
     public $visiblename;
 
-    /** @var string The external URL that we should link to when someone requests this external page. */
+    /** @var string|\moodle_url The external URL that we should link to when someone requests this external page. */
     public $url;
 
     /** @var array The role capability/permission a user must have to access this external page. */
@@ -1249,7 +1249,7 @@ class admin_externalpage implements part_of_admin_tree, linkable_settings_page {
      *
      * @param string $name The internal name for this external page. Must be unique amongst ALL part_of_admin_tree objects.
      * @param string $visiblename The displayed name for this external page. Usually obtained through get_string().
-     * @param string $url The external URL that we should link to when someone requests this external page.
+     * @param string|\moodle_url $url The external URL that we should link to when someone requests this external page.
      * @param mixed $req_capability The role capability/permission a user must have to access this external page. Defaults to 'moodle/site:config'.
      * @param boolean $hidden Is this external page hidden in admin tree block? Default false.
      * @param stdClass $context The context the page relates to. Not sure what happens
@@ -6640,7 +6640,7 @@ class admin_page_managemods extends admin_externalpage {
      */
     public function __construct() {
         global $CFG;
-        parent::__construct('managemodules', get_string('modsettings', 'admin'), "$CFG->wwwroot/$CFG->admin/modules.php");
+        parent::__construct('managemodules', get_string('modsettings', 'admin'), new moodle_url("/admin/modules.php"));
     }
 
     /**
@@ -7124,7 +7124,7 @@ class admin_page_manageportfolios extends admin_externalpage {
     public function __construct() {
         global $CFG;
         parent::__construct('manageportfolios', get_string('manageportfolios', 'portfolio'),
-                "$CFG->wwwroot/$CFG->admin/portfolio.php");
+                new moodle_url("/admin/portfolio.php"));
     }
 
     /**
@@ -7175,7 +7175,7 @@ class admin_page_managerepositories extends admin_externalpage {
     public function __construct() {
         global $CFG;
         parent::__construct('managerepositories', get_string('manage',
-                'repository'), "$CFG->wwwroot/$CFG->admin/repository.php");
+                'repository'), new moodle_url("/admin/repository.php"));
     }
 
     /**
@@ -8067,7 +8067,7 @@ class admin_page_managefilters extends admin_externalpage {
      */
     public function __construct() {
         global $CFG;
-        parent::__construct('managefilters', get_string('filtersettings', 'admin'), "$CFG->wwwroot/$CFG->admin/filters.php");
+        parent::__construct('managefilters', get_string('filtersettings', 'admin'), new moodle_url("/admin/filters.php"));
     }
 
     /**

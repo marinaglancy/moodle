@@ -27,6 +27,6 @@ defined('MOODLE_INTERNAL') || die;
 
 $ADMIN->add('reports', new admin_externalpage('reportinfectedfiles',
     get_string('infectedfiles', 'report_infectedfiles'),
-    "$CFG->wwwroot/report/infectedfiles/index.php"));
+    new moodle_url("/report/infectedfiles/index.php")));
 
 $settings = null;

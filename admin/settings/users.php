@@ -17,9 +17,9 @@ if ($hassiteconfig
 
 
     // Stuff under the "accounts" subcategory.
-    $ADMIN->add('accounts', new admin_externalpage('editusers', new lang_string('userlist','admin'), "$CFG->wwwroot/$CFG->admin/user.php", array('moodle/user:update', 'moodle/user:delete')));
-    $ADMIN->add('accounts', new admin_externalpage('userbulk', new lang_string('userbulk','admin'), "$CFG->wwwroot/$CFG->admin/user/user_bulk.php", array('moodle/user:update', 'moodle/user:delete')));
-    $ADMIN->add('accounts', new admin_externalpage('addnewuser', new lang_string('addnewuser'), "$CFG->wwwroot/user/editadvanced.php?id=-1", 'moodle/user:create'));
+    $ADMIN->add('accounts', new admin_externalpage('editusers', new lang_string('userlist','admin'), new moodle_url("/admin/user.php"), array('moodle/user:update', 'moodle/user:delete')));
+    $ADMIN->add('accounts', new admin_externalpage('userbulk', new lang_string('userbulk','admin'), new moodle_url("/admin/user/user_bulk.php"), array('moodle/user:update', 'moodle/user:delete')));
+    $ADMIN->add('accounts', new admin_externalpage('addnewuser', new lang_string('addnewuser'), new moodle_url("/user/editadvanced.php", ['id' => -1]), 'moodle/user:create'));
 
     // User management settingpage.
     $temp = new admin_settingpage('usermanagement', new lang_string('usermanagement', 'admin'));
@@ -99,14 +99,14 @@ if ($hassiteconfig
     }
     $ADMIN->add('accounts', $temp);
 
-    $ADMIN->add('accounts', new admin_externalpage('profilefields', new lang_string('profilefields','admin'), "$CFG->wwwroot/user/profile/index.php", 'moodle/site:config'));
-    $ADMIN->add('accounts', new admin_externalpage('cohorts', new lang_string('cohorts', 'cohort'), $CFG->wwwroot . '/cohort/index.php', array('moodle/cohort:manage', 'moodle/cohort:view')));
+    $ADMIN->add('accounts', new admin_externalpage('profilefields', new lang_string('profilefields','admin'), new moodle_url("/user/profile/index.php"), 'moodle/site:config'));
+    $ADMIN->add('accounts', new admin_externalpage('cohorts', new lang_string('cohorts', 'cohort'), new moodle_url('/cohort/index.php'), array('moodle/cohort:manage', 'moodle/cohort:view')));
     $ADMIN->add(
         'accounts',
         new admin_externalpage(
             'cohort_customfield',
             new lang_string('cohort_customfield', 'admin'),
-            $CFG->wwwroot . '/cohort/customfield.php',
+            new moodle_url('/cohort/customfield.php'),
             ['moodle/cohort:configurecustomfields']
         )
     );
@@ -269,11 +269,11 @@ if ($hassiteconfig
     $ADMIN->add('roles', $temp);
 
     if (is_siteadmin()) {
-        $ADMIN->add('roles', new admin_externalpage('admins', new lang_string('siteadministrators', 'role'), "$CFG->wwwroot/$CFG->admin/roles/admins.php"));
+        $ADMIN->add('roles', new admin_externalpage('admins', new lang_string('siteadministrators', 'role'), new moodle_url("/admin/roles/admins.php")));
     }
-    $ADMIN->add('roles', new admin_externalpage('defineroles', new lang_string('defineroles', 'role'), "$CFG->wwwroot/$CFG->admin/roles/manage.php", 'moodle/role:manage'));
-    $ADMIN->add('roles', new admin_externalpage('assignroles', new lang_string('assignglobalroles', 'role'), "$CFG->wwwroot/$CFG->admin/roles/assign.php?contextid=".$systemcontext->id, 'moodle/role:assign'));
-    $ADMIN->add('roles', new admin_externalpage('checkpermissions', new lang_string('checkglobalpermissions', 'role'), "$CFG->wwwroot/$CFG->admin/roles/check.php?contextid=".$systemcontext->id, array('moodle/role:assign', 'moodle/role:safeoverride', 'moodle/role:override', 'moodle/role:manage')));
+    $ADMIN->add('roles', new admin_externalpage('defineroles', new lang_string('defineroles', 'role'), new moodle_url("/admin/roles/manage.php"), 'moodle/role:manage'));
+    $ADMIN->add('roles', new admin_externalpage('assignroles', new lang_string('assignglobalroles', 'role'), new moodle_url("/admin/roles/assign.php", ['contextid' => $systemcontext->id]), 'moodle/role:assign'));
+    $ADMIN->add('roles', new admin_externalpage('checkpermissions', new lang_string('checkglobalpermissions', 'role'), new moodle_url("/admin/roles/check.php", ['contextid' => $systemcontext->id]), array('moodle/role:assign', 'moodle/role:safeoverride', 'moodle/role:override', 'moodle/role:manage')));
 
 } // End of speedup.
 

@@ -61,7 +61,7 @@ if ($section = optional_param('section', '', PARAM_SAFEPATH) and confirm_sesskey
         redirect($CFG->wwwroot . '/' . $CFG->admin . '/settings.php?section=' . $section);
 
     } elseif ($temp instanceof admin_externalpage) {
-        redirect($temp->url);
+        redirect($temp->get_settings_page_url());
 
     } else if ($temp instanceof admin_category) {
         redirect($CFG->wwwroot . '/' . $CFG->admin . '/category.php?category=' . $section);

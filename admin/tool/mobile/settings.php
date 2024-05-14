@@ -77,7 +77,7 @@ if ($hassiteconfig) {
         new admin_externalpage(
             'mobileappsubscription',
             new lang_string('mobileappsubscription', 'tool_mobile'),
-            "$CFG->wwwroot/$CFG->admin/tool/mobile/subscription.php",
+            new moodle_url("/admin/tool/mobile/subscription.php"),
             'moodle/site:config',
             $hideappsubscription
         )

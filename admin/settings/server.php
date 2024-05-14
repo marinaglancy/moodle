@@ -281,11 +281,11 @@ if ($hassiteconfig) {
 
     // Environment.
     $ADMIN->add('server', new admin_externalpage('environment', new lang_string('environment', 'admin'),
-        "{$CFG->wwwroot}/{$CFG->admin}/environment.php"));
+        new moodle_url("/admin/environment.php")));
 
     // PHP info.
     $ADMIN->add('server', new admin_externalpage('phpinfo', new lang_string('phpinfo'),
-        "{$CFG->wwwroot}/{$CFG->admin}/phpinfo.php"));
+        new moodle_url("/admin/phpinfo.php")));
 
     // Test outgoing mail configuration (hidden, accessed via direct link from the settings page).
     $ADMIN->add('server', new admin_externalpage('testoutgoingmailconf', new lang_string('testoutgoingmailconf', 'admin'),
@@ -454,7 +454,7 @@ if ($hassiteconfig) {
         $ADMIN->add('taskconfig', new admin_externalpage(
             'tasklogs',
             new lang_string('tasklogs', 'admin'),
-            "{$CFG->wwwroot}/{$CFG->admin}/tasklogs.php"
+            new moodle_url("/admin/tasklogs.php")
         ));
     }
 
@@ -640,7 +640,7 @@ if ($hassiteconfig) {
 
     // Web services > API documentation.
     $ADMIN->add('webservicesettings', new admin_externalpage('webservicedocumentation', new lang_string('wsdocapi', 'webservice'),
-        "{$CFG->wwwroot}/{$CFG->admin}/webservice/documentation.php", 'moodle/site:config', false));
+        new moodle_url("/admin/webservice/documentation.php"), 'moodle/site:config', false));
 
     // Web services > External services.
     $temp = new admin_settingpage('externalservices', new lang_string('externalservices', 'webservice'));
@@ -653,18 +653,18 @@ if ($hassiteconfig) {
     $ADMIN->add('webservicesettings', $temp);
 
     $ADMIN->add('webservicesettings', new admin_externalpage('externalservice', new lang_string('editaservice', 'webservice'),
-        "{$CFG->wwwroot}/{$CFG->admin}/webservice/service.php", 'moodle/site:config', true));
+        new moodle_url("/admin/webservice/service.php"), 'moodle/site:config', true));
 
     $ADMIN->add('webservicesettings', new admin_externalpage('externalservicefunctions',
-        new lang_string('externalservicefunctions', 'webservice'), "{$CFG->wwwroot}/{$CFG->admin}/webservice/service_functions.php",
+        new lang_string('externalservicefunctions', 'webservice'), new moodle_url("/admin/webservice/service_functions.php"),
         'moodle/site:config', true));
 
     $ADMIN->add('webservicesettings', new admin_externalpage('externalserviceusers',
-        new lang_string('externalserviceusers', 'webservice'), "{$CFG->wwwroot}/{$CFG->admin}/webservice/service_users.php",
+        new lang_string('externalserviceusers', 'webservice'), new moodle_url("/admin/webservice/service_users.php"),
         'moodle/site:config', true));
 
     $ADMIN->add('webservicesettings', new admin_externalpage('externalserviceusersettings',
-        new lang_string('serviceusersettings', 'webservice'), "{$CFG->wwwroot}/{$CFG->admin}/webservice/service_user_settings.php",
+        new lang_string('serviceusersettings', 'webservice'), new moodle_url("/admin/webservice/service_user_settings.php"),
         'moodle/site:config', true));
 
     // Web services > Manage protocols.

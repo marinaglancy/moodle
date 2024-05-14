@@ -27,18 +27,18 @@ defined('MOODLE_INTERNAL') || die;
 if ($hassiteconfig) {
     $ADMIN->add('development', new admin_externalpage('toolgeneratorcourse',
             get_string('maketestcourse', 'tool_generator'),
-            $CFG->wwwroot . '/' . $CFG->admin . '/tool/generator/maketestcourse.php'));
+            new moodle_url('/admin/tool/generator/maketestcourse.php')));
 
     $ADMIN->add('development', new admin_externalpage('toolgeneratortestplan',
             get_string('maketestplan', 'tool_generator'),
-            $CFG->wwwroot . '/' . $CFG->admin . '/tool/generator/maketestplan.php'));
+            new moodle_url('/admin/tool/generator/maketestplan.php')));
 
     $ADMIN->add(
         'development',
         new admin_externalpage(
             'toolgenerator_runtestscenario',
             get_string('testscenario', 'tool_generator'),
-            $CFG->wwwroot . '/' . $CFG->admin . '/tool/generator/runtestscenario.php'
+            new moodle_url('/admin/tool/generator/runtestscenario.php')
         )
     );
 }

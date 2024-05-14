@@ -30,7 +30,7 @@ if ($hassiteconfig) {
         new admin_externalpage(
             'scheduledtasks',
             new lang_string('scheduledtasks', 'tool_task'),
-            "$CFG->wwwroot/$CFG->admin/tool/task/scheduledtasks.php"
+            new moodle_url("/admin/tool/task/scheduledtasks.php")
         )
     );
 
@@ -39,7 +39,7 @@ if ($hassiteconfig) {
         new admin_externalpage(
             'adhoctasks',
             new lang_string('adhoctasks', 'tool_task'),
-            "$CFG->wwwroot/$CFG->admin/tool/task/adhoctasks.php"
+            new moodle_url("/admin/tool/task/adhoctasks.php")
         )
     );
 
@@ -48,7 +48,7 @@ if ($hassiteconfig) {
         new admin_externalpage(
             'runningtasks',
             new lang_string('runningtasks', 'tool_task'),
-            "$CFG->wwwroot/$CFG->admin/tool/task/runningtasks.php"
+            new moodle_url("/admin/tool/task/runningtasks.php")
         )
     );
 }

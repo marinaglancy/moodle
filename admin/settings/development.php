@@ -110,18 +110,18 @@ if ($hassiteconfig) { // speedup for non-admins, add all caps used on this page
     $ADMIN->add('development', $temp);
 
      // Web service test clients DO NOT COMMIT : THE EXTERNAL WEB PAGE IS NOT AN ADMIN PAGE !!!!!
-    $ADMIN->add('development', new admin_externalpage('testclient', new lang_string('testclient', 'webservice'), "$CFG->wwwroot/$CFG->admin/webservice/testclient.php"));
+    $ADMIN->add('development', new admin_externalpage('testclient', new lang_string('testclient', 'webservice'), new moodle_url("/admin/webservice/testclient.php")));
 
 
     if ($CFG->mnet_dispatcher_mode !== 'off') {
-        $ADMIN->add('development', new admin_externalpage('mnettestclient', new lang_string('testclient', 'mnet'), "$CFG->wwwroot/$CFG->admin/mnet/testclient.php"));
+        $ADMIN->add('development', new admin_externalpage('mnettestclient', new lang_string('testclient', 'mnet'), new moodle_url("/admin/mnet/testclient.php")));
     }
 
     $ADMIN->add('development', new admin_externalpage('purgecaches', new lang_string('purgecachespage', 'admin'),
             "$CFG->wwwroot/$CFG->admin/purgecaches.php"));
 
-    $ADMIN->add('development', new admin_externalpage('thirdpartylibs', new lang_string('thirdpartylibs','admin'), "$CFG->wwwroot/$CFG->admin/thirdpartylibs.php"));
+    $ADMIN->add('development', new admin_externalpage('thirdpartylibs', new lang_string('thirdpartylibs','admin'), new moodle_url("/admin/thirdpartylibs.php")));
 
     $ADMIN->add('development', new admin_externalpage('hooksoverview',
-        new lang_string('hooksoverview', 'admin'), "$CFG->wwwroot/$CFG->admin/hooks.php"));
+        new lang_string('hooksoverview', 'admin'), new moodle_url("/admin/hooks.php")));
 } // end of speedup

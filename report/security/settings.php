@@ -25,7 +25,7 @@
 defined('MOODLE_INTERNAL') || die;
 
 $ADMIN->add('reports', new admin_externalpage('reportsecurity', get_string('pluginname', 'report_security'),
-    "$CFG->wwwroot/report/security/index.php", 'report/security:view'));
+    new moodle_url("/report/security/index.php"), 'report/security:view'));
 
 // No report settings.
 $settings = null;

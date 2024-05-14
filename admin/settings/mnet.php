@@ -5,13 +5,13 @@
 if ($hassiteconfig) { // speedup for non-admins, add all caps used on this page
 
 $ADMIN->add('mnet', new admin_externalpage('net', new lang_string('settings', 'mnet'),
-                                           "$CFG->wwwroot/$CFG->admin/mnet/index.php",
+                                           new moodle_url("/admin/mnet/index.php"),
                                            'moodle/site:config'));
 
 
 
 $ADMIN->add('mnet', new admin_externalpage('mnetpeers', new lang_string('managemnetpeers', 'mnet'),
-                                           "$CFG->wwwroot/$CFG->admin/mnet/peers.php",
+                                           new moodle_url("/admin/mnet/peers.php"),
                                            'moodle/site:config'));
 
 
@@ -29,7 +29,7 @@ if (isset($CFG->mnet_dispatcher_mode) and $CFG->mnet_dispatcher_mode !== 'off') 
             new admin_externalpage(
                 'mnetpeer' . $host->id,
                 $host->name,
-                $CFG->wwwroot . '/'.$CFG->admin.'/mnet/peers.php?step=update&hostid=' . $host->id,
+                new moodle_url('/admin/mnet/peers.php', ['step' => 'update', 'hostid' => $host->id]),
                 'moodle/site:config'
             )
         );
@@ -37,13 +37,13 @@ if (isset($CFG->mnet_dispatcher_mode) and $CFG->mnet_dispatcher_mode !== 'off') 
 }
 
 $ADMIN->add('mnet', new admin_externalpage('ssoaccesscontrol', new lang_string('ssoaccesscontrol', 'mnet'),
-                                           "$CFG->wwwroot/$CFG->admin/mnet/access_control.php",
+                                           new moodle_url("/admin/mnet/access_control.php"),
                                            'moodle/site:config'));
 $ADMIN->add('mnet', new admin_externalpage('mnetenrol', new lang_string('clientname', 'mnetservice_enrol'),
-                                           "$CFG->wwwroot/mnet/service/enrol/index.php",
+                                           new moodle_url("/mnet/service/enrol/index.php"),
                                            'moodle/site:config'));
 $ADMIN->add('mnet', new admin_externalpage('trustedhosts', new lang_string('trustedhosts', 'mnet'),
-                                           "$CFG->wwwroot/$CFG->admin/mnet/trustedhosts.php",
+                                           new moodle_url("/admin/mnet/trustedhosts.php"),
                                            'moodle/site:config'));
 
 if (isset($CFG->mnet_dispatcher_mode) and $CFG->mnet_dispatcher_mode !== 'off') {

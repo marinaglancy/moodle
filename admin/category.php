@@ -100,7 +100,7 @@ foreach ($settingspage->children as $childpage) {
         continue;
     }
     if ($childpage instanceof admin_externalpage) {
-        $outputhtml .= $OUTPUT->heading(html_writer::link($childpage->url, $childpage->visiblename), 3);
+        $outputhtml .= $OUTPUT->heading(html_writer::link($childpage->get_settings_page_url(), $childpage->visiblename), 3);
     } else if ($childpage instanceof admin_settingpage) {
         $outputhtml .= $OUTPUT->heading(html_writer::link(new moodle_url('/'.$CFG->admin.'/settings.php', array('section' => $childpage->name)), $childpage->visiblename), 3);
         // If its a settings page and has settings lets display them.

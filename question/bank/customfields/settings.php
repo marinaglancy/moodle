@@ -31,7 +31,7 @@ if ($hassiteconfig) {
     $ADMIN->add('qbanksettings',
             new admin_externalpage('qbank_customfields',
                     new lang_string('pluginname', 'qbank_customfields'),
-                    $CFG->wwwroot . '/question/bank/customfields/customfield.php',
+                    new moodle_url('/question/bank/customfields/customfield.php'),
                     ['qbank/customfields:configurecustomfields']
             )
     );

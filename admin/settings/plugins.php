@@ -376,7 +376,7 @@ if ($hassiteconfig) {
     require_once($CFG->libdir. '/portfoliolib.php');
     $catname = new lang_string('portfolios', 'portfolio');
     $manage = new lang_string('manageportfolios', 'portfolio');
-    $url = "$CFG->wwwroot/$CFG->admin/portfolio.php";
+    $url = new moodle_url("/admin/portfolio.php");
 
     $ADMIN->add('modules', new admin_category('portfoliosettings', $catname, empty($CFG->enableportfolios)));
 
@@ -425,7 +425,7 @@ if ($hassiteconfig) {
             new admin_externalpage(
                 'portfoliosettings' . $portfolio->get('id'),
                 $portfolio->get('name'),
-                $url . '?action=edit&pf=' . $portfolio->get('id'),
+                new moodle_url($url, ['action' => 'edit', 'pf' => $portfolio->get('id')]),
                 'moodle/site:config'
             )
         );
@@ -435,7 +435,7 @@ if ($hassiteconfig) {
     require_once("$CFG->dirroot/repository/lib.php");
     $catname =new lang_string('repositories', 'repository');
     $managerepo = new lang_string('manage', 'repository');
-    $url = $CFG->wwwroot.'/'.$CFG->admin.'/repository.php';
+    $url = new moodle_url('/admin/repository.php');
     $ADMIN->add('modules', new admin_category('repositorysettings', $catname));
 
     // Add main page (with table)
@@ -555,7 +555,7 @@ if ($hassiteconfig || has_capability('moodle/question:config', $systemcontext)) 
 if ($hassiteconfig && !empty($CFG->enableplagiarism)) {
     $ADMIN->add('modules', new admin_category('plagiarism', new lang_string('plagiarism', 'plagiarism')));
     $ADMIN->add('plagiarism', new admin_externalpage('manageplagiarismplugins', new lang_string('manageplagiarism', 'plagiarism'),
-        $CFG->wwwroot . '/' . $CFG->admin . '/plagiarism.php'));
+        new moodle_url('/admin/plagiarism.php')));
 
     $plugins = core_plugin_manager::instance()->get_plugins_of_type('plagiarism');
     core_collator::asort_objects_by_property($plugins, 'displayname');
@@ -566,7 +566,7 @@ if ($hassiteconfig && !empty($CFG->enableplagiarism)) {
 }
 
 // Comments report, note this page is really just a means to delete comments so check that.
-$ADMIN->add('reports', new admin_externalpage('comments', new lang_string('comments'), $CFG->wwwroot . '/comment/index.php',
+$ADMIN->add('reports', new admin_externalpage('comments', new lang_string('comments'), new moodle_url('/comment/index.php'),
     'moodle/comment:delete'));
 
 // Course reports settings
@@ -609,7 +609,7 @@ foreach (core_component::get_plugin_list('report') as $report => $plugindir) {
 }
 $ADMIN->add('modules', new admin_category('reportplugins', new lang_string('reports')));
 $ADMIN->add('reportplugins', new admin_externalpage('managereports', new lang_string('reportsmanage', 'admin'),
-                                                    $CFG->wwwroot . '/' . $CFG->admin . '/reports.php'));
+                                                    new moodle_url('/admin/reports.php')));
 core_collator::asort_objects_by_property($pages, 'visiblename');
 foreach ($pages as $page) {
     $ADMIN->add('reportplugins', $page);
@@ -781,10 +781,10 @@ foreach ($plugins as $plugin) {
 // Now add the Cache plugins
 if ($hassiteconfig) {
     $ADMIN->add('modules', new admin_category('cache', new lang_string('caching', 'cache')));
-    $ADMIN->add('cache', new admin_externalpage('cacheconfig', new lang_string('cacheconfig', 'cache'), $CFG->wwwroot .'/cache/admin.php'));
-    $ADMIN->add('cache', new admin_externalpage('cachetestperformance', new lang_string('testperformance', 'cache'), $CFG->wwwroot . '/cache/testperformance.php'));
+    $ADMIN->add('cache', new admin_externalpage('cacheconfig', new lang_string('cacheconfig', 'cache'), new moodle_url('/cache/admin.php')));
+    $ADMIN->add('cache', new admin_externalpage('cachetestperformance', new lang_string('testperformance', 'cache'), new moodle_url('/cache/testperformance.php')));
     $ADMIN->add('cache', new admin_externalpage('cacheusage',
-            new lang_string('cacheusage', 'cache'), $CFG->wwwroot . '/cache/usage.php'));
+            new lang_string('cacheusage', 'cache'), new moodle_url('/cache/usage.php')));
     $ADMIN->add('cache', new admin_category('cachestores', new lang_string('cachestores', 'cache')));
     $ADMIN->locate('cachestores')->set_sorting(true);
     foreach (core_component::get_plugin_list('cachestore') as $plugin => $path) {
@@ -839,7 +839,7 @@ if ($hassiteconfig) {
 if ($hassiteconfig) {
     $ADMIN->add('modules', new admin_category('localplugins', new lang_string('localplugins')));
     $ADMIN->add('localplugins', new admin_externalpage('managelocalplugins', new lang_string('localpluginsmanage'),
-                                                        $CFG->wwwroot . '/' . $CFG->admin . '/localplugins.php'));
+                                                        new moodle_url('/admin/localplugins.php')));
 }
 
 // Extend settings for each local plugin. Note that their settings may be in any part of the
