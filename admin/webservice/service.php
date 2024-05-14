@@ -92,7 +92,7 @@ if ($mform->is_cancelled()) {
 
         //redirect to the 'add functions to service' page
         $addfunctionpage = new moodle_url(
-                        $CFG->wwwroot . '/' . $CFG->admin . '/webservice/service_functions.php',
+                        '/admin/webservice/service_functions.php',
                         array('id' => $servicedata->id));
         $returnurl = $addfunctionpage->out(false);
     } else {
