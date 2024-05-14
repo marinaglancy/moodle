@@ -6625,7 +6625,7 @@ class admin_page_pluginsoverview extends admin_externalpage {
     public function __construct() {
         global $CFG;
         parent::__construct('pluginsoverview', get_string('pluginsoverview', 'core_admin'),
-            "$CFG->wwwroot/$CFG->admin/plugins.php");
+            new moodle_url("/admin/plugins.php"));
     }
 }
 
