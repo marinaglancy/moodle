@@ -155,8 +155,8 @@ function print_report_tree($contextid, $contexts, $systemcontext, $fullname, $al
         $stredit = get_string('edit');
         $strcheckpermissions = get_string('checkpermissions', 'core_role');
         $globalroleassigner = has_capability('moodle/role:assign', $systemcontext);
-        $assignurl = $CFG->wwwroot . '/' . $CFG->admin . '/roles/assign.php';
-        $checkurl = $CFG->wwwroot . '/' . $CFG->admin . '/roles/check.php';
+        $assignurl = new moodle_url('/admin/roles/assign.php');
+        $checkurl = new moodle_url('/roles/check.php');
     }
 
     // Pull the current context into an array for convenience.

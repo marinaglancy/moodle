@@ -295,7 +295,7 @@
 
     function slasharguments($texexp) {
         global $CFG;
-        $admin = $CFG->wwwroot.'/'.$CFG->admin.'/settings.php?section=http';
+        $admin = new moodle_url('/admin/settings.php?section=http');
         $image = tex2image($texexp,true);
         echo "<p>If the following image displays correctly, set your ";
         echo "<a href=\"$admin\" target=\"_blank\">Administration->Server->HTTP</a> ";

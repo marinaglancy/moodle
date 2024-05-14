@@ -128,10 +128,10 @@ function print_report_tree($contextid, $contexts, $allroles) {
     // Start the list item, and print the context name as a link to the place to
     // make changes.
     if ($contextid == context_system::instance()->id) {
-        $url = "$CFG->wwwroot/$CFG->admin/roles/manage.php";
+        $url = new moodle_url("/admin/roles/manage.php");
         $title = get_string('changeroles', 'tool_capability');
     } else {
-        $url = "$CFG->wwwroot/$CFG->admin/roles/override.php?contextid=$contextid";
+        $url = new moodle_url("/admin/roles/override.php?contextid=$contextid");
         $title = get_string('changeoverrides', 'tool_capability');
     }
     $context = context::instance_by_id($contextid);
