@@ -2470,7 +2470,7 @@ function require_login($courseorid = null, $autologinguest = true, $cm = null, $
                 // We need to override the navigation URL as the course won't have been added to the navigation and thus
                 // the navigation will mess up when trying to find it.
                 navigation_node::override_active_url(new moodle_url('/'));
-                notice(get_string('coursehidden'), $CFG->wwwroot .'/');
+                notice(get_string('coursehidden'), new moodle_url('/'));
             }
         }
     }
@@ -2489,7 +2489,7 @@ function require_login($courseorid = null, $autologinguest = true, $cm = null, $
                 }
                 $PAGE->set_context(null);
                 echo $OUTPUT->header();
-                notice(get_string('studentnotallowed', '', fullname($USER, true)), $CFG->wwwroot .'/');
+                notice(get_string('studentnotallowed', '', fullname($USER, true)), new moodle_url('/'));
             }
         }
 
@@ -2583,7 +2583,7 @@ function require_login($courseorid = null, $autologinguest = true, $cm = null, $
                     // We need to override the navigation URL as the course won't have been added to the navigation and thus
                     // the navigation will mess up when trying to find it.
                     navigation_node::override_active_url(new moodle_url('/'));
-                    notice(get_string('coursehidden'), $CFG->wwwroot .'/');
+                    notice(get_string('coursehidden'), new moodle_url('/'));
                 }
             }
         }
