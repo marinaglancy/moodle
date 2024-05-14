@@ -45,7 +45,8 @@ require_course_login($course->id, true, $cm);
 $context = context_module::instance($cm->id);
 require_capability('mod/glossary:export', $context);
 
-$returnurl = "view.php?id=$cm->id&amp;mode=$prevmode&amp;hook=".urlencode($hook);
+$returnurl = new moodle_url("/mod/glossary/view.php",
+    ['id' => $cm->id, 'mode' => $prevmode, 'hook' => $hook]);
 
 if (!$mainglossary = $DB->get_record('glossary', array('course'=>$cm->course, 'mainglossary'=>1))) {
     //main glossary not present

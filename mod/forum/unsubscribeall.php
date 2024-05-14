@@ -32,7 +32,7 @@ $PAGE->set_url('/mod/forum/unsubscribeall.php');
 require_login(null, false);
 $PAGE->set_context(context_user::instance($USER->id));
 
-$return = $CFG->wwwroot.'/';
+$return = new moodle_url('/');
 
 if (isguestuser()) {
     redirect($return);

@@ -140,7 +140,7 @@ if ($start and $end and !$confirmdelete) {   // Show a full transcript.
     }
 
     if (!$deletesession or !has_capability('mod/chat:deletelog', $context)) {
-        echo $OUTPUT->continue_button("report.php?id=$cm->id");
+        echo $OUTPUT->continue_button("/mod/chat/report.php?id=$cm->id");
     }
 
     echo $OUTPUT->footer();

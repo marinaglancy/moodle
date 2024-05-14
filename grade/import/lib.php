@@ -159,7 +159,7 @@ function grade_import_commit($courseid, $importcode, $importfeedback=true, $verb
             }
             echo $OUTPUT->notification(get_string('unenrolledusersinimport', 'grades', html_writer::alist($list)), 'notifysuccess');
         }
-        echo $OUTPUT->continue_button($CFG->wwwroot.'/grade/index.php?id='.$courseid);
+        echo $OUTPUT->continue_button(new moodle_url('/grade/index.php', ['id' => $courseid]));
     }
     // clean up
     import_cleanup($importcode);

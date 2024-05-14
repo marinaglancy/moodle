@@ -874,7 +874,7 @@ class portfolio_exporter {
         $PAGE->set_heading($title);
         echo $OUTPUT->header();
         echo $OUTPUT->notification(get_string('exportexpireddesc', 'portfolio'));
-        echo $OUTPUT->continue_button($CFG->wwwroot);
+        echo $OUTPUT->continue_button(new moodle_url('/'));
         echo $OUTPUT->footer();
         exit;
     }
@@ -898,7 +898,7 @@ class portfolio_exporter {
         echo $OUTPUT->header();
         echo $OUTPUT->notification(get_string('exportalreadyfinished', 'portfolio'));
         self::print_finish_info($log->returnurl, $instance->resolve_static_continue_url($log->continueurl));
-        echo $OUTPUT->continue_button($CFG->wwwroot);
+        echo $OUTPUT->continue_button(new moodle_url('/'));
         echo $OUTPUT->footer();
         exit;
     }

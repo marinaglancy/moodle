@@ -88,7 +88,7 @@ if ($data = $form->get_data()) {
 
         // Finish up.
         echo $OUTPUT->notification(get_string('success'), 'notifysuccess');
-        echo $OUTPUT->continue_button("$CFG->wwwroot/$CFG->admin/");
+        echo $OUTPUT->continue_button(new moodle_url("/admin/"));
         echo $OUTPUT->footer();
         die;
     }
