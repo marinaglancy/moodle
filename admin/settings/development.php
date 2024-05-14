@@ -118,7 +118,7 @@ if ($hassiteconfig) { // speedup for non-admins, add all caps used on this page
     }
 
     $ADMIN->add('development', new admin_externalpage('purgecaches', new lang_string('purgecachespage', 'admin'),
-            "$CFG->wwwroot/$CFG->admin/purgecaches.php"));
+            new moodle_url("/admin/purgecaches.php")));
 
     $ADMIN->add('development', new admin_externalpage('thirdpartylibs', new lang_string('thirdpartylibs','admin'), new moodle_url("/admin/thirdpartylibs.php")));
 
