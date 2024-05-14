@@ -8747,7 +8747,7 @@ function admin_externalpage_setup($section, $extrabutton = '', array $extraurlpa
             // but most likely the user has inadequate capabilities
             throw new \moodle_exception('accessdenied', 'admin');
         } else {
-            throw new \moodle_exception('sectionerror', 'admin', "$CFG->wwwroot/$CFG->admin/");
+            throw new \moodle_exception('sectionerror', 'admin', new moodle_url('/admin/'));
         }
     }
 

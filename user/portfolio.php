@@ -105,7 +105,7 @@ if ($display) {
     echo html_writer::tag('p', $introstr);
 
     if (!$instances = portfolio_instances(true, false)) {
-        throw new \moodle_exception('noinstances', 'portfolio', $CFG->wwwroot . '/user/view.php');
+        throw new \moodle_exception('noinstances', 'portfolio', new moodle_url('/user/view.php'));
     }
 
     $table = new html_table();

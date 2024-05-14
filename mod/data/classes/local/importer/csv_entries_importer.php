@@ -71,7 +71,7 @@ class csv_entries_importer extends entries_importer {
 
         $readcount = $cir->load_csv_content($this->get_data_file_content(), $encoding, $fielddelimiter);
         if (empty($readcount)) {
-            throw new \moodle_exception('csvfailed', 'data', "{$CFG->wwwroot}/mod/data/edit.php?d={$data->id}");
+            throw new \moodle_exception('csvfailed', 'data', new \moodle_url("/mod/data/edit.php?d={$data->id}"));
         } else {
             if (!$fieldnames = $cir->get_columns()) {
                 throw new \moodle_exception('cannotreadtmpfile', 'error');

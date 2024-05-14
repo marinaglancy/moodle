@@ -75,7 +75,7 @@ $access = grade_report_overview::check_access($systemcontext, $context, $persona
 
 if (!$access) {
     // no access to grades!
-    throw new \moodle_exception('nopermissiontoviewgrades', 'error',  $CFG->wwwroot.'/course/view.php?id='.$courseid);
+    throw new \moodle_exception('nopermissiontoviewgrades', 'error',  new moodle_url('course/view.php?id='.$courseid));
 }
 
 /// return tracking object

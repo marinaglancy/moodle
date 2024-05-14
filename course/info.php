@@ -49,7 +49,7 @@
 
     $context = context_course::instance($course->id);
     if (!core_course_category::can_view_course_info($course) && !is_enrolled($context, null, '', true)) {
-        throw new \moodle_exception('cannotviewcategory', '', $CFG->wwwroot .'/');
+        throw new \moodle_exception('cannotviewcategory', '', new moodle_url('/'));
     }
 
     $PAGE->set_course($course);

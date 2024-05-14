@@ -80,7 +80,7 @@ class moodle_exception extends Exception {
     public $a;
 
     /**
-     * @var string The url where the user will be prompted to continue. If no url is provided the user will be directed to the site index page.
+     * @var string|moodle_url The url where the user will be prompted to continue. If no url is provided the user will be directed to the site index page.
      */
     public $link;
 
@@ -93,7 +93,7 @@ class moodle_exception extends Exception {
      * Constructor
      * @param string $errorcode The name of the string from error.php to print
      * @param string $module name of module
-     * @param string $link The url where the user will be prompted to continue. If no url is provided the user will be directed to the site index page.
+     * @param string|moodle_url $link The url where the user will be prompted to continue. If no url is provided the user will be directed to the site index page.
      * @param mixed $a Extra words and phrases that might be required in the error string
      * @param string $debuginfo optional debugging information
      */

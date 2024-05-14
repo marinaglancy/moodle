@@ -41,7 +41,7 @@ $adminroot = admin_get_root(); // need all settings
 $settingspage = $adminroot->locate($category, true);
 
 if (empty($settingspage) or !($settingspage instanceof admin_category)) {
-    throw new \moodle_exception('categoryerror', 'error', "$CFG->wwwroot/$CFG->admin/");
+    throw new \moodle_exception('categoryerror', 'error', new moodle_url("/admin/"));
 }
 
 if (!($settingspage->check_access())) {

@@ -67,7 +67,7 @@ $lastmonthend = stats_get_base_monthly();
 $timeoptions = stats_get_time_options($now,$lastweekend,$lastmonthend,$earliestday,$earliestweek,$earliestmonth);
 
 if (empty($timeoptions)) {
-    throw new \moodle_exception('nostatstodisplay', 'error', $CFG->wwwroot.'/course/view.php?id='.$course->id);
+    throw new \moodle_exception('nostatstodisplay', 'error', new moodle_url('/course/view.php?id='.$course->id));
 }
 
 echo html_writer::start_tag('form', ['action' => 'index.php', 'method' => 'post',

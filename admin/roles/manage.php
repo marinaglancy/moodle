@@ -43,8 +43,8 @@ if ($action) {
 }
 
 // Get the base URL for this and related pages into a convenient variable.
-$baseurl = $CFG->wwwroot . '/' . $CFG->admin . '/roles/manage.php';
-$defineurl = $CFG->wwwroot . '/' . $CFG->admin . '/roles/define.php';
+$baseurl = new moodle_url('/admin/roles/manage.php');
+$defineurl = new moodle_url('/admin/roles/define.php');
 
 admin_externalpage_setup('defineroles');
 

@@ -2381,7 +2381,7 @@ function send_temp_file($path, $filename, $pathisstring=false) {
     if (!$pathisstring) {
         if (!file_exists($path)) {
             send_header_404();
-            throw new \moodle_exception('filenotfound', 'error', $CFG->wwwroot.'/');
+            throw new \moodle_exception('filenotfound', 'error', new moodle_url('/'));
         }
         // executed after normal finish or abort
         core_shutdown_manager::register_function('send_temp_file_finished', array($path));

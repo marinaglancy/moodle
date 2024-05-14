@@ -98,7 +98,7 @@ $modinfo = get_fast_modinfo($course);
 $completion = new completion_info($course);
 
 if (!$completion->has_criteria()) {
-    throw new \moodle_exception('nocriteriaset', 'completion', $CFG->wwwroot.'/course/report.php?id='.$course->id);
+    throw new \moodle_exception('nocriteriaset', 'completion', new moodle_url('/course/report.php?id='.$course->id));
 }
 
 // Get criteria and put in correct order

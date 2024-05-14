@@ -119,7 +119,7 @@ function report_stats_report($course, $report, $mode, $user, $roleid, $time) {
     $reportoptions = stats_get_report_options($course->id, $mode);
     $timeoptions = report_stats_timeoptions($mode);
     if (empty($timeoptions)) {
-        throw new \moodle_exception('nostatstodisplay', '', $CFG->wwwroot.'/course/view.php?id='.$course->id);
+        throw new \moodle_exception('nostatstodisplay', '', new moodle_url('/course/view.php?id='.$course->id));
     }
 
     $users = array();

@@ -41,7 +41,7 @@ if (!empty($action) and confirm_sesskey()) {
     // fetch the record in question
     $id = required_param('id', PARAM_INT);
     if (!$idrec = $DB->get_record('mnet_sso_access_control', array('id'=>$id))) {
-        throw new \moodle_exception('recordnoexists', 'mnet', "$CFG->wwwroot/$CFG->admin/mnet/access_control.php");
+        throw new \moodle_exception('recordnoexists', 'mnet', new moodle_url("/admin/mnet/access_control.php"));
     }
 
     switch ($action) {
@@ -56,7 +56,7 @@ if (!empty($action) and confirm_sesskey()) {
             // require the access parameter, and it must be 'allow' or 'deny'
             $accessctrl = trim(strtolower(required_param('accessctrl', PARAM_ALPHA)));
             if ($accessctrl != 'allow' and $accessctrl != 'deny') {
-                throw new \moodle_exception('invalidaccessparam', 'mnet', "$CFG->wwwroot/$CFG->admin/mnet/access_control.php");
+                throw new \moodle_exception('invalidaccessparam', 'mnet', new moodle_url("/admin/mnet/access_control.php"));
             }
 
             if (mnet_update_sso_access_control($idrec->username, $idrec->mnet_host_id, $accessctrl)) {
@@ -71,7 +71,7 @@ if (!empty($action) and confirm_sesskey()) {
             break;
 
         default:
-            throw new \moodle_exception('invalidactionparam', 'mnet', "$CFG->wwwroot/$CFG->admin/mnet/access_control.php");
+            throw new \moodle_exception('invalidactionparam', 'mnet', new moodle_url("/admin/mnet/access_control.php"));
     }
 }
 
@@ -82,7 +82,7 @@ if ($form = data_submitted() and confirm_sesskey()) {
 
     // check permissions and verify form input
     if (!has_capability('moodle/user:delete', $sitecontext)) {
-        throw new \moodle_exception('nomodifyacl', 'mnet', "$CFG->wwwroot/$CFG->admin/mnet/access_control.php");
+        throw new \moodle_exception('nomodifyacl', 'mnet', new moodle_url("/admin/mnet/access_control.php"));
     }
     if (empty($form->username)) {
         $formerror['username'] = get_string('enterausername','mnet');

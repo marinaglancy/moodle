@@ -2688,7 +2688,7 @@ class lesson extends lesson_base {
         $pages = $this->load_all_pages();
 
         if (!array_key_exists($pageid, $pages) || ($after!=0 && !array_key_exists($after, $pages))) {
-            throw new \moodle_exception('cannotfindpages', 'lesson', "$CFG->wwwroot/mod/lesson/edit.php?id=$cm->id");
+            throw new \moodle_exception('cannotfindpages', 'lesson', new moodle_url("/mod/lesson/edit.php?id=$cm->id"));
         }
 
         $pagetomove = clone($pages[$pageid]);

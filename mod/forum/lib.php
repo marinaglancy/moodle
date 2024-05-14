@@ -5749,7 +5749,7 @@ function forum_get_posts_by_user($user, array $courses, $musthaveaccess = false,
                     // But they're not... if it was a specific course throw an error otherwise
                     // just skip this course so that it is not searched.
                     if ($musthaveaccess) {
-                        throw new \moodle_exception("groupnotamember", '', $CFG->wwwroot."/course/view.php?id=$course->id");
+                        throw new \moodle_exception("groupnotamember", '', new moodle_url("/course/view.php?id=$course->id"));
                     }
                     continue;
                 }

@@ -295,7 +295,7 @@ function upgrade_set_timeout($max_execution_time=300) {
             $upgraderunning = 0;
         } else {
             // web upgrade not running or aborted
-            throw new \moodle_exception('upgradetimedout', 'admin', "$CFG->wwwroot/$CFG->admin/");
+            throw new \moodle_exception('upgradetimedout', 'admin', new moodle_url('/admin/'));
         }
     }
 
