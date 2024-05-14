@@ -459,7 +459,7 @@ class page_wiki_edit extends page_wiki {
             $params['section'] = $this->section;
         }
 
-        $PAGE->set_url($CFG->wwwroot . '/mod/wiki/edit.php', $params);
+        $PAGE->set_url('/mod/wiki/edit.php', $params);
     }
 
     protected function set_session_url() {
@@ -722,7 +722,7 @@ class page_wiki_comments extends page_wiki {
 
     function set_url() {
         global $PAGE, $CFG;
-        $PAGE->set_url($CFG->wwwroot . '/mod/wiki/comments.php', array('pageid' => $this->page->id));
+        $PAGE->set_url('/mod/wiki/comments.php', array('pageid' => $this->page->id));
     }
 
     protected function create_navbar() {
@@ -747,7 +747,7 @@ class page_wiki_editcomment extends page_wiki {
 
     function set_url() {
         global $PAGE, $CFG;
-        $PAGE->set_url($CFG->wwwroot . '/mod/wiki/comments.php', array('pageid' => $this->page->id));
+        $PAGE->set_url('/mod/wiki/comments.php', array('pageid' => $this->page->id));
     }
 
     function print_header() {
@@ -873,7 +873,7 @@ class page_wiki_search extends page_wiki {
 
     function set_url() {
         global $PAGE, $CFG;
-        $PAGE->set_url($CFG->wwwroot . '/mod/wiki/search.php');
+        $PAGE->set_url('/mod/wiki/search.php');
     }
 
     function print_header() {
@@ -1046,7 +1046,7 @@ class page_wiki_preview extends page_wiki_edit {
             $params['section'] = $this->section;
         }
 
-        $PAGE->set_url($CFG->wwwroot . '/mod/wiki/edit.php', $params);
+        $PAGE->set_url('/mod/wiki/edit.php', $params);
     }
 
     protected function setup_tabs($options = array()) {
@@ -1143,7 +1143,7 @@ class page_wiki_diff extends page_wiki {
     function set_url() {
         global $PAGE, $CFG;
 
-        $PAGE->set_url($CFG->wwwroot . '/mod/wiki/diff.php', array('pageid' => $this->page->id, 'comparewith' => $this->comparewith, 'compare' => $this->compare));
+        $PAGE->set_url('/mod/wiki/diff.php', array('pageid' => $this->page->id, 'comparewith' => $this->comparewith, 'compare' => $this->compare));
     }
 
     function set_comparison($compare, $comparewith) {
@@ -1269,7 +1269,7 @@ class page_wiki_history extends page_wiki {
 
     function set_url() {
         global $PAGE, $CFG;
-        $PAGE->set_url($CFG->wwwroot . '/mod/wiki/history.php', array('pageid' => $this->page->id));
+        $PAGE->set_url('/mod/wiki/history.php', array('pageid' => $this->page->id));
     }
 
     function set_paging($paging) {
@@ -1514,7 +1514,7 @@ class page_wiki_map extends page_wiki {
 
     function set_url() {
         global $PAGE, $CFG;
-        $PAGE->set_url($CFG->wwwroot . '/mod/wiki/map.php', array('pageid' => $this->page->id));
+        $PAGE->set_url('/mod/wiki/map.php', array('pageid' => $this->page->id));
     }
 
     protected function create_navbar() {
@@ -1913,7 +1913,7 @@ class page_wiki_restoreversion extends page_wiki {
 
     function set_url() {
         global $PAGE, $CFG;
-        $PAGE->set_url($CFG->wwwroot . '/mod/wiki/viewversion.php', array('pageid' => $this->page->id, 'versionid' => $this->version->id));
+        $PAGE->set_url('/mod/wiki/viewversion.php', array('pageid' => $this->page->id, 'versionid' => $this->version->id));
     }
 
     function set_versionid($versionid) {
@@ -2158,7 +2158,7 @@ class page_wiki_viewversion extends page_wiki {
 
     function set_url() {
         global $PAGE, $CFG;
-        $PAGE->set_url($CFG->wwwroot . '/mod/wiki/viewversion.php', array('pageid' => $this->page->id, 'versionid' => $this->version->id));
+        $PAGE->set_url('/mod/wiki/viewversion.php', array('pageid' => $this->page->id, 'versionid' => $this->version->id));
     }
 
     function set_versionid($versionid) {
@@ -2231,7 +2231,7 @@ class page_wiki_confirmrestore extends page_wiki_save {
 
     function set_url() {
         global $PAGE, $CFG;
-        $PAGE->set_url($CFG->wwwroot . '/mod/wiki/viewversion.php', array('pageid' => $this->page->id, 'versionid' => $this->version->id));
+        $PAGE->set_url('/mod/wiki/viewversion.php', array('pageid' => $this->page->id, 'versionid' => $this->version->id));
     }
 
     function print_header() {
@@ -2289,7 +2289,7 @@ class page_wiki_prettyview extends page_wiki {
     function set_url() {
         global $PAGE, $CFG;
 
-        $PAGE->set_url($CFG->wwwroot . '/mod/wiki/prettyview.php', array('pageid' => $this->page->id));
+        $PAGE->set_url('/mod/wiki/prettyview.php', array('pageid' => $this->page->id));
     }
 
     private function print_pretty_view() {
@@ -2353,7 +2353,7 @@ class page_wiki_handlecomments extends page_wiki {
 
     public function set_url() {
         global $PAGE, $CFG;
-        $PAGE->set_url($CFG->wwwroot . '/mod/wiki/comments.php', array('pageid' => $this->page->id));
+        $PAGE->set_url('/mod/wiki/comments.php', array('pageid' => $this->page->id));
     }
 
     public function set_action($action, $commentid, $content) {
@@ -2408,7 +2408,7 @@ class page_wiki_lock extends page_wiki_edit {
             $params['section'] = $this->section;
         }
 
-        $PAGE->set_url($CFG->wwwroot . '/mod/wiki/lock.php', $params);
+        $PAGE->set_url('/mod/wiki/lock.php', $params);
     }
 
     protected function set_session_url() {
@@ -2456,7 +2456,7 @@ class page_wiki_overridelocks extends page_wiki_edit {
             $params['section'] = $this->section;
         }
 
-        $PAGE->set_url($CFG->wwwroot . '/mod/wiki/overridelocks.php', $params);
+        $PAGE->set_url('/mod/wiki/overridelocks.php', $params);
     }
 
     protected function set_session_url() {
@@ -2560,7 +2560,7 @@ class page_wiki_admin extends page_wiki {
      */
     function set_url() {
         global $PAGE, $CFG;
-        $PAGE->set_url($CFG->wwwroot . '/mod/wiki/admin.php', array('pageid' => $this->page->id));
+        $PAGE->set_url('/mod/wiki/admin.php', array('pageid' => $this->page->id));
     }
 
     /**

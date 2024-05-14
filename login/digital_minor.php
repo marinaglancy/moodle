@@ -34,7 +34,7 @@ if (!$authplugin || !\core_auth\digital_consent::is_age_digital_consent_verifica
 }
 
 $PAGE->set_context(context_system::instance());
-$PAGE->set_url($CFG->wwwroot.'/login/digital_minor.php');
+$PAGE->set_url('/login/digital_minor.php');
 
 if (isloggedin() and !isguestuser()) {
     // Prevent signing up when already logged in.

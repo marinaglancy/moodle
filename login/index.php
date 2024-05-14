@@ -47,7 +47,7 @@ if (defined('BEHAT_SITE_RUNNING') && BEHAT_SITE_RUNNING) {
 }
 
 $context = context_system::instance();
-$PAGE->set_url("$CFG->wwwroot/login/index.php");
+$PAGE->set_url("/login/index.php");
 $PAGE->set_context($context);
 $PAGE->set_pagelayout('login');
 
