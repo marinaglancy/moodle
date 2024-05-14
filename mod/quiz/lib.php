@@ -743,8 +743,8 @@ function quiz_grade_item_update($quiz, $grades = null) {
             if (!$confirm_regrade) {
                 if (!AJAX_SCRIPT) {
                     $message = get_string('gradeitemislocked', 'grades');
-                    $back_link = $CFG->wwwroot . '/mod/quiz/report.php?q=' . $quiz->id .
-                            '&amp;mode=overview';
+                    $back_link = new moodle_url('/mod/quiz/report.php?q=' . $quiz->id .
+                            '&mode=overview');
                     $regrade_link = qualified_me() . '&amp;confirm_regrade=1';
                     echo $OUTPUT->box_start('generalbox', 'notice');
                     echo '<p>'. $message .'</p>';

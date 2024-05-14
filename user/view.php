@@ -69,7 +69,7 @@ if (!empty($CFG->forceloginforprofiles)) {
         echo $OUTPUT->header();
         echo $OUTPUT->confirm(get_string('guestcantaccessprofiles', 'error'),
                               get_login_url(),
-                              $CFG->wwwroot);
+                              new moodle_url('/'));
         echo $OUTPUT->footer();
         die;
     }
