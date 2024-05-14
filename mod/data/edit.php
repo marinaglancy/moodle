@@ -76,7 +76,7 @@ if (isguestuser()) {
 /// Can't use this if there are no fields
 if ($manager->can_manage_templates()) {
     if (!$manager->has_fields()) {
-        redirect($CFG->wwwroot.'/mod/data/field.php?d='.$data->id);  // Redirect to field entry.
+        redirect(new moodle_url('/mod/data/field.php?d='.$data->id));  // Redirect to field entry.
     }
 }
 

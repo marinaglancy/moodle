@@ -72,7 +72,7 @@ $noteform->set_data($note);
 
 // If form was cancelled then return to the notes list of the note.
 if ($noteform->is_cancelled()) {
-    redirect($CFG->wwwroot . '/notes/index.php?course=' . $note->courseid . '&amp;user=' . $note->userid);
+    redirect(new moodle_url('/notes/index.php', ['course' => $note->courseid, 'user' => $note->userid]));
 }
 
 // If data was submitted and validated, then save it to database.
@@ -85,7 +85,7 @@ if ($note = $noteform->get_data()) {
     }
     note_save($note);
     // Redirect to notes list that contains this note.
-    redirect($CFG->wwwroot . '/notes/index.php?course=' . $note->courseid . '&amp;user=' . $note->userid);
+    redirect(new moodle_url('/notes/index.php', ['course' => $note->courseid, 'user' => $note->userid]));
 }
 
 if ($noteid) {

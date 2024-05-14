@@ -628,7 +628,7 @@ class portfolio_exporter {
         }
         $this->process_stage_cleanup(true);
         if ($logreturn) {
-            redirect($CFG->wwwroot . '/user/portfoliologs.php');
+            redirect(new moodle_url('/user/portfoliologs.php'));
         }
         redirect($this->caller->get_return_url());
         exit;

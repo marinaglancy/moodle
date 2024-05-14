@@ -39,7 +39,7 @@ $PAGE->set_url('/course/section.php', ['id' => $sectionid]);
 
 if ($section->course == SITEID) {
     // The home page is not a real course.
-    redirect($CFG->wwwroot .'/?redirect=0');
+    redirect(new moodle_url('/?redirect=0'));
 }
 
 $course = get_course($section->course);

@@ -62,7 +62,7 @@ if (!empty($CFG->maintenance_enabled) and !$hasmaintenanceaccess) {
 $hassiteconfig = has_capability('moodle/site:config', context_system::instance());
 
 if ($hassiteconfig && moodle_needs_upgrading()) {
-    redirect($CFG->wwwroot .'/'. $CFG->admin .'/index.php');
+    redirect(new moodle_url('/admin/index.php'));
 }
 
 // If site registration needs updating, redirect.
@@ -75,9 +75,9 @@ if (get_home_page() != HOMEPAGE_SITE) {
         set_user_preference('user_home_page_preference', HOMEPAGE_SITE);
     } else if (!empty($CFG->defaulthomepage) && ($CFG->defaulthomepage == HOMEPAGE_MY) && $redirect === 1) {
         // At this point, dashboard is enabled so we don't need to check for it (otherwise, get_home_page() won't return it).
-        redirect($CFG->wwwroot .'/my/');
+        redirect(new moodle_url('/my/'));
     } else if (!empty($CFG->defaulthomepage) && ($CFG->defaulthomepage == HOMEPAGE_MYCOURSES) && $redirect === 1) {
-        redirect($CFG->wwwroot .'/my/courses.php');
+        redirect(new moodle_url('/my/courses.php'));
     } else if (!empty($CFG->defaulthomepage) && ($CFG->defaulthomepage == HOMEPAGE_USER)) {
         $frontpagenode = $PAGE->settingsnav->find('frontpage', null);
         if ($frontpagenode) {

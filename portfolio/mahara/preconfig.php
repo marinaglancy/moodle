@@ -55,6 +55,6 @@ if (!$landed) {
     $exporter->verify_rewaken();
 
     $exporter->get('instance')->send_intent();
-    redirect($CFG->wwwroot . '/portfolio/add.php?postcontrol=1&sesskey=' . sesskey() . '&id=' . $id);
+    redirect(new moodle_url('/portfolio/add.php', ['postcontrol' => 1, 'sesskey' => sesskey(), 'id' => $id]));
 }
 

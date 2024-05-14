@@ -85,7 +85,7 @@ if (!has_any_capability(array(
         'moodle/badges:configuremessages',
         'moodle/badges:configuredetails',
         'moodle/badges:deletebadge'), $PAGE->context)) {
-    redirect($CFG->wwwroot);
+    redirect(new moodle_url('/'));
 }
 
 $PAGE->set_title($hdr);

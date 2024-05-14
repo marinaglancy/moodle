@@ -58,13 +58,13 @@ if ($section = optional_param('section', '', PARAM_SAFEPATH) and confirm_sesskey
     }
 
     if ($temp instanceof admin_settingpage) {
-        redirect($CFG->wwwroot . '/' . $CFG->admin . '/settings.php?section=' . $section);
+        redirect(new moodle_url('/admin/settings.php', ['section' => $section]));
 
     } elseif ($temp instanceof admin_externalpage) {
         redirect($temp->get_settings_page_url());
 
     } else if ($temp instanceof admin_category) {
-        redirect($CFG->wwwroot . '/' . $CFG->admin . '/category.php?category=' . $section);
+        redirect(new moodle_url('/admin/category.php', ['category' => $section]));
 
     }
 

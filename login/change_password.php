@@ -108,7 +108,7 @@ $navlinks = array();
 $navlinks[] = array('name' => $strparticipants, 'link' => "$CFG->wwwroot/user/index.php?id=$course->id", 'type' => 'misc');
 
 if ($mform->is_cancelled()) {
-    redirect($CFG->wwwroot.'/user/preferences.php?userid='.$USER->id.'&amp;course='.$course->id);
+    redirect(new moodle_url('/user/preferences.php', ['userid' => $USER->id, 'course' => $course->id]));
 } else if ($data = $mform->get_data()) {
 
     if (!$userauth->user_update_password($USER, $data->newpassword1)) {

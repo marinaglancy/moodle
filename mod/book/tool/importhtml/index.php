@@ -63,9 +63,9 @@ $mform = new booktool_importhtml_form(null, array('id'=>$id, 'chapterid'=>$chapt
 // If data submitted, then process and store.
 if ($mform->is_cancelled()) {
     if (empty($chapter->id)) {
-        redirect($CFG->wwwroot."/mod/book/view.php?id=$cm->id");
+        redirect(new moodle_url("/mod/book/view.php?id=$cm->id"));
     } else {
-        redirect($CFG->wwwroot."/mod/book/view.php?id=$cm->id&chapterid=$chapter->id");
+        redirect(new moodle_url("/mod/book/view.php?id=$cm->id&chapterid=$chapter->id"));
     }
 
 } else if ($data = $mform->get_data()) {

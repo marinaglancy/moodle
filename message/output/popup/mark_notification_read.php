@@ -27,7 +27,7 @@ require_once(__DIR__ . '/../../../config.php');
 require_login(null, false);
 
 if (isguestuser()) {
-    redirect($CFG->wwwroot);
+    redirect(new moodle_url('/'));
 }
 
 $notificationid = required_param('notificationid', PARAM_INT);
@@ -43,7 +43,7 @@ if (!empty($notification->contexturl)) {
 
 // Check notification belongs to this user.
 if ($USER->id != $notification->useridto) {
-    redirect($CFG->wwwroot);
+    redirect(new moodle_url('/'));
 }
 
 \core_message\api::mark_notification_as_read($notification);

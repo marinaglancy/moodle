@@ -176,9 +176,9 @@ if ($PAGE->user_allowed_editing()) {
         $USER->editing = 1;
         // Redirect to site root if Editing is toggled on frontpage.
         if ($course->id == SITEID) {
-            redirect($CFG->wwwroot .'/?redirect=0');
+            redirect(new moodle_url('/?redirect=0'));
         } else if (!empty($return)) {
-            redirect($CFG->wwwroot . $return);
+            redirect(new moodle_url($return));
         } else {
             $url = new moodle_url($PAGE->url, ['notifyeditingon' => 1]);
             redirect($url);
@@ -191,9 +191,9 @@ if ($PAGE->user_allowed_editing()) {
         }
         // Redirect to site root if Editing is toggled on frontpage.
         if ($course->id == SITEID) {
-            redirect($CFG->wwwroot .'/?redirect=0');
+            redirect(new moodle_url('/?redirect=0'));
         } else if (!empty($return)) {
-            redirect($CFG->wwwroot . $return);
+            redirect(new moodle_url($return));
         } else {
             redirect($PAGE->url);
         }
@@ -241,7 +241,7 @@ if ($PAGE->user_allowed_editing()) {
         $destsection = $section + $move;
         if (move_section_to($course, $section, $destsection)) {
             if ($course->id == SITEID) {
-                redirect($CFG->wwwroot . '/?redirect=0');
+                redirect(new moodle_url('/?redirect=0'));
             } else {
                 if ($format->get_course_display() == COURSE_DISPLAY_MULTIPAGE) {
                     redirect(course_get_url($course));
@@ -262,7 +262,7 @@ $SESSION->fromdiscussion = $PAGE->url->out(false);
 
 if ($course->id == SITEID) {
     // This course is not a real course.
-    redirect($CFG->wwwroot .'/?redirect=0');
+    redirect(new moodle_url('/?redirect=0'));
 }
 
 // Determine whether the user has permission to download course content.

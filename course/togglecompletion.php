@@ -103,7 +103,7 @@ if ($courseid) {
 
             $completion->mark_complete();
 
-            redirect($CFG->wwwroot.'/course/view.php?id='.$courseid);
+            redirect(new moodle_url('course/view.php?id='.$courseid));
             return;
         }
 

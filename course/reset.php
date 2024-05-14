@@ -56,7 +56,7 @@ $PAGE->set_secondary_active_tab('coursereuse');
 $mform = new course_reset_form();
 
 if ($mform->is_cancelled()) {
-    redirect($CFG->wwwroot.'/course/view.php?id='.$id);
+    redirect(new moodle_url('course/view.php?id='.$id));
 
 } else if ($data = $mform->get_data()) { // no magic quotes
 

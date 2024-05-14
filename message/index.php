@@ -27,7 +27,7 @@ require_once('../config.php');
 require_login(null, false);
 
 if (isguestuser()) {
-    redirect($CFG->wwwroot);
+    redirect(new moodle_url('/'));
 }
 
 if (empty($CFG->messaging)) {

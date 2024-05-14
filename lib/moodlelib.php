@@ -2349,7 +2349,7 @@ function require_login($courseorid = null, $autologinguest = true, $cm = null, $
                 redirect($changeurl);
             } else {
                 // Use moodle internal method.
-                redirect($CFG->wwwroot .'/login/change_password.php');
+                redirect(new moodle_url('/login/change_password.php'));
             }
         } else if ($userauth->can_change_password()) {
             throw new moodle_exception('forcepasswordchangenotice');
@@ -2375,7 +2375,7 @@ function require_login($courseorid = null, $autologinguest = true, $cm = null, $
         if ($setwantsurltome) {
             $SESSION->wantsurl = qualified_me();
         }
-        redirect($CFG->wwwroot .'/user/edit.php?id='. $USER->id .'&amp;course='. SITEID);
+        redirect(new moodle_url('user/edit.php', ['id' => $USER->id, 'course' => SITEID]));
     }
 
     // Make sure the USER has a sesskey set up. Used for CSRF protection.
@@ -2595,7 +2595,7 @@ function require_login($courseorid = null, $autologinguest = true, $cm = null, $
             if ($setwantsurltome) {
                 $SESSION->wantsurl = qualified_me();
             }
-            redirect($CFG->wwwroot .'/enrol/index.php?id='. $course->id);
+            redirect(new moodle_url('/enrol/index.php?id='. $course->id));
         }
     }
 
@@ -4165,7 +4165,7 @@ function complete_user_login($user, array $extrauserinfo = []) {
             } else {
                 require_once($CFG->dirroot . '/login/lib.php');
                 $SESSION->wantsurl = core_login_get_return_url();
-                redirect($CFG->wwwroot.'/login/change_password.php');
+                redirect(new moodle_url('/login/change_password.php'));
             }
         } else {
             throw new \moodle_exception('nopasswordchangeforced', 'auth');

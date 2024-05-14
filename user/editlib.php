@@ -82,7 +82,7 @@ function useredit_setup_preference_page($userid, $courseid) {
             $hostwwwroot = $DB->get_field('mnet_host', 'wwwroot', array('id' => $user->mnethostid));
             throw new \moodle_exception('usernotfullysetup', 'mnet', '', $hostwwwroot);
         }
-        redirect($CFG->wwwroot . "/user/view.php?course={$course->id}");
+        redirect(new moodle_url("/user/view.php?course={$course->id}"));
     }
 
     $systemcontext   = context_system::instance();

@@ -79,7 +79,7 @@ $context = context_module::instance($cm->id);
 // If we have an empty Database then redirect because this page is useless without data.
 if (has_capability('mod/data:managetemplates', $context)) {
     if (!$DB->record_exists('data_fields', array('dataid'=>$data->id))) {      // Brand new database!
-        redirect($CFG->wwwroot.'/mod/data/field.php?d='.$data->id);  // Redirect to field entry
+        redirect(new moodle_url('/mod/data/field.php?d='.$data->id));  // Redirect to field entry
     }
 }
 

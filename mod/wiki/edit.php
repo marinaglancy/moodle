@@ -100,7 +100,7 @@ if ($option == get_string('save', 'wiki')) {
             //delete lock
             wiki_delete_locks($page->id, $USER->id, $section);
 
-            redirect($CFG->wwwroot . '/mod/wiki/view.php?pageid=' . $pageid);
+            redirect(new moodle_url('/mod/wiki/view.php?pageid=' . $pageid));
         } else {
             $wikipage = new page_wiki_edit($wiki, $subwiki, $cm, 'modulepage');
             $wikipage->set_page($page);

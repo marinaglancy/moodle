@@ -32,7 +32,7 @@ $url = new moodle_url('/badges/backpack-export.php');
 
 require_login();
 if (empty($CFG->badges_allowexternalbackpack) || empty($CFG->enablebadges)) {
-    redirect($CFG->wwwroot);
+    redirect(new moodle_url('/'));
 }
 
 $backpack = badges_get_user_backpack();

@@ -30,7 +30,7 @@ require_once($CFG->libdir . '/badgeslib.php');
 $json = optional_param('badge', null, PARAM_RAW);
 // Redirect to homepage if users are trying to access external badge through old url.
 if ($json) {
-    redirect($CFG->wwwroot, get_string('invalidrequest', 'error'), 3);
+    redirect(new moodle_url('/'), get_string('invalidrequest', 'error'), 3);
 }
 
 $hash = required_param('hash', PARAM_ALPHANUM);

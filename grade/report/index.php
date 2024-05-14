@@ -76,5 +76,5 @@ if (empty($last)) {
 }
 
 //redirect to last or guessed report
-redirect($CFG->wwwroot.'/grade/report/'.$last.'/index.php?id='.$course->id);
+redirect(new moodle_url('/grade/report/'.$last.'/index.php?id='.$course->id));
 

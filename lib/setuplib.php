@@ -999,7 +999,7 @@ function initialise_fullme() {
             if (defined('REQUIRE_CORRECT_ACCESS') && REQUIRE_CORRECT_ACCESS) {
                 throw new \moodle_exception('sslonlyaccess', 'error');
             } else {
-                redirect($CFG->wwwroot, get_string('wwwrootmismatch', 'error', $CFG->wwwroot), 3);
+                redirect(new moodle_url('/'), get_string('wwwrootmismatch', 'error', $CFG->wwwroot), 3);
             }
         }
     } else {

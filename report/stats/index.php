@@ -46,7 +46,7 @@ if ($report == STATS_REPORT_USER_LOGINS) {
 }
 
 if ($mode == STATS_MODE_RANKED) {
-    redirect($CFG->wwwroot.'/report/stats/index.php?time='.$time);
+    redirect(new moodle_url('/report/stats/index.php?time='.$time));
 }
 
 if (!$course = $DB->get_record("course", array("id"=>$courseid))) {

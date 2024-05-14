@@ -77,7 +77,7 @@ if (is_mnet_remote_user($user)) {
         $hostwwwroot = $DB->get_field('mnet_host', 'wwwroot', array('id' => $user->mnethostid));
         throw new \moodle_exception('usernotfullysetup', 'mnet', '', $hostwwwroot);
     }
-    redirect($CFG->wwwroot . "/user/view.php?course={$course->id}");
+    redirect(new moodle_url("/user/view.php?course={$course->id}"));
 }
 
 // Load the appropriate auth plugin.

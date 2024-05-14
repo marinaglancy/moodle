@@ -261,7 +261,7 @@ switch ($mode) {
             $rec->defaultsortdir = $defaultsortdir;
 
             $DB->update_record('data', $rec);
-            redirect($CFG->wwwroot.'/mod/data/field.php?d='.$data->id, get_string('changessaved'), 2);
+            redirect(new moodle_url('/mod/data/field.php?d='.$data->id), get_string('changessaved'), 2);
             exit;
         }
         break;

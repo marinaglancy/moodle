@@ -28,7 +28,7 @@ require_once("$CFG->dirroot/enrol/paypal/lib.php");
 $id = required_param('id', PARAM_INT);
 
 if (!$course = $DB->get_record("course", array("id"=>$id))) {
-    redirect($CFG->wwwroot);
+    redirect(new moodle_url('/'));
 }
 
 $context = context_course::instance($course->id, MUST_EXIST);

@@ -2245,7 +2245,7 @@ class page_wiki_confirmrestore extends page_wiki_save {
         $wiki = $PAGE->activityrecord;
         if (wiki_user_can_edit($this->subwiki, $wiki) &&
                 wiki_restore_page($this->page, $version, $this->modcontext)) {
-            redirect($CFG->wwwroot . '/mod/wiki/view.php?pageid=' . $this->page->id, get_string('restoring', 'wiki', $version->version), 3);
+            redirect(new moodle_url('/mod/wiki/view.php?pageid=' . $this->page->id), get_string('restoring', 'wiki', $version->version), 3);
         } else {
             throw new \moodle_exception('restoreerror', 'wiki', $version->version);
         }
@@ -2343,7 +2343,7 @@ class page_wiki_handlecomments extends page_wiki {
 
             if ($manage || ($owner && $edit)) {
                 $this->delete_comment($this->commentid);
-                redirect($CFG->wwwroot . '/mod/wiki/comments.php?pageid=' . $this->page->id, get_string('deletecomment', 'wiki'), 2);
+                redirect(new moodle_url('/mod/wiki/comments.php?pageid=' . $this->page->id, get_string('deletecomment', 'wiki')), 2);
             } else {
                 throw new \moodle_exception('nopermissiontoeditcomment');
             }
@@ -2376,10 +2376,10 @@ class page_wiki_handlecomments extends page_wiki {
         wiki_add_comment($this->modcontext, $pageid, $content, $this->format);
 
         if (!$idcomment) {
-            redirect($CFG->wwwroot . '/mod/wiki/comments.php?pageid=' . $pageid, get_string('createcomment', 'wiki'), 2);
+            redirect(new moodle_url('/mod/wiki/comments.php?pageid=' . $pageid, get_string('createcomment', 'wiki')), 2);
         } else {
             $this->delete_comment($idcomment);
-            redirect($CFG->wwwroot . '/mod/wiki/comments.php?pageid=' . $pageid, get_string('editingcomment', 'wiki'), 2);
+            redirect(new moodle_url('/mod/wiki/comments.php?pageid=' . $pageid, get_string('editingcomment', 'wiki')), 2);
         }
     }
 
@@ -2444,7 +2444,7 @@ class page_wiki_overridelocks extends page_wiki_edit {
             $args .= "&section=" . urlencode($this->section);
         }
 
-        redirect($CFG->wwwroot . '/mod/wiki/edit.php?' . $args, get_string('overridinglocks', 'wiki'), 2);
+        redirect(new moodle_url('/mod/wiki/edit.php?' . $args, get_string('overridinglocks', 'wiki')), 2);
     }
 
     function set_url() {
@@ -2473,7 +2473,7 @@ class page_wiki_overridelocks extends page_wiki_edit {
             $args .= "&section=" . urlencode($this->section);
         }
 
-        redirect($CFG->wwwroot . '/mod/wiki/edit.php?' . $args, get_string('overridinglocks', 'wiki'), 2);
+        redirect(new moodle_url('/mod/wiki/edit.php?' . $args, get_string('overridinglocks', 'wiki')), 2);
     }
 
 }

@@ -190,6 +190,6 @@ class lesson_add_page_form_endofcluster extends lesson_add_page_form_base {
         $newanswer->jumpto = LESSON_NEXTPAGE;
         $newanswerid = $DB->insert_record("lesson_answers", $newanswer);
         $lesson->add_message(get_string('addedendofcluster', 'lesson'), 'notifysuccess');
-        redirect($CFG->wwwroot.'/mod/lesson/edit.php?id='.$PAGE->cm->id);
+        redirect(new moodle_url('/mod/lesson/edit.php?id='.$PAGE->cm->id));
     }
 }

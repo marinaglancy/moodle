@@ -78,9 +78,9 @@ if (!empty($dataid)) {
         // so process it elegantly and move on.
         if ($cancel) {
             if ($logreturn) {
-                redirect($CFG->wwwroot . '/user/portfoliologs.php');
+                redirect(new moodle_url('/user/portfoliologs.php'));
             }
-            redirect($CFG->wwwroot);
+            redirect(new moodle_url('/'));
         } else {
             throw $e;
         }
@@ -220,7 +220,7 @@ if (!$exporter->get('instance')) {
         // no point displaying a form, just redirect.
         $optionskeys = array_keys($options);
         $instance = array_shift($optionskeys);
-        redirect($CFG->wwwroot . '/portfolio/add.php?id= ' . $exporter->get('id') . '&instance=' . $instance . '&sesskey=' . sesskey());
+        redirect(new moodle_url('/portfolio/add.php?id= ' . $exporter->get('id')) . '&instance=' . $instance . '&sesskey=' . sesskey());
     }
     // be very selective about not including this unless we really need to
     require_once($CFG->libdir . '/portfolio/forms.php');
@@ -228,7 +228,7 @@ if (!$exporter->get('instance')) {
     if ($mform->is_cancelled()) {
         $exporter->cancel_request();
     } else if ($fromform = $mform->get_data()){
-        redirect($CFG->wwwroot . '/portfolio/add.php?instance=' . $fromform->instance . '&amp;id=' . $exporter->get('id'));
+        redirect(new moodle_url('/portfolio/add.php?instance=' . $fromform->instance . '&amp;id=' . $exporter->get('id')));
         exit;
     }
     else {

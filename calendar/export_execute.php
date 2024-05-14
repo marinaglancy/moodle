@@ -211,7 +211,7 @@ if(!empty($what) && !empty($time)) {
     }
     else {
         // Parameters given but incorrect, redirect back to export page
-        redirect($CFG->wwwroot.'/calendar/export.php');
+        redirect(new moodle_url('/calendar/export.php'));
         die();
     }
 }

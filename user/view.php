@@ -39,7 +39,7 @@ if (empty($id)) {
 }
 
 if ($courseid == SITEID) {   // Since Moodle 2.0 all site-level profiles are shown by profile.php.
-    redirect($CFG->wwwroot.'/user/profile.php?id='.$id);  // Immediate redirect.
+    redirect(new moodle_url('/user/profile.php?id='.$id));  // Immediate redirect.
 }
 
 $PAGE->set_url('/user/view.php', array('id' => $id, 'course' => $courseid));

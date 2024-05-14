@@ -38,7 +38,7 @@ $PAGE->set_pagelayout('admin');
 $url = new moodle_url('/badges/backpacks.php');
 
 if (empty($CFG->badges_allowexternalbackpack)) {
-    redirect($CFG->wwwroot);
+    redirect(new moodle_url('/'));
 }
 
 $PAGE->set_url($url);

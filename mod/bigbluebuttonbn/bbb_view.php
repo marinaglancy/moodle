@@ -117,7 +117,7 @@ switch (strtolower($action)) {
             $lastaccess = json_decode($lastaccess->meta);
             // If the user acceded from Timeline it should be redirected to the Dashboard.
             if (isset($lastaccess->origin) && $lastaccess->origin == logger::ORIGIN_TIMELINE) {
-                redirect($CFG->wwwroot . '/my/');
+                redirect(new moodle_url('/my/'));
             }
         }
         break;

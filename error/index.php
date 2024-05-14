@@ -66,7 +66,7 @@ $mform = new \core\form\error_feedback($CFG->wwwroot . '/error/index.php');
 if ($data = $mform->get_data()) {
 
     if (!$canmessage) {
-        redirect($CFG->wwwroot);
+        redirect(new moodle_url('/'));
     }
 
     // Send the message and redirect.
@@ -84,7 +84,7 @@ if ($data = $mform->get_data()) {
     $message->contexturl = $data->requested;
     message_send($message);
 
-    redirect($CFG->wwwroot, get_string('sendmessagesent', 'error', $data->requested), 5);
+    redirect(new moodle_url('/'), get_string('sendmessagesent', 'error', $data->requested), 5);
     exit;
 }
 

@@ -59,7 +59,7 @@ if (!empty($CFG->forgottenpasswordurl)) {
 
 // if you are logged in then you shouldn't be here!
 if (isloggedin() and !isguestuser()) {
-    redirect($CFG->wwwroot.'/index.php', get_string('loginalready'), 5);
+    redirect(new moodle_url('index.php'), get_string('loginalready'), 5);
 }
 
 // Fetch the token from the session, if present, and unset the session var immediately.
@@ -80,7 +80,7 @@ if (empty($token)) {
     // The session var is intentionally used only during the lifespan of one request (the redirect) and is unset above.
     if (!$tokeninsession && $_SERVER['REQUEST_METHOD'] === 'GET') {
         $SESSION->password_reset_token = $token;
-        redirect($CFG->wwwroot . '/login/forgot_password.php');
+        redirect(new moodle_url('/login/forgot_password.php'));
     } else {
         // Continue with the password reset process.
         core_login_process_password_set($token);

@@ -64,6 +64,6 @@ if (!empty($localuser->mnet_foreign_host_array)) {
 if ($wantsremoteurl) {
     redirect($remotewwwroot . $wantsurl);
 }
-redirect($CFG->wwwroot . $wantsurl);
+redirect(new moodle_url($wantsurl));
 
 

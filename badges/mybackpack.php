@@ -39,7 +39,7 @@ require_capability('moodle/badges:manageownbadges', $context);
 $disconnect = optional_param('disconnect', false, PARAM_BOOL);
 
 if (empty($CFG->badges_allowexternalbackpack)) {
-    redirect($CFG->wwwroot);
+    redirect(new moodle_url('/'));
 }
 
 $PAGE->set_url(new moodle_url('/badges/mybackpack.php'));

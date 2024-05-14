@@ -31,7 +31,7 @@ $user = isloggedin() && !isguestuser() ? $USER : null;
 if (!isset($CFG->supportavailability) ||
         $CFG->supportavailability == CONTACT_SUPPORT_DISABLED ||
         ($CFG->supportavailability == CONTACT_SUPPORT_AUTHENTICATED && is_null($user))) {
-    redirect($CFG->wwwroot);
+    redirect(new moodle_url('/'));
 }
 
 if (!empty($CFG->supportpage)) {
@@ -48,7 +48,7 @@ $renderer = $PAGE->get_renderer('user');
 
 $form = new \core_user\form\contactsitesupport_form(null, $user);
 if ($form->is_cancelled()) {
-    redirect($CFG->wwwroot);
+    redirect(new moodle_url('/'));
 } else if ($form->is_submitted() && $form->is_validated() && confirm_sesskey()) {
     $data = $form->get_data();
 
@@ -68,7 +68,7 @@ if ($form->is_cancelled()) {
         $output = $renderer->render_from_template('user/contact_site_support_not_available', $templatectx);
     } else {
         $level = \core\output\notification::NOTIFY_SUCCESS;
-        redirect($CFG->wwwroot, get_string('supportmessagesent', 'user'), 3, $level);
+        redirect(new moodle_url('/'), get_string('supportmessagesent', 'user'), 3, $level);
     }
 } else {
     $output = $form->render();

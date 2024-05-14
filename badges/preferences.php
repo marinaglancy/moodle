@@ -48,7 +48,7 @@ if (!$mform->is_cancelled() && $data = $mform->get_data()) {
 }
 
 if ($mform->is_cancelled()) {
-    redirect($CFG->wwwroot . '/user/preferences.php');
+    redirect(new moodle_url('/user/preferences.php'));
 }
 
 $strpreferences = get_string('preferences');

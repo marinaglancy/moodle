@@ -65,7 +65,7 @@ $fieldrecords = $DB->get_records('data_fields', array('dataid'=>$data->id), 'id'
 
 if(empty($fieldrecords)) {
     if (has_capability('mod/data:managetemplates', $context)) {
-        redirect($CFG->wwwroot.'/mod/data/field.php?d='.$data->id);
+        redirect(new moodle_url('/mod/data/field.php?d='.$data->id));
     } else {
         throw new \moodle_exception('nofieldindatabase', 'data');
     }

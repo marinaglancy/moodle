@@ -224,6 +224,6 @@ class lesson_add_page_form_endofbranch extends lesson_add_page_form_base {
             $lesson->add_message(get_string('nobranchtablefound', 'lesson'));
         }
 
-        redirect($CFG->wwwroot."/mod/lesson/edit.php?id=".$PAGE->cm->id);
+        redirect(new moodle_url("/mod/lesson/edit.php?id=".$PAGE->cm->id));
     }
 }

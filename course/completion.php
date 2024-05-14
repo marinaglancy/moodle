@@ -81,7 +81,7 @@ $PAGE->set_pagelayout('admin');
 $form = new course_completion_form('completion.php?id='.$id, array('course' => $course));
 
 if ($form->is_cancelled()){
-    redirect($CFG->wwwroot.'/course/view.php?id='.$course->id);
+    redirect(new moodle_url('course/view.php?id='.$course->id));
 
 } else if ($data = $form->get_data()) {
     $completion = new completion_info($course);

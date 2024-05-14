@@ -107,13 +107,13 @@ $wikipage->set_action($action);
 switch ($action) {
 case 'create':
     $newpageid = $wikipage->create_page($title);
-    redirect($CFG->wwwroot . '/mod/wiki/edit.php?pageid='.$newpageid);
+    redirect(new moodle_url('/mod/wiki/edit.php?pageid='.$newpageid));
     break;
 case 'new':
     // Go straight to editing if we know the page title and we're in force format mode.
     if ((int)$wiki->forceformat == 1 && $title != get_string('newpage', 'wiki')) {
         $newpageid = $wikipage->create_page($title);
-        redirect($CFG->wwwroot . '/mod/wiki/edit.php?pageid='.$newpageid);
+        redirect(new moodle_url('/mod/wiki/edit.php?pageid='.$newpageid));
     } else {
         $wikipage->print_header();
         // Create a new page.
