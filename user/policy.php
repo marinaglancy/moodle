@@ -41,7 +41,7 @@ if (!isloggedin()) {
 if (!empty($SESSION->wantsurl)) {
     $return = $SESSION->wantsurl;
 } else {
-    $return = $CFG->wwwroot.'/';
+    $return = new moodle_url('/');
 }
 
 $sitepolicymanager = new \core_privacy\local\sitepolicy\manager();
