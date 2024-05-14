@@ -34,7 +34,7 @@ $course = $DB->get_record('course', array('id'=>$id), '*', MUST_EXIST);
 $context = context_course::instance($course->id, MUST_EXIST);
 
 if ($course->id == SITEID) {
-    redirect("$CFG->wwwroot/");
+    redirect(new moodle_url('/'));
 }
 
 require_login($course);

@@ -35,7 +35,7 @@ $systemcontext = context_system::instance();
 
 if (empty($CFG->enablestats)) {
     if (has_capability('moodle/site:config', $systemcontext)) {
-        redirect("$CFG->wwwroot/$CFG->admin/search.php?query=enablestats", get_string('mustenablestats', 'admin'), 3);
+        redirect(new moodle_url("/admin/search.php?query=enablestats"), get_string('mustenablestats', 'admin'), 3);
     } else {
         throw new \moodle_exception('statsdisable');
     }

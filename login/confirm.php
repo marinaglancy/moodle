@@ -107,4 +107,4 @@ if (!empty($data) || (!empty($p) && !empty($s))) {
     throw new \moodle_exception("errorwhenconfirming");
 }
 
-redirect("$CFG->wwwroot/");
+redirect(new moodle_url('/'));

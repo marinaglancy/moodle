@@ -49,7 +49,7 @@ function resource_redirect_if_migrated($oldid, $cmid) {
         return;
     }
 
-    redirect("$CFG->wwwroot/mod/$old->newmodule/view.php?id=".$old->cmid);
+    redirect(new moodle_url("/mod/$old->newmodule/view.php?id=".$old->cmid));
 }
 
 /**

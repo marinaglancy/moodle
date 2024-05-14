@@ -40,9 +40,9 @@ $focus = '';
 if (empty($adminroot->errors) and $newsettingshtml === '') {
     // there must be either redirect without message or continue button or else upgrade would be sometimes broken
     if ($return == 'site') {
-        redirect("$CFG->wwwroot/");
+        redirect(new moodle_url('/'));
     } else {
-        redirect("$CFG->wwwroot/$CFG->admin/index.php");
+        redirect(new moodle_url("/admin/index.php"));
     }
 }
 

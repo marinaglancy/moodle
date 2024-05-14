@@ -301,7 +301,7 @@ if ($config->stage == INSTALL_SAVE) {
 
             if (file_exists($configfile)) {
                 // config created, let's continue!
-                redirect("$CFG->wwwroot/$config->admin/index.php?lang=$config->lang");
+                redirect(new moodle_url("/admin/index.php?lang=$config->lang"));
             }
 
             install_print_header($config, 'config.php',

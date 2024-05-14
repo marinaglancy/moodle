@@ -123,13 +123,13 @@ switch ($action) {
     case 'delete':
         $thispage = $lesson->load_page($pageid);
         $thispage->delete();
-        redirect("$CFG->wwwroot/mod/lesson/edit.php?id=$cm->id");
+        redirect(new moodle_url("/mod/lesson/edit.php?id=$cm->id"));
         break;
     case 'moveit':
         $after = (int)required_param('after', PARAM_INT); // target page
 
         $lesson->resort_pages($pageid, $after);
-        redirect("$CFG->wwwroot/mod/lesson/edit.php?id=$cm->id");
+        redirect(new moodle_url("/mod/lesson/edit.php?id=$cm->id"));
         break;
     case 'duplicate':
             $lesson->duplicate_page($pageid);

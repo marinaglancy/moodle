@@ -778,7 +778,7 @@ if (!$outagelessupgrade) {
             // Login user and let him set password and admin details.
             $adminuser->newadminuser = 1;
             complete_user_login($adminuser);
-            redirect("$CFG->wwwroot/user/editadvanced.php?id=$adminuser->id"); // Edit thyself.
+            redirect(new moodle_url("/user/editadvanced.php?id=$adminuser->id")); // Edit thyself.
 
         } else {
             unset_config('adminsetuppending');

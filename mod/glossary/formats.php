@@ -31,7 +31,7 @@ if ( $mode == 'visible' and confirm_sesskey()) {
         }
         $DB->update_record("glossary_formats",$displayformat);
     }
-    redirect("$CFG->wwwroot/$CFG->admin/settings.php?section=modsettingglossary#glossary_formats_header");
+    redirect(new moodle_url("/admin/settings.php?section=modsettingglossary#glossary_formats_header"));
     die;
 } elseif ( $mode == 'edit' and $form and confirm_sesskey()) {
 
@@ -49,7 +49,7 @@ if ( $mode == 'visible' and confirm_sesskey()) {
     $displayformat->showtabs = GLOSSARY_STANDARD.','.$visibletabs;
 
     $DB->update_record("glossary_formats",$displayformat);
-    redirect("$CFG->wwwroot/$CFG->admin/settings.php?section=modsettingglossary#glossary_formats_header");
+    redirect(new moodle_url("/admin/settings.php?section=modsettingglossary#glossary_formats_header"));
     die;
 }
 

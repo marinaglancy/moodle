@@ -306,10 +306,10 @@ if ($userform->is_cancelled()) {
             // Admin account is fully configured - set flag here in case the redirect does not work.
             unset_config('adminsetuppending');
             // Redirect to admin/ to continue with installation.
-            redirect("$CFG->wwwroot/$CFG->admin/");
+            redirect(new moodle_url("/admin/"));
         } else if (empty($SITE->fullname)) {
             // Somebody double clicked when editing admin user during install.
-            redirect("$CFG->wwwroot/$CFG->admin/");
+            redirect(new moodle_url("/admin/"));
         } else {
             redirect($returnurl, get_string('changessaved'), null, \core\output\notification::NOTIFY_SUCCESS);
         }
@@ -318,7 +318,7 @@ if ($userform->is_cancelled()) {
         redirect($returnurl, get_string('changessaved'), null, \core\output\notification::NOTIFY_SUCCESS);
     } else {
         \core\session\manager::gc(); // Remove stale sessions.
-        redirect("$CFG->wwwroot/$CFG->admin/user.php", get_string('changessaved'), null, \core\output\notification::NOTIFY_SUCCESS);
+        redirect(new moodle_url("/admin/user.php"), get_string('changessaved'), null, \core\output\notification::NOTIFY_SUCCESS);
     }
     // Never reached..
 }

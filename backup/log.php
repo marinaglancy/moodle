@@ -8,4 +8,4 @@
 
     require_capability('moodle/backup:backupcourse', context_system::instance());
 
-    redirect("$CFG->wwwroot/report/backups/index.php", '', 'admin', 1);
+    redirect(new moodle_url("/report/backups/index.php"), '', 'admin', 1);

@@ -111,7 +111,7 @@ if (empty($pageid)) {
             $lesson->add_message(get_string('lessonnotready2', 'lesson')); // a nice message to the student
         } else {
             if (!$DB->count_records('lesson_pages', array('lessonid'=>$lesson->id))) {
-                redirect("$CFG->wwwroot/mod/lesson/edit.php?id=$cm->id"); // no pages - redirect to add pages
+                redirect(new moodle_url("/mod/lesson/edit.php?id=$cm->id")); // no pages - redirect to add pages
             } else {
                 $lesson->add_message(get_string('lessonpagelinkingbroken', 'lesson'));  // ok, bad mojo
             }

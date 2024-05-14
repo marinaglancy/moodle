@@ -45,7 +45,7 @@ $usersecret = get_user_preferences('login_lockout_secret', false, $user);
 if ($secret === $usersecret) {
     login_unlock_account($user, true);
     if ($USER->id == $user->id) {
-        redirect("$CFG->wwwroot/");
+        redirect(new moodle_url('/'));
     } else {
         redirect(get_login_url());
     }

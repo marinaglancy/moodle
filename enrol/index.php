@@ -45,7 +45,7 @@ $context = context_course::instance($course->id, MUST_EXIST);
 
 // Everybody is enrolled on the frontpage
 if ($course->id == SITEID) {
-    redirect("$CFG->wwwroot/");
+    redirect(new moodle_url('/'));
 }
 
 if (!$course->visible && !has_capability('moodle/course:viewhiddencourses', context_course::instance($course->id))) {

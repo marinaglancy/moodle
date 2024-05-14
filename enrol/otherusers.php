@@ -38,7 +38,7 @@ require_login($course);
 require_capability('moodle/course:reviewotherusers', $context);
 
 if ($course->id == SITEID) {
-    redirect("$CFG->wwwroot/");
+    redirect(new moodle_url('/'));
 }
 
 $PAGE->set_pagelayout('admin');

@@ -94,4 +94,4 @@ if ($confirmed == AUTH_CONFIRM_ALREADY && !isloggedin()) {
     }
 }
 
-redirect("$CFG->wwwroot/");
+redirect(new moodle_url('/'));

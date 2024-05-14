@@ -46,7 +46,7 @@ $PAGE->set_title($stremailupdate);
 $PAGE->set_heading(format_string($SITE->fullname) . ": $stremailupdate");
 
 if (empty($preferences['newemailattemptsleft'])) {
-    redirect("$CFG->wwwroot/user/view.php?id=$user->id");
+    redirect(new moodle_url("/user/view.php?id=$user->id"));
 
 } else if ($preferences['newemailattemptsleft'] < 1) {
     cancel_email_update($user->id);

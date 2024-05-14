@@ -85,4 +85,4 @@ if ($confirmed) {
     }
 }
 
-redirect("$CFG->wwwroot/");
+redirect(new moodle_url('/'));

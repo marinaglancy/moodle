@@ -112,7 +112,7 @@ switch ($mode) {
         $mform = new essay_grading_form(null, array('scoreoptions' => $scoreoptions, 'user' => $user));
         $mform->set_data($essayinfo);
         if ($mform->is_cancelled()) {
-            redirect("$CFG->wwwroot/mod/lesson/essay.php?id=$cm->id");
+            redirect(new moodle_url("/mod/lesson/essay.php?id=$cm->id"));
         }
         if ($form = $mform->get_data()) {
             if (!$grades = $DB->get_records('lesson_grades', array("lessonid"=>$lesson->id, "userid"=>$attempt->userid), 'completed', '*', $attempt->retry, 1)) {

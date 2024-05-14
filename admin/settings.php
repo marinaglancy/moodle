@@ -65,8 +65,8 @@ if ($data = data_submitted() and confirm_sesskey() and isset($data->action) and 
         }
         // We didn't change a setting.
         switch ($return) {
-            case 'site': redirect("$CFG->wwwroot/");
-            case 'admin': redirect("$CFG->wwwroot/$CFG->admin/");
+            case 'site': redirect(new moodle_url('/'));
+            case 'admin': redirect(new moodle_url("/admin/"));
         }
         redirect($PAGE->url);
     } else {
