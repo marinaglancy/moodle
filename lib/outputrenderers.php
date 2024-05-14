@@ -916,7 +916,7 @@ class core_renderer extends renderer_base {
             if (function_exists('profiling_is_running') && profiling_is_running()) {
                 $txt = get_string('profiledscript', 'admin');
                 $title = get_string('profiledscriptview', 'admin');
-                $url = $CFG->wwwroot . '/admin/tool/profiling/index.php?script=' . urlencode($SCRIPT);
+                $url = new moodle_url('/admin/tool/profiling/index.php', ['script' => $SCRIPT]);
                 $link= '<a title="' . $title . '" href="' . $url . '">' . $txt . '</a>';
                 $output .= '<div class="profilingfooter">' . $link . '</div>';
             }
