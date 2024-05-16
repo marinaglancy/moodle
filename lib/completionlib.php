@@ -1596,7 +1596,7 @@ class completion_info {
     public function internal_systemerror($error) {
         global $CFG;
         throw new moodle_exception('err_system','completion',
-            $CFG->wwwroot.'/course/view.php?id='.$this->course->id,null,$error);
+            new moodle_url('/course/view.php?id='.$this->course->id),null,$error);
     }
 
     /**
