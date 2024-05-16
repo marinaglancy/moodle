@@ -136,7 +136,7 @@ foreach($feeds as $feed) {
 
 $table->print_html();
 
-$url = $CFG->wwwroot . '/blocks/rss_client/editfeed.php?' . substr($extraparams, 1);
+$url = new moodle_url('/blocks/rss_client/editfeed.php?' . substr($extraparams, 1));
 echo '<div class="actionbuttons">' . $OUTPUT->single_button($url, get_string('addnewfeed', 'block_rss_client'), 'get') . '</div>';
 
 
