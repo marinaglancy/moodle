@@ -65,7 +65,7 @@ class message_output_airnotifier extends message_output {
         }
 
         // Site id, to map with Moodle Mobile stored sites.
-        $siteid = md5($CFG->wwwroot . $eventdata->userto->username);
+        $siteid = md5($CFG->wwwroot . $eventdata->userto->username); // TODO-WWW
 
         // Airnotifier can handle custom requests using processors (that are Airnotifier plugins).
         // In the extra parameter we indicate which processor to use and also additional data to be handled by the processor.

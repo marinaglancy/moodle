@@ -118,7 +118,7 @@ class portfolio_plugin_flickr extends portfolio_plugin_push_base {
         $a->keysurl = 'http://www.flickr.com/services/api/keys/';
         $a->callbackurl = $CFG->wwwroot . '/portfolio/add.php?postcontrol=1&type=flickr';
         $mform->addElement('static', 'setupinfo', get_string('setupinfo', 'portfolio_flickr'),
-            get_string('setupinfodetails', 'portfolio_flickr', $a));
+            get_string('setupinfodetails', 'portfolio_flickr', $a)); // TODO-WWW
     }
 
     public function has_export_config() {
