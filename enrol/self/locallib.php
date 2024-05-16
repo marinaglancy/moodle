@@ -94,8 +94,8 @@ class enrol_self_enrol_form extends moodleform {
                 $keyholdercontext = context_user::instance($keyholder->id);
                 if ($USER->id == $keyholder->id || has_capability('moodle/user:viewdetails', context_system::instance()) ||
                         has_coursecontact_role($keyholder->id)) {
-                    $profilelink = '<a href="' . $CFG->wwwroot . '/user/view.php?id=' . $keyholder->id . '&amp;course=' .
-                    $this->instance->courseid . '">' . fullname($keyholder) . '</a>';
+                    $profilelink = '<a href="' . (new moodle_url('/user/view.php?id=' . $keyholder->id . '&course=' .
+                    $this->instance->courseid)) . '">' . fullname($keyholder) . '</a>';
                 } else {
                     $profilelink = fullname($keyholder);
                 }

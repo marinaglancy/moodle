@@ -300,10 +300,10 @@
         echo "<p>If the following image displays correctly, set your ";
         echo "<a href=\"$admin\" target=\"_blank\">Administration->Server->HTTP</a> ";
         echo "setting for slasharguments to file.php/1/pic.jpg: ";
-        echo "<img src=\"$CFG->wwwroot/filter/tex/pix.php/$image\" align=\"absmiddle\"></p>\n";
+        echo "<img src=\"".(new moodle_url("/filter/tex/pix.php/$image"))."\" align=\"absmiddle\"></p>\n";
         echo "<p>Otherwise set it to file.php?file=/1/pic.jpg ";
         echo "It should display correctly as ";
-        echo "<img src=\"$CFG->wwwroot/filter/tex/pix.php?file=$image\" align=\"absmiddle\"></p>\n";
+        echo "<img src=\"".(new moodle_url("/filter/tex/pix.php?file=$image"))."\" align=\"absmiddle\"></p>\n";
         echo "<p>If neither equation image displays correctly, please seek ";
         echo "further help at moodle.org at the ";
         echo "<a href=\"http://moodle.org/mod/forum/view.php?id=752&loginguest=true\" target=\"_blank\">";

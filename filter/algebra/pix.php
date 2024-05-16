@@ -53,10 +53,10 @@ define('NO_MOODLE_COOKIES', true); // Because it interferes with caching
         if (debugging()) {
             echo "The shell command<br />$cmd<br />returned status = $status<br />\n";
             echo "Image not found!<br />";
-            echo "Please try the <a href=\"$CFG->wwwroot/filter/algebra/algebradebug.php\">debugging script</a>";
+            echo "Please try the <a href=\"".(new moodle_url("/filter/algebra/algebradebug.php"))."\">debugging script</a>";
         } else {
             echo "Image not found!<br />";
-            echo "Please try the <a href=\"$CFG->wwwroot/filter/algebra/algebradebug.php\">debugging script</a><br />";
+            echo "Please try the <a href=\"".(new moodle_url("/filter/algebra/algebradebug.php"))."\">debugging script</a><br />";
             echo "Please turn on debug mode in site configuration to see more info here.";
         }
     }
