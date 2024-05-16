@@ -96,7 +96,7 @@ if ($canmessage) {
     echo \html_writer::tag('h4', get_string('sendmessage', 'error'));
     $mform->display();
 } else {
-    echo $OUTPUT->continue_button($CFG->wwwroot);
+    echo $OUTPUT->continue_button(new moodle_url('/'));
 }
 
 echo $OUTPUT->footer();

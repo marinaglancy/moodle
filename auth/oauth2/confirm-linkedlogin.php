@@ -69,11 +69,11 @@ if ($confirmed) {
     echo "<p>".get_string("confirmed")."</p>\n";
     // If $wantsurl and $redirect are empty, then the button will navigate the identical user to the dashboard.
     if ($user->id == $USER->id) {
-        echo $OUTPUT->single_button("$CFG->wwwroot/course/", get_string('courses'));
+        echo $OUTPUT->single_button(new moodle_url("/course/"), get_string('courses'));
     } else if (!isloggedin() || isguestuser()) {
         echo $OUTPUT->single_button(get_login_url(), get_string('login'));
     } else {
-        echo $OUTPUT->single_button("$CFG->wwwroot/login/logout.php", get_string('logout'));
+        echo $OUTPUT->single_button(new moodle_url("/login/logout.php"), get_string('logout'));
     }
     echo $OUTPUT->box_end();
     echo $OUTPUT->footer();

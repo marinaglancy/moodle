@@ -48,7 +48,7 @@ if ($confirmed == AUTH_CONFIRM_ALREADY && !isloggedin()) {
     echo $OUTPUT->header();
     echo $OUTPUT->box_start('generalbox centerpara boxwidthnormal boxaligncenter');
     echo "<p>".get_string("alreadyconfirmed")."</p>\n";
-    echo $OUTPUT->single_button("$CFG->wwwroot/course/", get_string('courses'));
+    echo $OUTPUT->single_button(new moodle_url("/course/"), get_string('courses'));
     echo $OUTPUT->box_end();
     echo $OUTPUT->footer();
     exit;
@@ -83,7 +83,7 @@ if ($confirmed == AUTH_CONFIRM_ALREADY && !isloggedin()) {
     if (!isloggedin() || isguestuser()) {
         echo $OUTPUT->single_button(get_login_url(), get_string('login'));
     } else {
-        echo $OUTPUT->single_button("$CFG->wwwroot/login/logout.php", get_string('logout'));
+        echo $OUTPUT->single_button(new moodle_url("/login/logout.php"), get_string('logout'));
     }
     echo $OUTPUT->box_end();
     echo $OUTPUT->footer();
