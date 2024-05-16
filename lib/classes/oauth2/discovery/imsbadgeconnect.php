@@ -127,7 +127,7 @@ class imsbadgeconnect extends base_definition {
                 $scopes = str_replace("\r", " ", $issuer->get('scopessupported'));
 
                 // Add slash at the end of the site URL.
-                $hosturl = $CFG->wwwroot;
+                $hosturl = $CFG->wwwroot; // TODO-WWW
                 $hosturl .= (substr($CFG->wwwroot, -1) == '/' ? '' : '/');
 
                 // Create the registration request following the format defined in the IMS OBv2.1 specification.

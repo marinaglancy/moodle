@@ -47,7 +47,7 @@ class send_login_notifications extends adhoc_task {
 
         $this->log_start("Sending login notification to {$USER->username}");
         $sitename = format_string($SITE->fullname);
-        $siteurl = $CFG->wwwroot;
+        $siteurl = $CFG->wwwroot; // TODO-WWW
         $userfullname = fullname($USER);
         $username = $USER->username;
         $useremail = ($USER->username != $USER->email) ? $USER->email : '';

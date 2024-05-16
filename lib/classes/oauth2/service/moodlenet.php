@@ -130,7 +130,7 @@ class moodlenet implements issuer_interface {
             $url = $issuer->get_endpoint_url('registration');
             if ($url) {
                 $scopes = str_replace("\r", " ", $issuer->get('scopessupported'));
-                $hosturl = $CFG->wwwroot;
+                $hosturl = $CFG->wwwroot; // TODO-WWW
 
                 $request = [
                     'client_name' => $SITE->fullname,

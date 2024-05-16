@@ -192,7 +192,7 @@ class registration {
 
         // Version and url.
         $siteinfo['moodlerelease'] = $CFG->release;
-        $siteinfo['url'] = $CFG->wwwroot;
+        $siteinfo['url'] = $CFG->wwwroot; // TODO-WWW
 
         // Mobile related information.
         $siteinfo['mobileservicesenabled'] = 0;
