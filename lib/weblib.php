@@ -2841,7 +2841,7 @@ function navmenulist($course, $sections, $modinfo, $strsection, $strjumpto, $wid
         $class .= ($cmid == $mod->id) ? ' selected' : '';
         $menu[] = '<li class="'.$class.'">'.
                   $OUTPUT->image_icon('monologo', '', $mod->modname).
-                  '<a href="'.$CFG->wwwroot.'/mod/'.$url.'">'.$mod->name.'</a></li>';
+                  '<a href="'.(new moodle_url('/mod/'.$url)).'">'.$mod->name.'</a></li>';
     }
 
     if ($doneheading) {

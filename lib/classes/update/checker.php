@@ -757,7 +757,7 @@ class checker {
             $text .= PHP_EOL;
             $html .= html_writer::end_tag('ul') . PHP_EOL;
 
-            $a = array('url' => $CFG->wwwroot.'/'.$CFG->admin.'/index.php');
+            $a = array('url' => new \moodle_url('/admin/index.php'));
             $text .= get_string('updateavailabledetailslink', 'core_admin', $a) . PHP_EOL;
             $a = array('url' => html_writer::link(new \moodle_url('/admin/index.php'), new \moodle_url('/admin/index.php')));
             $html .= html_writer::tag('p', get_string('updateavailabledetailslink', 'core_admin', $a)) . PHP_EOL;
@@ -788,9 +788,10 @@ class checker {
             $text .= PHP_EOL;
             $html .= html_writer::end_tag('ul') . PHP_EOL;
 
-            $a = array('url' => $CFG->wwwroot.'/'.$CFG->admin.'/plugins.php');
+            $url = new \moodle_url('/admin/plugins.php');
+            $a = array('url' => $url);
             $text .= get_string('updateavailabledetailslink', 'core_admin', $a) . PHP_EOL;
-            $a = array('url' => html_writer::link(new \moodle_url('/admin/plugins.php'), $CFG->wwwroot.'/'.$CFG->admin.'/plugins.php'));
+            $a = array('url' => html_writer::link($url, $url->out(false)));
             $html .= html_writer::tag('p', get_string('updateavailabledetailslink', 'core_admin', $a)) . PHP_EOL;
         }
 

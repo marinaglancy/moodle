@@ -681,7 +681,7 @@ class api {
             // Return certificate information and verify the certificate.
             $curl->setopt(array('CURLOPT_CERTINFO' => 1, 'CURLOPT_SSL_VERIFYPEER' => true));
             // Check https using a page not redirecting or returning exceptions.
-            $curl->head("$CFG->wwwroot/$CFG->admin/tool/mobile/mobile.webmanifest.php");
+            $curl->head(new moodle_url("/admin/tool/mobile/mobile.webmanifest.php"));
             $info = $curl->get_info();
 
             // Check the certificate is not self-signed or has an untrusted-root.

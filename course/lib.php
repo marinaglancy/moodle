@@ -2457,7 +2457,7 @@ class course_request {
         if ($users = get_users_from_config($CFG->courserequestnotify, 'moodle/site:approvecourse')) {
 
             $a = new stdClass;
-            $a->link = "$CFG->wwwroot/course/pending.php";
+            $a->link = new moodle_url("/course/pending.php");
             $a->user = fullname($USER);
             $subject = get_string('courserequest');
             $message = get_string('courserequestnotifyemail', 'admin', $a);
@@ -2694,7 +2694,7 @@ class course_request {
 
         $a = new stdClass();
         $a->name = format_string($course->fullname, true, array('context' => context_course::instance($course->id)));
-        $a->url = $CFG->wwwroot.'/course/view.php?id=' . $course->id;
+        $a->url = new moodle_url('/course/view.php?id=' . $course->id);
         $this->notify($user, $USER, 'courserequestapproved', get_string('courseapprovedsubject'), get_string('courseapprovedemail2', 'moodle', $a), $course->id);
 
         return $course->id;

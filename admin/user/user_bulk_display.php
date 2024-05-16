@@ -75,7 +75,7 @@ foreach ($columns as $column) {
 
 foreach($users as $user) {
     $table->data[] = array (
-        '<a href="'.$CFG->wwwroot.'/user/view.php?id='.$user->id.'&amp;course='.SITEID.'">'.$user->fullname.'</a>',
+        '<a href="'.(new moodle_url('/user/view.php?id='.$user->id.'&course='.SITEID)).'">'.$user->fullname.'</a>',
 //        $user->username,
         s($user->email),
         $user->city,

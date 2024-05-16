@@ -82,7 +82,7 @@ class block_news_items extends block_base {
             $currentgroup = groups_get_activity_group($cm, true);
 
             if (forum_user_can_post_discussion($forum, $currentgroup, $groupmode, $cm, $context)) {
-                $text .= '<div class="newlink"><a href="'.$CFG->wwwroot.'/mod/forum/post.php?forum='.$forum->id.'">'.
+                $text .= '<div class="newlink"><a href="'.(new moodle_url('/mod/forum/post.php?forum='.$forum->id)).'">'.
                           get_string('addanewtopic', 'forum').'</a>...</div>';
             }
 
@@ -132,14 +132,14 @@ class block_news_items extends block_base {
                          '<div class="date">'.userdate($posttime, $strposttimeformat).'</div>'.
                          '<div class="name">'.$userfullname.'</div>'.
                          '</div>'.
-                         '<div class="info"><a href="'.$CFG->wwwroot.'/mod/forum/discuss.php?d='.$discussion->discussion.'">'.$discussion->subject.'</a></div>'.
+                         '<div class="info"><a href="'.(new moodle_url('/mod/forum/discuss.php?d='.$discussion->discussion)).'">'.$discussion->subject.'</a></div>'.
                          "</li>\n";
             }
             $text .= "</ul>\n";
 
             $this->content->text = $text;
 
-            $this->content->footer = '<a href="'.$CFG->wwwroot.'/mod/forum/view.php?f='.$forum->id.'">'.
+            $this->content->footer = '<a href="'.(new moodle_url('/mod/forum/view.php?f='.$forum->id)).'">'.
                                       get_string('oldertopics', 'forum').'</a> ...';
 
         /// If RSS is activated at site and forum level and this forum has rss defined, show link

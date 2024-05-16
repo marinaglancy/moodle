@@ -134,7 +134,7 @@ class block_online_users extends block_base {
 
                 } else { // Not a guest user.
                     $this->content->text .= '<div class="user">';
-                    $this->content->text .= '<a href="'.$CFG->wwwroot.'/user/view.php?id='.$user->id.'&amp;course='.$this->page->course->id.'" title="'.$timeago.'">';
+                    $this->content->text .= '<a href="'.(new moodle_url('/user/view.php?id='.$user->id.'&course='.$this->page->course->id)).'" title="'.$timeago.'">';
                     $avataroptions = [
                         'size' => 30,
                         'class' => 'userpicture align-middle',

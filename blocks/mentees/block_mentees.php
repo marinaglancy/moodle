@@ -61,7 +61,7 @@ class block_mentees extends block_base {
 
             $this->content->text = '<ul>';
             foreach ($usercontexts as $usercontext) {
-                $this->content->text .= '<li><a href="'.$CFG->wwwroot.'/user/view.php?id='.$usercontext->instanceid.'&amp;course='.SITEID.'">'.fullname($usercontext).'</a></li>';
+                $this->content->text .= '<li><a href="'.(new moodle_url('/user/view.php?id='.$usercontext->instanceid.'&course='.SITEID)).'">'.fullname($usercontext).'</a></li>';
             }
             $this->content->text .= '</ul>';
         }

@@ -376,9 +376,9 @@ class portfolio_exporter {
             return true;
         }
         $strconfirm = get_string('confirmexport', 'portfolio');
-        $baseurl = $CFG->wwwroot . '/portfolio/add.php?sesskey=' . sesskey() . '&id=' . $this->get('id');
-        $yesurl = $baseurl . '&stage=' . PORTFOLIO_STAGE_QUEUEORWAIT;
-        $nourl  = $baseurl . '&cancel=1';
+        $baseurl = new moodle_url('/portfolio/add.php?sesskey=' . sesskey() . '&id=' . $this->get('id'));
+        $yesurl = new moodle_url($baseurl, ['stage' => PORTFOLIO_STAGE_QUEUEORWAIT]);
+        $nourl  = new moodle_url($baseurl, ['cancel' => 1]);
         $this->print_header(get_string('confirmexport', 'portfolio'));
         echo $OUTPUT->box_start();
         echo $OUTPUT->heading(get_string('confirmsummary', 'portfolio'), 3);

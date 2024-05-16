@@ -63,7 +63,7 @@ class completion_criteria_course extends completion_criteria {
     public function config_form_display(&$mform, $data = null) {
         global $CFG;
 
-        $link = "<a href=\"{$CFG->wwwroot}/course/view.php?id={$data->id}\">".s($data->fullname).'</a>';
+        $link = "<a href=\"".(new moodle_url("/course/view.php?id={$data->id}"))."\">".s($data->fullname).'</a>';
         $mform->addElement('checkbox', 'criteria_course['.$data->id.']', $link);
 
         if ($this->id) {
@@ -222,9 +222,9 @@ class completion_criteria_course extends completion_criteria {
 
         $details = array();
         $details['type'] = $this->get_title();
-        $details['criteria'] = '<a href="'.$CFG->wwwroot.'/course/view.php?id='.$this->courseinstance.'">'.s($fullname).'</a>';
+        $details['criteria'] = '<a href="'.(new moodle_url('/course/view.php?id='.$this->courseinstance)).'">'.s($fullname).'</a>';
         $details['requirement'] = get_string('coursecompleted', 'completion');
-        $details['status'] = '<a href="'.$CFG->wwwroot.'/blocks/completionstatus/details.php?course='.$this->courseinstance.'">'.get_string('seedetails', 'completion').'</a>';
+        $details['status'] = '<a href="'.(new moodle_url('/blocks/completionstatus/details.php?course='.$this->courseinstance)).'">'.get_string('seedetails', 'completion').'</a>';
 
         return $details;
     }

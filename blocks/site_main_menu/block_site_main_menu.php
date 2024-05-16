@@ -140,7 +140,8 @@ class block_site_main_menu extends block_list {
 
         if ($ismoving) {
             $this->content->icons[] = $OUTPUT->pix_icon('t/move', get_string('move'));
-            $this->content->items[] = $USER->activitycopyname.'&nbsp;(<a href="'.$CFG->wwwroot.'/course/mod.php?cancelcopy=true&amp;sesskey='.sesskey().'">'.$strcancel.'</a>)';
+            $this->content->items[] = $USER->activitycopyname.'&nbsp;(<a href="'.
+                (new moodle_url('/course/mod.php?cancelcopy=true&sesskey='.sesskey())).'">'.$strcancel.'</a>)';
         }
 
         if (!empty($modinfo->sections[0])) {

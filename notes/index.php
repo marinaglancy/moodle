@@ -186,7 +186,7 @@ if ($courseid != SITEID) {
         foreach ($courses as $c) {
             $ccontext = context_course::instance($c->id);
             $cfullname = format_string($c->fullname, true, array('context' => $ccontext));
-            $header = '<a href="' . $CFG->wwwroot . '/course/view.php?id=' . $c->id . '">' . $cfullname . '</a>';
+            $header = '<a href="' . (new moodle_url('/course/view.php?id=' . $c->id)) . '">' . $cfullname . '</a>';
             $viewcoursenotes = has_capability('moodle/notes:view', $ccontext);
             if (has_capability('moodle/notes:manage', $ccontext)) {
                 $addid = $c->id;

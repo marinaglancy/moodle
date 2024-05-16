@@ -66,12 +66,12 @@ class block_course_list extends block_list {
                     $coursecontext = context_course::instance($course->id);
                     $linkcss = $course->visible ? "" : " class=\"dimmed\" ";
                     $this->content->items[]="<a $linkcss title=\"" . format_string($course->shortname, true, array('context' => $coursecontext)) . "\" ".
-                               "href=\"$CFG->wwwroot/course/view.php?id=$course->id\">".$icon.format_string(get_course_display_name_for_list($course)). "</a>";
+                               "href=\"".(new moodle_url("/course/view.php?id=$course->id"))."\">".$icon.format_string(get_course_display_name_for_list($course)). "</a>";
                 }
                 $this->title = get_string('mycourses');
             /// If we can update any course of the view all isn't hidden, show the view all courses link
                 if ($allcourselink) {
-                    $this->content->footer = "<a href=\"$CFG->wwwroot/course/index.php\">".get_string("fulllistofcourses")."</a> ...";
+                    $this->content->footer = "<a href=\"".(new moodle_url("/course/index.php"))."\">".get_string("fulllistofcourses")."</a> ...";
                 }
             }
             $this->get_remote_courses();
@@ -87,11 +87,11 @@ class block_course_list extends block_list {
                 foreach ($categories as $category) {
                     $categoryname = $category->get_formatted_name();
                     $linkcss = $category->visible ? "" : " class=\"dimmed\" ";
-                    $this->content->items[]="<a $linkcss href=\"$CFG->wwwroot/course/index.php?categoryid=$category->id\">".$icon . $categoryname . "</a>";
+                    $this->content->items[]="<a $linkcss href=\"".(new moodle_url("/course/index.php?categoryid=$category->id"))."\">".$icon . $categoryname . "</a>";
                 }
             /// If we can update any course of the view all isn't hidden, show the view all courses link
                 if ($allcourselink) {
-                    $this->content->footer .= "<a href=\"$CFG->wwwroot/course/index.php\">".get_string('fulllistofcourses').'</a> ...';
+                    $this->content->footer .= "<a href=\"".(new moodle_url("/course/index.php"))."\">".get_string('fulllistofcourses').'</a> ...';
                 }
                 $this->title = get_string('categories');
             } else {                          // Just print course names of single category
@@ -105,12 +105,12 @@ class block_course_list extends block_list {
 
                         $this->content->items[]="<a $linkcss title=\""
                                    . s($course->get_formatted_shortname())."\" ".
-                                   "href=\"$CFG->wwwroot/course/view.php?id=$course->id\">"
+                                   "href=\"".(new moodle_url("/course/view.php?id=$course->id"))."\">"
                                    .$icon. $course->get_formatted_name() . "</a>";
                     }
                 /// If we can update any course of the view all isn't hidden, show the view all courses link
                     if ($allcourselink) {
-                        $this->content->footer .= "<a href=\"$CFG->wwwroot/course/index.php\">".get_string('fulllistofcourses').'</a> ...';
+                        $this->content->footer .= "<a href=\"".(new moodle_url("/course/index.php"))."\">".get_string('fulllistofcourses').'</a> ...';
                     }
                     $this->get_remote_courses();
                 } else {
@@ -118,7 +118,7 @@ class block_course_list extends block_list {
                     $this->content->icons[] = '';
                     $this->content->items[] = get_string('nocoursesyet');
                     if (has_capability('moodle/course:create', context_coursecat::instance($category->id))) {
-                        $this->content->footer = '<a href="'.$CFG->wwwroot.'/course/edit.php?category='.$category->id.'">'.get_string("addnewcourse").'</a> ...';
+                        $this->content->footer = '<a href="'.(new moodle_url('/course/edit.php?category='.$category->id)).'">'.get_string("addnewcourse").'</a> ...';
                     }
                     $this->get_remote_courses();
                 }
@@ -149,7 +149,7 @@ class block_course_list extends block_list {
             $this->content->icons[] = '';
             foreach ($courses as $course) {
                 $this->content->items[]="<a title=\"" . format_string($course->shortname, true) . "\" ".
-                    "href=\"{$CFG->wwwroot}/auth/mnet/jump.php?hostid={$course->hostid}&amp;wantsurl=/course/view.php?id={$course->remoteid}\">"
+                    "href=\"".(new moodle_url("/auth/mnet/jump.php?hostid={$course->hostid}&wantsurl=/course/view.php?id={$course->remoteid}"))."\">"
                     .$icon. format_string(get_course_display_name_for_list($course)) . "</a>";
             }
             // if we listed courses, we are done

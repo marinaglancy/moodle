@@ -103,7 +103,7 @@ class block_selfcompletion extends block_base {
         // If user is not complete, or has not yet self completed
         } else {
             $this->content->text = '';
-            $this->content->footer = '<br /><a href="'.$CFG->wwwroot.'/course/togglecompletion.php?course='.$this->page->course->id.'">';
+            $this->content->footer = '<br /><a href="'.(new moodle_url('/course/togglecompletion.php?course='.$this->page->course->id)).'">';
             $this->content->footer .= get_string('completecourse', 'block_selfcompletion').'</a>...';
         }
 

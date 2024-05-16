@@ -1140,7 +1140,7 @@ class core_renderer extends renderer_base {
             $fullname = fullname($realuser);
             if ($withlinks) {
                 $loginastitle = get_string('loginas');
-                $realuserinfo = " [<a href=\"$CFG->wwwroot/course/loginas.php?id=$course->id&amp;sesskey=".sesskey()."\"";
+                $realuserinfo = " [<a href=\"".(new moodle_url("/course/loginas.php?id=$course->id&sesskey=".sesskey()))."\"";
                 $realuserinfo .= "title =\"".$loginastitle."\">$fullname</a>] ";
             } else {
                 $realuserinfo = " [$fullname] ";
@@ -1162,7 +1162,7 @@ class core_renderer extends renderer_base {
             // Since Moodle 2.0 this link always goes to the public profile page (not the course profile page)
             if ($withlinks) {
                 $linktitle = get_string('viewprofile');
-                $username = "<a href=\"$CFG->wwwroot/user/profile.php?id=$USER->id\" title=\"$linktitle\">$fullname</a>";
+                $username = "<a href=\"".(new moodle_url("/user/profile.php?id=$USER->id"))."\" title=\"$linktitle\">$fullname</a>";
             } else {
                 $username = $fullname;
             }
@@ -1191,7 +1191,7 @@ class core_renderer extends renderer_base {
             } else {
                 $loggedinas = $realuserinfo.get_string('loggedinas', 'moodle', $username);
                 if ($withlinks) {
-                    $loggedinas .= " (<a href=\"$CFG->wwwroot/login/logout.php?sesskey=".sesskey()."\">".get_string('logout').'</a>)';
+                    $loggedinas .= " (<a href=\"".(new moodle_url("/login/logout.php?sesskey=".sesskey()))."\">".get_string('logout').'</a>)';
                 }
             }
         } else {
@@ -1265,11 +1265,11 @@ class core_renderer extends renderer_base {
                    '<img src="' . $this->image_url('moodlelogo_grayhat') . '" alt="'.get_string('moodlelogo').'" /></a></div>';
 
         } else if ($this->page->course->id == $SITE->id || strpos($this->page->pagetype, 'course-view') === 0) {
-            return '<div class="homelink"><a href="' . $CFG->wwwroot . '/">' .
+            return '<div class="homelink"><a href="' . (new moodle_url('/')).'">' .
                     get_string('home') . '</a></div>';
 
         } else {
-            return '<div class="homelink"><a href="' . $CFG->wwwroot . '/course/view.php?id=' . $this->page->course->id . '">' .
+            return '<div class="homelink"><a href="' . (new moodle_url('/course/view.php?id=' . $this->page->course->id)) . '">' .
                     format_string($this->page->course->shortname, true, array('context' => $this->page->context)) . '</a></div>';
         }
     }
@@ -4348,7 +4348,7 @@ EOD;
             $attributes = ['href' => $CFG->supportpage, 'target' => 'blank'];
             $content .= $this->pix_icon('i/externallink', '', 'moodle', ['class' => 'ml-1']);
         } else {
-            $attributes = ['href' => $CFG->wwwroot . '/user/contactsitesupport.php'];
+            $attributes = ['href' => new moodle_url('/user/contactsitesupport.php')];
         }
 
         $attributes += $customattribs;
