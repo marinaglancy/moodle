@@ -304,7 +304,7 @@ function core_myprofile_navigation(core_user\output\myprofile\tree $tree, $user,
                     }
 
                     if ($course->groupmode != NOGROUPS) {
-                        $groupstr .= ' <a href="'.$CFG->wwwroot.'/user/index.php?id='.$course->id.'&amp;group='.$group->id.'">'
+                        $groupstr .= ' <a href="'.(new moodle_url('/user/index.php?id='.$course->id.'&group='.$group->id)).'">'
                                      .format_string($group->name).'</a>,';
                     } else {
                         // The user/index.php shows groups only when course in group mode.

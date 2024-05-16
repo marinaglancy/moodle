@@ -332,9 +332,9 @@ class block_activity_results extends block_base {
 
                 if ($nameformat == B_ACTIVITYRESULTS_NAME_FORMAT_FULL) {
                     if (has_capability('moodle/course:managegroups', $context)) {
-                        $grouplink = $CFG->wwwroot.'/group/overview.php?id='.$courseid.'&amp;group=';
+                        $grouplink = new moodle_url('/group/overview.php?id='.$courseid);
                     } else if (course_can_view_participants($context)) {
-                        $grouplink = $CFG->wwwroot.'/user/index.php?id='.$courseid.'&amp;group=';
+                        $grouplink = new moodle_url('/user/index.php?id='.$courseid);
                     } else {
                         $grouplink = '';
                     }
@@ -359,7 +359,7 @@ class block_activity_results extends block_base {
                             default:
                             case B_ACTIVITYRESULTS_NAME_FORMAT_FULL:
                                 if ($grouplink) {
-                                    $thisname = '<a href="'.$grouplink.$groupid.'">'.$groupgrades[$groupid]['group'].'</a>';
+                                    $thisname = '<a href="'.(new moodle_url($grouplink, ['group' => $groupid])).'">'.$groupgrades[$groupid]['group'].'</a>';
                                 } else {
                                     $thisname = $groupgrades[$groupid]['group'];
                                 }
