@@ -32,6 +32,6 @@ echo $OUTPUT->header();
 
 $msg = '<p>'.get_string('ntlmsso_attempting', 'auth_ldap').'</p>'
     . '<img width="1", height="1" '
-    . ' src="' . $CFG->wwwroot . '/auth/ldap/ntlmsso_magic.php?sesskey='
-    . $sesskey . '" />';
+    . ' src="' . (new moodle_url('/auth/ldap/ntlmsso_magic.php?sesskey='
+    . $sesskey)) . '" />';
 redirect(new moodle_url('auth/ldap/ntlmsso_finish.php'), $msg, 3);

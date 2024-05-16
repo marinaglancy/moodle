@@ -48,7 +48,7 @@ class hook_callbacks {
                 }
 
                 if (!empty($mobilesettings->androidappid)) {
-                    $mobilemanifesturl = "$CFG->wwwroot/$CFG->admin/tool/mobile/mobile.webmanifest.php";
+                    $mobilemanifesturl = new \moodle_url("/admin/tool/mobile/mobile.webmanifest.php");
                     $hook->add_html('<link rel="manifest" href="' . $mobilemanifesturl . '" />');
                 }
             }

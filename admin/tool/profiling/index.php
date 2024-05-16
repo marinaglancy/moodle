@@ -145,7 +145,7 @@ if (isset($script)) {
 
     // The flexitable that will root listings
     $table = new xhprof_table_sql('profiling-list-table');
-    $baseurl = $CFG->wwwroot . '/'.$CFG->admin.'/tool/profiling/index.php';
+    $baseurl = new moodle_url('/admin/tool/profiling/index.php');
 
     // Check if we are listing all or some URL ones
     $sqlconditions = '';
@@ -159,7 +159,7 @@ if (isset($script)) {
         $sqlconditions = 'url = :url';
         $sqlparams['url'] = $listurl;
         $table->set_listurlmode(true);
-        $baseurl .= '?listurl=' . urlencode($listurl);
+        $baseurl->param('listurl', $listurl);
     }
 
     echo $OUTPUT->heading($header);

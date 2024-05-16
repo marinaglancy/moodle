@@ -140,7 +140,7 @@ foreach ($users as $user) {
         );
     } else {
         $table->data[] = array(
-            '<a href="' . $CFG->wwwroot . '/user/view.php?id=' . $user->id . '&amp;course=' . SITEID . '">' .
+            '<a href="' . (new moodle_url('/user/view.php?id=' . $user->id . '&course=' . SITEID)) . '">' .
             $user->fullname .
             '</a>',
             s($user->email),

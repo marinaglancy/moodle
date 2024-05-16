@@ -47,7 +47,7 @@ if (!empty($CFG->enablemobilewebservice) && !empty($mobilesettings->enablesmarta
         [
             'sizes' => '144x144',
             'type' => 'image/png',
-            'src' => "$CFG->wwwroot/$CFG->admin/tool/mobile/pix/icon_144.png"
+            'src' => (new moodle_url("/admin/tool/mobile/pix/icon_144.png"))->out(false),
         ]
     ];
     $manifest->related_applications = [(object)
