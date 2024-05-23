@@ -2269,6 +2269,7 @@ function scorm_get_sco_and_launch_url($scorm, $scoid, $context) {
         if (isset($sco->parameters) && (!empty($sco->parameters))) {
             $scoparams = '&'. $sco->parameters;
         }
+        // TODO-WWW
         $launcher = $sco->launch.$connector.'aicc_sid='.$aiccsid.'&aicc_url='.$CFG->wwwroot.'/mod/scorm/aicc.php'.$scoparams;
     } else {
         if (isset($sco->parameters) && (!empty($sco->parameters))) {

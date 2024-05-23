@@ -923,7 +923,7 @@ function initialise_fullme() {
     global $CFG, $FULLME, $ME, $SCRIPT, $FULLSCRIPT;
 
     // Detect common config error.
-    if (substr($CFG->wwwroot, -1) == '/') {
+    if (substr($CFG->wwwroot, -1) == '/') { // TODO-WWW
         throw new \moodle_exception('wwwrootslash', 'error');
     }
 
@@ -975,6 +975,7 @@ function initialise_fullme() {
             }
             $rfullpath = $rurl['fullpath'];
             // Check that URL is under $CFG->wwwroot.
+            // TODO-WWW
             if (strpos($rfullpath, $wwwroot['path']) === 0) {
                 $rfullpath = substr($rurl['fullpath'], strlen($wwwroot['path']) - 1);
                 $rfullpath = (new moodle_url($rfullpath))->out(false);

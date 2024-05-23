@@ -375,7 +375,7 @@ class helper {
             'postUserStatistics' => false,
             'ajax' => $ajaxpaths,
             'saveFreq' => $savefreq,
-            'siteUrl' => $CFG->wwwroot,
+            'siteUrl' => $CFG->wwwroot, // TODO-WWW
             'l10n' => array('H5P' => $core->getLocalization()),
             'user' => $usersettings,
             'hubIsEnabled' => false,

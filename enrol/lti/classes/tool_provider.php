@@ -88,7 +88,7 @@ class tool_provider extends ToolProvider {
         // Override debugMode and set to the configured value.
         $this->debugMode = $CFG->debugdeveloper;
 
-        $this->baseUrl = $CFG->wwwroot;
+        $this->baseUrl = $CFG->wwwroot; // TODO-WWW
         $toolpath = helper::get_launch_url($toolid);
         $toolpath = $this->strip_base_url($toolpath);
 

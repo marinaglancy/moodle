@@ -57,7 +57,7 @@ function mnet_get_public_key($uri, $application=null) {
     }
 
     $params = [
-        new \PhpXmlRpc\Value($CFG->wwwroot),
+        new \PhpXmlRpc\Value($CFG->wwwroot), // TODO-WWW
         new \PhpXmlRpc\Value($mnet->public_key),
         new \PhpXmlRpc\Value($application->name),
     ];
@@ -369,7 +369,7 @@ function mnet_generate_keypair($dn = null, $days=28) {
         $days = $CFG->mnetkeylifetime;
     }
 
-    $host = strtolower($CFG->wwwroot);
+    $host = strtolower($CFG->wwwroot); // TODO-WWW
     $host = preg_replace("~^http(s)?://~",'',$host);
     $break = strpos($host.'/' , '/');
     $host   = substr($host, 0, $break);

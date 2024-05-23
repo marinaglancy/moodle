@@ -107,12 +107,12 @@ $regrequest = (object) [
     'response_types' => ['id_token'],
     'initiate_login_uri' => $CFG->wwwroot . '/enrol/lti/login.php?id=' . $draftreg->get_uniqueid(),
     'redirect_uris' => [
-        $CFG->wwwroot . '/enrol/lti/launch.php',
+        $CFG->wwwroot . '/enrol/lti/launch.php', // TODO-WWW
         $CFG->wwwroot . '/enrol/lti/launch_deeplink.php',
     ],
      // TODO: Consider whether to support client_name#ja syntax for multi language support - see MDL-73109.
     'client_name' => format_string($SITE->fullname, true, ['context' => system::instance()]),
-    'jwks_uri' => $CFG->wwwroot . '/enrol/lti/jwks.php',
+    'jwks_uri' => $CFG->wwwroot . '/enrol/lti/jwks.php', // TODO-WWW
     'logo_uri' => $OUTPUT->get_compact_logo_url() ? $OUTPUT->get_compact_logo_url()->out(false) : '',
     'token_endpoint_auth_method' => 'private_key_jwt',
     'scope' => implode(" ", $scopes),

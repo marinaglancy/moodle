@@ -59,7 +59,7 @@ define('CALENDAR_DEFAULT_WEEKEND', 65);
 /**
  * CALENDAR_URL - path to calendar's folder
  */
-define('CALENDAR_URL', $CFG->wwwroot.'/calendar/');
+define('CALENDAR_URL', $CFG->wwwroot.'/calendar/'); // TODO-WWW
 
 /**
  * CALENDAR_TF_24 - Calendar time in 24 hours format

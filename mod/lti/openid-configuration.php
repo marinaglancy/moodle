@@ -36,7 +36,7 @@ require_once($CFG->libdir.'/weblib.php');
 $scopes = registration_helper::get()->lti_get_service_scopes();
 $scopes[] = 'openid';
 $conf = [
-    'issuer' => $CFG->wwwroot,
+    'issuer' => $CFG->wwwroot, // TODO-WWW
     'token_endpoint' => (new moodle_url('/mod/lti/token.php'))->out(false),
     'token_endpoint_auth_methods_supported' => ['private_key_jwt'],
     'token_endpoint_auth_signing_alg_values_supported' => ['RS256'],

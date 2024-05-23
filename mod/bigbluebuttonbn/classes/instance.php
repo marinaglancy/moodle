@@ -1085,7 +1085,7 @@ EOF;
     public function get_origin_data(): stdClass {
         global $CFG;
 
-        $parsedurl = parse_url($CFG->wwwroot);
+        $parsedurl = parse_url($CFG->wwwroot); // TODO-WWW
         return (object) [
             'origin' => 'Moodle',
             'originVersion' => $CFG->release,

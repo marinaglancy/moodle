@@ -135,7 +135,7 @@ class core_userfeedback {
 
         $url = new moodle_url($baseurl, [
             'lang' => $lang,
-            'moodle_url' => $moodleurl,
+            'moodle_url' => $moodleurl, // TODO-WWW
             'moodle_version' => $moodleversion,
             'theme' => $theme,
             'theme_version' => $themeversion,
