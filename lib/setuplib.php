@@ -942,6 +942,20 @@ function initialise_fullme() {
     $rurl = setup_get_remote_url();
     $wwwroot = parse_url($CFG->wwwroot.'/');
 
+    if ($CFG->allowmultipledomains ?? false) {
+        if ($wwwroot['path'] !== '/') {
+            throw new moodle_exception('You can not allow multiple domains if the primary wwwroot contains a path');
+        }
+        if (!empty($rurl['host'])
+                && ($rurl['host'] !== $wwwroot['host'] ||
+                (!empty($wwwroot['port']) && $rurl['port'] != $wwwroot['port']))) {
+            $CFG->wwwroot = $rurl['scheme'] . '://' . $rurl['host'] .
+                ($rurl['port'] && $rurl['port'] != 80 ? ":{$rurl['port']}" : '');
+            $CFG->httpswwwroot = $CFG->wwwroot;
+            $wwwroot = parse_url($CFG->wwwroot.'/');
+        }
+    }
+
     if (empty($rurl['host'])) {
         // missing host in request header, probably not a real browser, let's ignore them
 

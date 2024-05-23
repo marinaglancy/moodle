@@ -334,7 +334,7 @@ class core extends H5PCore {
     public function get_latest_content_types(): \stdClass {
         global $CFG;
 
-        $siteuuid = $this->get_site_uuid() ?? md5($CFG->wwwroot);
+        $siteuuid = $this->get_site_uuid() ?? md5($CFG->primarywwwroot);
         $postdata = ['uuid' => $siteuuid];
 
         // Get the latest content-types json.

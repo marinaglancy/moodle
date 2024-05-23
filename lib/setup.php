@@ -154,6 +154,10 @@ if (defined('BEHAT_SITE_RUNNING')) {
     }
 }
 
+// Remember the wwwroot from the config.php as the primary wwwroot. The actual $CFG->wwwroot may be
+// changed later if we access a site from an alternative domain.
+$CFG->primarywwwroot = $CFG->wwwroot;
+
 // Set default warn runtime.
 if (!isset($CFG->taskruntimewarn)) {
     $CFG->taskruntimewarn = 12 * 60 * 60;
