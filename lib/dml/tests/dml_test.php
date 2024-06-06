@@ -6436,6 +6436,15 @@ EOD;
             "Found invalid DB server version format when reading version from DB: '{$version}' ({$description}).");
         $db2->dispose();
     }
+
+    public function test_cast_as(): void {
+        global $DB;
+        $sql = 'SELECT x.targetformat AS conversiontargetformat FROM {file_conversion} x
+        UNION ALL
+        SELECT CAST(:oformat AS VARCHAR) AS conversiontargetformat' . $DB->sql_null_from_clause();
+        $res = $DB->get_records_sql($sql, ['oformat' => 'pdf']);
+        $this->assertEquals(['pdf' => (object)['conversiontargetformat' => 'pdf']], $res);
+    }
 }
 
 /**
