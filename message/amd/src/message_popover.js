@@ -25,13 +25,15 @@ define(
     'jquery',
     'core/custom_interaction_events',
     'core/pubsub',
-    'core_message/message_drawer_events'
+    'core_message/message_drawer_events',
+    'tool_realtime/events'
 ],
 function(
     $,
     CustomEvents,
     PubSub,
-    MessageDrawerEvents
+    MessageDrawerEvents,
+    RealTimeEvents
 ) {
     var SELECTORS = {
         COUNT_CONTAINER: '[data-region="count-container"]'
@@ -70,7 +72,9 @@ function(
     };
 
     var showConversationCount = function(root) {
-        return function() {
+        return function(context, component, area, itemid, payload) {
+            // eslint-disable-next-line no-console
+            console.log('Received event:', {context, component, area, itemid, payload});
             var countContainer = root.find(SELECTORS.COUNT_CONTAINER);
             var count = parseInt(countContainer.text(), 10);
 
@@ -102,7 +106,7 @@ function(
         PubSub.subscribe(MessageDrawerEvents.CONVERSATION_READ, handleDecrementConversationCount(button));
         PubSub.subscribe(MessageDrawerEvents.CONTACT_REQUEST_ACCEPTED, handleDecrementConversationCount(button));
         PubSub.subscribe(MessageDrawerEvents.CONTACT_REQUEST_DECLINED, handleDecrementConversationCount(button));
-        PubSub.subscribe('message-received', showConversationCount(button));
+        PubSub.subscribe(RealTimeEvents.EVENT, showConversationCount(button));
     };
 
     /**

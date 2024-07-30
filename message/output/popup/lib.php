@@ -66,7 +66,12 @@ function message_popup_render_navbar_output(\renderer_base $renderer) {
             'unreadcount' => $unreadcount + $requestcount
         ];
         $output .= $renderer->render_from_template('core_message/message_popover', $context);
-        component_class_callback('tool_polling_notification', 'init', []);
+        /** @uses \tool_realtime\api::subscribe */
+        component_class_callback(\tool_realtime\api::class, 'subscribe', [
+            'context' => context_system::instance(),
+            'component' => 'core',
+            'area' => 'messagereceived',
+            'itemid' => $USER->id]);
     }
 
     return $output;

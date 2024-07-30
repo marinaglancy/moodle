@@ -453,8 +453,12 @@ class manager {
                 $savemessage->id,
                 $eventdata->courseid
             )->trigger();
-            component_class_callback('tool_polling_notification', 'add_for_user',
-                [$eventdata->userto->id, 'message-received', true]);
+            /** @uses \tool_realtime\api::notify() */
+            component_class_callback(\tool_realtime\api::class, 'notify', [
+                'context' => \context_system::instance(),
+                'component' => 'core',
+                'area' => 'messagereceived',
+                'itemid' => $eventdata->userto->id]);
         } else { // Must be a message.
             // If the message is a group conversation, then trigger the 'group_message_sent' event.
             if ($eventdata->convid) {
@@ -477,8 +481,12 @@ class manager {
                 $savemessage->id,
                 $eventdata->courseid
             )->trigger();
-            component_class_callback('tool_polling_notification', 'add_for_user',
-                [$eventdata->userto->id, 'message-received', true]);
+            /** @uses \tool_realtime\api::notify() */
+            component_class_callback(\tool_realtime\api::class, 'notify', [
+                'context' => \context_system::instance(),
+                'component' => 'core',
+                'area' => 'messagereceived',
+                'itemid' => $eventdata->userto->id]);
         }
     }
 
