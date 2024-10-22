@@ -15,16 +15,31 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Plugin version details
+ * Event observers for Number
  *
  * @package    customfield_number
- * @copyright  2024 Paul Holden <paulh@moodle.com>
+ * @category   event
+ * @copyright  Marina Glancy
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die;
+defined('MOODLE_INTERNAL') || die();
 
-$plugin->component = 'customfield_number';
-$plugin->version   = 2024100702;
-$plugin->requires  = 2024100100;
-$plugin->maturity  = MATURITY_STABLE;
+$observers = [
+    [
+        'eventname' => core_customfield\event\field_created::class,
+        'callback' => 'customfield_number\observer::field_created',
+    ],
+    [
+        'eventname' => core_customfield\event\field_updated::class,
+        'callback' => 'customfield_number\observer::field_updated',
+    ],
+    [
+        'eventname' => core\event\course_module_created::class,
+        'callback' => 'customfield_number\observer::course_module_created',
+    ],
+    [
+        'eventname' => core\event\course_module_deleted::class,
+        'callback' => 'customfield_number\observer::course_module_deleted',
+    ],
+];
