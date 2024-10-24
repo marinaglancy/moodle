@@ -55,10 +55,6 @@ class observer {
     /**
      * When a course module was created, schedule recalculation for all 'nofactivities' custom fields
      *
-     * Note that there is no observer for the 'updated' event. We only need to update the counts
-     * when module visibility was changed, in this case it will be done in the next scheduled
-     * task run.
-     *
      * @param \core\event\course_module_created $event
      */
     public static function course_module_created(\core\event\course_module_created $event): void {
@@ -74,6 +70,20 @@ class observer {
      * @param \core\event\course_module_deleted $event
      */
     public static function course_module_deleted(\core\event\course_module_deleted $event): void {
+        if (self::has_nofactivities_fields()) {
+            recalculate::schedule(['fieldtype' => nofactivities::class, 'component' => 'core_course',
+                'area' => 'course', 'instanceid' => $event->courseid]);
+        }
+    }
+
+    /**
+     * When a course module was updated, schedule recalculation for all 'nofactivities' custom fields
+     *
+     * Module visibility may change following an 'updated' event and it will affect the activities count
+     *
+     * @param \core\event\course_module_updated $event
+     */
+    public static function course_module_updated(\core\event\course_module_updated $event): void {
         if (self::has_nofactivities_fields()) {
             recalculate::schedule(['fieldtype' => nofactivities::class, 'component' => 'core_course',
                 'area' => 'course', 'instanceid' => $event->courseid]);

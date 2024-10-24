@@ -42,4 +42,8 @@ $observers = [
         'eventname' => core\event\course_module_deleted::class,
         'callback' => 'customfield_number\observer::course_module_deleted',
     ],
+    [
+        'eventname' => core\event\course_module_updated::class,
+        'callback' => 'customfield_number\observer::course_module_updated',
+    ],
 ];

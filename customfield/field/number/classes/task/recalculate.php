@@ -50,7 +50,6 @@ class recalculate extends adhoc_task {
             }
         } else if ($fieldtype) {
             $records = $DB->get_records('customfield_field', ['type' => 'number']);
-            $fields = [];
             foreach ($records as $record) {
                 $configdata = @json_decode($record->configdata, true);
                 if (($configdata['fieldtype'] ?? '') === $fieldtype) {
