@@ -825,6 +825,19 @@ $cache = ' . var_export($cache, true) . ';
             unset($items);
         }
 
+        $items = new DirectoryIterator($CFG->dirroot.'/plugins');
+        foreach ($items as $item) {
+            if ($item->isDot() || !$item->isDir() || substr($item->getFilename(), 0, strlen($plugintype) + 1) !== "{$plugintype}_") {
+                continue;
+            }
+            $pluginname = substr($item->getFilename(), strlen($plugintype) + 1);
+            if (!self::is_valid_plugin_name($plugintype, $pluginname)) {
+                // Always ignore plugins with problematic names here.
+                continue;
+            }
+            $result[$pluginname] = "{$CFG->dirroot}/plugins/{$plugintype}_$pluginname";
+        }
+
         ksort($result);
         return $result;
     }
@@ -1699,6 +1712,51 @@ $cache = ' . var_export($cache, true) . ';
         $hassvgmonologo = $theme->resolve_image_location('monologo', $component, true) !== null;
         $haspngmonologo = $theme->resolve_image_location('monologo', $component) !== null;
         return $haspngmonologo || $hassvgmonologo;
+    }
+
+    /**
+     * Resolve a relative path to the plugin file into the location on the disk
+     *
+     * @param string $relpath
+     * @return string|null
+     */
+    public static function resolve_plugin_file_path(string $relpath): ?string {
+        global $CFG;
+        if (DIRECTORY_SEPARATOR !== '/') {
+            $relpath = str_replace(DIRECTORY_SEPARATOR, '/', $relpath);
+        }
+        $found = null;
+        foreach (self::get_plugin_types() as $plugintype => $plugindir) {
+            $pluginrelativedir = substr($plugindir, strlen($CFG->dirroot) + 1);
+            if (substr($relpath, 0, strlen($pluginrelativedir) + 1) === $pluginrelativedir . '/') {
+                if (preg_match('#^([^/]+)(/.*|)#', substr($relpath, strlen($pluginrelativedir) + 1), $matches)) {
+                    if ($dir = self::get_plugin_directory($plugintype, $matches[1])) {
+                        $found = $dir . $matches[2];
+                    }
+                }
+            }
+        }
+        return $found ? realpath($found) : null;
+    }
+
+    /**
+     * Require a plugin file
+     *
+     * @param string $relpath
+     * @param bool $requireonce
+     * @return bool
+     */
+    public static function require_plugin_file(string $relpath, bool $requireonce = true): bool {
+        $fullpath = self::resolve_plugin_file_path($relpath);
+        if (!$fullpath || !file_exists($fullpath)) {
+            return false;
+        }
+        if ($requireonce) {
+            require_once $fullpath;
+        } else {
+            require $fullpath;
+        }
+        return true;
     }
 }
 

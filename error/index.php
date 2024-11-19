@@ -35,6 +35,21 @@ if ($ME === '/.well-known/change-password') {
     redirect(new moodle_url('/login/change_password.php'));
 }
 
+// Check if we requested a plugin file.
+$mainpath = preg_replace('#error/index.php$#', '', $_SERVER['SCRIPT_NAME']);
+$requestedpath = preg_replace(['#^' . preg_quote($mainpath, '#') . '#', '#\?.*$#'], '', $ME);
+if ($requestedpath && ($requestedfile = core_component::resolve_plugin_file_path($requestedpath))) {
+    // TODO support slasharguments, i.e. request http://webserver/admin/tool/myplugin/index.php/something/something will fail.
+    if (is_dir($requestedfile)) {
+        $requestedfile .= '/index.php';
+    }
+    if (file_exists($requestedfile)) {
+        require $requestedfile;
+        exit;
+    }
+}
+
+// Display an error that file is not found.
 $context = context_system::instance();
 $title = get_string('pagenotexisttitle', 'error');
 $PAGE->set_url('/error/index.php');
