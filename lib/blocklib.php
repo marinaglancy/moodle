@@ -2176,7 +2176,8 @@ function block_load_class($blockname) {
     global $CFG;
 
     $blocknameclean = clean_param($blockname, PARAM_PLUGIN);
-    if (empty($blockname) || empty($blocknameclean)) {
+    $plugindir = core_component::get_plugin_directory('block', $blockname);
+    if (empty($blockname) || empty($blocknameclean) || empty($plugindir)) {
         return false;
     }
 
@@ -2186,7 +2187,7 @@ function block_load_class($blockname) {
         return true;
     }
 
-    $blockpath = $CFG->dirroot.'/blocks/'.$blockname.'/block_'.$blockname.'.php';
+    $blockpath = $plugindir . '/block_'.$blockname.'.php';
 
     if (file_exists($blockpath)) {
         require_once($CFG->dirroot.'/blocks/moodleblock.class.php');

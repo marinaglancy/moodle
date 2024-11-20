@@ -1720,11 +1720,15 @@ $cache = ' . var_export($cache, true) . ';
      * @param string $relpath
      * @return string|null
      */
-    public static function resolve_plugin_file_path(string $relpath): ?string {
+    public static function resolve_plugin_file_path(string $relpath, bool $checkfileexists = false): ?string {
         global $CFG;
         if (DIRECTORY_SEPARATOR !== '/') {
             $relpath = str_replace(DIRECTORY_SEPARATOR, '/', $relpath);
         }
+        if (substr($relpath, 0, 1) !== '/') {
+            throw new coding_exception('Path must start with a slash');
+        }
+        $relpath = substr($relpath, 1);
         $found = null;
         foreach (self::get_plugin_types() as $plugintype => $plugindir) {
             $pluginrelativedir = substr($plugindir, strlen($CFG->dirroot) + 1);
@@ -1736,7 +1740,11 @@ $cache = ' . var_export($cache, true) . ';
                 }
             }
         }
-        return $found ? realpath($found) : null;
+        $filepath = $found ? realpath($found) : null;
+        if ($filepath && $checkfileexists && !file_exists($filepath)) {
+            $filepath = null;
+        }
+        return $filepath;
     }
 
     /**
@@ -1747,8 +1755,8 @@ $cache = ' . var_export($cache, true) . ';
      * @return bool
      */
     public static function require_plugin_file(string $relpath, bool $requireonce = true): bool {
-        $fullpath = self::resolve_plugin_file_path($relpath);
-        if (!$fullpath || !file_exists($fullpath)) {
+        $fullpath = self::resolve_plugin_file_path($relpath, true);
+        if (!$fullpath) {
             return false;
         }
         if ($requireonce) {

@@ -36,12 +36,18 @@ if ($ME === '/.well-known/change-password') {
 }
 
 // Check if we requested a plugin file.
+// IMPORTANT! This is a temporary solution that is not secure, it will serve all plugin files even php scripts that should not
+// be executed unless they are internal and files that would have been hidden by the server configuration (upgrade.txt, etc).
+// We need to find a way for plugins to declare which files they want to serve through 404, for example,
+// only php files in the plugin root, css, js, image files.
+// TODO we actually need to change how we calculate $FULLME and $ME in case of missing paths because they can be used in
+// after_config hooks or other places that analyse currently requested script.
+// TODO support slasharguments, i.e. request http://webserver/admin/tool/myplugin/index.php/something/something will fail.
 $mainpath = preg_replace('#error/index.php$#', '', $_SERVER['SCRIPT_NAME']);
 $requestedpath = preg_replace(['#^' . preg_quote($mainpath, '#') . '#', '#\?.*$#'], '', $ME);
-if ($requestedpath && ($requestedfile = core_component::resolve_plugin_file_path($requestedpath))) {
-    // TODO support slasharguments, i.e. request http://webserver/admin/tool/myplugin/index.php/something/something will fail.
+if ($requestedpath && ($requestedfile = core_component::resolve_plugin_file_path('/' . $requestedpath))) {
     if (is_dir($requestedfile)) {
-        $requestedfile .= '/index.php';
+        $requestedfile .= '/index.php'; // TODO do we need index.html/index.htm?
     }
     if (file_exists($requestedfile)) {
         require $requestedfile;

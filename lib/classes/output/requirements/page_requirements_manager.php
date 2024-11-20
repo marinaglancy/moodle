@@ -762,8 +762,9 @@ class page_requirements_manager {
                 }
             }
             if (debugging()) {
+                $path = core_component::resolve_plugin_file_path(strtok($url, '?'), false);
                 // Check file existence only when in debug mode.
-                if (!file_exists($CFG->dirroot . strtok($url, '?'))) {
+                if (!file_exists($CFG->dirroot . strtok($url, '?')) && !file_exists($path)) {
                     throw new coding_exception('Attempt to require a JavaScript file that does not exist.', $url);
                 }
             }

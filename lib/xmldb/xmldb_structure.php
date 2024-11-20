@@ -234,9 +234,9 @@ class xmldb_structure extends xmldb_object {
         // Normalize paths to compare them.
         $filepath = realpath($this->name); // File path comes in name.
         $filename = basename($filepath);
-        $structurepath = core_component::resolve_plugin_file_path($this->path . '/' . $filename);
-        if ($filepath !== $structurepath) {
-            $relativepath = dirname(str_replace(realpath($CFG->dirroot) . DIRECTORY_SEPARATOR, '', $filepath));
+        $structurepath = core_component::resolve_plugin_file_path('/' . $this->path . '/' . $filename);
+        $relativepath = dirname(str_replace(realpath($CFG->dirroot) . DIRECTORY_SEPARATOR, '', $filepath));
+        if ($relativepath !== 'lib/db' && $filepath !== $structurepath) {
             $this->errormsg = 'PATH attribute does not match file directory: ' . $relativepath;
             $this->debug($this->errormsg);
             $result = false;
