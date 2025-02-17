@@ -237,6 +237,21 @@ class inplace_editable implements renderable, templatable {
         return true;
     }
 
+    private ?string $updatehandler = null;
+    /**
+     * Set the name of the class implementing \some_core_interface_for_handlers that will handle the update.
+     *
+     * @param string $handler
+     * @return void
+     */
+    final public function set_update_handler(string $handler): void {
+        if (!is_a($handler, 'some_core_interface_for_handlers', true)) {
+            throw new \coding_exception('Handler must implement some_core_interface_for_handlers');
+        }
+        \some_core_dispatcher_class::register_handler($handler, $this->component, $this->itemtype);
+        $this->updatehandler = $handler;
+    }
+
     /**
      * Export this data so it can be used as the context for a mustache template (core/inplace_editable).
      *
@@ -244,6 +259,10 @@ class inplace_editable implements renderable, templatable {
      * @return array data context for a mustache template
      */
     public function export_for_template(\renderer_base $output) {
+        if (!$this->updatehandler) {
+            debugging('Did you forget to set the update handler?', DEBUG_DEVELOPER);
+        }
+
         if (!$this->editable) {
             return [
                 'displayvalue' => (string)$this->displayvalue,

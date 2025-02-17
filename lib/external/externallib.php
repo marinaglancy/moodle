@@ -463,6 +463,12 @@ class core_external extends external_api {
         // Validate and normalize parameters.
         $params = self::validate_parameters(self::update_inplace_editable_parameters(),
                       array('component' => $component, 'itemtype' => $itemtype, 'itemid' => $itemid, 'value' => $value));
+
+        if (\some_core_dispatcher_class::has_handler($component, $itemtype)) {
+            $tmpl = \some_core_dispatcher_class::call_handler($component, $itemtype, $itemid, $value);
+            return $tmpl->export_for_template($PAGE->get_renderer('core'));
+        }
+
         if (!$functionname = component_callback_exists($component, 'inplace_editable')) {
             throw new \moodle_exception('inplaceeditableerror');
         }
