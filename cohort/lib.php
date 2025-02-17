@@ -687,8 +687,6 @@ function cohort_edit_controls(context $context, moodle_url $currenturl) {
 function core_cohort_inplace_editable($itemtype, $itemid, $newvalue) {
     if ($itemtype === 'cohortname') {
         return \core_cohort\output\cohortname::update($itemid, $newvalue);
-    } else if ($itemtype === 'cohortidnumber') {
-        return \core_cohort\output\cohortidnumber::update($itemid, $newvalue);
     }
 }
 

@@ -34,7 +34,7 @@ use lang_string;
  * @copyright 2016 Marina Glancy
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class cohortidnumber extends \core\output\inplace_editable {
+class cohortidnumber extends \core\output\inplace_editable implements \some_core_interface_for_handlers {
     /**
      * Constructor.
      *
@@ -49,6 +49,23 @@ class cohortidnumber extends \core\output\inplace_editable {
             $cohort->idnumber,
             new lang_string('editcohortidnumber', 'cohort'),
             new lang_string('newidnumberfor', 'cohort', $displayvalue));
+        $this->set_update_handler(self::class);
+    }
+
+    /**
+     * Implements method from \some_core_interface_for_handlers
+     *
+     * @param int $itemid
+     * @param mixed $newvalue
+     * @return ?\core\output\inplace_editable
+     */
+    public static function handle_update(int $itemid, $newvalue): ?\core\output\inplace_editable {
+        return self::update($itemid, $newvalue);
+        // Alternatively, this method also accepts the component and area, then it can be used for multiple areas.
+        // if ($component === 'core_cohort' && $area === 'cohortidnumber') {
+        //     return self::update($itemid, $newvalue);
+        // }
+        // return null;
     }
 
     /**
