@@ -102,6 +102,7 @@ class admin_preset extends base {
                 $canedit = (int)$row->iscore === \core_adminpresets\manager::NONCORE_PRESET;
                 $inlineeditable = new inplace_editable('tool_admin_presets', 'presetname', $row->id, $canedit,
                     $displayvalue, $row->name, $edithint, $editlabel);
+                $inlineeditable->set_update_handler(inline_editable_handler::class);
                 return $OUTPUT->render($inlineeditable);
             });
 
