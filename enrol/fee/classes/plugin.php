@@ -235,7 +235,9 @@ class enrol_fee_plugin extends enrol_plugin {
                     ]);
             }
 
-            $body = $OUTPUT->render_from_template('enrol_fee/enrol_page', ['cost' => $cost, 'currency' => $instance->currency]);
+            $body = $OUTPUT->render_from_template('enrol_fee/enrol_page', [
+                'cost' => \core_payment\helper::get_cost_as_string($cost, $instance->currency),
+            ]);
             $enrolpage = new enrol_page(
                 instance: $instance,
                 header: $name,

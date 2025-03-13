@@ -23,6 +23,8 @@
 
 import ModalForm from 'core_form/modalform';
 import {getString} from 'core/str';
+import {prefetchStrings} from 'core/prefetch';
+import Url from 'core/url';
 
 /**
  * Initialise widget on the course enrolment page - clicking on the button should submit the form
@@ -30,6 +32,10 @@ import {getString} from 'core/str';
  * @param {Number} instanceId
  */
 export function initEnrol(instanceId) {
+    prefetchStrings('moodle', [
+        'loginguest',
+    ]);
+
     const button = document.querySelector('button[type="submit"][data-instance="' + instanceId + '"]');
     if (button) {
         button.addEventListener('click', (e) => {
@@ -47,7 +53,8 @@ export function initEnrol(instanceId) {
 
             // Redirect to the course page when the form is submitted.
             modalForm.addEventListener(modalForm.events.FORM_SUBMITTED, event => {
-                window.location.href = event.detail ? event.detail : (M.cfg.wwwroot + '/course/view.php?id=' + button.dataset.id);
+                window.location.href = event.detail ? event.detail :
+                    Url.relativeUrl('/course/view.php', {id: button.dataset.id});
             });
 
             modalForm.show();

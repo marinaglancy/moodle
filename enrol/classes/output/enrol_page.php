@@ -19,7 +19,7 @@ declare(strict_types=1);
 namespace core_enrol\output;
 
 use core\output\named_templatable;
-use renderable;
+use core\output\renderable;
 use core\output\single_button;
 
 /**

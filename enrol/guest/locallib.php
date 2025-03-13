@@ -22,12 +22,13 @@ require_once("$CFG->libdir/formslib.php");
 /**
  * Guest access plugin implementation.
  *
- * @deprecated since Moodle 5.0
+ * @deprecated since Moodle 5.0 - please use {@see enrol_guest\form\enrol_form}
  *
  * @package    enrol_guest
  * @copyright  2010 Petr Skoda  {@link http://skodak.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+#[\core\attribute\deprecated(replacement: enrol_guest\form\enrol_form::class, since: '5.0', reason: 'Now a dynamic form is used')]
 class enrol_guest_enrol_form extends moodleform {
     protected $instance;
 
@@ -44,8 +45,7 @@ class enrol_guest_enrol_form extends moodleform {
      */
     public function __construct($action=null, $customdata=null, $method='post', $target='', $attributes=null, $editable=true,
                                 $ajaxformdata=null) {
-        debugging('The class enrol_guest_enrol_form is deprecated since Moodle 5.0. Use enrol_guest\form\enrol_form instead.',
-            DEBUG_DEVELOPER);
+        \core\deprecation::emit_deprecation_if_present([$this, __FUNCTION__]);
         parent::__construct($action, $customdata, $method, $target, $attributes, $editable, $ajaxformdata);
     }
 

@@ -174,7 +174,13 @@ class enrol_form extends dynamic_form {
         return new moodle_url('/enrol/index.php', ['id' => $instance->courseid, 'instance' => $instance->id]);
     }
 
-    #[\Override]
+    /**
+     * Process the form submission, used if form was submitted via AJAX
+     *
+     * Enrols the user in the course and returns the URL to redirect to
+     *
+     * @return string
+     */
     public function process_dynamic_submission() {
         global $CFG, $SESSION;
         $this->get_plugin()->enrol_self($this->get_instance(), $this->get_data());
