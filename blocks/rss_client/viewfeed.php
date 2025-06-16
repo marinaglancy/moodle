@@ -93,11 +93,11 @@ if (!empty($rssrecord->preferredtitle)) {
     $feedtitle =  $rss->get_title();
 }
 echo '<table align="center" width="50%" cellspacing="1">'."\n";
-echo '<tr><td colspan="2"><strong>'. s($feedtitle) .'</strong></td></tr>'."\n";
+echo '<tr><td colspan="2"><strong>'. $feedtitle .'</strong></td></tr>'."\n";
 foreach ($rss->get_items() as $item) {
     echo '<tr><td valign="middle">'."\n";
     echo '<a href="'.$item->get_link().'" target="_blank"><strong>';
-    echo s($item->get_title());
+    echo $item->get_title();
     echo '</strong></a>'."\n";
     echo '</td>'."\n";
     echo '</tr>'."\n";
