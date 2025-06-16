@@ -364,12 +364,13 @@ function forum_rss_feed_contents($forum, $sql, $params, $context) {
             } else {
                 // The user must have permission to view
                 if ($isdiscussion && !empty($rec->discussionname)) {
-                    $item->title = format_string($rec->discussionname);
+                    $item->title = format_string($rec->discussionname, true, ['escape' => false]);
                 } else if (!empty($rec->postsubject)) {
-                    $item->title = format_string($rec->postsubject);
+                    $item->title = format_string($rec->postsubject, true, ['escape' => false]);
                 } else {
                     //we should have an item title by now but if we dont somehow then substitute something somewhat meaningful
-                    $item->title = format_string($forum->name.' '.userdate($rec->postcreated,get_string('strftimedatetimeshort', 'langconfig')));
+                    $item->title = format_string($forum->name, true, ['escape' => false]) .
+                        ' ' . userdate($rec->postcreated, get_string('strftimedatetimeshort', 'langconfig'));
                 }
                 $item->author = fullname($rec);
                 $message = file_rewrite_pluginfile_urls($rec->postmessage, 'pluginfile.php', $context->id,
@@ -403,9 +404,9 @@ function forum_rss_feed_contents($forum, $sql, $params, $context) {
     $recs->close();
 
     // Create the RSS header.
-    $header = rss_standard_header(strip_tags(format_string($forum->name,true)),
+    $header = rss_standard_header(format_string($forum->name, true, ['escape' => false]),
                                   $CFG->wwwroot."/mod/forum/view.php?f=".$forum->id,
-                                  format_string($forum->intro,true)); // TODO: fix format
+                                  format_string($forum->intro, true, ['escape' => false]));
     // Now all the RSS items, if there are any.
     $articles = '';
     if (!empty($items)) {
