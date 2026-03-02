@@ -55,13 +55,18 @@ class provider extends \core_ai\provider {
 
     #[\Override]
     public function add_authentication_headers(RequestInterface $request): RequestInterface {
-        if (empty($this->config['enablebasicauth'])) {
-            return $request;
-        } else {
-            // Add the Authorization header for basic auth.
+        $authtype = $this->config['authtype'] ?? 'none';
+
+        if ($authtype === 'basic') {
             $authheader = 'Basic ' . base64_encode($this->config['username'] . ':' . $this->config['password']);
             return $request->withAddedHeader('Authorization', $authheader);
         }
+
+        if ($authtype === 'bearer') {
+            return $request->withAddedHeader('Authorization', 'Bearer ' . $this->config['apikey']);
+        }
+
+        return $request;
     }
 
     #[\Override]

@@ -52,15 +52,21 @@ class hook_listener {
         $mform->addRule('endpoint', get_string('required'), 'required', null, 'client');
         $mform->setDefault('endpoint', 'http://localhost:11434');
 
-        // Checkbox to enable basic auth settings.
+        // Authentication type selector.
+        $authtypes = [
+            'none' => get_string('authtype_none', 'aiprovider_ollama'),
+            'basic' => get_string('authtype_basic', 'aiprovider_ollama'),
+            'bearer' => get_string('authtype_bearer', 'aiprovider_ollama'),
+        ];
         $mform->addElement(
-            'checkbox',
-            'enablebasicauth',
-            get_string('enablebasicauth', 'aiprovider_ollama')
+            'select',
+            'authtype',
+            get_string('authtype', 'aiprovider_ollama'),
+            $authtypes,
         );
-        $mform->setType('enablebasicauth', PARAM_INT);
-        $mform->addHelpButton('enablebasicauth', 'enablebasicauth', 'aiprovider_ollama');
-        $mform->setDefault('enablebasicauth', 0);
+        $mform->setType('authtype', PARAM_ALPHA);
+        $mform->addHelpButton('authtype', 'authtype', 'aiprovider_ollama');
+        $mform->setDefault('authtype', 'none');
 
         // Username for basic auth.
         $mform->addElement(
@@ -70,10 +76,9 @@ class hook_listener {
         );
         $mform->setType('username', PARAM_TEXT);
         $mform->addHelpButton('username', 'username', 'aiprovider_ollama');
-        $mform->hideIf('username', 'enablebasicauth', 'notchecked');
+        $mform->hideIf('username', 'authtype', 'neq', 'basic');
 
         // Password for basic auth.
-        // Username for basic auth.
         $mform->addElement(
             'passwordunmask',
             'password',
@@ -81,7 +86,17 @@ class hook_listener {
         );
         $mform->setType('password', PARAM_TEXT);
         $mform->addHelpButton('password', 'password', 'aiprovider_ollama');
-        $mform->hideIf('password', 'enablebasicauth', 'notchecked');
+        $mform->hideIf('password', 'authtype', 'neq', 'basic');
+
+        // API key for bearer token auth.
+        $mform->addElement(
+            'passwordunmask',
+            'apikey',
+            get_string('apikey', 'aiprovider_ollama'),
+        );
+        $mform->setType('apikey', PARAM_TEXT);
+        $mform->addHelpButton('apikey', 'apikey', 'aiprovider_ollama');
+        $mform->hideIf('apikey', 'authtype', 'neq', 'bearer');
     }
 
     /**
