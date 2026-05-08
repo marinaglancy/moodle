@@ -60,16 +60,23 @@ class process_generate_image extends abstract_processor {
     protected function query_ai_api(): array {
         $response = parent::query_ai_api();
 
-        // If the request was successful, save the URL to a file.
         if ($response['success']) {
-            $fileobj = $this->url_to_file(
-                $this->action->get_configuration('userid'),
-                $response['sourceurl']
-            );
-            // Add the file to the response, so the calling placement can do whatever they want with it.
+            $userid = $this->action->get_configuration('userid');
+            if (!empty($response['sourceurl'])) {
+                $fileobj = $this->url_to_file($userid, $response['sourceurl']);
+            } else if (!empty($response['b64data'])) {
+                $fileobj = $this->b64_to_file($userid, $response['b64data']);
+            } else {
+                return [
+                    'success' => false,
+                    'errorcode' => 500,
+                    'errormessage' => 'AzureAI image response had neither url nor b64_json',
+                ];
+            }
             $response['draftfile'] = $fileobj;
         }
 
+        unset($response['b64data']);
         return $response;
     }
 
@@ -96,17 +103,40 @@ class process_generate_image extends abstract_processor {
 
     #[\Override]
     protected function create_request_object(string $userid): RequestInterface {
+        $deployment = strtolower($this->get_deployment_name());
+        $isdalle = str_contains($deployment, 'dall');
+
+        // Quality value vocabulary differs by model:
+        // - DALL-E 3:    standard | hd
+        // - gpt-image-1: low | medium | high | auto
+        // Moodle's UI sends DALL-E values, so remap when the deployment isn't DALL-E.
+        $quality = $this->action->get_configuration('quality');
+        if (!$isdalle) {
+            $quality = match ($quality) {
+                'hd' => 'high',
+                'standard' => 'medium',
+                default => 'auto',
+            };
+        }
+
+        $body = [
+            'prompt' => $this->action->get_configuration('prompttext'),
+            'n' => $this->numberimages,
+            'quality' => $quality,
+            'size' => $this->calculate_size($this->action->get_configuration('aspectratio')),
+            'user' => $userid,
+        ];
+
+        // The `style` parameter (vivid/natural) is DALL-E 3 only — gpt-image-1 rejects
+        // it with "Unknown parameter: 'style'.".
+        if ($isdalle) {
+            $body['style'] = $this->action->get_configuration('style');
+        }
+
         return new Request(
             method: 'POST',
             uri: '',
-            body: json_encode((object) [
-                'prompt' => $this->action->get_configuration('prompttext'),
-                'n' => $this->numberimages,
-                'quality' => $this->action->get_configuration('quality'),
-                'size' => $this->calculate_size($this->action->get_configuration('aspectratio')),
-                'style' => $this->action->get_configuration('style'),
-                'user' => $userid,
-            ]),
+            body: json_encode((object) $body),
             headers: [
                 'Content-Type' => 'application/json',
             ],
@@ -115,13 +145,16 @@ class process_generate_image extends abstract_processor {
 
     #[\Override]
     protected function handle_api_success(ResponseInterface $response): array {
-        $responsebody = $response->getBody();
-        $bodyobj = json_decode($responsebody->getContents());
+        $bodyobj = json_decode($response->getBody()->getContents());
+        $data = $bodyobj->data[0] ?? null;
 
+        // DALL-E 3 returns a hosted image URL plus a model-rewritten prompt; gpt-image-1
+        // returns the raw image as base64 (`b64_json`) and no revised_prompt.
         return [
             'success' => true,
-            'sourceurl' => $bodyobj->data[0]->url,
-            'revisedprompt' => $bodyobj->data[0]->revised_prompt,
+            'sourceurl' => $data->url ?? '',
+            'b64data' => $data->b64_json ?? '',
+            'revisedprompt' => $data->revised_prompt ?? '',
         ];
     }
 
@@ -161,6 +194,44 @@ class process_generate_image extends abstract_processor {
 
         // We put the file in the user draft area initially.
         // Placements (on behalf of the user) can then move it to the correct location.
+        $fileinfo = new \stdClass();
+        $fileinfo->contextid = \context_user::instance($userid)->id;
+        $fileinfo->filearea = 'draft';
+        $fileinfo->component = 'user';
+        $fileinfo->itemid = file_get_unused_draft_itemid();
+        $fileinfo->filepath = '/';
+        $fileinfo->filename = $filename;
+
+        $fs = get_file_storage();
+        return $fs->create_file_from_string($fileinfo, file_get_contents($tempdst));
+    }
+
+    /**
+     * Save a base64-encoded image (gpt-image-1's `b64_json`) to the user draft area.
+     *
+     * @param int $userid The user id.
+     * @param string $b64data Base64-encoded image bytes (no `data:` prefix).
+     * @return \stored_file The file object.
+     */
+    private function b64_to_file(int $userid, string $b64data): \stored_file {
+        global $CFG;
+
+        require_once("{$CFG->libdir}/filelib.php");
+
+        $bytes = base64_decode($b64data, true);
+        if ($bytes === false) {
+            throw new \moodle_exception('error', 'aiprovider_azureai');
+        }
+
+        $filename = substr(hash('sha512', $b64data . $userid), 0, 16) . '.png';
+
+        // ai_image::add_watermark() works on a file path, so write to a temp file first.
+        $downloadtmpdir = make_request_directory();
+        $tempdst = $downloadtmpdir . $filename;
+        file_put_contents($tempdst, $bytes);
+        $image = new ai_image($tempdst);
+        $image->add_watermark()->save();
+
         $fileinfo = new \stdClass();
         $fileinfo->contextid = \context_user::instance($userid)->id;
         $fileinfo->filearea = 'draft';
