@@ -1,0 +1,20 @@
+issueNumber: MDL-88680
+notes:
+  aiprovider_azureai:
+    - message: >
+        The Azure AI image generation processor now switches from returning a
+        URL to returning `response_format=b64_json` for DALL-E deployments, and
+        decodes the image directly from the API response instead of downloading
+        it via a second HTTP request.
+      type: changed
+    - message: >
+        The Azure AI image generation processor now supports modern
+        text-to-image models (e.g. gpt-image-1) in addition to DALL-E. Because
+        Azure deployment names are admin-chosen, the model family is inferred
+        from the deployment name: a deployment whose name contains "dall" is
+        treated as DALL-E; otherwise the GPT image model contract is used
+        (`output_format=png`, no `response_format`, no `style`, and Moodle
+        quality values 'standard' and 'hd' are mapped to 'medium' and 'high'
+        respectively). Image sizes for non-DALL-E deployments use 1536x1024
+        for landscape and 1024x1536 for portrait.
+      type: improved
