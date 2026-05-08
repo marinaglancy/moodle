@@ -16,7 +16,6 @@
 
 namespace aiprovider_azureai;
 
-use core\http_client;
 use core_ai\ai_image;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Uri;
@@ -50,11 +49,11 @@ class process_generate_image extends abstract_processor {
     protected function query_ai_api(): array {
         $response = parent::query_ai_api();
 
-        // If the request was successful, save the URL to a file.
+        // If the request was successful, save the image to a file.
         if ($response['success']) {
-            $fileobj = $this->url_to_file(
+            $fileobj = $this->create_file_from_response(
                 $this->action->get_configuration('userid'),
-                $response['sourceurl']
+                $response,
             );
             // Add the file to the response, so the calling placement can do whatever they want with it.
             $response['draftfile'] = $fileobj;
@@ -64,42 +63,100 @@ class process_generate_image extends abstract_processor {
     }
 
     /**
-     * Convert the given aspect ratio to an image size
-     * that is compatible with the azureai API.
+     * Whether the configured deployment is a DALL-E deployment.
      *
-     * @param string $ratio The aspect ratio of the image.
-     * @return string The size of the image.
+     * Azure deployment names are admin-chosen free-form strings, so we infer
+     * the model family by looking for "dall" in the deployment name.
+     *
+     * @return bool
+     */
+    private function is_dalle(): bool {
+        return str_contains(strtolower($this->get_deployment_name()), 'dall');
+    }
+
+    /**
+     * Convert the given aspect ratio to an image size compatible with the model's API.
+     *
+     * DALL-E 3: square=1024x1024, landscape=1792x1024, portrait=1024x1792.
+     * GPT image models: square=1024x1024, landscape=1536x1024, portrait=1024x1536.
+     *
+     * @param string $ratio The aspect ratio of the image (square, landscape, portrait).
+     * @return string The size string for the API request.
      * @throws \coding_exception
      */
     private function calculate_size(string $ratio): string {
-        if ($ratio === 'square') {
-            $size = '1024x1024';
-        } else if ($ratio === 'landscape') {
-            $size = '1792x1024';
-        } else if ($ratio === 'portrait') {
-            $size = '1024x1792';
+        if ($this->is_dalle()) {
+            if ($ratio === 'square') {
+                $size = '1024x1024';
+            } else if ($ratio === 'landscape') {
+                $size = '1792x1024';
+            } else if ($ratio === 'portrait') {
+                $size = '1024x1792';
+            } else {
+                throw new \coding_exception('Invalid aspect ratio: ' . $ratio);
+            }
         } else {
-            throw new \coding_exception('Invalid aspect ratio: ' . $ratio);
+            if ($ratio === 'square') {
+                $size = '1024x1024';
+            } else if ($ratio === 'landscape') {
+                $size = '1536x1024';
+            } else if ($ratio === 'portrait') {
+                $size = '1024x1536';
+            } else {
+                throw new \coding_exception('Invalid aspect ratio: ' . $ratio);
+            }
         }
         return $size;
     }
 
+    /**
+     * Convert the given quality setting to the value expected by the model's API.
+     *
+     * DALL-E models accept the Moodle values directly (standard, hd).
+     * GPT image models map them: standard -> medium, hd -> high.
+     *
+     * @param string $quality The quality setting (standard, hd).
+     * @return string The quality value for the API request.
+     * @throws \coding_exception
+     */
+    private function calculate_quality(string $quality): string {
+        if ($this->is_dalle()) {
+            return $quality;
+        }
+        if ($quality === 'standard') {
+            return 'medium';
+        } else if ($quality === 'hd') {
+            return 'high';
+        }
+        throw new \coding_exception('Invalid quality: ' . $quality);
+    }
+
     #[\Override]
     protected function create_request_object(string $userid): RequestInterface {
+        $body = (object) [
+            'prompt' => $this->action->get_configuration('prompttext'),
+            'n' => $this->numberimages,
+            'quality' => $this->calculate_quality($this->action->get_configuration('quality')),
+            'size' => $this->calculate_size($this->action->get_configuration('aspectratio')),
+            'user' => $userid,
+        ];
+
+        // DALL-E models use response_format=b64_json and support style;
+        // GPT image models use output_format instead and do not accept style.
+        if ($this->is_dalle()) {
+            $body->response_format = 'b64_json';
+            $body->style = $this->action->get_configuration('style');
+        } else {
+            $body->output_format = 'png';
+        }
+
         return new Request(
             method: 'POST',
             uri: '',
             headers: [
                 'Content-Type' => 'application/json',
             ],
-            body: json_encode((object) [
-                'prompt' => $this->action->get_configuration('prompttext'),
-                'n' => $this->numberimages,
-                'quality' => $this->action->get_configuration('quality'),
-                'size' => $this->calculate_size($this->action->get_configuration('aspectratio')),
-                'style' => $this->action->get_configuration('style'),
-                'user' => $userid,
-            ]),
+            body: json_encode($body),
         );
     }
 
@@ -110,42 +167,36 @@ class process_generate_image extends abstract_processor {
 
         return [
             'success' => true,
-            'sourceurl' => $bodyobj->data[0]->url,
-            'revisedprompt' => $bodyobj->data[0]->revised_prompt,
+            'b64json' => $bodyobj->data[0]->b64_json,
+            'output_format' => $bodyobj->output_format ?? 'png',
+            'revisedprompt' => $bodyobj->data[0]->revised_prompt ?? '',
         ];
     }
 
     /**
-     * Convert the url for the image  to a file.
+     * Decode the base64-encoded image from the API response, add a watermark,
+     * and store it as a draft file for the given user.
      *
      * Placements can't interact with the provider AI directly,
      * therefore we need to provide the image file in a format that can
      * be used by placements. So we use the file API.
      *
      * @param int $userid The user id.
-     * @param string $url The URL to the image.
-     * @return \stored_file The file object.
+     * @param array $response Response from the AI provider, containing 'b64json' and 'output_format'.
+     * @return \stored_file The stored draft file.
      */
-    private function url_to_file(int $userid, string $url): \stored_file {
+    private function create_file_from_response(int $userid, array $response): \stored_file {
         global $CFG;
 
         require_once("{$CFG->libdir}/filelib.php");
 
-        // Azure AI doesn't always return unique file names, but does return unique URLS.
-        // Therefore, some processing is needed to get a unique filename.
-        $parsedurl = parse_url($url, PHP_URL_PATH); // Parse the URL to get the path.
-        $fileext = pathinfo($parsedurl, PATHINFO_EXTENSION); // Get the file extension.
-        $filename = substr(hash('sha512', ($url . $userid)), 0, 16) . '.' . $fileext;
+        // Decode the image and store in temp dir.
+        $b64json = $response['b64json'];
+        $imagebytes = base64_decode($b64json);
+        $filename = substr(hash('sha512', $b64json), 0, 16) . '.' . $response['output_format'];
+        $tempdst = make_request_directory() . DIRECTORY_SEPARATOR . $filename;
+        file_put_contents($tempdst, $imagebytes);
 
-        $client = \core\di::get(http_client::class);
-
-        // Download the image and add the watermark.
-        $downloadtmpdir = make_request_directory();
-        $tempdst = $downloadtmpdir . $filename;
-        $client->get($url, [
-            'sink' => $tempdst,
-            'timeout' => $CFG->repositorygetfiletimeout,
-        ]);
         $image = new ai_image($tempdst);
         $image->add_watermark()->save();
 
