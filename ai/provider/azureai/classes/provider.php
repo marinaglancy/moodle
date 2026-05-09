@@ -160,7 +160,7 @@ class provider extends \core_ai\provider {
             new \lang_string("action_deployment", 'aiprovider_azureai'),
             new \lang_string("action_deployment_desc", 'aiprovider_azureai'),
             '',
-            PARAM_ALPHANUMEXT,
+            PARAM_TEXT,
         );
         // Add API version.
         $settings[] = new \admin_setting_configtext(
@@ -168,7 +168,7 @@ class provider extends \core_ai\provider {
             new \lang_string("action_apiversion", 'aiprovider_azureai'),
             '',
             '2024-06-01',
-            PARAM_ALPHANUMEXT,
+            PARAM_TEXT,
         );
 
         if ($actionname === 'generate_text' || $actionname === 'summarise_text') {
