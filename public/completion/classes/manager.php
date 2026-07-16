@@ -79,6 +79,7 @@ class manager {
         global $OUTPUT;
         $moduleinfo = get_fast_modinfo($this->courseid);
         $sections = $moduleinfo->get_sections();
+        $delegatedsections = $moduleinfo->get_sections_delegated_by_cm();
         $data = new stdClass;
         $data->courseid = $this->courseid;
         $data->sesskey = sesskey();
@@ -87,6 +88,14 @@ class manager {
         foreach ($sections as $sectionnumber => $section) {
             $sectioninfo = $moduleinfo->get_section_info($sectionnumber);
 
+            // Subsections are displayed as part of their parent section.
+            if ($sectioninfo->is_delegated()) {
+                continue;
+            }
+
+            // Expand any delegated subsections with their nested activities.
+            $section = $this->expand_delegated_sections($section, $sections, $delegatedsections);
+
             $sectionobject = new stdClass();
             $sectionobject->sectionnumber = $sectionnumber;
             $sectionobject->name = get_section_name($this->courseid, $sectioninfo);
@@ -94,6 +103,27 @@ class manager {
             $data->sections[] = $sectionobject;
         }
         return $data;
+    }
+
+    /**
+     * Expands a list of section course module IDs, replacing delegated course module IDs with their subsection's activities.
+     *
+     * @param int[] $cmids List of course module IDs in the section
+     * @param array $sections All sections
+     * @param section_info[] $delegatedsections Delegated sections indexed by course module ID
+     * @return int[] Expanded list of course module IDs
+     */
+    private function expand_delegated_sections(array $cmids, array $sections, array $delegatedsections): array {
+        $expanded = [];
+        foreach ($cmids as $cmid) {
+            if (isset($delegatedsections[$cmid])) {
+                $subseccmids = $sections[$delegatedsections[$cmid]->sectionnum] ?? [];
+                $expanded = array_merge($expanded, $subseccmids);
+            } else {
+                $expanded[] = $cmid;
+            }
+        }
+        return $expanded;
     }
 
     /**
