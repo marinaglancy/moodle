@@ -79,6 +79,8 @@ final class grading_external_test extends \core_external\tests\externallib_testc
             'areaid' => $areaid,
             'method' => 'rubric',
             'name' => 'test',
+            'description' => 'my rubric',
+            'descriptionformat' => 0,
             'status' => 20,
             'copiedfromid' => 1,
             'timecreated' => 1,
