@@ -85,6 +85,8 @@ final class grading_external_test extends \externallib_advanced_testcase {
         $rubricdefinition = array (
             'areaid' => $areaid,
             'method' => 'rubric',
+            'description' => 'my rubric',
+            'descriptionformat' => 0,
             'name' => 'test',
             'status' => 20,
             'copiedfromid' => 1,
