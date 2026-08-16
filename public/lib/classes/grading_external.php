@@ -162,7 +162,7 @@ class core_grading_external extends external_api {
                 // Format the description text field.
                 $formattedtext = \core_external\util::format_text($definition['description'],
                     $definition['descriptionformat'],
-                    $context->id,
+                    $context,
                     $componentname,
                     'description',
                     $def->id);
