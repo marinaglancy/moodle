@@ -76,7 +76,9 @@
 
 {{#js}}
 require(['jquery', 'core_message/message_drawer'], function($, MessageDrawer) {
-    var root = $('#message-drawer-{{uniqid}}');
-    MessageDrawer.init(root, '{{uniqid}}', false);
+    $(function() {
+        var root = $('#message-drawer-{{uniqid}}');
+        MessageDrawer.init(root, '{{uniqid}}', false);
+    });
 });
 {{/js}}
