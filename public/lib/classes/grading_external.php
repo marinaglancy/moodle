@@ -97,11 +97,9 @@ class core_grading_external extends external_api {
             // Get the grading manager.
             $gradingmanager = get_grading_manager($context, $componentname, $params['areaname']);
             // Get the controller for each grading method.
-            $methods = array();
+            $methods = array_keys($gradingmanager->get_available_methods(false));
             if ($params['activeonly'] == true) {
-                $methods[] = $gradingmanager->get_active_method();
-            } else {
-                $methods = array_keys($gradingmanager->get_available_methods(false));
+                $methods = array_intersect($methods, [$gradingmanager->get_active_method()]);
             }
 
             $area = array();

@@ -175,6 +175,39 @@ final class grading_external_test extends \core_external\tests\externallib_testc
     }
 
     /**
+     * Test get_definitions with activeonly for areas without a usable active method
+     */
+    public function test_get_definitions_activeonly(): void {
+        global $CFG, $DB;
+        require_once("$CFG->dirroot/grade/grading/lib.php");
+
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $course = $this->getDataGenerator()->create_course();
+        $rubricassign = $this->getDataGenerator()->create_module('assign', ['course' => $course->id]);
+        $simpleassign = $this->getDataGenerator()->create_module('assign', ['course' => $course->id]);
+        $uninstalledassign = $this->getDataGenerator()->create_module('assign', ['course' => $course->id]);
+
+        // A rubric, simple direct grading, and a grading method whose plugin is no longer installed.
+        $this->getDataGenerator()->get_plugin_generator('gradingform_rubric')
+            ->get_test_rubric(\context_module::instance($rubricassign->cmid), 'mod_assign', 'submissions');
+        get_grading_manager(\context_module::instance($simpleassign->cmid), 'mod_assign', 'submissions')
+            ->set_active_method('');
+        $uninstalledcontext = \context_module::instance($uninstalledassign->cmid);
+        get_grading_manager($uninstalledcontext, 'mod_assign', 'submissions')->set_active_method('guide');
+        $DB->set_field('grading_areas', 'activemethod', 'uninstalled', ['contextid' => $uninstalledcontext->id]);
+
+        $cmids = [$rubricassign->cmid, $simpleassign->cmid, $uninstalledassign->cmid];
+        $result = core_grading_external::get_definitions($cmids, 'submissions', true);
+        $result = external_api::clean_returnvalue(core_grading_external::get_definitions_returns(), $result);
+
+        $this->assertEquals($cmids, array_column($result['areas'], 'cmid'));
+        $this->assertEquals(['rubric', null, 'uninstalled'], array_column($result['areas'], 'activemethod'));
+        $this->assertEquals([1, 0, 0], array_map(fn($area) => count($area['definitions']), $result['areas']));
+        $this->assertEmpty($result['warnings']);
+    }
+
+    /**
      * Test get_gradingform_instances
      */
     public function test_get_gradingform_instances(): void {
