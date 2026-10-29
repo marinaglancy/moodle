@@ -139,6 +139,71 @@ final class external_api_test extends \advanced_testcase {
     }
 
     /**
+     * Test that an error deep in the structure reports its path and the fault once.
+     *
+     * @param string $method external_api method to call
+     * @param array $data parameters or response
+     * @param string $exception expected exception class
+     * @param string $message expected exception message
+     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('nested_error_provider')]
+    public function test_nested_error(string $method, array $data, string $exception, string $message): void {
+        $description = new external_function_parameters([
+            'areas' => new external_multiple_structure(new external_single_structure([
+                'definitions' => new external_multiple_structure(new external_single_structure([
+                    'name' => new external_value(PARAM_TEXT, 'Name'),
+                    'status' => new external_value(PARAM_INT, 'Status', VALUE_DEFAULT, 'draft'),
+                ])),
+            ])),
+        ]);
+        try {
+            external_api::$method($description, $data);
+            $this->fail('Exception expected');
+        } catch (\moodle_exception $ex) {
+            $this->assertInstanceOf($exception, $ex);
+            $this->assertSame($message, $ex->getMessage());
+        }
+    }
+
+    /**
+     * Data provider for test_nested_error().
+     *
+     * @return array
+     */
+    public static function nested_error_provider(): array {
+        return [
+            'Unexpected key in parameters' => [
+                'validate_parameters',
+                ['areas' => [['definitions' => [['name' => 'Rubric', 'status' => 1, 'shortname' => 'R']]]]],
+                \invalid_parameter_exception::class,
+                'Invalid parameter value detected (areas => definitions => '
+                    . 'Unexpected keys (shortname) detected in parameter array.)',
+            ],
+            'Invalid default in parameters' => [
+                'validate_parameters',
+                ['areas' => [['definitions' => [['name' => 'Rubric']]]]],
+                \invalid_parameter_exception::class,
+                'Invalid parameter value detected (areas => definitions => status => '
+                    . 'Invalid external api parameter: the value is "draft", the server was expecting "int" type)',
+            ],
+            'Missing key in response' => [
+                'clean_returnvalue',
+                ['areas' => [['definitions' => [['status' => 1]]]]],
+                \invalid_response_exception::class,
+                'Invalid response value detected (areas => definitions => '
+                    . 'Error in response - Missing following required key in a single structure: name)',
+            ],
+            'Invalid default in response' => [
+                'clean_returnvalue',
+                ['areas' => [['definitions' => [['name' => 'Rubric']]]]],
+                \invalid_response_exception::class,
+                'Invalid response value detected (areas => definitions => status => Invalid external api response: '
+                    . 'the value is "draft" of PHP type "string", the server was expecting "int" type)',
+            ],
+        ];
+    }
+
+    /**
      * Test for clean_returnvalue() for testing that returns the PHP type.
      */
     public function test_clean_returnvalue_return_php_type(): void {
@@ -217,8 +282,7 @@ final class external_api_test extends \advanced_testcase {
             $this->fail('Exception expected');
         } catch (\moodle_exception $ex) {
             $this->assertInstanceOf(\invalid_response_exception::class, $ex);
-            $this->assertSame('Invalid response value detected (object => Invalid response value detected '
-                . '(Error in response - Missing following required key in a single structure: value1): Error in response - '
+            $this->assertSame('Invalid response value detected (object => Error in response - '
                 . 'Missing following required key in a single structure: value1)', $ex->getMessage());
         }
 

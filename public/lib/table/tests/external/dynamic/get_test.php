@@ -131,8 +131,8 @@ final class get_test extends advanced_testcase {
             ]
         ];
         $this->expectException(\invalid_parameter_exception::class);
-        $this->expectExceptionMessage("Invalid parameter value detected (filters => Invalid parameter value detected " .
-        "(Missing required key in single structure: name): Missing required key in single structure: name");
+        $this->expectExceptionMessage("Invalid parameter value detected (filters => " .
+        "Missing required key in single structure: name)");
 
         get::execute(
             "core_user",
