@@ -30,7 +30,7 @@ final class poll_stored_progress_test extends \advanced_testcase {
      * Throw an exception if the wrong data type is passed for an ID.
      */
     public function test_execute_invalid_id(): void {
-        $debuginfo = 'Invalid external api parameter: the value is "foo", the server was expecting "int" type';
+        $debuginfo = 'ids => Invalid external api parameter: the value is "foo", the server was expecting "int" type';
         $pollstoredprogress = new poll_stored_progress();
         $this->expectExceptionObject(new \invalid_parameter_exception($debuginfo));
         $pollstoredprogress->execute(['foo']);

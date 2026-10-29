@@ -350,7 +350,7 @@ class external_api {
                         } catch (invalid_parameter_exception $e) {
                             // We are only interested by exceptions returned by validate_param() and validate_parameters().
                             // This is used to build the path to the faulty attribute.
-                            throw new invalid_parameter_exception("{$key} => " . $e->getMessage() . ': ' . $e->debuginfo);
+                            throw new invalid_parameter_exception("{$key} => " . $e->debuginfo);
                         }
                     }
                 } else {
@@ -359,7 +359,7 @@ class external_api {
                     } catch (invalid_parameter_exception $e) {
                         // We are only interested by exceptions returned by validate_param() and validate_parameters().
                         // This is used to build the path to the faulty attribute.
-                        throw new invalid_parameter_exception($key . " => " . $e->getMessage() . ': ' . $e->debuginfo);
+                        throw new invalid_parameter_exception($key . " => " . $e->debuginfo);
                     }
                 }
                 unset($params[$key]);
@@ -453,7 +453,7 @@ class external_api {
                                 $result[$key] = static::clean_returnvalue($subdesc, $subdesc->default);
                             } catch (invalid_response_exception $e) {
                                 // Build the path to the faulty attribute.
-                                throw new invalid_response_exception("{$key} => " . $e->getMessage() . ': ' . $e->debuginfo);
+                                throw new invalid_response_exception("{$key} => " . $e->debuginfo);
                             }
                         }
                     }
@@ -462,7 +462,7 @@ class external_api {
                         $result[$key] = static::clean_returnvalue($subdesc, $response[$key]);
                     } catch (invalid_response_exception $e) {
                         // Build the path to the faulty attribute.
-                        throw new invalid_response_exception("{$key} => " . $e->getMessage() . ': ' . $e->debuginfo);
+                        throw new invalid_response_exception("{$key} => " . $e->debuginfo);
                     }
                 }
                 unset($response[$key]);
